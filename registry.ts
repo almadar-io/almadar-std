@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { OperatorMeta } from '../types/operators.js';
+import type { OperatorMeta } from '@almadar/core/types';
 import type { StdOperatorMeta, StdModule } from './types.js';
 import { isStdOperator, getModuleFromOperator, STD_MODULES } from './types.js';
 

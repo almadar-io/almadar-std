@@ -69,6 +69,24 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Control timing with delays, debouncing, retries, and timeouts.',
         icon: '⏳',
     },
+    nn: {
+        name: 'Neural Network',
+        displayName: 'Neural Network Operations',
+        description: 'Define and compose neural network layers and modules.',
+        icon: '🧠',
+    },
+    tensor: {
+        name: 'Tensor',
+        displayName: 'Tensor Operations',
+        description: 'Create and manipulate multi-dimensional arrays for numerical computing.',
+        icon: '📊',
+    },
+    train: {
+        name: 'Training',
+        displayName: 'Training Operations',
+        description: 'Training loops, loss functions, and optimization for neural networks.',
+        icon: '🎯',
+    },
 };
 
 /**

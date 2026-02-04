@@ -7,7 +7,57 @@
  * @packageDocumentation
  */
 
-import { OperatorMeta } from '../types/operators.js';
+// ============================================================================
+// Base Operator Types (self-contained, no external dependencies)
+// ============================================================================
+
+/**
+ * Operator categories for the core expression language.
+ */
+export const OPERATOR_CATEGORIES = [
+  'arithmetic',
+  'comparison',
+  'logic',
+  'control',
+  'effect',
+  'collection',
+  'std-math',
+  'std-str',
+  'std-array',
+  'std-object',
+  'std-validate',
+  'std-time',
+  'std-format',
+  'std-async',
+  'std-nn',
+  'std-tensor',
+  'std-train',
+] as const;
+
+export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
+
+/**
+ * Basic return types for core operators.
+ */
+export type BasicReturnType = 'number' | 'boolean' | 'string' | 'any' | 'void' | 'array';
+
+/**
+ * Base metadata for an operator.
+ */
+export interface OperatorMeta {
+  /** Operator category */
+  category: OperatorCategory;
+  /** Minimum number of arguments */
+  minArity: number;
+  /** Maximum number of arguments (null = unlimited) */
+  maxArity: number | null;
+  /** Human-readable description */
+  description: string;
+  /** Whether this operator has side effects (only valid in effect context) */
+  hasSideEffects: boolean;
+  /** Return type hint - basic types for core operators, extended types for std modules */
+  returnType: string;
+}
 
 // ============================================================================
 // Standard Library Categories

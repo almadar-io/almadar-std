@@ -12,8 +12,7 @@
  * @packageDocumentation
  */
 
-import type { SExpr } from '../../types/expression.js';
-import type { RequiredField } from '../../types/trait.js';
+import type { SExpr, RequiredField } from '@almadar/core/types';
 
 // ============================================================================
 // Behavior Categories
