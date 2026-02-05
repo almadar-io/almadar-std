@@ -24,6 +24,17 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 's', type: 'string', description: 'The string' }],
     example: '["str/len", "hello"] // => 5',
   },
+  'str/concat': {
+    module: 'str',
+    category: 'std-str',
+    minArity: 1,
+    maxArity: 99,
+    description: 'Concatenate strings together',
+    hasSideEffects: false,
+    returnType: 'string',
+    params: [{ name: 'strings', type: 'string', variadic: true, description: 'Strings to concatenate' }],
+    example: '["str/concat", "/users/", "@entity.id"] // => "/users/123"',
+  },
   'str/upper': {
     module: 'str',
     category: 'std-str',
