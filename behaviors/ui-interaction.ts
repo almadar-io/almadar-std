@@ -67,12 +67,12 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    type: 'page-header',
+                    patternType: 'page-header',
                     title: '@entity.title',
                     actions: [{ label: 'Create', event: 'CREATE', variant: 'primary' }],
                   }],
                   ['render-ui', 'main', {
-                    type: 'entity-table',
+                    patternType: 'entity-table',
                     entity: '@entity.entityType',
                     columns: '@entity.columns',
                     itemActions: [
@@ -89,7 +89,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'CREATE',
                 effects: [
                   ['render-ui', 'modal', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     mode: 'create',
                     submitEvent: 'SAVE',
@@ -104,7 +104,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'drawer', {
-                    type: 'entity-detail',
+                    patternType: 'entity-detail',
                     entity: '@entity.entityType',
                     id: '@payload.id',
                     actions: [
@@ -121,7 +121,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'drawer', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     id: '@payload.id',
                     mode: 'edit',
@@ -136,7 +136,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT',
                 effects: [
                   ['render-ui', 'drawer', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     id: '@entity.selectedId',
                     mode: 'edit',
@@ -166,7 +166,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'SAVE',
                 effects: [
                   ['persist', 'create', '@entity.entityType', '@payload.data'],
-                  ['notify', { type: 'success', message: 'Created successfully' }],
+                  ['notify', 'in_app', 'Created successfully'],
                   ['emit', 'INIT'],
                 ],
               },
@@ -176,7 +176,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'SAVE',
                 effects: [
                   ['persist', 'update', '@entity.entityType', '@payload.data'],
-                  ['notify', { type: 'success', message: 'Updated successfully' }],
+                  ['notify', 'in_app', 'Updated successfully'],
                   ['emit', 'INIT'],
                 ],
               },
@@ -186,7 +186,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'CONFIRM_DELETE',
                 effects: [
                   ['persist', 'delete', '@entity.entityType', '@entity.selectedId'],
-                  ['notify', { type: 'success', message: 'Deleted successfully' }],
+                  ['notify', 'in_app', 'Deleted successfully'],
                   ['emit', 'INIT'],
                 ],
               },
@@ -273,7 +273,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    type: 'page-header',
+                    patternType: 'page-header',
                     title: '@entity.name',
                     actions: [
                       { label: 'Edit', event: 'EDIT' },
@@ -281,7 +281,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                     ],
                   }],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    patternType: 'entity-detail',
                     entity: '@entity.entityType',
                     fieldNames: '@entity.fields',
                   }],
@@ -293,7 +293,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT',
                 effects: [
                   ['render-ui', 'main', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     mode: 'edit',
                     fields: '@entity.fields',
@@ -308,7 +308,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'SAVE',
                 effects: [
                   ['persist', 'update', '@entity.entityType', '@payload.data'],
-                  ['notify', { type: 'success', message: 'Updated successfully' }],
+                  ['notify', 'in_app', 'Updated successfully'],
                   ['emit', 'INIT'],
                 ],
               },
@@ -415,7 +415,7 @@ export const FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     fields: '@entity.fields',
                     values: '@entity.values',
@@ -471,7 +471,7 @@ export const FORM_BEHAVIOR: OrbitalSchema = {
                 to: 'Editing',
                 event: 'VALIDATION_FAILED',
                 effects: [
-                  ['notify', { type: 'error', message: 'Please fix the validation errors' }],
+                  ['notify', 'in_app', 'Please fix the validation errors'],
                 ],
               },
               {
@@ -480,7 +480,7 @@ export const FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'SUBMIT_SUCCESS',
                 effects: [
                   ['set', '@entity.isSubmitting', false],
-                  ['notify', { type: 'success', message: 'Saved successfully' }],
+                  ['notify', 'in_app', 'Saved successfully'],
                   ['emit', '@entity.submitEvent', { data: '@entity.values' }],
                 ],
               },
@@ -491,7 +491,7 @@ export const FORM_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isSubmitting', false],
                   ['set', '@entity.errors', { _form: '@payload.error' }],
-                  ['notify', { type: 'error', message: '@payload.error' }],
+                  ['notify', 'in_app', '@payload.error'],
                 ],
               },
               {
@@ -770,7 +770,7 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                     current: 0,
                   }],
                   ['render-ui', 'main', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     fields: '@entity.step1Fields',
                     submitEvent: 'NEXT',
@@ -789,7 +789,7 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                     current: 1,
                   }],
                   ['render-ui', 'main', {
-                    type: 'form-section',
+                    patternType: 'form-section',
                     entity: '@entity.entityType',
                     fields: '@entity.step2Fields',
                     submitEvent: 'NEXT',
@@ -815,7 +815,7 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                     current: 2,
                   }],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    patternType: 'entity-detail',
                     entity: '@entity.entityType',
                     fieldNames: ['step1', 'step2'],
                     title: 'Review',
@@ -834,7 +834,7 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                 event: 'COMPLETE',
                 effects: [
                   ['persist', 'create', '@entity.entityType', '@entity.stepData'],
-                  ['notify', { type: 'success', message: 'Wizard completed!' }],
+                  ['notify', 'in_app', 'Wizard completed!'],
                   ['navigate', '@entity.completionUrl'],
                 ],
               },
@@ -910,7 +910,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    patternType: 'entity-detail',
                     entity: '@entity.entityType',
                     id: '@payload.id',
                     fieldNames: '@entity.detailFields',
@@ -924,7 +924,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    patternType: 'entity-detail',
                     entity: '@entity.entityType',
                     id: '@payload.id',
                     fieldNames: '@entity.detailFields',

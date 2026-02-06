@@ -162,7 +162,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                       ['do',
                         ['set', '@entity.selected', ['array/append', '@entity.selected', '@payload.id']],
                         ['set', '@entity.lastSelected', '@payload.id']],
-                      ['notify', { type: 'warning', message: 'Maximum selection reached' }]]],
+                      ['notify', 'in_app', 'Maximum selection reached']]],
                 ],
               },
               {
@@ -187,7 +187,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                         ['if', ['=', '@entity.mode', 'single'],
                           ['@payload.id'],
                           ['array/append', '@entity.selected', '@payload.id']]],
-                      ['notify', { type: 'warning', message: 'Maximum selection reached' }]]],
+                      ['notify', 'in_app', 'Maximum selection reached']]],
                 ],
               },
               {

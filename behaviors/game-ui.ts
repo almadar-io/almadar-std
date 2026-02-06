@@ -67,7 +67,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'screen', {
-                                        type: 'card',
+                                        patternType: 'card',
                                         title: '@entity.title',
                                         actions: [{ event: 'START', label: 'Start Game' }],
                                     }],
@@ -92,7 +92,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastState', 'Playing'],
                                     ['emit', 'GAME_LOOP_PAUSE'],
                                     ['render-ui', 'overlay', {
-                                        type: 'modal',
+                                        patternType: 'modal',
                                         title: 'Paused',
                                         content: { playTime: '@entity.playTime' },
                                         actions: [
@@ -115,7 +115,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'overlay', {
-                                        type: 'modal',
+                                        patternType: 'modal',
                                         title: 'Game Over',
                                         content: { playTime: '@entity.playTime', attempts: '@entity.attempts' },
                                         actions: [
@@ -132,7 +132,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'overlay', {
-                                        type: 'modal',
+                                        patternType: 'modal',
                                         title: 'Victory!',
                                         content: { playTime: '@entity.playTime', attempts: '@entity.attempts' },
                                         actions: [
@@ -257,7 +257,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastTypeTime', '@now'],
                                     ['emit', 'GAME_PAUSE'],
                                     ['render-ui', 'overlay.dialogue', {
-                                        type: 'modal',
+                                        patternType: 'modal',
                                         title: '@entity.speaker',
                                         content: { text: '@entity.displayedText', isTyping: '@entity.isTyping' },
                                         actions: [
@@ -319,7 +319,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
                                         ['render-ui', 'overlay.dialogue', {
-                                            type: 'modal',
+                                            patternType: 'modal',
                                             title: 'Choose',
                                             content: { choices: '@currentDialogue.choices' },
                                         }]],
@@ -449,7 +449,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                                 event: 'INIT',
                                 effects: [
                                     ['render-ui', 'screen', {
-                                        type: 'entity-table',
+                                        patternType: 'entity-table',
                                         entity: 'Level',
                                         title: 'Select Level',
                                         subtitle: 'Total Stars: @entity.totalStars',

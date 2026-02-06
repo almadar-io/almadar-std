@@ -61,7 +61,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.error', null],
                   ['set', '@entity.startTime', ['time/now']],
                   ['render-ui', 'content', {
-                    type: 'loading-state',
+                    patternType: 'loading-state',
                   }],
                 ],
               },
@@ -82,8 +82,8 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isLoading', false],
                   ['set', '@entity.error', '@payload.error'],
                   ['render-ui', 'content', {
-                    type: 'error-state',
-                    error: '@entity.error',
+                    patternType: 'error-state',
+                    message: '@entity.error',
                     onRetry: 'RETRY',
                   }],
                 ],
@@ -97,7 +97,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.error', null],
                   ['set', '@entity.startTime', ['time/now']],
                   ['render-ui', 'content', {
-                    type: 'loading-state',
+                    patternType: 'loading-state',
                   }],
                 ],
               },
@@ -312,7 +312,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                 event: 'SUBMIT_SUCCESS',
                 effects: [
                   ['set', '@entity.isSubmitting', false],
-                  ['notify', { type: 'success', message: '@entity.successMessage' }],
+                  ['notify', 'in_app', '@entity.successMessage'],
                   ['when', '@entity.resetOnSuccess', ['emit', 'RESET']],
                 ],
               },
@@ -323,7 +323,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isSubmitting', false],
                   ['set', '@entity.error', '@payload.error'],
-                  ['notify', { type: 'error', message: '@entity.errorMessage' }],
+                  ['notify', 'in_app', '@entity.errorMessage'],
                 ],
               },
               {
@@ -447,7 +447,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                 guard: ['>=', '@entity.attempt', '@entity.maxAttempts'],
                 effects: [
                   ['set', '@entity.error', '@payload.error'],
-                  ['notify', { type: 'error', message: 'All retry attempts failed' }],
+                  ['notify', 'in_app', 'All retry attempts failed'],
                 ],
               },
               {
@@ -460,7 +460,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                 from: 'Waiting',
                 to: 'Failed',
                 event: 'GIVE_UP',
-                effects: [['notify', { type: 'warning', message: 'Retry cancelled' }]],
+                effects: [['notify', 'in_app', 'Retry cancelled']],
               },
               {
                 from: 'Success',

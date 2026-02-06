@@ -169,7 +169,7 @@ export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.message', '@payload.message'],
                   ['set', '@entity.pendingAction', '@payload.onConfirm'],
                   ['render-ui', 'modal', {
-                    type: 'confirmation',
+                    patternType: 'confirmation',
                     title: '@entity.title',
                     message: '@entity.message',
                     confirmLabel: '@entity.confirmLabel',
