@@ -48,7 +48,6 @@ export const LIST_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Browsing',
     states: [
       { name: 'Browsing', isInitial: true },
       { name: 'Creating' },
@@ -57,14 +56,14 @@ export const LIST_BEHAVIOR: StandardBehavior = {
       { name: 'Deleting' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'CREATE' },
-      { key: 'VIEW' },
-      { key: 'EDIT' },
-      { key: 'DELETE' },
-      { key: 'CONFIRM_DELETE' },
-      { key: 'CANCEL' },
-      { key: 'SAVE' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'CREATE', name: 'CREATE' },
+      { key: 'VIEW', name: 'VIEW' },
+      { key: 'EDIT', name: 'EDIT' },
+      { key: 'DELETE', name: 'DELETE' },
+      { key: 'CONFIRM_DELETE', name: 'CONFIRM_DELETE' },
+      { key: 'CANCEL', name: 'CANCEL' },
+      { key: 'SAVE', name: 'SAVE' },
     ],
     transitions: [
       // INIT: Self-loop on Browsing that renders the list UI
@@ -278,19 +277,18 @@ export const DETAIL_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Viewing',
     states: [
       { name: 'Viewing', isInitial: true },
       { name: 'Editing' },
       { name: 'Deleting' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'EDIT' },
-      { key: 'SAVE' },
-      { key: 'CANCEL' },
-      { key: 'DELETE' },
-      { key: 'CONFIRM_DELETE' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'EDIT', name: 'EDIT' },
+      { key: 'SAVE', name: 'SAVE' },
+      { key: 'CANCEL', name: 'CANCEL' },
+      { key: 'DELETE', name: 'DELETE' },
+      { key: 'CONFIRM_DELETE', name: 'CONFIRM_DELETE' },
     ],
     transitions: [
       // INIT: Self-loop on Viewing
@@ -422,7 +420,6 @@ export const FORM_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Editing' },
@@ -432,15 +429,15 @@ export const FORM_BEHAVIOR: StandardBehavior = {
       { name: 'Error' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'FIELD_CHANGE' },
-      { key: 'FIELD_BLUR' },
-      { key: 'SUBMIT' },
-      { key: 'VALIDATION_PASSED' },
-      { key: 'VALIDATION_FAILED' },
-      { key: 'SUBMIT_SUCCESS' },
-      { key: 'SUBMIT_ERROR' },
-      { key: 'RESET' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'FIELD_CHANGE', name: 'FIELD_CHANGE' },
+      { key: 'FIELD_BLUR', name: 'FIELD_BLUR' },
+      { key: 'SUBMIT', name: 'SUBMIT' },
+      { key: 'VALIDATION_PASSED', name: 'VALIDATION_PASSED' },
+      { key: 'VALIDATION_FAILED', name: 'VALIDATION_FAILED' },
+      { key: 'SUBMIT_SUCCESS', name: 'SUBMIT_SUCCESS' },
+      { key: 'SUBMIT_ERROR', name: 'SUBMIT_ERROR' },
+      { key: 'RESET', name: 'RESET' },
     ],
     transitions: [
       // INIT: Self-loop on Idle → Editing
@@ -594,15 +591,14 @@ export const MODAL_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Closed',
     states: [
       { name: 'Closed', isInitial: true },
       { name: 'Open' },
     ],
     events: [
-      { key: 'OPEN' },
-      { key: 'CLOSE' },
-      { key: 'CONFIRM' },
+      { key: 'OPEN', name: 'OPEN' },
+      { key: 'CLOSE', name: 'CLOSE' },
+      { key: 'CONFIRM', name: 'CONFIRM' },
     ],
     transitions: [
       {
@@ -672,14 +668,13 @@ export const DRAWER_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Closed',
     states: [
       { name: 'Closed', isInitial: true },
       { name: 'Open' },
     ],
     events: [
-      { key: 'OPEN' },
-      { key: 'CLOSE' },
+      { key: 'OPEN', name: 'OPEN' },
+      { key: 'CLOSE', name: 'CLOSE' },
     ],
     transitions: [
       {
@@ -742,13 +737,12 @@ export const TABS_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Active',
     states: [
       { name: 'Active', isInitial: true },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'SELECT_TAB' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'SELECT_TAB', name: 'SELECT_TAB' },
     ],
     transitions: [
       // INIT: Self-loop on Active
@@ -818,7 +812,6 @@ export const WIZARD_BEHAVIOR: StandardBehavior = {
   // IMPORTANT: Each wizard step is a STATE, not a number index
   // This is the correct pattern for wizards
   stateMachine: {
-    initial: 'Step1',
     states: [
       { name: 'Step1', isInitial: true },
       { name: 'Step2' },
@@ -826,10 +819,10 @@ export const WIZARD_BEHAVIOR: StandardBehavior = {
       { name: 'Complete' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'NEXT' },
-      { key: 'PREV' },
-      { key: 'COMPLETE' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'NEXT', name: 'NEXT' },
+      { key: 'PREV', name: 'PREV' },
+      { key: 'COMPLETE', name: 'COMPLETE' },
     ],
     transitions: [
       // INIT on Step1: Self-loop that renders step 1
@@ -981,15 +974,14 @@ export const MASTER_DETAIL_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'NoSelection',
     states: [
       { name: 'NoSelection', isInitial: true },
       { name: 'Selected' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'SELECT' },
-      { key: 'DESELECT' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'SELECT', name: 'SELECT' },
+      { key: 'DESELECT', name: 'DESELECT' },
     ],
     transitions: [
       // INIT: Self-loop on NoSelection
@@ -1094,16 +1086,15 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Filtering' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'SET_FILTER' },
-      { key: 'CLEAR_FILTERS' },
-      { key: 'SEARCH' },
+      { key: 'INIT', name: 'INIT' },
+      { key: 'SET_FILTER', name: 'SET_FILTER' },
+      { key: 'CLEAR_FILTERS', name: 'CLEAR_FILTERS' },
+      { key: 'SEARCH', name: 'SEARCH' },
     ],
     transitions: [
       // INIT: Self-loop

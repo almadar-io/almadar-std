@@ -43,7 +43,6 @@ export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Menu',
         states: [
             { name: 'Menu', isInitial: true },
             { name: 'Playing' },
@@ -52,13 +51,13 @@ export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
             { name: 'Victory' },
         ],
         events: [
-            { key: 'START' },
-            { key: 'PAUSE' },
-            { key: 'RESUME' },
-            { key: 'GAME_OVER' },
-            { key: 'VICTORY' },
-            { key: 'RESTART' },
-            { key: 'QUIT' },
+            { key: 'START', name: 'START' },
+            { key: 'PAUSE', name: 'PAUSE' },
+            { key: 'RESUME', name: 'RESUME' },
+            { key: 'GAME_OVER', name: 'GAME_OVER' },
+            { key: 'VICTORY', name: 'VICTORY' },
+            { key: 'RESTART', name: 'RESTART' },
+            { key: 'QUIT', name: 'QUIT' },
         ],
         transitions: [
             {
@@ -197,7 +196,6 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Hidden',
         states: [
             { name: 'Hidden', isInitial: true },
             { name: 'Typing' },
@@ -205,13 +203,13 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
             { name: 'Choice' },
         ],
         events: [
-            { key: 'SHOW' },
-            { key: 'NEXT' },
-            { key: 'SELECT_CHOICE' },
-            { key: 'SKIP' },
-            { key: 'CLOSE' },
-            { key: 'TYPE_CHAR' },
-            { key: 'TYPE_COMPLETE' },
+            { key: 'SHOW', name: 'SHOW' },
+            { key: 'NEXT', name: 'NEXT' },
+            { key: 'SELECT_CHOICE', name: 'SELECT_CHOICE' },
+            { key: 'SKIP', name: 'SKIP' },
+            { key: 'CLOSE', name: 'CLOSE' },
+            { key: 'TYPE_CHAR', name: 'TYPE_CHAR' },
+            { key: 'TYPE_COMPLETE', name: 'TYPE_COMPLETE' },
         ],
         transitions: [
             {
@@ -382,19 +380,18 @@ export const LEVEL_PROGRESS_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Browsing',
         states: [
             { name: 'Browsing', isInitial: true },
             { name: 'LevelLoading' },
             { name: 'InLevel' },
         ],
         events: [
-            { key: 'INIT' },
-            { key: 'SELECT_LEVEL' },
-            { key: 'LEVEL_LOADED' },
-            { key: 'COMPLETE_LEVEL' },
-            { key: 'UNLOCK_LEVEL' },
-            { key: 'BACK_TO_SELECT' },
+            { key: 'INIT', name: 'INIT' },
+            { key: 'SELECT_LEVEL', name: 'SELECT_LEVEL' },
+            { key: 'LEVEL_LOADED', name: 'LEVEL_LOADED' },
+            { key: 'COMPLETE_LEVEL', name: 'COMPLETE_LEVEL' },
+            { key: 'UNLOCK_LEVEL', name: 'UNLOCK_LEVEL' },
+            { key: 'BACK_TO_SELECT', name: 'BACK_TO_SELECT' },
         ],
         transitions: [
             {

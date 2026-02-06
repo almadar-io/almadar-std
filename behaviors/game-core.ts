@@ -44,18 +44,17 @@ export const GAME_LOOP_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Stopped',
         states: [
             { name: 'Stopped', isInitial: true },
             { name: 'Running' },
             { name: 'Paused' },
         ],
         events: [
-            { key: 'START' },
-            { key: 'STOP' },
-            { key: 'PAUSE' },
-            { key: 'RESUME' },
-            { key: 'TICK' },
+            { key: 'START', name: 'START' },
+            { key: 'STOP', name: 'STOP' },
+            { key: 'PAUSE', name: 'PAUSE' },
+            { key: 'RESUME', name: 'RESUME' },
+            { key: 'TICK', name: 'TICK' },
         ],
         transitions: [
             {
@@ -148,17 +147,16 @@ export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Active',
         states: [
             { name: 'Active', isInitial: true },
             { name: 'Frozen' },
         ],
         events: [
-            { key: 'INIT' },
-            { key: 'APPLY_FORCE' },
-            { key: 'GROUND_HIT' },
-            { key: 'FREEZE' },
-            { key: 'UNFREEZE' },
+            { key: 'INIT', name: 'INIT' },
+            { key: 'APPLY_FORCE', name: 'APPLY_FORCE' },
+            { key: 'GROUND_HIT', name: 'GROUND_HIT' },
+            { key: 'FREEZE', name: 'FREEZE' },
+            { key: 'UNFREEZE', name: 'UNFREEZE' },
         ],
         transitions: [
             {
@@ -271,16 +269,15 @@ export const INPUT_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Ready',
         states: [
             { name: 'Ready', isInitial: true },
         ],
         events: [
-            { key: 'KEY_DOWN' },
-            { key: 'KEY_UP' },
-            { key: 'TOUCH_START' },
-            { key: 'TOUCH_END' },
-            { key: 'RESET' },
+            { key: 'KEY_DOWN', name: 'KEY_DOWN' },
+            { key: 'KEY_UP', name: 'KEY_UP' },
+            { key: 'TOUCH_START', name: 'TOUCH_START' },
+            { key: 'TOUCH_END', name: 'TOUCH_END' },
+            { key: 'RESET', name: 'RESET' },
         ],
         transitions: [
             {
@@ -376,17 +373,16 @@ export const COLLISION_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Active',
         states: [
             { name: 'Active', isInitial: true },
             { name: 'Disabled' },
         ],
         events: [
-            { key: 'COLLISION' },
-            { key: 'TRIGGER_ENTER' },
-            { key: 'TRIGGER_EXIT' },
-            { key: 'ENABLE' },
-            { key: 'DISABLE' },
+            { key: 'COLLISION', name: 'COLLISION' },
+            { key: 'TRIGGER_ENTER', name: 'TRIGGER_ENTER' },
+            { key: 'TRIGGER_EXIT', name: 'TRIGGER_EXIT' },
+            { key: 'ENABLE', name: 'ENABLE' },
+            { key: 'DISABLE', name: 'DISABLE' },
         ],
         transitions: [
             {

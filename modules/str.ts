@@ -32,7 +32,7 @@ export const STR_OPERATORS: Record<string, StdOperatorMeta> = {
     description: 'Concatenate strings together',
     hasSideEffects: false,
     returnType: 'string',
-    params: [{ name: 'strings', type: 'string', variadic: true, description: 'Strings to concatenate' }],
+    params: [{ name: 'strings', type: 'string', description: 'Strings to concatenate' }],
     example: '["str/concat", "/users/", "@entity.id"] // => "/users/123"',
   },
   'str/upper': {

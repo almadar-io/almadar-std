@@ -39,7 +39,6 @@ export const LOADING_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Loading' },
@@ -47,11 +46,11 @@ export const LOADING_BEHAVIOR: StandardBehavior = {
       { name: 'Error' },
     ],
     events: [
-      { key: 'START' },
-      { key: 'SUCCESS' },
-      { key: 'ERROR' },
-      { key: 'RETRY' },
-      { key: 'RESET' },
+      { key: 'START', name: 'Start' },
+      { key: 'SUCCESS', name: 'Success' },
+      { key: 'ERROR', name: 'Error' },
+      { key: 'RETRY', name: 'Retry' },
+      { key: 'RESET', name: 'Reset' },
     ],
     transitions: [
       {
@@ -99,7 +98,17 @@ export const LOADING_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
-        from: ['Success', 'Error'],
+        from: 'Success',
+        to: 'Idle',
+        event: 'RESET',
+        effects: [
+          ['set', '@entity.isLoading', false],
+          ['set', '@entity.error', null],
+          ['set', '@entity.data', null],
+        ],
+      },
+      {
+        from: 'Error',
         to: 'Idle',
         event: 'RESET',
         effects: [
@@ -150,7 +159,6 @@ export const FETCH_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Fetching' },
@@ -159,15 +167,24 @@ export const FETCH_BEHAVIOR: StandardBehavior = {
       { name: 'Error' },
     ],
     events: [
-      { key: 'FETCH' },
-      { key: 'FETCH_SUCCESS' },
-      { key: 'FETCH_ERROR' },
-      { key: 'REFRESH' },
-      { key: 'INVALIDATE' },
+      { key: 'FETCH', name: 'Fetch' },
+      { key: 'FETCH_SUCCESS', name: 'Fetch Success' },
+      { key: 'FETCH_ERROR', name: 'Fetch Error' },
+      { key: 'REFRESH', name: 'Refresh' },
+      { key: 'INVALIDATE', name: 'Invalidate' },
     ],
     transitions: [
       {
-        from: ['Idle', 'Stale'],
+        from: 'Idle',
+        to: 'Fetching',
+        event: 'FETCH',
+        effects: [
+          ['set', '@entity.isFetching', true],
+          ['set', '@entity.error', null],
+        ],
+      },
+      {
+        from: 'Stale',
         to: 'Fetching',
         event: 'FETCH',
         effects: [
@@ -203,7 +220,25 @@ export const FETCH_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
-        from: ['Fresh', 'Stale', 'Error'],
+        from: 'Fresh',
+        to: 'Fetching',
+        event: 'REFRESH',
+        effects: [
+          ['set', '@entity.isFetching', true],
+          ['set', '@entity.error', null],
+        ],
+      },
+      {
+        from: 'Stale',
+        to: 'Fetching',
+        event: 'REFRESH',
+        effects: [
+          ['set', '@entity.isFetching', true],
+          ['set', '@entity.error', null],
+        ],
+      },
+      {
+        from: 'Error',
         to: 'Fetching',
         event: 'REFRESH',
         effects: [
@@ -254,7 +289,6 @@ export const SUBMIT_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Submitting' },
@@ -262,11 +296,11 @@ export const SUBMIT_BEHAVIOR: StandardBehavior = {
       { name: 'Error' },
     ],
     events: [
-      { key: 'SUBMIT' },
-      { key: 'SUBMIT_SUCCESS' },
-      { key: 'SUBMIT_ERROR' },
-      { key: 'RETRY' },
-      { key: 'RESET' },
+      { key: 'SUBMIT', name: 'Submit' },
+      { key: 'SUBMIT_SUCCESS', name: 'Submit Success' },
+      { key: 'SUBMIT_ERROR', name: 'Submit Error' },
+      { key: 'RETRY', name: 'Retry' },
+      { key: 'RESET', name: 'Reset' },
     ],
     transitions: [
       {
@@ -309,7 +343,17 @@ export const SUBMIT_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
-        from: ['Success', 'Error'],
+        from: 'Success',
+        to: 'Idle',
+        event: 'RESET',
+        effects: [
+          ['set', '@entity.isSubmitting', false],
+          ['set', '@entity.error', null],
+          ['set', '@entity.lastSubmittedData', null],
+        ],
+      },
+      {
+        from: 'Error',
         to: 'Idle',
         event: 'RESET',
         effects: [
@@ -360,7 +404,6 @@ export const RETRY_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Attempting' },
@@ -369,12 +412,12 @@ export const RETRY_BEHAVIOR: StandardBehavior = {
       { name: 'Failed' },
     ],
     events: [
-      { key: 'START' },
-      { key: 'ATTEMPT_SUCCESS' },
-      { key: 'ATTEMPT_ERROR' },
-      { key: 'RETRY_TICK' },
-      { key: 'GIVE_UP' },
-      { key: 'RESET' },
+      { key: 'START', name: 'Start' },
+      { key: 'ATTEMPT_SUCCESS', name: 'Attempt Success' },
+      { key: 'ATTEMPT_ERROR', name: 'Attempt Error' },
+      { key: 'RETRY_TICK', name: 'Retry Tick' },
+      { key: 'GIVE_UP', name: 'Give Up' },
+      { key: 'RESET', name: 'Reset' },
     ],
     transitions: [
       {
@@ -433,7 +476,17 @@ export const RETRY_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
-        from: ['Success', 'Failed'],
+        from: 'Success',
+        to: 'Idle',
+        event: 'RESET',
+        effects: [
+          ['set', '@entity.attempt', 0],
+          ['set', '@entity.error', null],
+          ['set', '@entity.nextRetryAt', null],
+        ],
+      },
+      {
+        from: 'Failed',
         to: 'Idle',
         event: 'RESET',
         effects: [
@@ -486,20 +539,19 @@ export const POLL_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Stopped',
     states: [
       { name: 'Stopped', isInitial: true },
       { name: 'Polling' },
       { name: 'Paused' },
     ],
     events: [
-      { key: 'START' },
-      { key: 'STOP' },
-      { key: 'PAUSE' },
-      { key: 'RESUME' },
-      { key: 'POLL_TICK' },
-      { key: 'POLL_SUCCESS' },
-      { key: 'POLL_ERROR' },
+      { key: 'START', name: 'Start' },
+      { key: 'STOP', name: 'Stop' },
+      { key: 'PAUSE', name: 'Pause' },
+      { key: 'RESUME', name: 'Resume' },
+      { key: 'POLL_TICK', name: 'Poll Tick' },
+      { key: 'POLL_SUCCESS', name: 'Poll Success' },
+      { key: 'POLL_ERROR', name: 'Poll Error' },
     ],
     transitions: [
       {
@@ -514,6 +566,7 @@ export const POLL_BEHAVIOR: StandardBehavior = {
       },
       {
         from: 'Polling',
+        to: 'Polling',
         event: 'POLL_TICK',
         guard: ['or', ['=', '@config.maxPolls', null], ['<', '@entity.pollCount', '@config.maxPolls']],
         effects: [
@@ -522,6 +575,7 @@ export const POLL_BEHAVIOR: StandardBehavior = {
       },
       {
         from: 'Polling',
+        to: 'Polling',
         event: 'POLL_SUCCESS',
         effects: [
           ['set', '@entity.pollCount', ['+', '@entity.pollCount', 1]],
@@ -530,6 +584,7 @@ export const POLL_BEHAVIOR: StandardBehavior = {
       },
       {
         from: 'Polling',
+        to: 'Polling',
         event: 'POLL_ERROR',
         effects: [
           ['set', '@entity.error', '@payload.error'],
@@ -554,7 +609,15 @@ export const POLL_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
-        from: ['Polling', 'Paused'],
+        from: 'Polling',
+        to: 'Stopped',
+        event: 'STOP',
+        effects: [
+          ['set', '@entity.isPolling', false],
+        ],
+      },
+      {
+        from: 'Paused',
         to: 'Stopped',
         event: 'STOP',
         effects: [

@@ -12,7 +12,38 @@
  * @packageDocumentation
  */
 
-import type { SExpr, RequiredField } from '@almadar/core/types';
+import type {
+  SExpr,
+  RequiredField,
+  Effect,
+  Expression,
+  Trait,
+  TraitCategory,
+  StateMachine,
+  State,
+  Event,
+  Transition,
+  Guard,
+  TraitTick,
+  TraitDataEntity,
+  TraitEntityField,
+  TraitEventListener,
+} from '@almadar/core/types';
+
+// Re-export core types for use in behaviors
+export type {
+  Effect,
+  Expression,
+  Trait,
+  StateMachine,
+  State,
+  Event,
+  Transition,
+  Guard,
+  TraitTick,
+  TraitDataEntity,
+  TraitEntityField,
+};
 
 // ============================================================================
 // Behavior Categories
@@ -58,93 +89,30 @@ export interface ConfigField {
 }
 
 // ============================================================================
-// Behavior State Machine Types (flexible for authoring)
+// Deprecated Aliases (for backwards compatibility)
+// Use the core types directly from @almadar/core/types
 // ============================================================================
 
-/**
- * State definition - can be string or object
- */
-export interface BehaviorState {
-  name: string;
-  isInitial?: boolean;
-  isFinal?: boolean;
-  description?: string;
-}
+/** @deprecated Use State from @almadar/core/types */
+export type BehaviorState = State;
 
-/**
- * Event definition - simplified, only key required
- */
-export interface BehaviorEvent {
-  key: string;
-  name?: string;
-  description?: string;
-  payload?: Record<string, unknown>;
-}
+/** @deprecated Use Event from @almadar/core/types */
+export type BehaviorEvent = Event;
 
-/**
- * Transition definition - flexible from/to
- */
-export interface BehaviorTransition {
-  /** Source state(s) - string, '*' for any, or array */
-  from?: string | string[] | '*';
-  /** Target state - optional for self-transitions */
-  to?: string;
-  /** Event that triggers this transition */
-  event: string;
-  /** Guard condition (S-expression) */
-  guard?: SExpr;
-  /** Effects to execute (S-expressions) */
-  effects?: SExpr[];
-}
+/** @deprecated Use Transition from @almadar/core/types */
+export type BehaviorTransition = Transition;
 
-/**
- * State machine for behaviors - more flexible than core StateMachine
- */
-export interface BehaviorStateMachine {
-  initial: string;
-  states: (string | BehaviorState)[];
-  events: (string | BehaviorEvent)[];
-  transitions: BehaviorTransition[];
-  guards?: Array<{
-    name: string;
-    condition: SExpr;
-    description?: string;
-  }>;
-}
+/** @deprecated Use StateMachine from @almadar/core/types */
+export type BehaviorStateMachine = StateMachine;
 
-// ============================================================================
-// Behavior Tick (for frame-by-frame execution)
-// ============================================================================
+/** @deprecated Use TraitTick from @almadar/core/types */
+export type BehaviorTick = TraitTick;
 
-export interface BehaviorTick {
-  name: string;
-  description?: string;
-  priority?: number;
-  interval: 'frame' | number;
-  appliesTo?: string[];
-  guard?: SExpr;
-  effects: SExpr[];
-}
+/** @deprecated Use TraitEntityField from @almadar/core/types */
+export type BehaviorEntityField = TraitEntityField;
 
-// ============================================================================
-// Behavior Data Entity (runtime state)
-// ============================================================================
-
-export interface BehaviorEntityField {
-  name: string;
-  type: string;
-  default?: unknown;
-  required?: boolean;
-  description?: string;
-}
-
-export interface BehaviorDataEntity {
-  name: string;
-  runtime?: boolean;
-  singleton?: boolean;
-  fields: BehaviorEntityField[];
-  description?: string;
-}
+/** @deprecated Use TraitDataEntity from @almadar/core/types */
+export type BehaviorDataEntity = TraitDataEntity;
 
 // ============================================================================
 // Item Action (for render_ui props)
@@ -212,11 +180,11 @@ export interface StandardBehavior {
   listens?: Array<{
     event: string;
     triggers: string;
-    guard?: SExpr;
+    guard?: Expression;
   }>;
 
   /** Initial effects on behavior activation */
-  initialEffects?: SExpr[];
+  initialEffects?: Effect[];
 }
 
 /**
@@ -252,13 +220,11 @@ export function isGameBehaviorCategory(category: BehaviorCategory): boolean {
 export function getBehaviorMetadata(behavior: StandardBehavior): BehaviorMetadata {
   const sm = behavior.stateMachine;
 
-  const states: string[] = (sm?.states || []).map(s =>
-    typeof s === 'string' ? s : s.name
-  );
+  // Core types: State is always an object with name
+  const states: string[] = (sm?.states || []).map(s => s.name);
 
-  const events: string[] = (sm?.events || []).map(e =>
-    typeof e === 'string' ? e : e.key
-  );
+  // Core types: Event is always an object with key
+  const events: string[] = (sm?.events || []).map(e => e.key);
 
   return {
     name: behavior.name,
@@ -301,8 +267,10 @@ export function validateBehaviorStructure(behavior: StandardBehavior): string[] 
       errors.push('State machine must have at least one state');
     }
 
-    if (!sm.initial) {
-      errors.push('State machine must have an initial state');
+    // Core types: check initial state using isInitial flag on State
+    const hasInitialState = sm.states?.some(s => s.isInitial);
+    if (!hasInitialState) {
+      errors.push('State machine must have an initial state (set isInitial: true on one state)');
     }
   }
 
@@ -317,8 +285,9 @@ export function validateBehaviorEvents(behavior: StandardBehavior): string[] {
   const sm = behavior.stateMachine;
   if (!sm) return errors;
 
+  // Core types: Event is always an object with key
   const declaredEvents = new Set(
-    (sm.events || []).map(e => typeof e === 'string' ? e : e.key)
+    (sm.events || []).map(e => e.key)
   );
 
   const transitionEvents = new Set(
@@ -342,26 +311,54 @@ export function validateBehaviorStates(behavior: StandardBehavior): string[] {
   const sm = behavior.stateMachine;
   if (!sm) return errors;
 
+  // Core types: State is always an object with name
   const declaredStates = new Set(
-    (sm.states || []).map(s => typeof s === 'string' ? s : s.name)
+    (sm.states || []).map(s => s.name)
   );
 
   for (const t of sm.transitions || []) {
-    // Check 'from' states (allow '*' and arrays)
-    if (t.from && t.from !== '*') {
-      const fromStates = Array.isArray(t.from) ? t.from : [t.from];
-      for (const state of fromStates) {
-        if (!declaredStates.has(state)) {
-          errors.push(`Transition from undeclared state: ${state}`);
-        }
-      }
+    // Core types: from and to are both strings
+    if (t.from && !declaredStates.has(t.from)) {
+      errors.push(`Transition from undeclared state: ${t.from}`);
     }
 
-    // Check 'to' state (optional)
     if (t.to && !declaredStates.has(t.to)) {
       errors.push(`Transition to undeclared state: ${t.to}`);
     }
   }
 
   return errors;
+}
+
+// ============================================================================
+// Normalization Functions
+// Convert flexible Behavior types to strict core types
+// ============================================================================
+
+/**
+ * Humanize an event key to a readable name.
+ * E.g., 'CONFIRM_DELETE' -> 'Confirm Delete'
+ */
+function humanizeEventKey(key: string): string {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+/**
+ * Map BehaviorCategory to TraitCategory.
+ * Falls back to 'interaction' for unmapped categories.
+ */
+function mapBehaviorCategoryToTraitCategory(category: BehaviorCategory): TraitCategory {
+  const mapping: Record<BehaviorCategory, TraitCategory> = {
+    'ui-interaction': 'interaction',
+    'data-management': 'lifecycle',
+    'async': 'integration',
+    'feedback': 'notification',
+    'game-core': 'game-core',
+    'game-entity': 'game-character',
+    'game-ui': 'interaction',
+  };
+  return mapping[category] || 'interaction';
 }

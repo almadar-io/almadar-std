@@ -41,20 +41,20 @@ export const PAGINATION_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Active',
     states: [
       { name: 'Active', isInitial: true },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'NEXT_PAGE' },
-      { key: 'PREV_PAGE' },
-      { key: 'GO_TO_PAGE' },
-      { key: 'SET_PAGE_SIZE' },
+      { key: 'INIT', name: 'Initialize' },
+      { key: 'NEXT_PAGE', name: 'Next Page' },
+      { key: 'PREV_PAGE', name: 'Previous Page' },
+      { key: 'GO_TO_PAGE', name: 'Go to Page' },
+      { key: 'SET_PAGE_SIZE', name: 'Set Page Size' },
     ],
     transitions: [
       {
-        from: '*',
+        from: 'Active',
+        to: 'Active',
         event: 'INIT',
         effects: [
           ['set', '@entity.page', 1],
@@ -62,6 +62,8 @@ export const PAGINATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'NEXT_PAGE',
         guard: ['<', '@entity.page', ['math/ceil', ['/', '@entity.totalItems', '@entity.pageSize']]],
         effects: [
@@ -69,6 +71,8 @@ export const PAGINATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'PREV_PAGE',
         guard: ['>', '@entity.page', 1],
         effects: [
@@ -76,6 +80,8 @@ export const PAGINATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'GO_TO_PAGE',
         guard: ['and',
           ['>=', '@payload.page', 1],
@@ -85,6 +91,8 @@ export const PAGINATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'SET_PAGE_SIZE',
         effects: [
           ['set', '@entity.pageSize', '@payload.size'],
@@ -131,21 +139,21 @@ export const SELECTION_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Active',
     states: [
       { name: 'Active', isInitial: true },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'SELECT' },
-      { key: 'DESELECT' },
-      { key: 'TOGGLE' },
-      { key: 'SELECT_ALL' },
-      { key: 'CLEAR' },
+      { key: 'INIT', name: 'Initialize' },
+      { key: 'SELECT', name: 'Select' },
+      { key: 'DESELECT', name: 'Deselect' },
+      { key: 'TOGGLE', name: 'Toggle' },
+      { key: 'SELECT_ALL', name: 'Select All' },
+      { key: 'CLEAR', name: 'Clear' },
     ],
     transitions: [
       {
-        from: '*',
+        from: 'Active',
+        to: 'Active',
         event: 'INIT',
         effects: [
           ['set', '@entity.selected', []],
@@ -153,6 +161,8 @@ export const SELECTION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'SELECT',
         effects: [
           ['if', ['=', '@config.mode', 'single'],
@@ -169,12 +179,16 @@ export const SELECTION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'DESELECT',
         effects: [
           ['set', '@entity.selected', ['array/filter', '@entity.selected', ['fn', 'id', ['!=', '@id', '@payload.id']]]],
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'TOGGLE',
         effects: [
           ['if', ['array/includes', '@entity.selected', '@payload.id'],
@@ -190,6 +204,8 @@ export const SELECTION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'SELECT_ALL',
         guard: ['=', '@config.mode', 'multi'],
         effects: [
@@ -197,6 +213,8 @@ export const SELECTION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'CLEAR',
         effects: [
           ['set', '@entity.selected', []],
@@ -242,19 +260,19 @@ export const SORT_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Active',
     states: [
       { name: 'Active', isInitial: true },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'SORT' },
-      { key: 'TOGGLE_DIRECTION' },
-      { key: 'CLEAR_SORT' },
+      { key: 'INIT', name: 'Initialize' },
+      { key: 'SORT', name: 'Sort' },
+      { key: 'TOGGLE_DIRECTION', name: 'Toggle Direction' },
+      { key: 'CLEAR_SORT', name: 'Clear Sort' },
     ],
     transitions: [
       {
-        from: '*',
+        from: 'Active',
+        to: 'Active',
         event: 'INIT',
         effects: [
           ['set', '@entity.sortField', '@config.defaultField'],
@@ -262,6 +280,8 @@ export const SORT_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'SORT',
         effects: [
           ['if', ['=', '@entity.sortField', '@payload.field'],
@@ -272,6 +292,8 @@ export const SORT_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'TOGGLE_DIRECTION',
         guard: ['!=', '@entity.sortField', null],
         effects: [
@@ -279,6 +301,8 @@ export const SORT_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'CLEAR_SORT',
         effects: [
           ['set', '@entity.sortField', null],
@@ -330,30 +354,30 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
       runtime: true,
       singleton: true,
       fields: [
-        { name: 'status', type: 'string', default: null, description: 'Filter by status field' },
-        { name: 'priority', type: 'string', default: null, description: 'Filter by priority field' },
-        { name: 'search', type: 'string', default: '', description: 'Search term' },
-        { name: 'sortBy', type: 'string', default: 'createdAt', description: 'Sort field' },
-        { name: 'sortOrder', type: 'string', default: 'desc', description: 'Sort direction: asc or desc' },
+        { name: 'status', type: 'string', default: null },
+        { name: 'priority', type: 'string', default: null },
+        { name: 'search', type: 'string', default: '' },
+        { name: 'sortBy', type: 'string', default: 'createdAt' },
+        { name: 'sortOrder', type: 'string', default: 'desc' },
       ],
     },
   ],
 
   stateMachine: {
-    initial: 'Active',
     states: [
       { name: 'Active', isInitial: true },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'FILTER' },
-      { key: 'SEARCH' },
-      { key: 'SORT' },
-      { key: 'CLEAR_FILTERS' },
+      { key: 'INIT', name: 'Initialize' },
+      { key: 'FILTER', name: 'Filter' },
+      { key: 'SEARCH', name: 'Search' },
+      { key: 'SORT', name: 'Sort' },
+      { key: 'CLEAR_FILTERS', name: 'Clear Filters' },
     ],
     transitions: [
       {
-        from: '*',
+        from: 'Active',
+        to: 'Active',
         event: 'INIT',
         effects: [
           // Render filter UI with query reference
@@ -372,6 +396,8 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'FILTER',
         effects: [
           ['set', '@QueryState.status', '@payload.status'],
@@ -379,12 +405,16 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'SEARCH',
         effects: [
           ['set', '@QueryState.search', '@payload.searchTerm'],
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'SORT',
         effects: [
           ['set', '@QueryState.sortBy', '@payload.field'],
@@ -392,6 +422,8 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Active',
+        to: 'Active',
         event: 'CLEAR_FILTERS',
         effects: [
           ['set', '@QueryState.status', null],
@@ -447,20 +479,20 @@ export const SEARCH_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Idle',
     states: [
       { name: 'Idle', isInitial: true },
       { name: 'Searching' },
     ],
     events: [
-      { key: 'INIT' },
-      { key: 'SEARCH' },
-      { key: 'CLEAR_SEARCH' },
-      { key: 'SEARCH_COMPLETE' },
+      { key: 'INIT', name: 'Initialize' },
+      { key: 'SEARCH', name: 'Search' },
+      { key: 'CLEAR_SEARCH', name: 'Clear Search' },
+      { key: 'SEARCH_COMPLETE', name: 'Search Complete' },
     ],
     transitions: [
       {
-        from: '*',
+        from: 'Idle',
+        to: 'Idle',
         event: 'INIT',
         effects: [
           ['set', '@entity.search', ''],
@@ -485,6 +517,7 @@ export const SEARCH_BEHAVIOR: StandardBehavior = {
       },
       {
         from: 'Idle',
+        to: 'Idle',
         event: 'SEARCH',
         guard: ['<', ['str/len', '@payload.term'], '@config.minLength'],
         effects: [
@@ -500,6 +533,17 @@ export const SEARCH_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Idle',
+        to: 'Idle',
+        event: 'CLEAR_SEARCH',
+        effects: [
+          ['set', '@entity.search', ''],
+          ['set', '@entity.isSearching', false],
+        ],
+      },
+      {
+        from: 'Searching',
+        to: 'Idle',
         event: 'CLEAR_SEARCH',
         effects: [
           ['set', '@entity.search', ''],

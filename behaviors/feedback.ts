@@ -37,17 +37,16 @@ export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Hidden',
     states: [
       { name: 'Hidden', isInitial: true },
       { name: 'Visible' },
       { name: 'Dismissing' },
     ],
     events: [
-      { key: 'SHOW' },
-      { key: 'HIDE' },
-      { key: 'DISMISS' },
-      { key: 'AUTO_DISMISS' },
+      { key: 'SHOW', name: 'SHOW' },
+      { key: 'HIDE', name: 'HIDE' },
+      { key: 'DISMISS', name: 'DISMISS' },
+      { key: 'AUTO_DISMISS', name: 'AUTO_DISMISS' },
     ],
     transitions: [
       {
@@ -130,15 +129,14 @@ export const CONFIRMATION_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Closed',
     states: [
       { name: 'Closed', isInitial: true },
       { name: 'Open' },
     ],
     events: [
-      { key: 'REQUEST' },
-      { key: 'CONFIRM' },
-      { key: 'CANCEL' },
+      { key: 'REQUEST', name: 'REQUEST' },
+      { key: 'CONFIRM', name: 'CONFIRM' },
+      { key: 'CANCEL', name: 'CANCEL' },
     ],
     transitions: [
       {
@@ -219,15 +217,14 @@ export const UNDO_BEHAVIOR: StandardBehavior = {
   ],
 
   stateMachine: {
-    initial: 'Ready',
     states: [
       { name: 'Ready', isInitial: true },
     ],
     events: [
-      { key: 'PUSH' },
-      { key: 'UNDO' },
-      { key: 'REDO' },
-      { key: 'CLEAR' },
+      { key: 'PUSH', name: 'PUSH' },
+      { key: 'UNDO', name: 'UNDO' },
+      { key: 'REDO', name: 'REDO' },
+      { key: 'CLEAR', name: 'CLEAR' },
     ],
     transitions: [
       {

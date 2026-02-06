@@ -43,7 +43,6 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Alive',
         states: [
             { name: 'Alive', isInitial: true },
             { name: 'Damaged' },
@@ -51,16 +50,16 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
             { name: 'Dead' },
         ],
         events: [
-            { key: 'INIT' },
-            { key: 'DAMAGE' },
-            { key: 'HEAL' },
-            { key: 'DIE' },
-            { key: 'RESPAWN' },
-            { key: 'INVULNERABILITY_END' },
+            { key: 'INIT', name: 'Initialize' },
+            { key: 'DAMAGE', name: 'Damage' },
+            { key: 'HEAL', name: 'Heal' },
+            { key: 'DIE', name: 'Die' },
+            { key: 'RESPAWN', name: 'Respawn' },
+            { key: 'INVULNERABILITY_END', name: 'Invulnerability End' },
         ],
         transitions: [
             {
-                from: '*',
+                from: 'Alive',
                 to: 'Alive',
                 event: 'INIT',
                 effects: [
@@ -89,7 +88,7 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['Damaged', 'Invulnerable'],
+                from: 'Damaged',
                 to: 'Alive',
                 event: 'INVULNERABILITY_END',
                 effects: [
@@ -97,7 +96,16 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['Alive', 'Damaged', 'Invulnerable'],
+                from: 'Invulnerable',
+                to: 'Alive',
+                event: 'INVULNERABILITY_END',
+                effects: [
+                    ['set', '@entity.isInvulnerable', false],
+                ],
+            },
+            {
+                from: 'Alive',
+                to: 'Alive',
                 event: 'HEAL',
                 effects: [
                     ['set', '@entity.currentHealth', ['math/min', '@entity.maxHealth', ['+', '@entity.currentHealth', '@payload.amount']]],
@@ -105,7 +113,45 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['Alive', 'Damaged', 'Invulnerable'],
+                from: 'Damaged',
+                to: 'Damaged',
+                event: 'HEAL',
+                effects: [
+                    ['set', '@entity.currentHealth', ['math/min', '@entity.maxHealth', ['+', '@entity.currentHealth', '@payload.amount']]],
+                    ['render', 'entity.effect', 'heal-effect', {}],
+                ],
+            },
+            {
+                from: 'Invulnerable',
+                to: 'Invulnerable',
+                event: 'HEAL',
+                effects: [
+                    ['set', '@entity.currentHealth', ['math/min', '@entity.maxHealth', ['+', '@entity.currentHealth', '@payload.amount']]],
+                    ['render', 'entity.effect', 'heal-effect', {}],
+                ],
+            },
+            {
+                from: 'Alive',
+                to: 'Dead',
+                event: 'DIE',
+                effects: [
+                    ['set', '@entity.currentHealth', 0],
+                    ['emit', '@config.onDeath', { entityId: '@entity.id' }],
+                    ['render', 'entity.sprite', 'death-animation', {}],
+                ],
+            },
+            {
+                from: 'Damaged',
+                to: 'Dead',
+                event: 'DIE',
+                effects: [
+                    ['set', '@entity.currentHealth', 0],
+                    ['emit', '@config.onDeath', { entityId: '@entity.id' }],
+                    ['render', 'entity.sprite', 'death-animation', {}],
+                ],
+            },
+            {
+                from: 'Invulnerable',
                 to: 'Dead',
                 event: 'DIE',
                 effects: [
@@ -182,21 +228,21 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Active',
         states: [
             { name: 'Active', isInitial: true },
         ],
         events: [
-            { key: 'INIT' },
-            { key: 'ADD_POINTS' },
-            { key: 'COMBO_HIT' },
-            { key: 'COMBO_BREAK' },
-            { key: 'RESET' },
-            { key: 'SAVE_HIGH_SCORE' },
+            { key: 'INIT', name: 'Initialize' },
+            { key: 'ADD_POINTS', name: 'Add Points' },
+            { key: 'COMBO_HIT', name: 'Combo Hit' },
+            { key: 'COMBO_BREAK', name: 'Combo Break' },
+            { key: 'RESET', name: 'Reset' },
+            { key: 'SAVE_HIGH_SCORE', name: 'Save High Score' },
         ],
         transitions: [
             {
-                from: '*',
+                from: 'Active',
+                to: 'Active',
                 event: 'INIT',
                 effects: [
                     ['set', '@entity.currentScore', 0],
@@ -211,6 +257,8 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Active',
+                to: 'Active',
                 event: 'ADD_POINTS',
                 effects: [
                     ['set', '@entity.currentScore', ['+', '@entity.currentScore', ['*', '@payload.points', '@entity.multiplier']]],
@@ -222,6 +270,8 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Active',
+                to: 'Active',
                 event: 'COMBO_HIT',
                 effects: [
                     ['set', '@entity.comboCount', ['+', '@entity.comboCount', 1]],
@@ -230,6 +280,8 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Active',
+                to: 'Active',
                 event: 'COMBO_BREAK',
                 effects: [
                     ['set', '@entity.comboCount', 0],
@@ -237,6 +289,8 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Active',
+                to: 'Active',
                 event: 'RESET',
                 effects: [
                     ['if', ['>', '@entity.currentScore', '@entity.highScore'],
@@ -245,6 +299,8 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Active',
+                to: 'Active',
                 event: 'SAVE_HIGH_SCORE',
                 guard: ['>', '@entity.currentScore', '@entity.highScore'],
                 effects: [
@@ -314,7 +370,6 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Idle',
         states: [
             { name: 'Idle', isInitial: true },
             { name: 'Moving' },
@@ -322,10 +377,10 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
             { name: 'Falling' },
         ],
         events: [
-            { key: 'MOVE' },
-            { key: 'STOP' },
-            { key: 'JUMP' },
-            { key: 'LAND' },
+            { key: 'MOVE', name: 'Move' },
+            { key: 'STOP', name: 'Stop' },
+            { key: 'JUMP', name: 'Jump' },
+            { key: 'LAND', name: 'Land' },
         ],
         transitions: [
             {
@@ -342,6 +397,7 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Moving',
+                to: 'Moving',
                 event: 'MOVE',
                 effects: [
                     ['set', '@entity.direction', '@payload.direction'],
@@ -360,7 +416,7 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['Idle', 'Moving'],
+                from: 'Idle',
                 to: 'Jumping',
                 event: 'JUMP',
                 guard: '@entity.canJump',
@@ -370,7 +426,27 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['Jumping', 'Falling'],
+                from: 'Moving',
+                to: 'Jumping',
+                event: 'JUMP',
+                guard: '@entity.canJump',
+                effects: [
+                    ['set', '@entity.canJump', false],
+                    ['emit', 'APPLY_FORCE', { fx: 0, fy: '@config.jumpForce' }],
+                ],
+            },
+            {
+                from: 'Jumping',
+                to: 'Idle',
+                event: 'LAND',
+                effects: [
+                    ['set', '@entity.canJump', true],
+                    ['if', ['!=', '@entity.direction', 0],
+                        ['emit', 'MOVE', { direction: '@entity.direction' }]],
+                ],
+            },
+            {
+                from: 'Falling',
                 to: 'Idle',
                 event: 'LAND',
                 effects: [
@@ -435,17 +511,16 @@ export const COMBAT_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Ready',
         states: [
             { name: 'Ready', isInitial: true },
             { name: 'Attacking' },
             { name: 'Cooldown' },
         ],
         events: [
-            { key: 'ATTACK' },
-            { key: 'ATTACK_END' },
-            { key: 'HIT_CONNECT' },
-            { key: 'COOLDOWN_END' },
+            { key: 'ATTACK', name: 'Attack' },
+            { key: 'ATTACK_END', name: 'Attack End' },
+            { key: 'HIT_CONNECT', name: 'Hit Connect' },
+            { key: 'COOLDOWN_END', name: 'Cooldown End' },
         ],
         transitions: [
             {
@@ -466,6 +541,7 @@ export const COMBAT_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Attacking',
+                to: 'Attacking',
                 event: 'HIT_CONNECT',
                 guard: ['not', ['array/includes', '@entity.hitEntities', '@payload.entityId']],
                 effects: [
@@ -555,25 +631,24 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
     ],
 
     stateMachine: {
-        initial: 'Empty',
         states: [
             { name: 'Empty', isInitial: true },
             { name: 'HasItems' },
             { name: 'Full' },
         ],
         events: [
-            { key: 'COLLECT' },
-            { key: 'USE' },
-            { key: 'DROP' },
-            { key: 'EQUIP' },
-            { key: 'UNEQUIP' },
-            { key: 'OPEN' },
-            { key: 'CLOSE' },
-            { key: 'INVENTORY_EMPTY' },
+            { key: 'COLLECT', name: 'Collect' },
+            { key: 'USE', name: 'Use' },
+            { key: 'DROP', name: 'Drop' },
+            { key: 'EQUIP', name: 'Equip' },
+            { key: 'UNEQUIP', name: 'Unequip' },
+            { key: 'OPEN', name: 'Open' },
+            { key: 'CLOSE', name: 'Close' },
+            { key: 'INVENTORY_EMPTY', name: 'Inventory Empty' },
         ],
         transitions: [
             {
-                from: ['Empty', 'HasItems'],
+                from: 'Empty',
                 to: 'HasItems',
                 event: 'COLLECT',
                 guard: ['<', ['array/len', '@entity.items'], '@config.maxSlots'],
@@ -585,6 +660,18 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'HasItems',
+                to: 'HasItems',
+                event: 'COLLECT',
+                guard: ['<', ['array/len', '@entity.items'], '@config.maxSlots'],
+                effects: [
+                    ['set', '@entity.items', ['array/append', '@entity.items', '@payload.item']],
+                    ['render', 'effect.collect', 'collect-effect', { item: '@payload.item' }],
+                    ['notify', { type: 'info', message: ['str/concat', 'Collected ', '@payload.item.name'] }],
+                ],
+            },
+            {
+                from: 'HasItems',
+                to: 'HasItems',
                 event: 'USE',
                 effects: [
                     ['let', [['item', ['array/nth', '@entity.items', '@payload.slot']]],
@@ -598,6 +685,7 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'HasItems',
+                to: 'HasItems',
                 event: 'DROP',
                 effects: [
                     ['let', [['item', ['array/nth', '@entity.items', '@payload.slot']]],
@@ -614,6 +702,8 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
                 effects: [],
             },
             {
+                from: 'Empty',
+                to: 'Empty',
                 event: 'EQUIP',
                 effects: [
                     ['set', '@entity.equipped', ['object/set', '@entity.equipped', '@payload.slot', '@payload.item']],
@@ -621,6 +711,17 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'HasItems',
+                to: 'HasItems',
+                event: 'EQUIP',
+                effects: [
+                    ['set', '@entity.equipped', ['object/set', '@entity.equipped', '@payload.slot', '@payload.item']],
+                    ['emit', 'STATS_UPDATED', { equipped: '@entity.equipped' }],
+                ],
+            },
+            {
+                from: 'Empty',
+                to: 'Empty',
                 event: 'UNEQUIP',
                 effects: [
                     ['set', '@entity.equipped', ['object/remove', '@entity.equipped', '@payload.slot']],
@@ -628,6 +729,17 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'HasItems',
+                to: 'HasItems',
+                event: 'UNEQUIP',
+                effects: [
+                    ['set', '@entity.equipped', ['object/remove', '@entity.equipped', '@payload.slot']],
+                    ['emit', 'STATS_UPDATED', { equipped: '@entity.equipped' }],
+                ],
+            },
+            {
+                from: 'Empty',
+                to: 'Empty',
                 event: 'OPEN',
                 effects: [
                     ['set', '@entity.isOpen', true],
@@ -644,6 +756,35 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'HasItems',
+                to: 'HasItems',
+                event: 'OPEN',
+                effects: [
+                    ['set', '@entity.isOpen', true],
+                    ['render', 'overlay.inventory', 'inventory-panel', {
+                        items: '@entity.items',
+                        selectedSlot: '@entity.selectedSlot',
+                        equipped: '@entity.equipped',
+                        maxSlots: '@config.maxSlots',
+                        onUse: 'USE',
+                        onDrop: 'DROP',
+                        onEquip: 'EQUIP',
+                        onClose: 'CLOSE',
+                    }],
+                ],
+            },
+            {
+                from: 'Empty',
+                to: 'Empty',
+                event: 'CLOSE',
+                effects: [
+                    ['set', '@entity.isOpen', false],
+                    ['render', 'overlay.inventory', null],
+                ],
+            },
+            {
+                from: 'HasItems',
+                to: 'HasItems',
                 event: 'CLOSE',
                 effects: [
                     ['set', '@entity.isOpen', false],

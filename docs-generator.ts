@@ -375,8 +375,9 @@ export function generateBehaviorDoc(behavior: StandardBehavior): BehaviorDoc {
         typeof e === 'string' ? e : e.key
     );
 
-    // Get initial state
-    const initial = sm?.initial || states[0] || '';
+    // Get initial state - find state with isInitial: true
+    const initialState = (sm?.states || []).find(s => typeof s !== 'string' && s.isInitial);
+    const initial = initialState ? (typeof initialState === 'string' ? initialState : initialState.name) : states[0] || '';
 
     // Build state machine for visualizer
     const stateMachineDoc: BehaviorStateMachineDoc | undefined = sm ? {
@@ -473,13 +474,18 @@ function generateBehaviorSourceCode(behavior: StandardBehavior): string {
         const sm = behavior.stateMachine;
         lines.push('');
         lines.push(`${indent}stateMachine: {`);
-        lines.push(`${indent}${indent}initial: '${sm.initial}',`);
+        // Find initial state from isInitial flag
+        const initialStateName = sm.states.find(s => typeof s !== 'string' && s.isInitial);
+        const initialName = initialStateName ? (typeof initialStateName === 'string' ? initialStateName : initialStateName.name) : '';
+        if (initialName) {
+            lines.push(`${indent}${indent}// Initial state: '${initialName}'`);
+        }
 
         // States
         lines.push(`${indent}${indent}states: [`);
         for (const state of sm.states) {
             const name = typeof state === 'string' ? state : state.name;
-            const isInitial = typeof state === 'string' ? name === sm.initial : state.isInitial;
+            const isInitial = typeof state === 'string' ? false : state.isInitial;
             if (isInitial) {
                 lines.push(`${indent}${indent}${indent}{ name: '${name}', isInitial: true },`);
             } else {
