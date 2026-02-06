@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-gameloop - Master Game Tick Coordination
@@ -19,7 +19,7 @@ import type { BehaviorSchema } from './types.js';
  * States: Running, Paused
  * Provides the master clock for all game systems.
  */
-export const GAME_LOOP_BEHAVIOR: BehaviorSchema = {
+export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
     name: 'std-gameloop',
     version: '1.0.0',
     description: 'Master game loop coordinator running at 60fps',
@@ -118,7 +118,7 @@ export const GAME_LOOP_BEHAVIOR: BehaviorSchema = {
  *
  * Applied to entities that need physics simulation.
  */
-export const PHYSICS_2D_BEHAVIOR: BehaviorSchema = {
+export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
     name: 'std-physics2d',
     version: '1.0.0',
     description: '2D physics with gravity, velocity, and friction',
@@ -249,7 +249,7 @@ export const PHYSICS_2D_BEHAVIOR: BehaviorSchema = {
  *
  * Singleton behavior that tracks all input state.
  */
-export const INPUT_BEHAVIOR: BehaviorSchema = {
+export const INPUT_BEHAVIOR: OrbitalSchema = {
     name: 'std-input',
     version: '1.0.0',
     description: 'Unified keyboard and touch input state management',
@@ -345,7 +345,7 @@ export const INPUT_BEHAVIOR: BehaviorSchema = {
  *
  * Configures how an entity responds to collisions.
  */
-export const COLLISION_BEHAVIOR: BehaviorSchema = {
+export const COLLISION_BEHAVIOR: OrbitalSchema = {
     name: 'std-collision',
     version: '1.0.0',
     description: 'Collision detection and response configuration',
@@ -437,7 +437,7 @@ export const COLLISION_BEHAVIOR: BehaviorSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_CORE_BEHAVIORS: BehaviorSchema[] = [
+export const GAME_CORE_BEHAVIORS: OrbitalSchema[] = [
     GAME_LOOP_BEHAVIOR,
     PHYSICS_2D_BEHAVIOR,
     INPUT_BEHAVIOR,

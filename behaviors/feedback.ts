@@ -8,13 +8,13 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-notification - Toast Notifications
 // ============================================================================
 
-export const NOTIFICATION_BEHAVIOR: BehaviorSchema = {
+export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-notification',
   version: '1.0.0',
   description: 'Toast notification with auto-dismiss',
@@ -124,7 +124,7 @@ export const NOTIFICATION_BEHAVIOR: BehaviorSchema = {
 // std-confirmation - Confirmation Dialog
 // ============================================================================
 
-export const CONFIRMATION_BEHAVIOR: BehaviorSchema = {
+export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-confirmation',
   version: '1.0.0',
   description: 'Confirmation dialog with confirm/cancel actions',
@@ -206,7 +206,7 @@ export const CONFIRMATION_BEHAVIOR: BehaviorSchema = {
 // std-undo - Undo Stack
 // ============================================================================
 
-export const UNDO_BEHAVIOR: BehaviorSchema = {
+export const UNDO_BEHAVIOR: OrbitalSchema = {
   name: 'std-undo',
   version: '1.0.0',
   description: 'Undo/redo stack for reversible actions',
@@ -310,7 +310,7 @@ export const UNDO_BEHAVIOR: BehaviorSchema = {
 // Export All Feedback Behaviors
 // ============================================================================
 
-export const FEEDBACK_BEHAVIORS: BehaviorSchema[] = [
+export const FEEDBACK_BEHAVIORS: OrbitalSchema[] = [
   NOTIFICATION_BEHAVIOR,
   CONFIRMATION_BEHAVIOR,
   UNDO_BEHAVIOR,

@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-gameflow - Game State Machine
@@ -18,7 +18,7 @@ import type { BehaviorSchema } from './types.js';
  *
  * States: Menu → Playing → Paused → GameOver/Victory
  */
-export const GAME_FLOW_BEHAVIOR: BehaviorSchema = {
+export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
     name: 'std-gameflow',
     version: '1.0.0',
     description: 'Master game flow: menu, play, pause, game over, victory',
@@ -200,7 +200,7 @@ export const GAME_FLOW_BEHAVIOR: BehaviorSchema = {
 /**
  * std-dialogue - Manages NPC dialogue and branching conversations.
  */
-export const DIALOGUE_BEHAVIOR: BehaviorSchema = {
+export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
     name: 'std-dialogue',
     version: '1.0.0',
     description: 'NPC dialogue system with branching conversations',
@@ -401,7 +401,7 @@ export const DIALOGUE_BEHAVIOR: BehaviorSchema = {
 /**
  * std-levelprogress - Manages level unlock, selection, and completion.
  */
-export const LEVEL_PROGRESS_BEHAVIOR: BehaviorSchema = {
+export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
     name: 'std-levelprogress',
     version: '1.0.0',
     description: 'Level progression with unlock, selection, and completion tracking',
@@ -529,7 +529,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: BehaviorSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_UI_BEHAVIORS: BehaviorSchema[] = [
+export const GAME_UI_BEHAVIORS: OrbitalSchema[] = [
     GAME_FLOW_BEHAVIOR,
     DIALOGUE_BEHAVIOR,
     LEVEL_PROGRESS_BEHAVIOR,

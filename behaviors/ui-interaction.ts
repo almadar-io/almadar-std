@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-list - Entity List Management
@@ -19,7 +19,7 @@ import type { BehaviorSchema } from './types.js';
  * States: Browsing → Creating/Viewing/Editing/Deleting
  * Implements complete CRUD operations with modal/drawer UI patterns.
  */
-export const LIST_BEHAVIOR: BehaviorSchema = {
+export const LIST_BEHAVIOR: OrbitalSchema = {
   name: 'std-list',
   version: '1.0.0',
   description: 'Entity list management with CRUD operations',
@@ -227,7 +227,7 @@ export const LIST_BEHAVIOR: BehaviorSchema = {
 // std-detail - Single Entity View
 // ============================================================================
 
-export const DETAIL_BEHAVIOR: BehaviorSchema = {
+export const DETAIL_BEHAVIOR: OrbitalSchema = {
   name: 'std-detail',
   version: '1.0.0',
   description: 'Single entity view with edit/delete capabilities',
@@ -358,7 +358,7 @@ export const DETAIL_BEHAVIOR: BehaviorSchema = {
 // std-form - Form State Management
 // ============================================================================
 
-export const FORM_BEHAVIOR: BehaviorSchema = {
+export const FORM_BEHAVIOR: OrbitalSchema = {
   name: 'std-form',
   version: '1.0.0',
   description: 'Form state management with validation and submission',
@@ -529,7 +529,7 @@ export const FORM_BEHAVIOR: BehaviorSchema = {
 // std-modal - Modal Dialog
 // ============================================================================
 
-export const MODAL_BEHAVIOR: BehaviorSchema = {
+export const MODAL_BEHAVIOR: OrbitalSchema = {
   name: 'std-modal',
   version: '1.0.0',
   description: 'Modal dialog with open/close state management',
@@ -597,7 +597,7 @@ export const MODAL_BEHAVIOR: BehaviorSchema = {
 // std-drawer - Side Drawer Panel
 // ============================================================================
 
-export const DRAWER_BEHAVIOR: BehaviorSchema = {
+export const DRAWER_BEHAVIOR: OrbitalSchema = {
   name: 'std-drawer',
   version: '1.0.0',
   description: 'Side drawer panel for detail views and forms',
@@ -658,7 +658,7 @@ export const DRAWER_BEHAVIOR: BehaviorSchema = {
 // std-tabs - Tabbed Navigation
 // ============================================================================
 
-export const TABS_BEHAVIOR: BehaviorSchema = {
+export const TABS_BEHAVIOR: OrbitalSchema = {
   name: 'std-tabs',
   version: '1.0.0',
   description: 'Tabbed navigation within a page',
@@ -721,7 +721,7 @@ export const TABS_BEHAVIOR: BehaviorSchema = {
 // std-wizard - Multi-Step Flow
 // ============================================================================
 
-export const WIZARD_BEHAVIOR: BehaviorSchema = {
+export const WIZARD_BEHAVIOR: OrbitalSchema = {
   name: 'std-wizard',
   version: '1.0.0',
   description: 'Multi-step wizard flow - each step is a state',
@@ -851,7 +851,7 @@ export const WIZARD_BEHAVIOR: BehaviorSchema = {
 // std-masterdetail - List + Detail Layout
 // ============================================================================
 
-export const MASTER_DETAIL_BEHAVIOR: BehaviorSchema = {
+export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
   name: 'std-masterdetail',
   version: '1.0.0',
   description: 'Master-detail layout with synchronized list and detail views',
@@ -956,7 +956,7 @@ export const MASTER_DETAIL_BEHAVIOR: BehaviorSchema = {
 // std-filter - Filter Management (ui-interaction version)
 // ============================================================================
 
-export const FILTER_BEHAVIOR: BehaviorSchema = {
+export const FILTER_BEHAVIOR: OrbitalSchema = {
   name: 'std-filter-ui',
   version: '1.0.0',
   description: 'Filter and search management for lists',
@@ -1054,7 +1054,7 @@ export const FILTER_BEHAVIOR: BehaviorSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const UI_INTERACTION_BEHAVIORS: BehaviorSchema[] = [
+export const UI_INTERACTION_BEHAVIORS: OrbitalSchema[] = [
   LIST_BEHAVIOR,
   DETAIL_BEHAVIOR,
   FORM_BEHAVIOR,

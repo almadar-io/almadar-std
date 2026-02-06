@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-pagination - Page Navigation
@@ -17,7 +17,7 @@ import type { BehaviorSchema } from './types.js';
 /**
  * std-pagination - Page navigation behavior for large data sets.
  */
-export const PAGINATION_BEHAVIOR: BehaviorSchema = {
+export const PAGINATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-pagination',
   version: '1.0.0',
   description: 'Page-based navigation for large data sets',
@@ -104,7 +104,7 @@ export const PAGINATION_BEHAVIOR: BehaviorSchema = {
 // std-selection - Single/Multi Selection
 // ============================================================================
 
-export const SELECTION_BEHAVIOR: BehaviorSchema = {
+export const SELECTION_BEHAVIOR: OrbitalSchema = {
   name: 'std-selection',
   version: '1.0.0',
   description: 'Single or multi-selection management',
@@ -219,7 +219,7 @@ export const SELECTION_BEHAVIOR: BehaviorSchema = {
 // std-sort - Sorting
 // ============================================================================
 
-export const SORT_BEHAVIOR: BehaviorSchema = {
+export const SORT_BEHAVIOR: OrbitalSchema = {
   name: 'std-sort',
   version: '1.0.0',
   description: 'Sorting by field with direction toggle',
@@ -309,7 +309,7 @@ export const SORT_BEHAVIOR: BehaviorSchema = {
  * This behavior uses a singleton entity to hold filter state, making filtering
  * explicit in the schema rather than implicit in component behavior.
  */
-export const FILTER_BEHAVIOR: BehaviorSchema = {
+export const FILTER_BEHAVIOR: OrbitalSchema = {
   name: 'std-filter',
   version: '1.0.0',
   description: 'Query Singleton pattern for explicit filtering - use with entity-table query prop',
@@ -414,7 +414,7 @@ export const FILTER_BEHAVIOR: BehaviorSchema = {
 /**
  * std-search - Search with debounce.
  */
-export const SEARCH_BEHAVIOR: BehaviorSchema = {
+export const SEARCH_BEHAVIOR: OrbitalSchema = {
   name: 'std-search',
   version: '1.0.0',
   description: 'Search with debounce - updates QueryState.search field',
@@ -519,7 +519,7 @@ export const SEARCH_BEHAVIOR: BehaviorSchema = {
 // Export All Data Management Behaviors
 // ============================================================================
 
-export const DATA_MANAGEMENT_BEHAVIORS: BehaviorSchema[] = [
+export const DATA_MANAGEMENT_BEHAVIORS: OrbitalSchema[] = [
   PAGINATION_BEHAVIOR,
   SELECTION_BEHAVIOR,
   SORT_BEHAVIOR,

@@ -12,8 +12,7 @@
 
 // Types
 export {
-  type BehaviorSchema,
-  /** @deprecated Use BehaviorSchema instead */
+  /** @deprecated Use OrbitalSchema directly */
   type BehaviorTrait,
   type BehaviorMetadata,
   type ItemAction,

@@ -8,13 +8,13 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-loading - Loading State Management
 // ============================================================================
 
-export const LOADING_BEHAVIOR: BehaviorSchema = {
+export const LOADING_BEHAVIOR: OrbitalSchema = {
   name: 'std-loading',
   version: '1.0.0',
   description: 'Loading state management with success/error handling',
@@ -134,7 +134,7 @@ export const LOADING_BEHAVIOR: BehaviorSchema = {
 // std-fetch - Data Fetching
 // ============================================================================
 
-export const FETCH_BEHAVIOR: BehaviorSchema = {
+export const FETCH_BEHAVIOR: OrbitalSchema = {
   name: 'std-fetch',
   version: '1.0.0',
   description: 'Data fetching with caching and refresh capabilities',
@@ -256,7 +256,7 @@ export const FETCH_BEHAVIOR: BehaviorSchema = {
 // std-submit - Form Submission
 // ============================================================================
 
-export const SUBMIT_BEHAVIOR: BehaviorSchema = {
+export const SUBMIT_BEHAVIOR: OrbitalSchema = {
   name: 'std-submit',
   version: '1.0.0',
   description: 'Async submission with retry capabilities',
@@ -368,7 +368,7 @@ export const SUBMIT_BEHAVIOR: BehaviorSchema = {
 // std-retry - Automatic Retry
 // ============================================================================
 
-export const RETRY_BEHAVIOR: BehaviorSchema = {
+export const RETRY_BEHAVIOR: OrbitalSchema = {
   name: 'std-retry',
   version: '1.0.0',
   description: 'Automatic retry with exponential backoff',
@@ -495,7 +495,7 @@ export const RETRY_BEHAVIOR: BehaviorSchema = {
 // std-poll - Periodic Polling
 // ============================================================================
 
-export const POLL_BEHAVIOR: BehaviorSchema = {
+export const POLL_BEHAVIOR: OrbitalSchema = {
   name: 'std-poll',
   version: '1.0.0',
   description: 'Periodic polling with start/stop control',
@@ -612,7 +612,7 @@ export const POLL_BEHAVIOR: BehaviorSchema = {
 // Export All Async Behaviors
 // ============================================================================
 
-export const ASYNC_BEHAVIORS: BehaviorSchema[] = [
+export const ASYNC_BEHAVIORS: OrbitalSchema[] = [
   LOADING_BEHAVIOR,
   FETCH_BEHAVIOR,
   SUBMIT_BEHAVIOR,

@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from './types.js';
 
 // ============================================================================
 // std-health - Entity Health System
@@ -18,7 +18,7 @@ import type { BehaviorSchema } from './types.js';
  *
  * States: Alive → Damaged → Dead
  */
-export const HEALTH_BEHAVIOR: BehaviorSchema = {
+export const HEALTH_BEHAVIOR: OrbitalSchema = {
     name: 'std-health',
     version: '1.0.0',
     description: 'Entity health with damage, healing, invulnerability, and death',
@@ -164,7 +164,7 @@ export const HEALTH_BEHAVIOR: BehaviorSchema = {
 /**
  * std-score - Manages score with points, combos, and multipliers.
  */
-export const SCORE_BEHAVIOR: BehaviorSchema = {
+export const SCORE_BEHAVIOR: OrbitalSchema = {
     name: 'std-score',
     version: '1.0.0',
     description: 'Score tracking with points, combos, and multipliers',
@@ -291,7 +291,7 @@ export const SCORE_BEHAVIOR: BehaviorSchema = {
  *
  * Handles position updates based on input or AI.
  */
-export const MOVEMENT_BEHAVIOR: BehaviorSchema = {
+export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
     name: 'std-movement',
     version: '1.0.0',
     description: 'Entity movement with speed and direction',
@@ -421,7 +421,7 @@ export const MOVEMENT_BEHAVIOR: BehaviorSchema = {
 /**
  * std-combat - Handles attacks, cooldowns, and hit detection.
  */
-export const COMBAT_BEHAVIOR: BehaviorSchema = {
+export const COMBAT_BEHAVIOR: OrbitalSchema = {
     name: 'std-combat',
     version: '1.0.0',
     description: 'Combat system with attacks, cooldowns, and hitboxes',
@@ -523,7 +523,7 @@ export const COMBAT_BEHAVIOR: BehaviorSchema = {
 /**
  * std-inventory - Manages collected items and equipment.
  */
-export const INVENTORY_BEHAVIOR: BehaviorSchema = {
+export const INVENTORY_BEHAVIOR: OrbitalSchema = {
     name: 'std-inventory',
     version: '1.0.0',
     description: 'Item collection, storage, and usage',
@@ -704,7 +704,7 @@ export const INVENTORY_BEHAVIOR: BehaviorSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_ENTITY_BEHAVIORS: BehaviorSchema[] = [
+export const GAME_ENTITY_BEHAVIORS: OrbitalSchema[] = [
     HEALTH_BEHAVIOR,
     SCORE_BEHAVIOR,
     MOVEMENT_BEHAVIOR,

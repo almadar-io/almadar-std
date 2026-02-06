@@ -48,21 +48,11 @@ export type {
 };
 
 // ============================================================================
-// Behavior Schema Type (OrbitalSchema-based)
+// Legacy Type Aliases (for backward compatibility only)
 // ============================================================================
 
 /**
- * BehaviorSchema is the canonical type for Standard Library behaviors.
- * Each behavior is a self-contained OrbitalSchema that can function as a standalone .orb file.
- */
-export type BehaviorSchema = OrbitalSchema;
-
-// ============================================================================
-// Legacy Behavior Trait Type Alias (for backward compatibility)
-// ============================================================================
-
-/**
- * @deprecated Use BehaviorSchema instead. BehaviorTrait is kept for backward compatibility.
+ * @deprecated Use OrbitalSchema directly. BehaviorTrait is kept for backward compatibility.
  */
 export type BehaviorTrait = Trait;
 

@@ -2,12 +2,12 @@
  * Standard Behaviors Registry
  *
  * Combined registry of all Standard Behaviors with lookup functions.
- * Note: Behaviors are now typed as BehaviorSchema (OrbitalSchema).
+ * Note: Behaviors are now typed as OrbitalSchema (OrbitalSchema).
  *
  * @packageDocumentation
  */
 
-import type { BehaviorSchema, BehaviorMetadata } from './types.js';
+import type { OrbitalSchema, BehaviorMetadata } from './types.js';
 import { getBehaviorMetadata } from './types.js';
 import { UI_INTERACTION_BEHAVIORS } from './ui-interaction.js';
 import { DATA_MANAGEMENT_BEHAVIORS } from './data-management.js';
@@ -23,9 +23,9 @@ import { GAME_UI_BEHAVIORS } from './game-ui.js';
 
 /**
  * All Standard Behaviors combined into a single array.
- * Each behavior is now a BehaviorSchema (OrbitalSchema).
+ * Each behavior is now a OrbitalSchema (OrbitalSchema).
  */
-export const STANDARD_BEHAVIORS: BehaviorSchema[] = [
+export const STANDARD_BEHAVIORS: OrbitalSchema[] = [
   ...UI_INTERACTION_BEHAVIORS,
   ...DATA_MANAGEMENT_BEHAVIORS,
   ...ASYNC_BEHAVIORS,
@@ -38,12 +38,12 @@ export const STANDARD_BEHAVIORS: BehaviorSchema[] = [
 /**
  * Behavior registry indexed by name for fast lookup.
  */
-export const BEHAVIOR_REGISTRY: Record<string, BehaviorSchema> = STANDARD_BEHAVIORS.reduce(
+export const BEHAVIOR_REGISTRY: Record<string, OrbitalSchema> = STANDARD_BEHAVIORS.reduce(
   (acc, behavior) => {
     acc[behavior.name] = behavior;
     return acc;
   },
-  {} as Record<string, BehaviorSchema>
+  {} as Record<string, OrbitalSchema>
 );
 
 // ============================================================================
@@ -56,7 +56,7 @@ export const BEHAVIOR_REGISTRY: Record<string, BehaviorSchema> = STANDARD_BEHAVI
  * @param name - Behavior name (e.g., 'std-list')
  * @returns The behavior or undefined if not found
  */
-export function getBehavior(name: string): BehaviorSchema | undefined {
+export function getBehavior(name: string): OrbitalSchema | undefined {
   return BEHAVIOR_REGISTRY[name];
 }
 
@@ -84,7 +84,7 @@ export function getAllBehaviorNames(): string[] {
  *
  * @returns Array of all behaviors
  */
-export function getAllBehaviors(): BehaviorSchema[] {
+export function getAllBehaviors(): OrbitalSchema[] {
   return STANDARD_BEHAVIORS;
 }
 
@@ -103,7 +103,7 @@ export function getAllBehaviorMetadata(): BehaviorMetadata[] {
  * @param useCase - Use case description to match
  * @returns Array of matching behaviors
  */
-export function findBehaviorsForUseCase(useCase: string): BehaviorSchema[] {
+export function findBehaviorsForUseCase(useCase: string): OrbitalSchema[] {
   const lowerUseCase = useCase.toLowerCase();
   return STANDARD_BEHAVIORS.filter((behavior) =>
     behavior.description?.toLowerCase().includes(lowerUseCase) ?? false
@@ -116,7 +116,7 @@ export function findBehaviorsForUseCase(useCase: string): BehaviorSchema[] {
  * @param event - Event name
  * @returns Array of behaviors that handle this event
  */
-export function getBehaviorsForEvent(event: string): BehaviorSchema[] {
+export function getBehaviorsForEvent(event: string): OrbitalSchema[] {
   return STANDARD_BEHAVIORS.filter((behavior) => {
     // Access stateMachine from first orbital's traits
     for (const orbital of behavior.orbitals || []) {
@@ -139,7 +139,7 @@ export function getBehaviorsForEvent(event: string): BehaviorSchema[] {
  * @param state - State name
  * @returns Array of behaviors that have this state
  */
-export function getBehaviorsWithState(state: string): BehaviorSchema[] {
+export function getBehaviorsWithState(state: string): OrbitalSchema[] {
   return STANDARD_BEHAVIORS.filter((behavior) => {
     // Access stateMachine from first orbital's traits
     for (const orbital of behavior.orbitals || []) {
