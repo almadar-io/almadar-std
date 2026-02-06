@@ -67,12 +67,12 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'page-header',
+                    type: 'page-header',
                     title: '@entity.title',
                     actions: [{ label: 'Create', event: 'CREATE', variant: 'primary' }],
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'entity-table',
+                    type: 'entity-table',
                     entity: '@entity.entityType',
                     columns: '@entity.columns',
                     itemActions: [
@@ -89,7 +89,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'CREATE',
                 effects: [
                   ['render-ui', 'modal', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     mode: 'create',
                     onSubmit: 'SAVE',
@@ -104,7 +104,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'drawer', {
-                    patternType: 'entity-detail',
+                    type: 'entity-detail',
                     entity: '@entity.entityType',
                     data: '@payload.id',
                     actions: [
@@ -121,7 +121,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'drawer', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     initialData: '@payload.id',
                     mode: 'edit',
@@ -136,7 +136,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT',
                 effects: [
                   ['render-ui', 'drawer', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     initialData: '@entity.selectedId',
                     mode: 'edit',
@@ -152,7 +152,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'modal', {
-                    patternType: 'confirm-dialog',
+                    type: 'confirm-dialog',
                     isOpen: true,
                     onClose: 'CANCEL',
                     onConfirm: 'CONFIRM_DELETE',
@@ -276,7 +276,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'page-header',
+                    type: 'page-header',
                     title: '@entity.name',
                     actions: [
                       { label: 'Edit', event: 'EDIT' },
@@ -284,7 +284,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                     ],
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'entity-detail',
+                    type: 'entity-detail',
                     entity: '@entity.entityType',
                     fieldNames: '@entity.fields',
                   }],
@@ -296,7 +296,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     mode: 'edit',
                     fields: '@entity.fields',
@@ -327,7 +327,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'DELETE',
                 effects: [
                   ['render-ui', 'modal', {
-                    patternType: 'confirm-dialog',
+                    type: 'confirm-dialog',
                     isOpen: true,
                     onClose: 'CANCEL',
                     onConfirm: 'CONFIRM',
@@ -421,7 +421,7 @@ export const FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     fields: '@entity.fields',
                     initialData: '@entity.values',
@@ -572,7 +572,7 @@ export const MODAL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.content', '@payload.content'],
                   ['render-ui', 'modal', {
-                    patternType: 'modal',
+                    type: 'modal',
                     isOpen: true,
                     onClose: 'CLOSE',
                   }],
@@ -640,7 +640,7 @@ export const DRAWER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.content', '@payload.content'],
                   ['render-ui', 'drawer', {
-                    patternType: 'drawer',
+                    type: 'drawer',
                     isOpen: true,
                     onClose: 'CLOSE',
                   }],
@@ -701,7 +701,7 @@ export const TABS_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.activeTab', '@entity.defaultTab'],
                   ['render-ui', 'main', {
-                    patternType: 'tabs',
+                    type: 'tabs',
                     tabs: '@entity.tabs',
                     activeTab: '@entity.activeTab',
                     onTabChange: 'SELECT_TAB',
@@ -771,12 +771,12 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'wizard-progress',
+                    type: 'wizard-progress',
                     steps: ['Step 1', 'Step 2', 'Step 3'],
                     currentStep: 0,
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     fields: '@entity.step1Fields',
                     onSubmit: 'NEXT',
@@ -790,12 +790,12 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.stepData.step1', '@payload'],
                   ['render-ui', 'main', {
-                    patternType: 'wizard-progress',
+                    type: 'wizard-progress',
                     steps: ['Step 1', 'Step 2', 'Step 3'],
                     currentStep: 1,
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'form-section',
+                    type: 'form-section',
                     entity: '@entity.entityType',
                     fields: '@entity.step2Fields',
                     onSubmit: 'NEXT',
@@ -816,12 +816,12 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.stepData.step2', '@payload'],
                   ['render-ui', 'main', {
-                    patternType: 'wizard-progress',
+                    type: 'wizard-progress',
                     steps: ['Step 1', 'Step 2', 'Step 3'],
                     currentStep: 2,
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'entity-detail',
+                    type: 'entity-detail',
                     entity: '@entity.entityType',
                     fieldNames: ['step1', 'step2'],
                     title: 'Review',
@@ -897,13 +897,13 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'master-detail',
+                    type: 'master-detail',
                     master: '@entity.entityType',
                     detail: '@entity.selectedId',
                     hasSelection: '@entity.hasSelection',
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'empty-state',
+                    type: 'empty-state',
                     message: 'Select an item to view details',
                   }],
                 ],
@@ -915,7 +915,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'main', {
-                    patternType: 'entity-detail',
+                    type: 'entity-detail',
                     entity: '@entity.entityType',
                     data: '@payload.id',
                     fieldNames: '@entity.detailFields',
@@ -929,7 +929,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'main', {
-                    patternType: 'entity-detail',
+                    type: 'entity-detail',
                     entity: '@entity.entityType',
                     data: '@payload.id',
                     fieldNames: '@entity.detailFields',
@@ -943,7 +943,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', null],
                   ['render-ui', 'main', {
-                    patternType: 'empty-state',
+                    type: 'empty-state',
                     message: 'Select an item to view details',
                   }],
                 ],
@@ -1001,7 +1001,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'main', {
-                    patternType: 'filter-group',
+                    type: 'filter-group',
                     entity: '@entity.entityType',
                     filters: '@entity.filterConfig',
                     onFilterChange: 'SET_FILTER',

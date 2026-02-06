@@ -67,7 +67,7 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.currentHealth', '@entity.maxHealth'],
                                     ['set', '@entity.isInvulnerable', false],
                                     ['render-ui', 'hud-top', {
-                                        patternType: 'stats',
+                                        type: 'stats',
                                         label: 'Health',
                                         value: '@entity.currentHealth',
                                     }],
@@ -209,7 +209,7 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.comboCount', 0],
                                     ['set', '@entity.multiplier', 1],
                                     ['render-ui', 'hud-top', {
-                                        patternType: 'stats',
+                                        type: 'stats',
                                         label: 'Score',
                                         value: '@entity.currentScore',
                                         subtitle: 'High: @entity.highScore',
@@ -656,7 +656,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                                 event: 'OPEN',
                                 effects: [
                                     ['render-ui', 'modal', {
-                                        patternType: 'modal',
+                                        type: 'modal',
                                         title: 'Inventory',
                                         isOpen: '@entity.isOpen',
                                         onClose: 'CLOSE',
@@ -669,7 +669,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                                 event: 'OPEN',
                                 effects: [
                                     ['render-ui', 'modal', {
-                                        patternType: 'modal',
+                                        type: 'modal',
                                         title: 'Inventory',
                                         isOpen: '@entity.isOpen',
                                         onClose: 'CLOSE',

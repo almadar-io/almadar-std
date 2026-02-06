@@ -67,7 +67,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'screen', {
-                                        patternType: 'game-menu',
+                                        type: 'game-menu',
                                         title: '@entity.title',
                                         options: [{ event: 'START', label: 'Start Game' }],
                                         onSelect: 'START',
@@ -93,7 +93,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastState', 'Playing'],
                                     ['emit', 'GAME_LOOP_PAUSE'],
                                     ['render-ui', 'overlay', {
-                                        patternType: 'game-pause-overlay',
+                                        type: 'game-pause-overlay',
                                         title: 'Paused',
                                         visible: true,
                                         options: [
@@ -116,7 +116,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'overlay', {
-                                        patternType: 'game-over-screen',
+                                        type: 'game-over-screen',
                                         title: 'Game Over',
                                         stats: [
                                             { label: 'Play Time', value: '@entity.playTime' },
@@ -136,7 +136,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'overlay', {
-                                        patternType: 'game-over-screen',
+                                        type: 'game-over-screen',
                                         title: 'Victory!',
                                         variant: 'success',
                                         stats: [
@@ -265,7 +265,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastTypeTime', '@now'],
                                     ['emit', 'GAME_PAUSE'],
                                     ['render-ui', 'overlay.dialogue', {
-                                        patternType: 'dialogue-box',
+                                        type: 'dialogue-box',
                                         dialogue: {
                                             speaker: '@entity.speaker',
                                             text: '@entity.displayedText',
@@ -327,7 +327,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
                                         ['render-ui', 'overlay.dialogue', {
-                                            patternType: 'dialogue-box',
+                                            type: 'dialogue-box',
                                             dialogue: {
                                                 speaker: 'Choose',
                                                 choices: '@currentDialogue.choices',
@@ -460,7 +460,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                                 event: 'INIT',
                                 effects: [
                                     ['render-ui', 'screen', {
-                                        patternType: 'level-select',
+                                        type: 'level-select',
                                         title: 'Select Level',
                                         levels: '@entity.levels',
                                         onSelect: 'SELECT_LEVEL',

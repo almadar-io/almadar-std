@@ -169,7 +169,7 @@ export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.message', '@payload.message'],
                   ['set', '@entity.pendingAction', '@payload.onConfirm'],
                   ['render-ui', 'modal', {
-                    patternType: 'confirm-dialog',
+                    type: 'confirm-dialog',
                     isOpen: true,
                     onClose: 'CANCEL',
                     onConfirm: 'CONFIRM',

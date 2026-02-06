@@ -352,13 +352,13 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['render-ui', 'sidebar', {
-                    patternType: 'filter-group',
+                    type: 'filter-group',
                     entity: '@entity.entityType',
                     query: '@QueryState',
                     filters: '@entity.filters',
                   }],
                   ['render-ui', 'main', {
-                    patternType: 'entity-table',
+                    type: 'entity-table',
                     entity: '@entity.entityType',
                     query: '@QueryState',
                     columns: '@entity.columns',
@@ -459,7 +459,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.search', ''],
                   ['set', '@entity.isSearching', false],
                   ['render-ui', 'main', {
-                    patternType: 'search-input',
+                    type: 'search-input',
                     query: '@SearchState',
                     placeholder: '@entity.placeholder',
                   }],

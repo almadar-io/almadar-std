@@ -61,7 +61,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.error', null],
                   ['set', '@entity.startTime', ['time/now']],
                   ['render-ui', 'content', {
-                    patternType: 'loading-state',
+                    type: 'loading-state',
                   }],
                 ],
               },
@@ -82,7 +82,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isLoading', false],
                   ['set', '@entity.error', '@payload.error'],
                   ['render-ui', 'content', {
-                    patternType: 'error-state',
+                    type: 'error-state',
                     message: '@entity.error',
                     onRetry: 'RETRY',
                   }],
@@ -97,7 +97,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.error', null],
                   ['set', '@entity.startTime', ['time/now']],
                   ['render-ui', 'content', {
-                    patternType: 'loading-state',
+                    type: 'loading-state',
                   }],
                 ],
               },
