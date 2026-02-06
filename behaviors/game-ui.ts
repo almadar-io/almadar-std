@@ -67,9 +67,10 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'screen', {
-                                        patternType: 'card',
+                                        patternType: 'game-menu',
                                         title: '@entity.title',
-                                        actions: [{ event: 'START', label: 'Start Game' }],
+                                        options: [{ event: 'START', label: 'Start Game' }],
+                                        onSelect: 'START',
                                     }],
                                 ],
                             },
@@ -92,10 +93,10 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastState', 'Playing'],
                                     ['emit', 'GAME_LOOP_PAUSE'],
                                     ['render-ui', 'overlay', {
-                                        patternType: 'modal',
+                                        patternType: 'game-pause-overlay',
                                         title: 'Paused',
-                                        content: { playTime: '@entity.playTime' },
-                                        actions: [
+                                        visible: true,
+                                        options: [
                                             { event: 'RESUME', label: 'Resume' },
                                             { event: 'QUIT', label: 'Quit' },
                                         ],
@@ -115,9 +116,12 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'overlay', {
-                                        patternType: 'modal',
+                                        patternType: 'game-over-screen',
                                         title: 'Game Over',
-                                        content: { playTime: '@entity.playTime', attempts: '@entity.attempts' },
+                                        stats: [
+                                            { label: 'Play Time', value: '@entity.playTime' },
+                                            { label: 'Attempts', value: '@entity.attempts' },
+                                        ],
                                         actions: [
                                             { event: 'RESTART', label: 'Try Again' },
                                             { event: 'QUIT', label: 'Quit' },
@@ -132,9 +136,13 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['emit', 'STOP'],
                                     ['render-ui', 'overlay', {
-                                        patternType: 'modal',
+                                        patternType: 'game-over-screen',
                                         title: 'Victory!',
-                                        content: { playTime: '@entity.playTime', attempts: '@entity.attempts' },
+                                        variant: 'success',
+                                        stats: [
+                                            { label: 'Play Time', value: '@entity.playTime' },
+                                            { label: 'Attempts', value: '@entity.attempts' },
+                                        ],
                                         actions: [
                                             { event: 'RESTART', label: 'Play Again' },
                                             { event: 'QUIT', label: 'Quit' },
@@ -257,13 +265,13 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastTypeTime', '@now'],
                                     ['emit', 'GAME_PAUSE'],
                                     ['render-ui', 'overlay.dialogue', {
-                                        patternType: 'modal',
-                                        title: '@entity.speaker',
-                                        content: { text: '@entity.displayedText', isTyping: '@entity.isTyping' },
-                                        actions: [
-                                            { event: 'NEXT', label: 'Next' },
-                                            { event: 'SKIP', label: 'Skip' },
-                                        ],
+                                        patternType: 'dialogue-box',
+                                        dialogue: {
+                                            speaker: '@entity.speaker',
+                                            text: '@entity.displayedText',
+                                            isTyping: '@entity.isTyping',
+                                        },
+                                        onAdvance: 'NEXT',
                                     }],
                                 ],
                             },
@@ -319,9 +327,12 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
                                         ['render-ui', 'overlay.dialogue', {
-                                            patternType: 'modal',
-                                            title: 'Choose',
-                                            content: { choices: '@currentDialogue.choices' },
+                                            patternType: 'dialogue-box',
+                                            dialogue: {
+                                                speaker: 'Choose',
+                                                choices: '@currentDialogue.choices',
+                                            },
+                                            onChoice: 'SELECT_CHOICE',
                                         }]],
                                 ],
                             },
@@ -449,10 +460,10 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                                 event: 'INIT',
                                 effects: [
                                     ['render-ui', 'screen', {
-                                        patternType: 'entity-table',
-                                        entity: 'Level',
+                                        patternType: 'level-select',
                                         title: 'Select Level',
-                                        subtitle: 'Total Stars: @entity.totalStars',
+                                        levels: '@entity.levels',
+                                        onSelect: 'SELECT_LEVEL',
                                     }],
                                 ],
                             },
