@@ -66,11 +66,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                                 effects: [
                                     ['set', '@entity.currentHealth', '@entity.maxHealth'],
                                     ['set', '@entity.isInvulnerable', false],
-                                    ['render-ui', 'hud.health', {
-                                        type: 'stats',
-                                        title: 'Health',
+                                    ['render-ui', 'hud-top', {
+                                        patternType: 'stats',
+                                        label: 'Health',
                                         value: '@entity.currentHealth',
-                                        max: '@entity.maxHealth',
                                     }],
                                 ],
                             },
@@ -209,9 +208,9 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.currentScore', 0],
                                     ['set', '@entity.comboCount', 0],
                                     ['set', '@entity.multiplier', 1],
-                                    ['render-ui', 'hud.score', {
-                                        type: 'stats',
-                                        title: 'Score',
+                                    ['render-ui', 'hud-top', {
+                                        patternType: 'stats',
+                                        label: 'Score',
                                         value: '@entity.currentScore',
                                         subtitle: 'High: @entity.highScore',
                                     }],
@@ -262,7 +261,7 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                                 guard: ['>', '@entity.currentScore', '@entity.highScore'],
                                 effects: [
                                     ['set', '@entity.highScore', '@entity.currentScore'],
-                                    ['persist', 'save', 'HighScore', { score: '@entity.highScore' }],
+                                    ['persist', 'update', 'HighScore', { score: '@entity.highScore' }],
                                 ],
                             },
                         ],
@@ -573,7 +572,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                                 guard: ['<', ['array/len', '@entity.items'], '@entity.maxSlots'],
                                 effects: [
                                     ['set', '@entity.items', ['array/append', '@entity.items', '@payload.item']],
-                                    ['notify', { type: 'info', message: ['str/concat', 'Collected ', '@payload.item.name'] }],
+                                    ['notify', 'in_app', ['str/concat', 'Collected ', '@payload.item.name']],
                                 ],
                             },
                             {
@@ -583,7 +582,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                                 guard: ['<', ['array/len', '@entity.items'], '@entity.maxSlots'],
                                 effects: [
                                     ['set', '@entity.items', ['array/append', '@entity.items', '@payload.item']],
-                                    ['notify', { type: 'info', message: ['str/concat', 'Collected ', '@payload.item.name'] }],
+                                    ['notify', 'in_app', ['str/concat', 'Collected ', '@payload.item.name']],
                                 ],
                             },
                             {
@@ -656,12 +655,11 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                                 to: 'Empty',
                                 event: 'OPEN',
                                 effects: [
-                                    ['set', '@entity.isOpen', true],
-                                    ['render-ui', 'overlay.inventory', {
-                                        type: 'modal',
+                                    ['render-ui', 'modal', {
+                                        patternType: 'modal',
                                         title: 'Inventory',
-                                        content: { items: '@entity.items', equipped: '@entity.equipped', maxSlots: '@entity.maxSlots' },
-                                        actions: [{ event: 'CLOSE', label: 'Close' }],
+                                        isOpen: '@entity.isOpen',
+                                        onClose: 'CLOSE',
                                     }],
                                 ],
                             },
@@ -670,12 +668,11 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                                 to: 'HasItems',
                                 event: 'OPEN',
                                 effects: [
-                                    ['set', '@entity.isOpen', true],
-                                    ['render-ui', 'overlay.inventory', {
-                                        type: 'modal',
+                                    ['render-ui', 'modal', {
+                                        patternType: 'modal',
                                         title: 'Inventory',
-                                        content: { items: '@entity.items', equipped: '@entity.equipped', maxSlots: '@entity.maxSlots' },
-                                        actions: [{ event: 'CLOSE', label: 'Close' }],
+                                        isOpen: '@entity.isOpen',
+                                        onClose: 'CLOSE',
                                     }],
                                 ],
                             },
