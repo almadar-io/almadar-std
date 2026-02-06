@@ -1,8 +1,8 @@
 /**
  * Standard Behaviors Types
  *
- * Standard Behaviors are reusable Traits with a `std/` naming convention.
- * They directly use the Trait type from @almadar/core/types.
+ * Standard Behaviors are reusable OrbitalSchema definitions with a `std-` naming convention.
+ * Each behavior is a self-contained .orb file that can function independently.
  *
  * @packageDocumentation
  */
@@ -23,6 +23,9 @@ import type {
   TraitDataEntity,
   TraitEntityField,
   TraitEventListener,
+  OrbitalSchema,
+  Orbital,
+  Entity,
 } from '@almadar/core/types';
 
 // Re-export core types for use in behaviors
@@ -39,15 +42,27 @@ export type {
   TraitDataEntity,
   TraitEntityField,
   TraitCategory,
+  OrbitalSchema,
+  Orbital,
+  Entity,
 };
 
 // ============================================================================
-// Behavior Trait Type Alias
+// Behavior Schema Type (OrbitalSchema-based)
 // ============================================================================
 
 /**
- * BehaviorTrait is the canonical type for Standard Library behaviors.
- * It is an alias for the core Trait type.
+ * BehaviorSchema is the canonical type for Standard Library behaviors.
+ * Each behavior is a self-contained OrbitalSchema that can function as a standalone .orb file.
+ */
+export type BehaviorSchema = OrbitalSchema;
+
+// ============================================================================
+// Legacy Behavior Trait Type Alias (for backward compatibility)
+// ============================================================================
+
+/**
+ * @deprecated Use BehaviorSchema instead. BehaviorTrait is kept for backward compatibility.
  */
 export type BehaviorTrait = Trait;
 

@@ -12,6 +12,8 @@
 
 // Types
 export {
+  type BehaviorSchema,
+  /** @deprecated Use BehaviorSchema instead */
   type BehaviorTrait,
   type BehaviorMetadata,
   type ItemAction,
@@ -27,11 +29,15 @@ export {
   type TraitDataEntity,
   type TraitEntityField,
   type TraitCategory,
+  type OrbitalSchema,
+  type Orbital,
+  type Entity,
   getBehaviorMetadata,
   validateBehaviorStructure,
   validateBehaviorEvents,
   validateBehaviorStates,
 } from './types.js';
+
 
 // Action Affinity
 export {

@@ -2,1020 +2,1059 @@
  * UI Interaction Behaviors
  *
  * Standard behaviors for common UI interaction patterns.
- * These use the Trait architecture with stateMachine.
- *
- * IMPORTANT: These are GENERATION TEMPLATES for LLMs.
- * They must use correct syntax:
- * - render-ui (not render)
- * - Explicit from states (not '*')
- * - Valid pattern types (form-section, entity-detail, etc.)
+ * Each behavior is a self-contained OrbitalSchema that can function as a standalone .orb file.
  *
  * @packageDocumentation
  */
 
-import type { BehaviorTrait } from './types.js';
+import type { BehaviorSchema } from './types.js';
 
 // ============================================================================
-// std/List - Entity List Management
+// std-list - Entity List Management
 // ============================================================================
 
 /**
- * std/List - The core behavior for displaying and interacting with entity collections.
+ * std-list - The core behavior for displaying and interacting with entity collections.
  *
  * States: Browsing → Creating/Viewing/Editing/Deleting
  * Implements complete CRUD operations with modal/drawer UI patterns.
  */
-export const LIST_BEHAVIOR: BehaviorTrait = {
-  name: 'std/List',
+export const LIST_BEHAVIOR: BehaviorSchema = {
+  name: 'std-list',
+  version: '1.0.0',
   description: 'Entity list management with CRUD operations',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'ListState',
-      runtime: true,
-      singleton: true,
-      fields: [
-        { name: 'selectedId', type: 'string', default: null },
+      name: 'ListOrbital',
+      entity: {
+        name: 'ListState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'selectedId', type: 'string', default: null },
+          { name: 'entityType', type: 'string', default: '' },
+          { name: 'title', type: 'string', default: 'Items' },
+          { name: 'columns', type: 'array', default: [] },
+        ],
+      },
+      traits: [
+        {
+          name: 'List',
+          linkedEntity: 'ListState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Browsing', isInitial: true },
+              { name: 'Creating' },
+              { name: 'Viewing' },
+              { name: 'Editing' },
+              { name: 'Deleting' },
+            ],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'CREATE', name: 'Create' },
+              { key: 'VIEW', name: 'View' },
+              { key: 'EDIT', name: 'Edit' },
+              { key: 'DELETE', name: 'Delete' },
+              { key: 'CONFIRM_DELETE', name: 'Confirm Delete' },
+              { key: 'CANCEL', name: 'Cancel' },
+              { key: 'SAVE', name: 'Save' },
+            ],
+            transitions: [
+              {
+                from: 'Browsing',
+                to: 'Browsing',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'page-header',
+                    title: '@entity.title',
+                    actions: [{ label: 'Create', event: 'CREATE', variant: 'primary' }],
+                  }],
+                  ['render-ui', 'main', {
+                    type: 'entity-table',
+                    entity: '@entity.entityType',
+                    columns: '@entity.columns',
+                    itemActions: [
+                      { label: 'View', event: 'VIEW', placement: 'row' },
+                      { label: 'Edit', event: 'EDIT', placement: 'row' },
+                      { label: 'Delete', event: 'DELETE', variant: 'danger', placement: 'row' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Browsing',
+                to: 'Creating',
+                event: 'CREATE',
+                effects: [
+                  ['render-ui', 'modal', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    mode: 'create',
+                    submitEvent: 'SAVE',
+                    cancelEvent: 'CANCEL',
+                  }],
+                ],
+              },
+              {
+                from: 'Browsing',
+                to: 'Viewing',
+                event: 'VIEW',
+                effects: [
+                  ['set', '@entity.selectedId', '@payload.id'],
+                  ['render-ui', 'drawer', {
+                    type: 'entity-detail',
+                    entity: '@entity.entityType',
+                    id: '@payload.id',
+                    actions: [
+                      { label: 'Edit', event: 'EDIT' },
+                      { label: 'Close', event: 'CANCEL' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Browsing',
+                to: 'Editing',
+                event: 'EDIT',
+                effects: [
+                  ['set', '@entity.selectedId', '@payload.id'],
+                  ['render-ui', 'drawer', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    id: '@payload.id',
+                    mode: 'edit',
+                    submitEvent: 'SAVE',
+                    cancelEvent: 'CANCEL',
+                  }],
+                ],
+              },
+              {
+                from: 'Viewing',
+                to: 'Editing',
+                event: 'EDIT',
+                effects: [
+                  ['render-ui', 'drawer', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    id: '@entity.selectedId',
+                    mode: 'edit',
+                    submitEvent: 'SAVE',
+                    cancelEvent: 'CANCEL',
+                  }],
+                ],
+              },
+              {
+                from: 'Browsing',
+                to: 'Deleting',
+                event: 'DELETE',
+                effects: [
+                  ['set', '@entity.selectedId', '@payload.id'],
+                  ['render-ui', 'modal', {
+                    type: 'confirmation',
+                    title: 'Delete Confirmation',
+                    message: 'Are you sure you want to delete this item?',
+                    confirmLabel: 'Delete',
+                    confirmVariant: 'danger',
+                  }],
+                ],
+              },
+              {
+                from: 'Creating',
+                to: 'Browsing',
+                event: 'SAVE',
+                effects: [
+                  ['persist', 'create', '@entity.entityType', '@payload.data'],
+                  ['notify', { type: 'success', message: 'Created successfully' }],
+                  ['emit', 'INIT'],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Browsing',
+                event: 'SAVE',
+                effects: [
+                  ['persist', 'update', '@entity.entityType', '@payload.data'],
+                  ['notify', { type: 'success', message: 'Updated successfully' }],
+                  ['emit', 'INIT'],
+                ],
+              },
+              {
+                from: 'Deleting',
+                to: 'Browsing',
+                event: 'CONFIRM_DELETE',
+                effects: [
+                  ['persist', 'delete', '@entity.entityType', '@entity.selectedId'],
+                  ['notify', { type: 'success', message: 'Deleted successfully' }],
+                  ['emit', 'INIT'],
+                ],
+              },
+              {
+                from: 'Creating',
+                to: 'Browsing',
+                event: 'CANCEL',
+                effects: [],
+              },
+              {
+                from: 'Viewing',
+                to: 'Browsing',
+                event: 'CANCEL',
+                effects: [],
+              },
+              {
+                from: 'Editing',
+                to: 'Browsing',
+                event: 'CANCEL',
+                effects: [],
+              },
+              {
+                from: 'Deleting',
+                to: 'Browsing',
+                event: 'CANCEL',
+                effects: [],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'Browsing', isInitial: true },
-      { name: 'Creating' },
-      { name: 'Viewing' },
-      { name: 'Editing' },
-      { name: 'Deleting' },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'CREATE', name: 'CREATE' },
-      { key: 'VIEW', name: 'VIEW' },
-      { key: 'EDIT', name: 'EDIT' },
-      { key: 'DELETE', name: 'DELETE' },
-      { key: 'CONFIRM_DELETE', name: 'CONFIRM_DELETE' },
-      { key: 'CANCEL', name: 'CANCEL' },
-      { key: 'SAVE', name: 'SAVE' },
-    ],
-    transitions: [
-      // INIT: Self-loop on Browsing that renders the list UI
-      {
-        from: 'Browsing',
-        to: 'Browsing',
-        event: 'INIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'page-header',
-            title: '@config.title',
-            actions: [{ label: 'Create', event: 'CREATE', variant: 'primary' }],
-          }],
-          ['render-ui', 'main', {
-            type: 'entity-table',
-            entity: '@config.entity',
-            columns: '@config.columns',
-            itemActions: [
-              { label: 'View', event: 'VIEW', placement: 'row' },
-              { label: 'Edit', event: 'EDIT', placement: 'row' },
-              { label: 'Delete', event: 'DELETE', variant: 'danger', placement: 'row' },
-            ],
-          }],
-        ],
-      },
-      {
-        from: 'Browsing',
-        to: 'Creating',
-        event: 'CREATE',
-        effects: [
-          ['render-ui', 'modal', {
-            type: 'form-section',
-            entity: '@config.entity',
-            mode: 'create',
-            submitEvent: 'SAVE',
-            cancelEvent: 'CANCEL',
-          }],
-        ],
-      },
-      {
-        from: 'Browsing',
-        to: 'Viewing',
-        event: 'VIEW',
-        effects: [
-          ['set', '@entity.selectedId', '@payload.id'],
-          ['render-ui', 'drawer', {
-            type: 'entity-detail',
-            entity: '@config.entity',
-            id: '@payload.id',
-            actions: [
-              { label: 'Edit', event: 'EDIT' },
-              { label: 'Close', event: 'CANCEL' },
-            ],
-          }],
-        ],
-      },
-      {
-        from: 'Browsing',
-        to: 'Editing',
-        event: 'EDIT',
-        effects: [
-          ['set', '@entity.selectedId', '@payload.id'],
-          ['render-ui', 'drawer', {
-            type: 'form-section',
-            entity: '@config.entity',
-            id: '@payload.id',
-            mode: 'edit',
-            submitEvent: 'SAVE',
-            cancelEvent: 'CANCEL',
-          }],
-        ],
-      },
-      {
-        from: 'Viewing',
-        to: 'Editing',
-        event: 'EDIT',
-        effects: [
-          ['render-ui', 'drawer', {
-            type: 'form-section',
-            entity: '@config.entity',
-            id: '@entity.selectedId',
-            mode: 'edit',
-            submitEvent: 'SAVE',
-            cancelEvent: 'CANCEL',
-          }],
-        ],
-      },
-      {
-        from: 'Browsing',
-        to: 'Deleting',
-        event: 'DELETE',
-        effects: [
-          ['set', '@entity.selectedId', '@payload.id'],
-          ['render-ui', 'modal', {
-            type: 'confirmation',
-            title: 'Delete Confirmation',
-            message: 'Are you sure you want to delete this item?',
-            confirmLabel: 'Delete',
-            confirmVariant: 'danger',
-          }],
-        ],
-      },
-      {
-        from: 'Creating',
-        to: 'Browsing',
-        event: 'SAVE',
-        effects: [
-          ['persist', 'create', '@config.entity', '@payload.data'],
-          ['render-ui', 'modal', null],
-          ['notify', { type: 'success', message: 'Created successfully' }],
-          ['emit', 'INIT'],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Browsing',
-        event: 'SAVE',
-        effects: [
-          ['persist', 'update', '@config.entity', '@payload.data'],
-          ['render-ui', 'drawer', null],
-          ['notify', { type: 'success', message: 'Updated successfully' }],
-          ['emit', 'INIT'],
-        ],
-      },
-      {
-        from: 'Deleting',
-        to: 'Browsing',
-        event: 'CONFIRM_DELETE',
-        effects: [
-          ['persist', 'delete', '@config.entity', '@entity.selectedId'],
-          ['render-ui', 'modal', null],
-          ['notify', { type: 'success', message: 'Deleted successfully' }],
-          ['emit', 'INIT'],
-        ],
-      },
-      {
-        from: 'Creating',
-        to: 'Browsing',
-        event: 'CANCEL',
-        effects: [
-          ['render-ui', 'modal', null],
-        ],
-      },
-      {
-        from: 'Viewing',
-        to: 'Browsing',
-        event: 'CANCEL',
-        effects: [
-          ['render-ui', 'drawer', null],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Browsing',
-        event: 'CANCEL',
-        effects: [
-          ['render-ui', 'drawer', null],
-        ],
-      },
-      {
-        from: 'Deleting',
-        to: 'Browsing',
-        event: 'CANCEL',
-        effects: [
-          ['render-ui', 'modal', null],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/Detail - Single Entity View
+// std-detail - Single Entity View
 // ============================================================================
 
-export const DETAIL_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Detail',
+export const DETAIL_BEHAVIOR: BehaviorSchema = {
+  name: 'std-detail',
+  version: '1.0.0',
   description: 'Single entity view with edit/delete capabilities',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'DetailState',
-      runtime: true,
-      fields: [
-        { name: 'entityId', type: 'string', default: null },
-        { name: 'isLoading', type: 'boolean', default: false },
-        { name: 'hasChanges', type: 'boolean', default: false },
-      ],
-    },
-  ],
-
-  stateMachine: {
-    states: [
-      { name: 'Viewing', isInitial: true },
-      { name: 'Editing' },
-      { name: 'Deleting' },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'EDIT', name: 'EDIT' },
-      { key: 'SAVE', name: 'SAVE' },
-      { key: 'CANCEL', name: 'CANCEL' },
-      { key: 'DELETE', name: 'DELETE' },
-      { key: 'CONFIRM_DELETE', name: 'CONFIRM_DELETE' },
-    ],
-    transitions: [
-      // INIT: Self-loop on Viewing
-      {
-        from: 'Viewing',
-        to: 'Viewing',
-        event: 'INIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'page-header',
-            title: '@entity.name',
-            actions: [
-              { label: 'Edit', event: 'EDIT' },
-              { label: 'Delete', event: 'DELETE', variant: 'danger' },
+      name: 'DetailOrbital',
+      entity: {
+        name: 'DetailState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'entityId', type: 'string', default: null },
+          { name: 'isLoading', type: 'boolean', default: false },
+          { name: 'hasChanges', type: 'boolean', default: false },
+          { name: 'entityType', type: 'string', default: '' },
+          { name: 'fields', type: 'array', default: [] },
+          { name: 'returnUrl', type: 'string', default: '/' },
+        ],
+      },
+      traits: [
+        {
+          name: 'Detail',
+          linkedEntity: 'DetailState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Viewing', isInitial: true },
+              { name: 'Editing' },
+              { name: 'Deleting' },
             ],
-          }],
-          ['render-ui', 'main', {
-            type: 'entity-detail',
-            entity: '@config.entity',
-            fieldNames: '@config.fields',
-          }],
-        ],
-      },
-      {
-        from: 'Viewing',
-        to: 'Editing',
-        event: 'EDIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'form-section',
-            entity: '@config.entity',
-            mode: 'edit',
-            fields: '@config.fields',
-            submitEvent: 'SAVE',
-            cancelEvent: 'CANCEL',
-          }],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Viewing',
-        event: 'SAVE',
-        effects: [
-          ['persist', 'update', '@config.entity', '@payload.data'],
-          ['notify', { type: 'success', message: 'Updated successfully' }],
-          ['emit', 'INIT'],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Viewing',
-        event: 'CANCEL',
-        effects: [
-          ['emit', 'INIT'],
-        ],
-      },
-      {
-        from: 'Viewing',
-        to: 'Deleting',
-        event: 'DELETE',
-        effects: [
-          ['render-ui', 'modal', {
-            type: 'confirmation',
-            title: 'Delete Confirmation',
-            message: 'Are you sure you want to delete this item?',
-          }],
-        ],
-      },
-      {
-        from: 'Deleting',
-        to: 'Viewing',
-        event: 'CONFIRM_DELETE',
-        effects: [
-          ['persist', 'delete', '@config.entity', '@entity.id'],
-          ['navigate', '@config.returnUrl'],
-        ],
-      },
-      {
-        from: 'Deleting',
-        to: 'Viewing',
-        event: 'CANCEL',
-        effects: [
-          ['render-ui', 'modal', null],
-        ],
-      },
-    ],
-  },
-
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'EDIT', name: 'Edit' },
+              { key: 'SAVE', name: 'Save' },
+              { key: 'CANCEL', name: 'Cancel' },
+              { key: 'DELETE', name: 'Delete' },
+              { key: 'CONFIRM_DELETE', name: 'Confirm Delete' },
+            ],
+            transitions: [
+              {
+                from: 'Viewing',
+                to: 'Viewing',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'page-header',
+                    title: '@entity.name',
+                    actions: [
+                      { label: 'Edit', event: 'EDIT' },
+                      { label: 'Delete', event: 'DELETE', variant: 'danger' },
+                    ],
+                  }],
+                  ['render-ui', 'main', {
+                    type: 'entity-detail',
+                    entity: '@entity.entityType',
+                    fieldNames: '@entity.fields',
+                  }],
+                ],
+              },
+              {
+                from: 'Viewing',
+                to: 'Editing',
+                event: 'EDIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    mode: 'edit',
+                    fields: '@entity.fields',
+                    submitEvent: 'SAVE',
+                    cancelEvent: 'CANCEL',
+                  }],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Viewing',
+                event: 'SAVE',
+                effects: [
+                  ['persist', 'update', '@entity.entityType', '@payload.data'],
+                  ['notify', { type: 'success', message: 'Updated successfully' }],
+                  ['emit', 'INIT'],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Viewing',
+                event: 'CANCEL',
+                effects: [['emit', 'INIT']],
+              },
+              {
+                from: 'Viewing',
+                to: 'Deleting',
+                event: 'DELETE',
+                effects: [
+                  ['render-ui', 'modal', {
+                    type: 'confirmation',
+                    title: 'Delete Confirmation',
+                    message: 'Are you sure you want to delete this item?',
+                  }],
+                ],
+              },
+              {
+                from: 'Deleting',
+                to: 'Viewing',
+                event: 'CONFIRM_DELETE',
+                effects: [
+                  ['persist', 'delete', '@entity.entityType', '@entity.id'],
+                  ['navigate', '@entity.returnUrl'],
+                ],
+              },
+              {
+                from: 'Deleting',
+                to: 'Viewing',
+                event: 'CANCEL',
+                effects: [],
+              },
+            ],
+          },
+        },
+      ],
+      pages: [],
+    },
+  ],
 };
 
 // ============================================================================
-// std/Form - Form State Management
+// std-form - Form State Management
 // ============================================================================
 
-export const FORM_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Form',
+export const FORM_BEHAVIOR: BehaviorSchema = {
+  name: 'std-form',
+  version: '1.0.0',
   description: 'Form state management with validation and submission',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'FormState',
-      runtime: true,
-      fields: [
-        { name: 'values', type: 'object', default: {} },
-        { name: 'errors', type: 'object', default: {} },
-        { name: 'touched', type: 'object', default: {} },
-        { name: 'isDirty', type: 'boolean', default: false },
-        { name: 'isSubmitting', type: 'boolean', default: false },
+      name: 'FormOrbital',
+      entity: {
+        name: 'FormState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'values', type: 'object', default: {} },
+          { name: 'errors', type: 'object', default: {} },
+          { name: 'touched', type: 'object', default: {} },
+          { name: 'isDirty', type: 'boolean', default: false },
+          { name: 'isSubmitting', type: 'boolean', default: false },
+          { name: 'entityType', type: 'string', default: '' },
+          { name: 'fields', type: 'array', default: [] },
+          { name: 'mode', type: 'string', default: 'create' },
+          { name: 'validation', type: 'object', default: {} },
+          { name: 'cancelEvent', type: 'string', default: 'CANCEL' },
+          { name: 'submitEvent', type: 'string', default: 'SUBMIT_SUCCESS' },
+        ],
+      },
+      traits: [
+        {
+          name: 'Form',
+          linkedEntity: 'FormState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Idle', isInitial: true },
+              { name: 'Editing' },
+              { name: 'Validating' },
+              { name: 'Submitting' },
+              { name: 'Success', isTerminal: true },
+              { name: 'Error' },
+            ],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'FIELD_CHANGE', name: 'Field Change' },
+              { key: 'FIELD_BLUR', name: 'Field Blur' },
+              { key: 'SUBMIT', name: 'Submit' },
+              { key: 'VALIDATION_PASSED', name: 'Validation Passed' },
+              { key: 'VALIDATION_FAILED', name: 'Validation Failed' },
+              { key: 'SUBMIT_SUCCESS', name: 'Submit Success' },
+              { key: 'SUBMIT_ERROR', name: 'Submit Error' },
+              { key: 'RESET', name: 'Reset' },
+            ],
+            transitions: [
+              {
+                from: 'Idle',
+                to: 'Editing',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    fields: '@entity.fields',
+                    values: '@entity.values',
+                    errors: '@entity.errors',
+                    submitEvent: 'SUBMIT',
+                    cancelEvent: '@entity.cancelEvent',
+                  }],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Editing',
+                event: 'FIELD_CHANGE',
+                effects: [
+                  ['set', '@entity.values', ['object/set', '@entity.values', '@payload.field', '@payload.value']],
+                  ['set', '@entity.isDirty', true],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Editing',
+                event: 'FIELD_BLUR',
+                effects: [
+                  ['set', '@entity.touched', ['object/set', '@entity.touched', '@payload.field', true]],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Validating',
+                event: 'SUBMIT',
+                effects: [
+                  ['let', [['result', ['validate/check', '@entity.values', '@entity.validation']]],
+                    ['if', '@result.valid',
+                      ['emit', 'VALIDATION_PASSED'],
+                      ['do',
+                        ['set', '@entity.errors', '@result.errors'],
+                        ['emit', 'VALIDATION_FAILED']]]],
+                ],
+              },
+              {
+                from: 'Validating',
+                to: 'Submitting',
+                event: 'VALIDATION_PASSED',
+                effects: [
+                  ['set', '@entity.isSubmitting', true],
+                  ['if', ['=', '@entity.mode', 'create'],
+                    ['persist', 'create', '@entity.entityType', '@entity.values'],
+                    ['persist', 'update', '@entity.entityType', '@entity.values']],
+                ],
+              },
+              {
+                from: 'Validating',
+                to: 'Editing',
+                event: 'VALIDATION_FAILED',
+                effects: [
+                  ['notify', { type: 'error', message: 'Please fix the validation errors' }],
+                ],
+              },
+              {
+                from: 'Submitting',
+                to: 'Success',
+                event: 'SUBMIT_SUCCESS',
+                effects: [
+                  ['set', '@entity.isSubmitting', false],
+                  ['notify', { type: 'success', message: 'Saved successfully' }],
+                  ['emit', '@entity.submitEvent', { data: '@entity.values' }],
+                ],
+              },
+              {
+                from: 'Submitting',
+                to: 'Error',
+                event: 'SUBMIT_ERROR',
+                effects: [
+                  ['set', '@entity.isSubmitting', false],
+                  ['set', '@entity.errors', { _form: '@payload.error' }],
+                  ['notify', { type: 'error', message: '@payload.error' }],
+                ],
+              },
+              {
+                from: 'Editing',
+                to: 'Idle',
+                event: 'RESET',
+                effects: [
+                  ['set', '@entity.values', {}],
+                  ['set', '@entity.errors', {}],
+                  ['set', '@entity.touched', {}],
+                  ['set', '@entity.isDirty', false],
+                ],
+              },
+              {
+                from: 'Error',
+                to: 'Idle',
+                event: 'RESET',
+                effects: [
+                  ['set', '@entity.values', {}],
+                  ['set', '@entity.errors', {}],
+                  ['set', '@entity.touched', {}],
+                  ['set', '@entity.isDirty', false],
+                ],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'Idle', isInitial: true },
-      { name: 'Editing' },
-      { name: 'Validating' },
-      { name: 'Submitting' },
-      { name: 'Success' },
-      { name: 'Error' },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'FIELD_CHANGE', name: 'FIELD_CHANGE' },
-      { key: 'FIELD_BLUR', name: 'FIELD_BLUR' },
-      { key: 'SUBMIT', name: 'SUBMIT' },
-      { key: 'VALIDATION_PASSED', name: 'VALIDATION_PASSED' },
-      { key: 'VALIDATION_FAILED', name: 'VALIDATION_FAILED' },
-      { key: 'SUBMIT_SUCCESS', name: 'SUBMIT_SUCCESS' },
-      { key: 'SUBMIT_ERROR', name: 'SUBMIT_ERROR' },
-      { key: 'RESET', name: 'RESET' },
-    ],
-    transitions: [
-      // INIT: Self-loop on Idle → Editing
-      {
-        from: 'Idle',
-        to: 'Editing',
-        event: 'INIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'form-section',
-            entity: '@config.entity',
-            fields: '@config.fields',
-            values: '@entity.values',
-            errors: '@entity.errors',
-            submitEvent: 'SUBMIT',
-            cancelEvent: '@config.cancelEvent',
-          }],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Editing',
-        event: 'FIELD_CHANGE',
-        effects: [
-          ['set', '@entity.values', ['object/set', '@entity.values', '@payload.field', '@payload.value']],
-          ['set', '@entity.isDirty', true],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Editing',
-        event: 'FIELD_BLUR',
-        effects: [
-          ['set', '@entity.touched', ['object/set', '@entity.touched', '@payload.field', true]],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Validating',
-        event: 'SUBMIT',
-        effects: [
-          ['let', [['result', ['validate/check', '@entity.values', '@config.validation']]],
-            ['if', '@result.valid',
-              ['emit', 'VALIDATION_PASSED'],
-              ['do',
-                ['set', '@entity.errors', '@result.errors'],
-                ['emit', 'VALIDATION_FAILED']]]],
-        ],
-      },
-      {
-        from: 'Validating',
-        to: 'Submitting',
-        event: 'VALIDATION_PASSED',
-        effects: [
-          ['set', '@entity.isSubmitting', true],
-          ['if', ['=', '@config.mode', 'create'],
-            ['persist', 'create', '@config.entity', '@entity.values'],
-            ['persist', 'update', '@config.entity', '@entity.values']],
-        ],
-      },
-      {
-        from: 'Validating',
-        to: 'Editing',
-        event: 'VALIDATION_FAILED',
-        effects: [
-          ['notify', { type: 'error', message: 'Please fix the validation errors' }],
-        ],
-      },
-      {
-        from: 'Submitting',
-        to: 'Success',
-        event: 'SUBMIT_SUCCESS',
-        effects: [
-          ['set', '@entity.isSubmitting', false],
-          ['notify', { type: 'success', message: 'Saved successfully' }],
-          ['emit', '@config.submitEvent', { data: '@entity.values' }],
-        ],
-      },
-      {
-        from: 'Submitting',
-        to: 'Error',
-        event: 'SUBMIT_ERROR',
-        effects: [
-          ['set', '@entity.isSubmitting', false],
-          ['set', '@entity.errors', { _form: '@payload.error' }],
-          ['notify', { type: 'error', message: '@payload.error' }],
-        ],
-      },
-      {
-        from: 'Editing',
-        to: 'Idle',
-        event: 'RESET',
-        effects: [
-          ['set', '@entity.values', {}],
-          ['set', '@entity.errors', {}],
-          ['set', '@entity.touched', {}],
-          ['set', '@entity.isDirty', false],
-        ],
-      },
-      {
-        from: 'Error',
-        to: 'Idle',
-        event: 'RESET',
-        effects: [
-          ['set', '@entity.values', {}],
-          ['set', '@entity.errors', {}],
-          ['set', '@entity.touched', {}],
-          ['set', '@entity.isDirty', false],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/Modal - Modal Dialog
+// std-modal - Modal Dialog
 // ============================================================================
 
-export const MODAL_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Modal',
+export const MODAL_BEHAVIOR: BehaviorSchema = {
+  name: 'std-modal',
+  version: '1.0.0',
   description: 'Modal dialog with open/close state management',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'ModalState',
-      runtime: true,
-      fields: [
-        { name: 'content', type: 'object', default: null },
+      name: 'ModalOrbital',
+      entity: {
+        name: 'ModalState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'content', type: 'object', default: null },
+        ],
+      },
+      traits: [
+        {
+          name: 'Modal',
+          linkedEntity: 'ModalState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Closed', isInitial: true },
+              { name: 'Open' },
+            ],
+            events: [
+              { key: 'OPEN', name: 'Open' },
+              { key: 'CLOSE', name: 'Close' },
+              { key: 'CONFIRM', name: 'Confirm' },
+            ],
+            transitions: [
+              {
+                from: 'Closed',
+                to: 'Open',
+                event: 'OPEN',
+                effects: [
+                  ['set', '@entity.content', '@payload.content'],
+                  ['render-ui', 'modal', {
+                    type: '@payload.type',
+                    onClose: 'CLOSE',
+                  }],
+                ],
+              },
+              {
+                from: 'Open',
+                to: 'Closed',
+                event: 'CLOSE',
+                effects: [],
+              },
+              {
+                from: 'Open',
+                to: 'Closed',
+                event: 'CONFIRM',
+                effects: [],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'Closed', isInitial: true },
-      { name: 'Open' },
-    ],
-    events: [
-      { key: 'OPEN', name: 'OPEN' },
-      { key: 'CLOSE', name: 'CLOSE' },
-      { key: 'CONFIRM', name: 'CONFIRM' },
-    ],
-    transitions: [
-      {
-        from: 'Closed',
-        to: 'Open',
-        event: 'OPEN',
-        effects: [
-          ['set', '@entity.content', '@payload.content'],
-          ['render-ui', 'modal', {
-            type: '@payload.type',
-            onClose: 'CLOSE',
-          }],
-        ],
-      },
-      {
-        from: 'Open',
-        to: 'Closed',
-        event: 'CLOSE',
-        effects: [
-          ['render-ui', 'modal', null],
-        ],
-      },
-      {
-        from: 'Open',
-        to: 'Closed',
-        event: 'CONFIRM',
-        effects: [
-          ['render-ui', 'modal', null],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/Drawer - Side Drawer Panel
+// std-drawer - Side Drawer Panel
 // ============================================================================
 
-export const DRAWER_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Drawer',
+export const DRAWER_BEHAVIOR: BehaviorSchema = {
+  name: 'std-drawer',
+  version: '1.0.0',
   description: 'Side drawer panel for detail views and forms',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'DrawerState',
-      runtime: true,
-      fields: [
-        { name: 'content', type: 'object', default: null },
+      name: 'DrawerOrbital',
+      entity: {
+        name: 'DrawerState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'content', type: 'object', default: null },
+        ],
+      },
+      traits: [
+        {
+          name: 'Drawer',
+          linkedEntity: 'DrawerState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Closed', isInitial: true },
+              { name: 'Open' },
+            ],
+            events: [
+              { key: 'OPEN', name: 'Open' },
+              { key: 'CLOSE', name: 'Close' },
+            ],
+            transitions: [
+              {
+                from: 'Closed',
+                to: 'Open',
+                event: 'OPEN',
+                effects: [
+                  ['set', '@entity.content', '@payload.content'],
+                  ['render-ui', 'drawer', {
+                    type: '@payload.type',
+                    onClose: 'CLOSE',
+                  }],
+                ],
+              },
+              {
+                from: 'Open',
+                to: 'Closed',
+                event: 'CLOSE',
+                effects: [],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'Closed', isInitial: true },
-      { name: 'Open' },
-    ],
-    events: [
-      { key: 'OPEN', name: 'OPEN' },
-      { key: 'CLOSE', name: 'CLOSE' },
-    ],
-    transitions: [
-      {
-        from: 'Closed',
-        to: 'Open',
-        event: 'OPEN',
-        effects: [
-          ['set', '@entity.content', '@payload.content'],
-          ['render-ui', 'drawer', {
-            type: '@payload.type',
-            onClose: 'CLOSE',
-          }],
-        ],
-      },
-      {
-        from: 'Open',
-        to: 'Closed',
-        event: 'CLOSE',
-        effects: [
-          ['render-ui', 'drawer', null],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/Tabs - Tabbed Navigation
+// std-tabs - Tabbed Navigation
 // ============================================================================
 
-export const TABS_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Tabs',
+export const TABS_BEHAVIOR: BehaviorSchema = {
+  name: 'std-tabs',
+  version: '1.0.0',
   description: 'Tabbed navigation within a page',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'TabsState',
-      runtime: true,
-      singleton: true,
-      fields: [
-        { name: 'activeTab', type: 'string', default: null },
+      name: 'TabsOrbital',
+      entity: {
+        name: 'TabsState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'activeTab', type: 'string', default: null },
+          { name: 'tabs', type: 'array', default: [] },
+          { name: 'defaultTab', type: 'string', default: null },
+        ],
+      },
+      traits: [
+        {
+          name: 'Tabs',
+          linkedEntity: 'TabsState',
+          category: 'interaction',
+          stateMachine: {
+            states: [{ name: 'Active', isInitial: true }],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'SELECT_TAB', name: 'Select Tab' },
+            ],
+            transitions: [
+              {
+                from: 'Active',
+                to: 'Active',
+                event: 'INIT',
+                effects: [
+                  ['set', '@entity.activeTab', '@entity.defaultTab'],
+                  ['render-ui', 'main', {
+                    type: 'filter-group',
+                    filterType: 'tabs',
+                    tabs: '@entity.tabs',
+                    active: '@entity.activeTab',
+                    onSelect: 'SELECT_TAB',
+                  }],
+                ],
+              },
+              {
+                from: 'Active',
+                to: 'Active',
+                event: 'SELECT_TAB',
+                effects: [['set', '@entity.activeTab', '@payload.tabId']],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'Active', isInitial: true },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'SELECT_TAB', name: 'SELECT_TAB' },
-    ],
-    transitions: [
-      // INIT: Self-loop on Active
-      {
-        from: 'Active',
-        to: 'Active',
-        event: 'INIT',
-        effects: [
-          ['set', '@entity.activeTab', '@config.defaultTab'],
-          ['render-ui', 'main', {
-            type: 'filter-group',
-            filterType: 'tabs',
-            tabs: '@config.tabs',
-            active: '@entity.activeTab',
-            onSelect: 'SELECT_TAB',
-          }],
-        ],
-      },
-      {
-        from: 'Active',
-        to: 'Active',
-        event: 'SELECT_TAB',
-        effects: [
-          ['set', '@entity.activeTab', '@payload.tabId'],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/Wizard - Multi-Step Flow
-// IMPORTANT: Each step is a STATE, not an index number
+// std-wizard - Multi-Step Flow
 // ============================================================================
 
-export const WIZARD_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Wizard',
+export const WIZARD_BEHAVIOR: BehaviorSchema = {
+  name: 'std-wizard',
+  version: '1.0.0',
   description: 'Multi-step wizard flow - each step is a state',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'WizardState',
-      runtime: true,
-      singleton: true,
-      fields: [
-        { name: 'stepData', type: 'object', default: {} },
+      name: 'WizardOrbital',
+      entity: {
+        name: 'WizardState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'stepData', type: 'object', default: {} },
+          { name: 'entityType', type: 'string', default: '' },
+          { name: 'step1Fields', type: 'array', default: [] },
+          { name: 'step2Fields', type: 'array', default: [] },
+          { name: 'completionUrl', type: 'string', default: '/' },
+        ],
+      },
+      traits: [
+        {
+          name: 'Wizard',
+          linkedEntity: 'WizardState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Step1', isInitial: true },
+              { name: 'Step2' },
+              { name: 'Step3' },
+              { name: 'Complete', isTerminal: true },
+            ],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'NEXT', name: 'Next' },
+              { key: 'PREV', name: 'Previous' },
+              { key: 'COMPLETE', name: 'Complete' },
+            ],
+            transitions: [
+              {
+                from: 'Step1',
+                to: 'Step1',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'wizard-progress',
+                    steps: ['Step 1', 'Step 2', 'Step 3'],
+                    current: 0,
+                  }],
+                  ['render-ui', 'main', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    fields: '@entity.step1Fields',
+                    submitEvent: 'NEXT',
+                  }],
+                ],
+              },
+              {
+                from: 'Step1',
+                to: 'Step2',
+                event: 'NEXT',
+                effects: [
+                  ['set', '@entity.stepData.step1', '@payload'],
+                  ['render-ui', 'main', {
+                    type: 'wizard-progress',
+                    steps: ['Step 1', 'Step 2', 'Step 3'],
+                    current: 1,
+                  }],
+                  ['render-ui', 'main', {
+                    type: 'form-section',
+                    entity: '@entity.entityType',
+                    fields: '@entity.step2Fields',
+                    submitEvent: 'NEXT',
+                    cancelEvent: 'PREV',
+                  }],
+                ],
+              },
+              {
+                from: 'Step2',
+                to: 'Step1',
+                event: 'PREV',
+                effects: [['emit', 'INIT']],
+              },
+              {
+                from: 'Step2',
+                to: 'Step3',
+                event: 'NEXT',
+                effects: [
+                  ['set', '@entity.stepData.step2', '@payload'],
+                  ['render-ui', 'main', {
+                    type: 'wizard-progress',
+                    steps: ['Step 1', 'Step 2', 'Step 3'],
+                    current: 2,
+                  }],
+                  ['render-ui', 'main', {
+                    type: 'entity-detail',
+                    entity: '@entity.entityType',
+                    fieldNames: ['step1', 'step2'],
+                    title: 'Review',
+                  }],
+                ],
+              },
+              {
+                from: 'Step3',
+                to: 'Step2',
+                event: 'PREV',
+                effects: [],
+              },
+              {
+                from: 'Step3',
+                to: 'Complete',
+                event: 'COMPLETE',
+                effects: [
+                  ['persist', 'create', '@entity.entityType', '@entity.stepData'],
+                  ['notify', { type: 'success', message: 'Wizard completed!' }],
+                  ['navigate', '@entity.completionUrl'],
+                ],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  // IMPORTANT: Each wizard step is a STATE, not a number index
-  // This is the correct pattern for wizards
-  stateMachine: {
-    states: [
-      { name: 'Step1', isInitial: true },
-      { name: 'Step2' },
-      { name: 'Step3' },
-      { name: 'Complete' },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'NEXT', name: 'NEXT' },
-      { key: 'PREV', name: 'PREV' },
-      { key: 'COMPLETE', name: 'COMPLETE' },
-    ],
-    transitions: [
-      // INIT on Step1: Self-loop that renders step 1
-      {
-        from: 'Step1',
-        to: 'Step1',
-        event: 'INIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'wizard-progress',
-            steps: ['Step 1', 'Step 2', 'Step 3'],
-            current: 0,
-          }],
-          ['render-ui', 'main', {
-            type: 'form-section',
-            entity: '@config.entity',
-            fields: '@config.step1Fields',
-            submitEvent: 'NEXT',
-          }],
-        ],
-      },
-      // Step1 → Step2
-      {
-        from: 'Step1',
-        to: 'Step2',
-        event: 'NEXT',
-        effects: [
-          ['set', '@entity.stepData.step1', '@payload'],
-          ['render-ui', 'main', {
-            type: 'wizard-progress',
-            steps: ['Step 1', 'Step 2', 'Step 3'],
-            current: 1,
-          }],
-          ['render-ui', 'main', {
-            type: 'form-section',
-            entity: '@config.entity',
-            fields: '@config.step2Fields',
-            submitEvent: 'NEXT',
-            cancelEvent: 'PREV',
-          }],
-        ],
-      },
-      // Step2 → Step1 (back)
-      {
-        from: 'Step2',
-        to: 'Step1',
-        event: 'PREV',
-        effects: [
-          ['emit', 'INIT'],
-        ],
-      },
-      // Step2 → Step3
-      {
-        from: 'Step2',
-        to: 'Step3',
-        event: 'NEXT',
-        effects: [
-          ['set', '@entity.stepData.step2', '@payload'],
-          ['render-ui', 'main', {
-            type: 'wizard-progress',
-            steps: ['Step 1', 'Step 2', 'Step 3'],
-            current: 2,
-          }],
-          ['render-ui', 'main', {
-            type: 'entity-detail',
-            entity: '@config.entity',
-            fieldNames: ['step1', 'step2'],
-            title: 'Review',
-          }],
-          ['render-ui', 'main', {
-            type: 'form-section',
-            submitLabel: 'Complete',
-            cancelLabel: 'Back',
-            submitEvent: 'COMPLETE',
-            cancelEvent: 'PREV',
-          }],
-        ],
-      },
-      // Step3 → Step2 (back)
-      {
-        from: 'Step3',
-        to: 'Step2',
-        event: 'PREV',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'wizard-progress',
-            steps: ['Step 1', 'Step 2', 'Step 3'],
-            current: 1,
-          }],
-          ['render-ui', 'main', {
-            type: 'form-section',
-            entity: '@config.entity',
-            fields: '@config.step2Fields',
-            submitEvent: 'NEXT',
-            cancelEvent: 'PREV',
-          }],
-        ],
-      },
-      // Step3 → Complete
-      {
-        from: 'Step3',
-        to: 'Complete',
-        event: 'COMPLETE',
-        effects: [
-          ['persist', 'create', '@config.entity', '@entity.stepData'],
-          ['notify', { type: 'success', message: 'Wizard completed!' }],
-          ['navigate', '@config.completionUrl'],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/MasterDetail - List + Detail Layout
+// std-masterdetail - List + Detail Layout
 // ============================================================================
 
-export const MASTER_DETAIL_BEHAVIOR: BehaviorTrait = {
-  name: 'std/MasterDetail',
+export const MASTER_DETAIL_BEHAVIOR: BehaviorSchema = {
+  name: 'std-masterdetail',
+  version: '1.0.0',
   description: 'Master-detail layout with synchronized list and detail views',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'MasterDetailState',
-      runtime: true,
-      singleton: true,
-      fields: [
-        { name: 'selectedId', type: 'string', default: null },
+      name: 'MasterDetailOrbital',
+      entity: {
+        name: 'MasterDetailState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'selectedId', type: 'string', default: null },
+          { name: 'entityType', type: 'string', default: '' },
+          { name: 'masterColumns', type: 'array', default: [] },
+          { name: 'detailFields', type: 'array', default: [] },
+        ],
+      },
+      traits: [
+        {
+          name: 'MasterDetail',
+          linkedEntity: 'MasterDetailState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'NoSelection', isInitial: true },
+              { name: 'Selected' },
+            ],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'SELECT', name: 'Select' },
+              { key: 'DESELECT', name: 'Deselect' },
+            ],
+            transitions: [
+              {
+                from: 'NoSelection',
+                to: 'NoSelection',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'master-detail',
+                    entity: '@entity.entityType',
+                    masterColumns: '@entity.masterColumns',
+                    onSelect: 'SELECT',
+                    selected: '@entity.selectedId',
+                  }],
+                  ['render-ui', 'main', {
+                    type: 'empty-state',
+                    message: 'Select an item to view details',
+                  }],
+                ],
+              },
+              {
+                from: 'NoSelection',
+                to: 'Selected',
+                event: 'SELECT',
+                effects: [
+                  ['set', '@entity.selectedId', '@payload.id'],
+                  ['render-ui', 'main', {
+                    type: 'entity-detail',
+                    entity: '@entity.entityType',
+                    id: '@payload.id',
+                    fieldNames: '@entity.detailFields',
+                  }],
+                ],
+              },
+              {
+                from: 'Selected',
+                to: 'Selected',
+                event: 'SELECT',
+                effects: [
+                  ['set', '@entity.selectedId', '@payload.id'],
+                  ['render-ui', 'main', {
+                    type: 'entity-detail',
+                    entity: '@entity.entityType',
+                    id: '@payload.id',
+                    fieldNames: '@entity.detailFields',
+                  }],
+                ],
+              },
+              {
+                from: 'Selected',
+                to: 'NoSelection',
+                event: 'DESELECT',
+                effects: [
+                  ['set', '@entity.selectedId', null],
+                  ['render-ui', 'main', {
+                    type: 'empty-state',
+                    message: 'Select an item to view details',
+                  }],
+                ],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'NoSelection', isInitial: true },
-      { name: 'Selected' },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'SELECT', name: 'SELECT' },
-      { key: 'DESELECT', name: 'DESELECT' },
-    ],
-    transitions: [
-      // INIT: Self-loop on NoSelection
-      {
-        from: 'NoSelection',
-        to: 'NoSelection',
-        event: 'INIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'master-detail',
-            entity: '@config.entity',
-            masterColumns: '@config.masterColumns',
-            onSelect: 'SELECT',
-            selected: '@entity.selectedId',
-          }],
-          ['render-ui', 'main', {
-            type: 'empty-state',
-            message: 'Select an item to view details',
-          }],
-        ],
-      },
-      {
-        from: 'NoSelection',
-        to: 'Selected',
-        event: 'SELECT',
-        effects: [
-          ['set', '@entity.selectedId', '@payload.id'],
-          ['render-ui', 'main', {
-            type: 'entity-detail',
-            entity: '@config.entity',
-            id: '@payload.id',
-            fieldNames: '@config.detailFields',
-          }],
-        ],
-      },
-      {
-        from: 'Selected',
-        to: 'Selected',
-        event: 'SELECT',
-        effects: [
-          ['set', '@entity.selectedId', '@payload.id'],
-          ['render-ui', 'main', {
-            type: 'entity-detail',
-            entity: '@config.entity',
-            id: '@payload.id',
-            fieldNames: '@config.detailFields',
-          }],
-        ],
-      },
-      {
-        from: 'Selected',
-        to: 'NoSelection',
-        event: 'DESELECT',
-        effects: [
-          ['set', '@entity.selectedId', null],
-          ['render-ui', 'main', {
-            type: 'empty-state',
-            message: 'Select an item to view details',
-          }],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
-// std/Filter - Filter Management
+// std-filter - Filter Management (ui-interaction version)
 // ============================================================================
 
-export const FILTER_BEHAVIOR: BehaviorTrait = {
-  name: 'std/Filter',
+export const FILTER_BEHAVIOR: BehaviorSchema = {
+  name: 'std-filter-ui',
+  version: '1.0.0',
   description: 'Filter and search management for lists',
-
-  dataEntities: [
+  orbitals: [
     {
-      name: 'FilterState',
-      runtime: true,
-      singleton: true,
-      fields: [
-        { name: 'filters', type: 'object', default: {} },
-        { name: 'searchTerm', type: 'string', default: '' },
+      name: 'FilterOrbital',
+      entity: {
+        name: 'FilterState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'filters', type: 'object', default: {} },
+          { name: 'searchTerm', type: 'string', default: '' },
+          { name: 'filterConfig', type: 'array', default: [] },
+        ],
+      },
+      traits: [
+        {
+          name: 'Filter',
+          linkedEntity: 'FilterState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Idle', isInitial: true },
+              { name: 'Filtering' },
+            ],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'SET_FILTER', name: 'Set Filter' },
+              { key: 'CLEAR_FILTERS', name: 'Clear Filters' },
+              { key: 'SEARCH', name: 'Search' },
+            ],
+            transitions: [
+              {
+                from: 'Idle',
+                to: 'Idle',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', {
+                    type: 'filter-group',
+                    filters: '@entity.filterConfig',
+                    values: '@entity.filters',
+                    onFilterChange: 'SET_FILTER',
+                    onClear: 'CLEAR_FILTERS',
+                  }],
+                ],
+              },
+              {
+                from: 'Idle',
+                to: 'Filtering',
+                event: 'SET_FILTER',
+                effects: [
+                  ['set', '@entity.filters', ['object/set', '@entity.filters', '@payload.field', '@payload.value']],
+                  ['emit', 'FILTER_CHANGED', '@entity.filters'],
+                ],
+              },
+              {
+                from: 'Filtering',
+                to: 'Idle',
+                event: 'SET_FILTER',
+                effects: [
+                  ['set', '@entity.filters', ['object/set', '@entity.filters', '@payload.field', '@payload.value']],
+                  ['emit', 'FILTER_CHANGED', '@entity.filters'],
+                ],
+              },
+              {
+                from: 'Filtering',
+                to: 'Idle',
+                event: 'CLEAR_FILTERS',
+                effects: [
+                  ['set', '@entity.filters', {}],
+                  ['set', '@entity.searchTerm', ''],
+                  ['emit', 'FILTER_CHANGED', {}],
+                ],
+              },
+              {
+                from: 'Idle',
+                to: 'Filtering',
+                event: 'SEARCH',
+                effects: [
+                  ['set', '@entity.searchTerm', '@payload.term'],
+                  ['emit', 'SEARCH_CHANGED', '@payload.term'],
+                ],
+              },
+            ],
+          },
+        },
       ],
+      pages: [],
     },
   ],
-
-  stateMachine: {
-    states: [
-      { name: 'Idle', isInitial: true },
-      { name: 'Filtering' },
-    ],
-    events: [
-      { key: 'INIT', name: 'INIT' },
-      { key: 'SET_FILTER', name: 'SET_FILTER' },
-      { key: 'CLEAR_FILTERS', name: 'CLEAR_FILTERS' },
-      { key: 'SEARCH', name: 'SEARCH' },
-    ],
-    transitions: [
-      // INIT: Self-loop
-      {
-        from: 'Idle',
-        to: 'Idle',
-        event: 'INIT',
-        effects: [
-          ['render-ui', 'main', {
-            type: 'filter-group',
-            filters: '@config.filters',
-            values: '@entity.filters',
-            onFilterChange: 'SET_FILTER',
-            onClear: 'CLEAR_FILTERS',
-          }],
-        ],
-      },
-      {
-        from: 'Idle',
-        to: 'Filtering',
-        event: 'SET_FILTER',
-        effects: [
-          ['set', '@entity.filters', ['object/set', '@entity.filters', '@payload.field', '@payload.value']],
-          ['emit', 'FILTER_CHANGED', '@entity.filters'],
-        ],
-      },
-      {
-        from: 'Filtering',
-        to: 'Idle',
-        event: 'SET_FILTER',
-        effects: [
-          ['set', '@entity.filters', ['object/set', '@entity.filters', '@payload.field', '@payload.value']],
-          ['emit', 'FILTER_CHANGED', '@entity.filters'],
-        ],
-      },
-      {
-        from: 'Filtering',
-        to: 'Idle',
-        event: 'CLEAR_FILTERS',
-        effects: [
-          ['set', '@entity.filters', {}],
-          ['set', '@entity.searchTerm', ''],
-          ['emit', 'FILTER_CHANGED', {}],
-        ],
-      },
-      {
-        from: 'Idle',
-        to: 'Filtering',
-        event: 'SEARCH',
-        effects: [
-          ['set', '@entity.searchTerm', '@payload.term'],
-          ['emit', 'SEARCH_CHANGED', '@payload.term'],
-        ],
-      },
-    ],
-  },
-
 };
 
 // ============================================================================
 // Export All Behaviors
 // ============================================================================
 
-export const UI_INTERACTION_BEHAVIORS: BehaviorTrait[] = [
+export const UI_INTERACTION_BEHAVIORS: BehaviorSchema[] = [
   LIST_BEHAVIOR,
   DETAIL_BEHAVIOR,
   FORM_BEHAVIOR,
