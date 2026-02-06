@@ -7,22 +7,15 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/Loading - Loading State Management
 // ============================================================================
 
-export const LOADING_BEHAVIOR: StandardBehavior = {
+export const LOADING_BEHAVIOR: BehaviorTrait = {
   name: 'std/Loading',
-  category: 'async',
   description: 'Loading state management with success/error handling',
-  suggestedFor: [
-    'Async data loading',
-    'API calls',
-    'Resource fetching',
-    'Initial page load',
-  ],
 
   dataEntities: [
     {
@@ -120,29 +113,15 @@ export const LOADING_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'showLoadingAfterMs', type: 'number', description: 'Delay before showing loading', default: 200 },
-      { name: 'minLoadingMs', type: 'number', description: 'Minimum loading display time', default: 500 },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Fetch - Data Fetching
 // ============================================================================
 
-export const FETCH_BEHAVIOR: StandardBehavior = {
+export const FETCH_BEHAVIOR: BehaviorTrait = {
   name: 'std/Fetch',
-  category: 'async',
   description: 'Data fetching with caching and refresh capabilities',
-  suggestedFor: [
-    'API data fetching',
-    'Entity loading',
-    'Remote data',
-    'Cached queries',
-  ],
 
   dataEntities: [
     {
@@ -249,31 +228,15 @@ export const FETCH_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'entity', description: 'Entity type to fetch' },
-    ],
-    optional: [
-      { name: 'staleTimeMs', type: 'number', description: 'Time until data is stale', default: 60000 },
-      { name: 'cacheKey', type: 'string', description: 'Cache key for deduplication' },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Submit - Form Submission
 // ============================================================================
 
-export const SUBMIT_BEHAVIOR: StandardBehavior = {
+export const SUBMIT_BEHAVIOR: BehaviorTrait = {
   name: 'std/Submit',
-  category: 'async',
   description: 'Async submission with retry capabilities',
-  suggestedFor: [
-    'Form submission',
-    'Data saving',
-    'API mutations',
-    'Actions with confirmation',
-  ],
 
   dataEntities: [
     {
@@ -365,30 +328,15 @@ export const SUBMIT_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'successMessage', type: 'string', description: 'Success notification', default: 'Saved successfully' },
-      { name: 'errorMessage', type: 'string', description: 'Error notification', default: 'Failed to save' },
-      { name: 'resetOnSuccess', type: 'boolean', description: 'Reset to idle on success', default: false },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Retry - Automatic Retry
 // ============================================================================
 
-export const RETRY_BEHAVIOR: StandardBehavior = {
+export const RETRY_BEHAVIOR: BehaviorTrait = {
   name: 'std/Retry',
-  category: 'async',
   description: 'Automatic retry with exponential backoff',
-  suggestedFor: [
-    'Network requests',
-    'Unreliable operations',
-    'Transient failures',
-    'Recovery logic',
-  ],
 
   dataEntities: [
     {
@@ -498,31 +446,15 @@ export const RETRY_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'maxAttempts', type: 'number', description: 'Maximum retry attempts', default: 3 },
-      { name: 'initialDelayMs', type: 'number', description: 'Initial retry delay', default: 1000 },
-      { name: 'maxDelayMs', type: 'number', description: 'Maximum retry delay', default: 30000 },
-      { name: 'backoffMultiplier', type: 'number', description: 'Backoff multiplier', default: 2 },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Poll - Periodic Polling
 // ============================================================================
 
-export const POLL_BEHAVIOR: StandardBehavior = {
+export const POLL_BEHAVIOR: BehaviorTrait = {
   name: 'std/Poll',
-  category: 'async',
   description: 'Periodic polling with start/stop control',
-  suggestedFor: [
-    'Real-time updates',
-    'Status checking',
-    'Live data',
-    'Notification polling',
-  ],
 
   dataEntities: [
     {
@@ -627,21 +559,13 @@ export const POLL_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'intervalMs', type: 'number', description: 'Poll interval in ms', default: 5000 },
-      { name: 'stopOnError', type: 'boolean', description: 'Stop polling on error', default: false },
-      { name: 'maxPolls', type: 'number', description: 'Maximum poll count (null = infinite)', default: null },
-    ],
-  },
 };
 
 // ============================================================================
 // Export All Async Behaviors
 // ============================================================================
 
-export const ASYNC_BEHAVIORS: StandardBehavior[] = [
+export const ASYNC_BEHAVIORS: BehaviorTrait[] = [
   LOADING_BEHAVIOR,
   FETCH_BEHAVIOR,
   SUBMIT_BEHAVIOR,

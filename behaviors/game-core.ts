@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/GameLoop - Master Game Tick Coordination
@@ -19,16 +19,9 @@ import type { StandardBehavior } from './types.js';
  * States: Running, Paused
  * Provides the master clock for all game systems.
  */
-export const GAME_LOOP_BEHAVIOR: StandardBehavior = {
+export const GAME_LOOP_BEHAVIOR: BehaviorTrait = {
     name: 'std/GameLoop',
-    category: 'game-core',
     description: 'Master game loop coordinator running at 60fps',
-    suggestedFor: [
-        'All real-time games',
-        'Platformers',
-        'Action games',
-        'Endless runners',
-    ],
 
     dataEntities: [
         {
@@ -79,7 +72,13 @@ export const GAME_LOOP_BEHAVIOR: StandardBehavior = {
                 effects: [],
             },
             {
-                from: ['Running', 'Paused'],
+                from: 'Running',
+                to: 'Stopped',
+                event: 'STOP',
+                effects: [],
+            },
+            {
+                from: 'Paused',
                 to: 'Stopped',
                 event: 'STOP',
                 effects: [],
@@ -100,13 +99,6 @@ export const GAME_LOOP_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'targetFps', type: 'number', description: 'Target frames per second', default: 60 },
-            { name: 'fixedTimestep', type: 'boolean', description: 'Use fixed timestep', default: true },
-        ],
-    },
 };
 
 // ============================================================================
@@ -118,16 +110,9 @@ export const GAME_LOOP_BEHAVIOR: StandardBehavior = {
  *
  * Applied to entities that need physics simulation.
  */
-export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
+export const PHYSICS_2D_BEHAVIOR: BehaviorTrait = {
     name: 'std/Physics2D',
-    category: 'game-core',
     description: '2D physics with gravity, velocity, and friction',
-    suggestedFor: [
-        'Platformer characters',
-        'Falling objects',
-        'Projectiles',
-        'Any entity affected by gravity',
-    ],
 
     requiredFields: [
         { name: 'x', type: 'number', description: 'Entity X position' },
@@ -160,7 +145,18 @@ export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
         ],
         transitions: [
             {
-                from: '*',
+                from: 'Active',
+                to: 'Active',
+                event: 'INIT',
+                effects: [
+                    ['set', '@entity.vx', 0],
+                    ['set', '@entity.vy', 0],
+                    ['set', '@entity.isGrounded', false],
+                ],
+            },
+            {
+                from: 'Frozen',
+                to: 'Active',
                 event: 'INIT',
                 effects: [
                     ['set', '@entity.vx', 0],
@@ -170,6 +166,7 @@ export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Active',
+                to: 'Active',
                 event: 'APPLY_FORCE',
                 effects: [
                     ['set', '@entity.vx', ['+', '@entity.vx', '@payload.fx']],
@@ -178,6 +175,7 @@ export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Active',
+                to: 'Active',
                 event: 'GROUND_HIT',
                 effects: [
                     ['set', '@entity.isGrounded', true],
@@ -221,15 +219,6 @@ export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'gravity', type: 'number', description: 'Gravity acceleration (pixels/frame²)', default: 0.5 },
-            { name: 'maxVelocityY', type: 'number', description: 'Terminal velocity', default: 15 },
-            { name: 'friction', type: 'number', description: 'Ground friction (0-1)', default: 0.8 },
-            { name: 'airResistance', type: 'number', description: 'Air resistance (0-1)', default: 0.99 },
-        ],
-    },
 };
 
 // ============================================================================
@@ -241,15 +230,9 @@ export const PHYSICS_2D_BEHAVIOR: StandardBehavior = {
  *
  * Singleton behavior that tracks all input state.
  */
-export const INPUT_BEHAVIOR: StandardBehavior = {
+export const INPUT_BEHAVIOR: BehaviorTrait = {
     name: 'std/Input',
-    category: 'game-core',
     description: 'Unified keyboard and touch input state management',
-    suggestedFor: [
-        'All interactive games',
-        'Player controls',
-        'Menu navigation',
-    ],
 
     dataEntities: [
         {
@@ -281,6 +264,8 @@ export const INPUT_BEHAVIOR: StandardBehavior = {
         ],
         transitions: [
             {
+                from: 'Ready',
+                to: 'Ready',
                 event: 'KEY_DOWN',
                 effects: [
                     ['if', ['or', ['=', '@payload.key', 'ArrowLeft'], ['=', '@payload.key', 'a']],
@@ -300,6 +285,8 @@ export const INPUT_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Ready',
+                to: 'Ready',
                 event: 'KEY_UP',
                 effects: [
                     ['if', ['or', ['=', '@payload.key', 'ArrowLeft'], ['=', '@payload.key', 'a']],
@@ -319,6 +306,8 @@ export const INPUT_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'Ready',
+                to: 'Ready',
                 event: 'RESET',
                 effects: [
                     ['set', '@entity.left', false],
@@ -333,12 +322,6 @@ export const INPUT_BEHAVIOR: StandardBehavior = {
         ],
     },
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'keyMap', type: 'object', description: 'Key to action mapping', default: {} },
-        ],
-    },
 };
 
 // ============================================================================
@@ -350,16 +333,9 @@ export const INPUT_BEHAVIOR: StandardBehavior = {
  *
  * Configures how an entity responds to collisions.
  */
-export const COLLISION_BEHAVIOR: StandardBehavior = {
+export const COLLISION_BEHAVIOR: BehaviorTrait = {
     name: 'std/Collision',
-    category: 'game-core',
     description: 'Collision detection and response configuration',
-    suggestedFor: [
-        'Solid platforms',
-        'Trigger zones',
-        'Collectibles',
-        'Hazards',
-    ],
 
     dataEntities: [
         {
@@ -387,6 +363,7 @@ export const COLLISION_BEHAVIOR: StandardBehavior = {
         transitions: [
             {
                 from: 'Active',
+                to: 'Active',
                 event: 'COLLISION',
                 effects: [
                     ['set', '@entity.isColliding', true],
@@ -397,6 +374,7 @@ export const COLLISION_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Active',
+                to: 'Active',
                 event: 'TRIGGER_ENTER',
                 effects: [
                     ['if', '@config.onTrigger',
@@ -405,6 +383,7 @@ export const COLLISION_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Active',
+                to: 'Active',
                 event: 'TRIGGER_EXIT',
                 effects: [
                     ['set', '@entity.collidingWith', ['array/filter', '@entity.collidingWith', ['fn', 'id', ['!=', '@id', '@payload.entityId']]]],
@@ -430,23 +409,13 @@ export const COLLISION_BEHAVIOR: StandardBehavior = {
         ],
     },
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'type', type: 'string', description: 'Collision type', default: 'solid', enum: ['solid', 'trigger'] },
-            { name: 'layer', type: 'string', description: 'Collision layer', default: 'default' },
-            { name: 'collidesWith', type: 'array', description: 'Layers to collide with', default: ['default'] },
-            { name: 'onCollision', type: 'event', description: 'Event to emit on collision' },
-            { name: 'onTrigger', type: 'event', description: 'Event to emit on trigger' },
-        ],
-    },
 };
 
 // ============================================================================
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_CORE_BEHAVIORS: StandardBehavior[] = [
+export const GAME_CORE_BEHAVIORS: BehaviorTrait[] = [
     GAME_LOOP_BEHAVIOR,
     PHYSICS_2D_BEHAVIOR,
     INPUT_BEHAVIOR,

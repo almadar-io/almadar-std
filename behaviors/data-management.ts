@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/Pagination - Page Navigation
@@ -16,16 +16,9 @@ import type { StandardBehavior } from './types.js';
 /**
  * std/Pagination - Page navigation behavior for large data sets.
  */
-export const PAGINATION_BEHAVIOR: StandardBehavior = {
+export const PAGINATION_BEHAVIOR: BehaviorTrait = {
   name: 'std/Pagination',
-  category: 'data-management',
   description: 'Page-based navigation for large data sets',
-  suggestedFor: [
-    'Large lists',
-    'Table pagination',
-    'Infinite scroll alternative',
-    'Data-heavy views',
-  ],
 
   dataEntities: [
     {
@@ -102,29 +95,15 @@ export const PAGINATION_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'defaultPageSize', type: 'number', description: 'Default items per page', default: 20 },
-      { name: 'pageSizeOptions', type: 'array', description: 'Available page sizes', default: [10, 20, 50, 100] },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Selection - Single/Multi Selection
 // ============================================================================
 
-export const SELECTION_BEHAVIOR: StandardBehavior = {
+export const SELECTION_BEHAVIOR: BehaviorTrait = {
   name: 'std/Selection',
-  category: 'data-management',
   description: 'Single or multi-selection management',
-  suggestedFor: [
-    'Multi-select lists',
-    'Bulk operations',
-    'Item picking',
-    'Checkboxes in tables',
-  ],
 
   dataEntities: [
     {
@@ -224,28 +203,15 @@ export const SELECTION_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'mode', type: 'string', description: 'Selection mode', default: 'single', enum: ['single', 'multi'] },
-      { name: 'maxSelection', type: 'number', description: 'Maximum selections (multi mode)', default: null },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Sort - Sorting
 // ============================================================================
 
-export const SORT_BEHAVIOR: StandardBehavior = {
+export const SORT_BEHAVIOR: BehaviorTrait = {
   name: 'std/Sort',
-  category: 'data-management',
   description: 'Sorting by field with direction toggle',
-  suggestedFor: [
-    'Sortable tables',
-    'List ordering',
-    'Column headers',
-  ],
 
   dataEntities: [
     {
@@ -312,13 +278,6 @@ export const SORT_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'defaultField', type: 'string', description: 'Default sort field' },
-      { name: 'defaultDirection', type: 'string', description: 'Default direction', default: 'asc', enum: ['asc', 'desc'] },
-    ],
-  },
 };
 
 // ============================================================================
@@ -336,17 +295,9 @@ export const SORT_BEHAVIOR: StandardBehavior = {
  * { "type": "entity-table", "entity": "Task", "query": "@TaskQuery" }
  * ```
  */
-export const FILTER_BEHAVIOR: StandardBehavior = {
+export const FILTER_BEHAVIOR: BehaviorTrait = {
   name: 'std/Filter',
-  category: 'data-management',
   description: 'Query Singleton pattern for explicit filtering - use with entity-table query prop',
-  suggestedFor: [
-    'Filterable lists',
-    'Advanced search',
-    'Filter panels',
-    'Faceted search',
-    'Entity tables with filters',
-  ],
 
   dataEntities: [
     {
@@ -434,15 +385,6 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'string', description: 'Entity to filter' },
-    ],
-    optional: [
-      { name: 'filters', type: 'array', description: 'Filter field definitions', default: [] },
-      { name: 'columns', type: 'array', description: 'Table columns to display', default: [] },
-    ],
-  },
 };
 
 // ============================================================================
@@ -455,16 +397,9 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
  * Uses a singleton to hold search state. Can be combined with std/Filter
  * for full query singleton functionality, or used standalone.
  */
-export const SEARCH_BEHAVIOR: StandardBehavior = {
+export const SEARCH_BEHAVIOR: BehaviorTrait = {
   name: 'std/Search',
-  category: 'data-management',
   description: 'Search with debounce - updates QueryState.search field',
-  suggestedFor: [
-    'Search inputs',
-    'Quick filters',
-    'Global search',
-    'Type-ahead',
-  ],
 
   dataEntities: [
     {
@@ -553,21 +488,13 @@ export const SEARCH_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'debounceMs', type: 'number', description: 'Debounce delay in ms', default: 300 },
-      { name: 'minLength', type: 'number', description: 'Minimum search length', default: 1 },
-      { name: 'placeholder', type: 'string', description: 'Input placeholder', default: 'Search...' },
-    ],
-  },
 };
 
 // ============================================================================
 // Export All Data Management Behaviors
 // ============================================================================
 
-export const DATA_MANAGEMENT_BEHAVIORS: StandardBehavior[] = [
+export const DATA_MANAGEMENT_BEHAVIORS: BehaviorTrait[] = [
   PAGINATION_BEHAVIOR,
   SELECTION_BEHAVIOR,
   SORT_BEHAVIOR,

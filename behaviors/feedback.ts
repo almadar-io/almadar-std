@@ -7,22 +7,15 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/Notification - Toast Notifications
 // ============================================================================
 
-export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
+export const NOTIFICATION_BEHAVIOR: BehaviorTrait = {
   name: 'std/Notification',
-  category: 'feedback',
   description: 'Toast notification with auto-dismiss',
-  suggestedFor: [
-    'Success messages',
-    'Error alerts',
-    'Status updates',
-    'User feedback',
-  ],
 
   dataEntities: [
     {
@@ -50,7 +43,8 @@ export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
     ],
     transitions: [
       {
-        from: '*',
+        from: 'Hidden',
+        to: 'Visible',
         event: 'SHOW',
         effects: [
           ['let', [['id', ['+', '@entity.currentId', 1]]],
@@ -68,6 +62,27 @@ export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Visible',
+        to: 'Visible',
+        event: 'SHOW',
+        effects: [
+          ['let', [['id', ['+', '@entity.currentId', 1]]],
+            ['do',
+              ['set', '@entity.currentId', '@id'],
+              ['set', '@entity.notifications',
+                ['array/append', '@entity.notifications', {
+                  id: '@id',
+                  type: '@payload.type',
+                  message: '@payload.message',
+                  title: '@payload.title',
+                }]],
+              ['when', ['>', '@config.autoDismissMs', 0],
+                ['async/delay', '@config.autoDismissMs', ['emit', 'AUTO_DISMISS', { id: '@id' }]]]]],
+        ],
+      },
+      {
+        from: 'Visible',
+        to: 'Visible',
         event: 'DISMISS',
         effects: [
           ['set', '@entity.notifications',
@@ -75,6 +90,8 @@ export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Visible',
+        to: 'Visible',
         event: 'AUTO_DISMISS',
         effects: [
           ['set', '@entity.notifications',
@@ -82,6 +99,8 @@ export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Visible',
+        to: 'Hidden',
         event: 'HIDE',
         effects: [
           ['set', '@entity.notifications', []],
@@ -90,30 +109,15 @@ export const NOTIFICATION_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'autoDismissMs', type: 'number', description: 'Auto dismiss delay (0 = no auto)', default: 5000 },
-      { name: 'position', type: 'string', description: 'Toast position', default: 'top-right', enum: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'] },
-      { name: 'maxVisible', type: 'number', description: 'Maximum visible notifications', default: 5 },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Confirmation - Confirmation Dialog
 // ============================================================================
 
-export const CONFIRMATION_BEHAVIOR: StandardBehavior = {
+export const CONFIRMATION_BEHAVIOR: BehaviorTrait = {
   name: 'std/Confirmation',
-  category: 'feedback',
   description: 'Confirmation dialog with confirm/cancel actions',
-  suggestedFor: [
-    'Delete confirmation',
-    'Destructive actions',
-    'Important decisions',
-    'Exit warnings',
-  ],
 
   dataEntities: [
     {
@@ -179,30 +183,15 @@ export const CONFIRMATION_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'confirmLabel', type: 'string', description: 'Confirm button label', default: 'Confirm' },
-      { name: 'cancelLabel', type: 'string', description: 'Cancel button label', default: 'Cancel' },
-      { name: 'confirmVariant', type: 'string', description: 'Confirm button variant', default: 'primary', enum: ['primary', 'danger', 'warning'] },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Undo - Undo Stack
 // ============================================================================
 
-export const UNDO_BEHAVIOR: StandardBehavior = {
+export const UNDO_BEHAVIOR: BehaviorTrait = {
   name: 'std/Undo',
-  category: 'feedback',
   description: 'Undo/redo stack for reversible actions',
-  suggestedFor: [
-    'Document editing',
-    'Form changes',
-    'Canvas operations',
-    'Reversible actions',
-  ],
 
   dataEntities: [
     {
@@ -228,6 +217,8 @@ export const UNDO_BEHAVIOR: StandardBehavior = {
     ],
     transitions: [
       {
+        from: 'Ready',
+        to: 'Ready',
         event: 'PUSH',
         effects: [
           ['set', '@entity.undoStack',
@@ -250,6 +241,8 @@ export const UNDO_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Ready',
+        to: 'Ready',
         event: 'UNDO',
         guard: ['>', ['array/len', '@entity.undoStack'], 0],
         effects: [
@@ -261,6 +254,8 @@ export const UNDO_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Ready',
+        to: 'Ready',
         event: 'REDO',
         guard: ['>', ['array/len', '@entity.redoStack'], 0],
         effects: [
@@ -272,6 +267,8 @@ export const UNDO_BEHAVIOR: StandardBehavior = {
         ],
       },
       {
+        from: 'Ready',
+        to: 'Ready',
         event: 'CLEAR',
         effects: [
           ['set', '@entity.undoStack', []],
@@ -281,21 +278,13 @@ export const UNDO_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'maxHistory', type: 'number', description: 'Maximum undo history', default: 50 },
-      { name: 'showToast', type: 'boolean', description: 'Show undo toast', default: true },
-      { name: 'toastDurationMs', type: 'number', description: 'Toast display duration', default: 5000 },
-    ],
-  },
 };
 
 // ============================================================================
 // Export All Feedback Behaviors
 // ============================================================================
 
-export const FEEDBACK_BEHAVIORS: StandardBehavior[] = [
+export const FEEDBACK_BEHAVIORS: BehaviorTrait[] = [
   NOTIFICATION_BEHAVIOR,
   CONFIRMATION_BEHAVIOR,
   UNDO_BEHAVIOR,

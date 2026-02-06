@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/GameFlow - Game State Machine
@@ -18,16 +18,9 @@ import type { StandardBehavior } from './types.js';
  *
  * States: Menu → Playing → Paused → GameOver/Victory
  */
-export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
+export const GAME_FLOW_BEHAVIOR: BehaviorTrait = {
     name: 'std/GameFlow',
-    category: 'game-ui',
     description: 'Master game flow: menu, play, pause, game over, victory',
-    suggestedFor: [
-        'All games',
-        'Game state management',
-        'Menu systems',
-        'Win/lose conditions',
-    ],
 
     dataEntities: [
         {
@@ -61,7 +54,55 @@ export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
         ],
         transitions: [
             {
-                from: '*',
+                from: 'Menu',
+                to: 'Menu',
+                event: 'QUIT',
+                effects: [
+                    ['emit', 'STOP'],
+                    ['render', 'screen', 'game-menu', {
+                        title: '@config.title',
+                        onStart: 'START',
+                    }],
+                ],
+            },
+            {
+                from: 'Playing',
+                to: 'Menu',
+                event: 'QUIT',
+                effects: [
+                    ['emit', 'STOP'],
+                    ['render', 'screen', 'game-menu', {
+                        title: '@config.title',
+                        onStart: 'START',
+                    }],
+                ],
+            },
+            {
+                from: 'Paused',
+                to: 'Menu',
+                event: 'QUIT',
+                effects: [
+                    ['emit', 'STOP'],
+                    ['render', 'screen', 'game-menu', {
+                        title: '@config.title',
+                        onStart: 'START',
+                    }],
+                ],
+            },
+            {
+                from: 'GameOver',
+                to: 'Menu',
+                event: 'QUIT',
+                effects: [
+                    ['emit', 'STOP'],
+                    ['render', 'screen', 'game-menu', {
+                        title: '@config.title',
+                        onStart: 'START',
+                    }],
+                ],
+            },
+            {
+                from: 'Victory',
                 to: 'Menu',
                 event: 'QUIT',
                 effects: [
@@ -139,7 +180,17 @@ export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['GameOver', 'Victory'],
+                from: 'GameOver',
+                to: 'Playing',
+                event: 'RESTART',
+                effects: [
+                    ['render', 'overlay', null],
+                    ['emit', 'GAME_RESET'],
+                    ['emit', 'START'],
+                ],
+            },
+            {
+                from: 'Victory',
                 to: 'Playing',
                 event: 'RESTART',
                 effects: [
@@ -151,14 +202,6 @@ export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
         ],
     },
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'title', type: 'string', description: 'Game title', default: 'Game' },
-            { name: 'showMenu', type: 'boolean', description: 'Show main menu', default: true },
-            { name: 'allowPause', type: 'boolean', description: 'Allow pausing', default: true },
-        ],
-    },
 };
 
 // ============================================================================
@@ -168,16 +211,9 @@ export const GAME_FLOW_BEHAVIOR: StandardBehavior = {
 /**
  * std/Dialogue - Manages NPC dialogue and branching conversations.
  */
-export const DIALOGUE_BEHAVIOR: StandardBehavior = {
+export const DIALOGUE_BEHAVIOR: BehaviorTrait = {
     name: 'std/Dialogue',
-    category: 'game-ui',
     description: 'NPC dialogue system with branching conversations',
-    suggestedFor: [
-        'RPGs',
-        'Adventure games',
-        'Story-driven games',
-        'NPC interactions',
-    ],
 
     dataEntities: [
         {
@@ -235,6 +271,7 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Typing',
+                to: 'Typing',
                 event: 'TYPE_CHAR',
                 effects: [
                     ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
@@ -265,6 +302,7 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'Showing',
+                to: 'Typing',
                 event: 'NEXT',
                 guard: ['not', ['object/get', ['array/nth', '@entity.dialogueTree', '@entity.currentNode'], 'choices']],
                 effects: [
@@ -309,7 +347,29 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
-                from: ['Typing', 'Showing', 'Choice'],
+                from: 'Typing',
+                to: 'Hidden',
+                event: 'CLOSE',
+                effects: [
+                    ['set', '@entity.dialogueTree', []],
+                    ['set', '@entity.currentNode', 0],
+                    ['emit', 'GAME_RESUME'],
+                    ['render', 'overlay.dialogue', null],
+                ],
+            },
+            {
+                from: 'Showing',
+                to: 'Hidden',
+                event: 'CLOSE',
+                effects: [
+                    ['set', '@entity.dialogueTree', []],
+                    ['set', '@entity.currentNode', 0],
+                    ['emit', 'GAME_RESUME'],
+                    ['render', 'overlay.dialogue', null],
+                ],
+            },
+            {
+                from: 'Choice',
                 to: 'Hidden',
                 event: 'CLOSE',
                 effects: [
@@ -336,15 +396,6 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'typingSpeed', type: 'number', description: 'Characters per second', default: 30 },
-            { name: 'autoAdvance', type: 'boolean', description: 'Auto-advance after typing', default: false },
-            { name: 'autoAdvanceDelay', type: 'number', description: 'Delay before auto-advance (ms)', default: 2000 },
-            { name: 'showPortrait', type: 'boolean', description: 'Show speaker portrait', default: true },
-        ],
-    },
 };
 
 // ============================================================================
@@ -354,16 +405,9 @@ export const DIALOGUE_BEHAVIOR: StandardBehavior = {
 /**
  * std/LevelProgress - Manages level unlock, selection, and completion.
  */
-export const LEVEL_PROGRESS_BEHAVIOR: StandardBehavior = {
+export const LEVEL_PROGRESS_BEHAVIOR: BehaviorTrait = {
     name: 'std/LevelProgress',
-    category: 'game-ui',
     description: 'Level progression with unlock, selection, and completion tracking',
-    suggestedFor: [
-        'Level-based games',
-        'Puzzle games',
-        'Platformers with levels',
-        'Mobile games',
-    ],
 
     dataEntities: [
         {
@@ -395,7 +439,37 @@ export const LEVEL_PROGRESS_BEHAVIOR: StandardBehavior = {
         ],
         transitions: [
             {
-                from: '*',
+                from: 'Browsing',
+                to: 'Browsing',
+                event: 'INIT',
+                effects: [
+                    ['render', 'screen', 'level-select', {
+                        levels: '@config.levels',
+                        unlockedLevels: '@entity.unlockedLevels',
+                        levelStars: '@entity.levelStars',
+                        starsPerLevel: '@config.starsPerLevel',
+                        totalStars: '@entity.totalStars',
+                        onSelect: 'SELECT_LEVEL',
+                    }],
+                ],
+            },
+            {
+                from: 'LevelLoading',
+                to: 'Browsing',
+                event: 'INIT',
+                effects: [
+                    ['render', 'screen', 'level-select', {
+                        levels: '@config.levels',
+                        unlockedLevels: '@entity.unlockedLevels',
+                        levelStars: '@entity.levelStars',
+                        starsPerLevel: '@config.starsPerLevel',
+                        totalStars: '@entity.totalStars',
+                        onSelect: 'SELECT_LEVEL',
+                    }],
+                ],
+            },
+            {
+                from: 'InLevel',
                 to: 'Browsing',
                 event: 'INIT',
                 effects: [
@@ -433,6 +507,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: StandardBehavior = {
             },
             {
                 from: 'InLevel',
+                to: 'InLevel',
                 event: 'COMPLETE_LEVEL',
                 effects: [
                     ['set', '@entity.levelStars', ['object/set', '@entity.levelStars', ['str/toString', '@entity.currentLevel'],
@@ -448,6 +523,8 @@ export const LEVEL_PROGRESS_BEHAVIOR: StandardBehavior = {
                 ],
             },
             {
+                from: 'InLevel',
+                to: 'InLevel',
                 event: 'UNLOCK_LEVEL',
                 guard: ['not', ['array/includes', '@entity.unlockedLevels', '@payload.levelIndex']],
                 effects: [
@@ -465,23 +542,13 @@ export const LEVEL_PROGRESS_BEHAVIOR: StandardBehavior = {
         ],
     },
 
-    configSchema: {
-        required: [
-            { name: 'levels', type: 'array', description: 'Level definitions' },
-        ],
-        optional: [
-            { name: 'starsPerLevel', type: 'number', description: 'Max stars per level', default: 3 },
-            { name: 'unlockNext', type: 'boolean', description: 'Auto-unlock next level on complete', default: true },
-            { name: 'persistProgress', type: 'boolean', description: 'Save progress to storage', default: true },
-        ],
-    },
 };
 
 // ============================================================================
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_UI_BEHAVIORS: StandardBehavior[] = [
+export const GAME_UI_BEHAVIORS: BehaviorTrait[] = [
     GAME_FLOW_BEHAVIOR,
     DIALOGUE_BEHAVIOR,
     LEVEL_PROGRESS_BEHAVIOR,

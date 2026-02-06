@@ -8,10 +8,11 @@
  */
 
 import type { StdOperatorMeta, StdModule } from './types.js';
-import type { StandardBehavior, BehaviorCategory } from './behaviors/types.js';
+import type { BehaviorTrait } from './behaviors/types.js';
+import type { State, Event, Transition } from '@almadar/core/types';
 import { STD_MODULES } from './types.js';
 import { STD_OPERATORS_BY_MODULE } from './registry.js';
-import { STANDARD_BEHAVIORS, BEHAVIORS_BY_CATEGORY } from './behaviors/registry.js';
+import { STANDARD_BEHAVIORS } from './behaviors/registry.js';
 
 // ============================================================================
 // Domain Language Mappings
@@ -90,9 +91,10 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
 };
 
 /**
- * Human-friendly behavior category descriptions
+ * (DEPRECATED) Behavior category descriptions
+ * Categories have been removed from behaviors, using flat list now.
  */
-export const BEHAVIOR_CATEGORY_DESCRIPTIONS: Partial<Record<BehaviorCategory, CategoryInfo>> = {
+const BEHAVIOR_GROUPINGS = {
     'ui-interaction': {
         name: 'UI Interaction',
         description: 'User interface state management for lists, forms, modals, and navigation.',
@@ -129,6 +131,8 @@ export const BEHAVIOR_CATEGORY_DESCRIPTIONS: Partial<Record<BehaviorCategory, Ca
         icon: '🕹️',
     },
 };
+
+export const BEHAVIOR_CATEGORY_DESCRIPTIONS = BEHAVIOR_GROUPINGS;
 
 // ============================================================================
 // Types
@@ -197,7 +201,7 @@ export interface BehaviorDoc {
     name: string;
     shortName: string;
     description: string;
-    suggestedFor: string[];
+    suggestedFor?: string[];
     states: string[];
     statesCount: number;
     initial: string;
@@ -362,31 +366,27 @@ export function generateModuleDoc(moduleId: StdModule): ModuleDoc | null {
 /**
  * Generate documentation for a single behavior
  */
-export function generateBehaviorDoc(behavior: StandardBehavior): BehaviorDoc {
+export function generateBehaviorDoc(behavior: BehaviorTrait): BehaviorDoc {
     const sm = behavior.stateMachine;
 
     // Extract states list
-    const states = (sm?.states || []).map(s =>
-        typeof s === 'string' ? s : s.name
-    );
+    const states = (sm?.states || []).map((s: State) => s.name);
 
     // Extract events list  
-    const events = (sm?.events || []).map(e =>
-        typeof e === 'string' ? e : e.key
-    );
+    const events = (sm?.events || []).map((e: Event) => e.key);
 
     // Get initial state - find state with isInitial: true
-    const initialState = (sm?.states || []).find(s => typeof s !== 'string' && s.isInitial);
-    const initial = initialState ? (typeof initialState === 'string' ? initialState : initialState.name) : states[0] || '';
+    const initialState = (sm?.states || []).find((s: State) => s.isInitial);
+    const initial = initialState?.name || states[0] || '';
 
     // Build state machine for visualizer
     const stateMachineDoc: BehaviorStateMachineDoc | undefined = sm ? {
-        states: states.map(name => ({
+        states: states.map((name: string) => ({
             name,
             isInitial: name === initial,
             isFinal: false,
         })),
-        transitions: (sm.transitions || []).map(t => ({
+        transitions: (sm.transitions || []).map((t: Transition) => ({
             from: t.from || '*',
             to: t.to,
             event: t.event,
@@ -399,9 +399,9 @@ export function generateBehaviorDoc(behavior: StandardBehavior): BehaviorDoc {
     const sourceCode = generateBehaviorSourceCode(behavior);
 
     // Extract data entities for display
-    const dataEntities = behavior.dataEntities?.map(e => ({
+    const dataEntities = behavior.dataEntities?.map((e: { name: string; fields: { name: string; type: string; default?: unknown }[] }) => ({
         name: e.name,
-        fields: e.fields.map(f => ({
+        fields: e.fields.map((f: { name: string; type: string; default?: unknown }) => ({
             name: f.name,
             type: f.type,
             default: f.default,
@@ -409,7 +409,7 @@ export function generateBehaviorDoc(behavior: StandardBehavior): BehaviorDoc {
     }));
 
     // Extract ticks for display
-    const ticks = behavior.ticks?.map(t => ({
+    const ticks = behavior.ticks?.map((t: { name: string; interval: string | number; description?: string }) => ({
         name: t.name,
         interval: t.interval,
         description: t.description,
@@ -418,8 +418,8 @@ export function generateBehaviorDoc(behavior: StandardBehavior): BehaviorDoc {
     return {
         name: behavior.name,
         shortName: behavior.name.replace('std/', ''),
-        description: behavior.description,
-        suggestedFor: behavior.suggestedFor || [],
+        description: behavior.description || '',
+        suggestedFor: [],
         states,
         statesCount: states.length,
         initial,
@@ -440,14 +440,13 @@ export function generateBehaviorDoc(behavior: StandardBehavior): BehaviorDoc {
 /**
  * Generate a formatted source code representation of a behavior
  */
-function generateBehaviorSourceCode(behavior: StandardBehavior): string {
+function generateBehaviorSourceCode(behavior: BehaviorTrait): string {
     const lines: string[] = [];
     const indent = '  ';
 
     lines.push(`export const ${behavior.name.replace('std/', '').toUpperCase()}_BEHAVIOR = {`);
     lines.push(`${indent}name: '${behavior.name}',`);
-    lines.push(`${indent}category: '${behavior.category}',`);
-    lines.push(`${indent}description: '${behavior.description}',`);
+    lines.push(`${indent}description: '${behavior.description || ''}',`);
 
     // Data Entities
     if (behavior.dataEntities && behavior.dataEntities.length > 0) {
@@ -475,8 +474,8 @@ function generateBehaviorSourceCode(behavior: StandardBehavior): string {
         lines.push('');
         lines.push(`${indent}stateMachine: {`);
         // Find initial state from isInitial flag
-        const initialStateName = sm.states.find(s => typeof s !== 'string' && s.isInitial);
-        const initialName = initialStateName ? (typeof initialStateName === 'string' ? initialStateName : initialStateName.name) : '';
+        const initialStateName = sm.states.find((s: State) => s.isInitial);
+        const initialName = initialStateName?.name || '';
         if (initialName) {
             lines.push(`${indent}${indent}// Initial state: '${initialName}'`);
         }
@@ -484,8 +483,8 @@ function generateBehaviorSourceCode(behavior: StandardBehavior): string {
         // States
         lines.push(`${indent}${indent}states: [`);
         for (const state of sm.states) {
-            const name = typeof state === 'string' ? state : state.name;
-            const isInitial = typeof state === 'string' ? false : state.isInitial;
+            const name = state.name;
+            const isInitial = state.isInitial;
             if (isInitial) {
                 lines.push(`${indent}${indent}${indent}{ name: '${name}', isInitial: true },`);
             } else {
@@ -497,7 +496,7 @@ function generateBehaviorSourceCode(behavior: StandardBehavior): string {
         // Events
         lines.push(`${indent}${indent}events: [`);
         for (const event of sm.events) {
-            const key = typeof event === 'string' ? event : event.key;
+            const key = event.key;
             lines.push(`${indent}${indent}${indent}{ key: '${key}' },`);
         }
         lines.push(`${indent}${indent}],`);
@@ -615,21 +614,18 @@ export function generateModulesDocs(): StdLibDocs {
 export function generateBehaviorsDocs(): BehaviorsDocs {
     const categories: CategoryDoc[] = [];
 
-    // Group behaviors by category
-    for (const [categoryId, categoryInfo] of Object.entries(BEHAVIOR_CATEGORY_DESCRIPTIONS)) {
-        const categoryBehaviors = BEHAVIORS_BY_CATEGORY[categoryId as BehaviorCategory] || [];
+    // Generate flat list of all behaviors (categories deprecated)
+    const allBehaviors = STANDARD_BEHAVIORS.map((b: BehaviorTrait) => generateBehaviorDoc(b));
 
-        if (categoryBehaviors.length === 0) continue;
-
-        const behaviors = categoryBehaviors.map((b) => generateBehaviorDoc(b));
-
-        categories.push({
-            id: categoryId,
-            ...categoryInfo,
-            behaviors,
-            behaviorCount: behaviors.length,
-        });
-    }
+    // Create a single "All Behaviors" category
+    categories.push({
+        id: 'all',
+        name: 'Standard Behaviors',
+        description: 'All reusable state machine behaviors from the standard library.',
+        icon: '📦',
+        behaviors: allBehaviors,
+        behaviorCount: allBehaviors.length,
+    });
 
     const stats: DocsStats = {
         totalModules: 0,

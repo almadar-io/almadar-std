@@ -6,7 +6,7 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior, BehaviorMetadata, BehaviorCategory } from './types.js';
+import type { BehaviorTrait, BehaviorMetadata } from './types.js';
 import { getBehaviorMetadata } from './types.js';
 import { UI_INTERACTION_BEHAVIORS } from './ui-interaction.js';
 import { DATA_MANAGEMENT_BEHAVIORS } from './data-management.js';
@@ -23,7 +23,7 @@ import { GAME_UI_BEHAVIORS } from './game-ui.js';
 /**
  * All Standard Behaviors combined into a single array.
  */
-export const STANDARD_BEHAVIORS: StandardBehavior[] = [
+export const STANDARD_BEHAVIORS: BehaviorTrait[] = [
   ...UI_INTERACTION_BEHAVIORS,
   ...DATA_MANAGEMENT_BEHAVIORS,
   ...ASYNC_BEHAVIORS,
@@ -36,26 +36,13 @@ export const STANDARD_BEHAVIORS: StandardBehavior[] = [
 /**
  * Behavior registry indexed by name for fast lookup.
  */
-export const BEHAVIOR_REGISTRY: Record<string, StandardBehavior> = STANDARD_BEHAVIORS.reduce(
+export const BEHAVIOR_REGISTRY: Record<string, BehaviorTrait> = STANDARD_BEHAVIORS.reduce(
   (acc, behavior) => {
     acc[behavior.name] = behavior;
     return acc;
   },
-  {} as Record<string, StandardBehavior>
+  {} as Record<string, BehaviorTrait>
 );
-
-/**
- * Behaviors grouped by category.
- */
-export const BEHAVIORS_BY_CATEGORY: Record<BehaviorCategory, StandardBehavior[]> = {
-  'ui-interaction': UI_INTERACTION_BEHAVIORS,
-  'data-management': DATA_MANAGEMENT_BEHAVIORS,
-  'async': ASYNC_BEHAVIORS,
-  'feedback': FEEDBACK_BEHAVIORS,
-  'game-core': GAME_CORE_BEHAVIORS,
-  'game-entity': GAME_ENTITY_BEHAVIORS,
-  'game-ui': GAME_UI_BEHAVIORS,
-};
 
 // ============================================================================
 // Lookup Functions
@@ -67,7 +54,7 @@ export const BEHAVIORS_BY_CATEGORY: Record<BehaviorCategory, StandardBehavior[]>
  * @param name - Behavior name (e.g., 'std/List')
  * @returns The behavior or undefined if not found
  */
-export function getBehavior(name: string): StandardBehavior | undefined {
+export function getBehavior(name: string): BehaviorTrait | undefined {
   return BEHAVIOR_REGISTRY[name];
 }
 
@@ -79,16 +66,6 @@ export function getBehavior(name: string): StandardBehavior | undefined {
  */
 export function isKnownBehavior(name: string): boolean {
   return name in BEHAVIOR_REGISTRY;
-}
-
-/**
- * Get all behaviors in a category.
- *
- * @param category - Behavior category
- * @returns Array of behaviors in that category
- */
-export function getBehaviorsByCategory(category: BehaviorCategory): StandardBehavior[] {
-  return BEHAVIORS_BY_CATEGORY[category] ?? [];
 }
 
 /**
@@ -105,7 +82,7 @@ export function getAllBehaviorNames(): string[] {
  *
  * @returns Array of all behaviors
  */
-export function getAllBehaviors(): StandardBehavior[] {
+export function getAllBehaviors(): BehaviorTrait[] {
   return STANDARD_BEHAVIORS;
 }
 
@@ -119,18 +96,15 @@ export function getAllBehaviorMetadata(): BehaviorMetadata[] {
 }
 
 /**
- * Find behaviors that match a use case.
+ * Find behaviors that match a use case based on description.
  *
  * @param useCase - Use case description to match
  * @returns Array of matching behaviors
  */
-export function findBehaviorsForUseCase(useCase: string): StandardBehavior[] {
+export function findBehaviorsForUseCase(useCase: string): BehaviorTrait[] {
   const lowerUseCase = useCase.toLowerCase();
   return STANDARD_BEHAVIORS.filter((behavior) =>
-    behavior.suggestedFor?.some((suggestion) =>
-      suggestion.toLowerCase().includes(lowerUseCase) ||
-      lowerUseCase.includes(suggestion.toLowerCase())
-    ) ?? false
+    behavior.description?.toLowerCase().includes(lowerUseCase) ?? false
   );
 }
 
@@ -140,10 +114,10 @@ export function findBehaviorsForUseCase(useCase: string): StandardBehavior[] {
  * @param event - Event name
  * @returns Array of behaviors that handle this event
  */
-export function getBehaviorsForEvent(event: string): StandardBehavior[] {
+export function getBehaviorsForEvent(event: string): BehaviorTrait[] {
   return STANDARD_BEHAVIORS.filter((behavior) => {
     const events = behavior.stateMachine?.events || [];
-    return events.some(e => (typeof e === 'string' ? e : e.key) === event);
+    return events.some((e: { key: string }) => e.key === event);
   });
 }
 
@@ -153,10 +127,10 @@ export function getBehaviorsForEvent(event: string): StandardBehavior[] {
  * @param state - State name
  * @returns Array of behaviors that have this state
  */
-export function getBehaviorsWithState(state: string): StandardBehavior[] {
+export function getBehaviorsWithState(state: string): BehaviorTrait[] {
   return STANDARD_BEHAVIORS.filter((behavior) => {
     const states = behavior.stateMachine?.states || [];
-    return states.some(s => (typeof s === 'string' ? s : s.name) === state);
+    return states.some((s: { name: string }) => s.name === state);
   });
 }
 
@@ -247,20 +221,17 @@ function levenshteinDistance(a: string, b: string): number {
  */
 export function getBehaviorLibraryStats(): {
   totalBehaviors: number;
-  byCategory: Record<string, number>;
   totalStates: number;
   totalEvents: number;
   totalTransitions: number;
   totalTicks: number;
 } {
-  const byCategory: Record<string, number> = {};
   let totalStates = 0;
   let totalEvents = 0;
   let totalTransitions = 0;
   let totalTicks = 0;
 
   for (const behavior of STANDARD_BEHAVIORS) {
-    byCategory[behavior.category] = (byCategory[behavior.category] ?? 0) + 1;
     const sm = behavior.stateMachine;
     if (sm) {
       totalStates += (sm.states || []).length;
@@ -272,7 +243,6 @@ export function getBehaviorLibraryStats(): {
 
   return {
     totalBehaviors: STANDARD_BEHAVIORS.length,
-    byCategory,
     totalStates,
     totalEvents,
     totalTransitions,

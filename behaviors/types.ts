@@ -2,12 +2,7 @@
  * Standard Behaviors Types
  *
  * Standard Behaviors are reusable Traits with a `std/` naming convention.
- * They use a more flexible state machine format optimized for authoring.
- *
- * ARCHITECTURE: Behaviors ARE Traits conceptually. They use:
- * - stateMachine: BehaviorStateMachine (flexible states, events, transitions)
- * - ticks: BehaviorTick[] (frame-by-frame execution for games)
- * - dataEntities: BehaviorDataEntity[] (runtime state)
+ * They directly use the Trait type from @almadar/core/types.
  *
  * @packageDocumentation
  */
@@ -43,76 +38,18 @@ export type {
   TraitTick,
   TraitDataEntity,
   TraitEntityField,
+  TraitCategory,
 };
 
 // ============================================================================
-// Behavior Categories
+// Behavior Trait Type Alias
 // ============================================================================
 
 /**
- * Categories of Standard Behaviors
+ * BehaviorTrait is the canonical type for Standard Library behaviors.
+ * It is an alias for the core Trait type.
  */
-export const BEHAVIOR_CATEGORIES = [
-  'ui-interaction',   // User interface state management
-  'data-management',  // Data operations and state
-  'async',            // Asynchronous workflows
-  'feedback',         // User feedback and confirmations
-  'game-core',        // Game loop and systems
-  'game-entity',      // Game entity behaviors
-  'game-ui',          // Game interface
-] as const;
-
-export type BehaviorCategory = (typeof BEHAVIOR_CATEGORIES)[number];
-
-// ============================================================================
-// Config Field Types (for IDE hints and documentation)
-// ============================================================================
-
-export type FieldType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'array'
-  | 'object'
-  | 'entity'
-  | 'slot'
-  | 'pattern'
-  | 'event'
-  | 'action[]';
-
-export interface ConfigField {
-  name: string;
-  type: FieldType;
-  description: string;
-  default?: unknown;
-  enum?: string[];
-}
-
-// ============================================================================
-// Deprecated Aliases (for backwards compatibility)
-// Use the core types directly from @almadar/core/types
-// ============================================================================
-
-/** @deprecated Use State from @almadar/core/types */
-export type BehaviorState = State;
-
-/** @deprecated Use Event from @almadar/core/types */
-export type BehaviorEvent = Event;
-
-/** @deprecated Use Transition from @almadar/core/types */
-export type BehaviorTransition = Transition;
-
-/** @deprecated Use StateMachine from @almadar/core/types */
-export type BehaviorStateMachine = StateMachine;
-
-/** @deprecated Use TraitTick from @almadar/core/types */
-export type BehaviorTick = TraitTick;
-
-/** @deprecated Use TraitEntityField from @almadar/core/types */
-export type BehaviorEntityField = TraitEntityField;
-
-/** @deprecated Use TraitDataEntity from @almadar/core/types */
-export type BehaviorDataEntity = TraitDataEntity;
+export type BehaviorTrait = Trait;
 
 // ============================================================================
 // Item Action (for render_ui props)
@@ -128,73 +65,16 @@ export interface ItemAction {
 }
 
 // ============================================================================
-// Standard Behavior Interface
+// Behavior Metadata (for quick lookup and documentation)
 // ============================================================================
 
 /**
- * Configuration schema for documentation and IDE hints
- */
-export interface BehaviorConfig {
-  required: ConfigField[];
-  optional: ConfigField[];
-}
-
-/**
- * Standard Behavior definition
- */
-export interface StandardBehavior {
-  /** Behavior identifier (e.g., 'std/List', 'std/Form') */
-  name: string;
-
-  /** Category for organization */
-  category: BehaviorCategory;
-
-  /** Human-readable description */
-  description: string;
-
-  // ========== Documentation Extensions ==========
-
-  /** When to use this behavior */
-  suggestedFor?: string[];
-
-  /** Configuration schema for IDE hints */
-  configSchema?: BehaviorConfig;
-
-  // ========== State Machine ==========
-
-  /** State machine definition */
-  stateMachine?: BehaviorStateMachine;
-
-  // ========== Trait Features ==========
-
-  /** Required fields from linked entity */
-  requiredFields?: RequiredField[];
-
-  /** Runtime data entities */
-  dataEntities?: BehaviorDataEntity[];
-
-  /** Frame-by-frame execution */
-  ticks?: BehaviorTick[];
-
-  /** Cross-behavior event listeners */
-  listens?: Array<{
-    event: string;
-    triggers: string;
-    guard?: Expression;
-  }>;
-
-  /** Initial effects on behavior activation */
-  initialEffects?: Effect[];
-}
-
-/**
- * Behavior metadata for quick lookup
+ * Behavior metadata extracted from a Trait for documentation purposes
  */
 export interface BehaviorMetadata {
   name: string;
-  category: BehaviorCategory;
+  category?: TraitCategory;
   description: string;
-  suggestedFor: string[];
   states: string[];
   events: string[];
   tickCount: number;
@@ -206,18 +86,10 @@ export interface BehaviorMetadata {
 // Helper Functions
 // ============================================================================
 
-export function isBehaviorCategory(value: string): value is BehaviorCategory {
-  return BEHAVIOR_CATEGORIES.includes(value as BehaviorCategory);
-}
-
-export function isGameBehaviorCategory(category: BehaviorCategory): boolean {
-  return category.startsWith('game-');
-}
-
 /**
- * Extract metadata from a StandardBehavior
+ * Extract metadata from a BehaviorTrait for documentation
  */
-export function getBehaviorMetadata(behavior: StandardBehavior): BehaviorMetadata {
+export function getBehaviorMetadata(behavior: BehaviorTrait): BehaviorMetadata {
   const sm = behavior.stateMachine;
 
   // Core types: State is always an object with name
@@ -230,7 +102,6 @@ export function getBehaviorMetadata(behavior: StandardBehavior): BehaviorMetadat
     name: behavior.name,
     category: behavior.category,
     description: behavior.description || '',
-    suggestedFor: behavior.suggestedFor || [],
     states,
     events,
     tickCount: behavior.ticks?.length || 0,
@@ -242,7 +113,7 @@ export function getBehaviorMetadata(behavior: StandardBehavior): BehaviorMetadat
 /**
  * Validate behavior structure
  */
-export function validateBehaviorStructure(behavior: StandardBehavior): string[] {
+export function validateBehaviorStructure(behavior: BehaviorTrait): string[] {
   const errors: string[] = [];
 
   if (!behavior.name) {
@@ -251,14 +122,6 @@ export function validateBehaviorStructure(behavior: StandardBehavior): string[] 
 
   if (!behavior.name.startsWith('std/')) {
     errors.push(`Behavior name should start with 'std/' (got: ${behavior.name})`);
-  }
-
-  if (!behavior.category) {
-    errors.push('Behavior must have a category');
-  }
-
-  if (!isBehaviorCategory(behavior.category)) {
-    errors.push(`Invalid category: ${behavior.category}`);
   }
 
   const sm = behavior.stateMachine;
@@ -280,7 +143,7 @@ export function validateBehaviorStructure(behavior: StandardBehavior): string[] 
 /**
  * Validate behavior events match transitions
  */
-export function validateBehaviorEvents(behavior: StandardBehavior): string[] {
+export function validateBehaviorEvents(behavior: BehaviorTrait): string[] {
   const errors: string[] = [];
   const sm = behavior.stateMachine;
   if (!sm) return errors;
@@ -306,7 +169,7 @@ export function validateBehaviorEvents(behavior: StandardBehavior): string[] {
 /**
  * Validate behavior states match transitions
  */
-export function validateBehaviorStates(behavior: StandardBehavior): string[] {
+export function validateBehaviorStates(behavior: BehaviorTrait): string[] {
   const errors: string[] = [];
   const sm = behavior.stateMachine;
   if (!sm) return errors;
@@ -328,37 +191,4 @@ export function validateBehaviorStates(behavior: StandardBehavior): string[] {
   }
 
   return errors;
-}
-
-// ============================================================================
-// Normalization Functions
-// Convert flexible Behavior types to strict core types
-// ============================================================================
-
-/**
- * Humanize an event key to a readable name.
- * E.g., 'CONFIRM_DELETE' -> 'Confirm Delete'
- */
-function humanizeEventKey(key: string): string {
-  return key
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-}
-
-/**
- * Map BehaviorCategory to TraitCategory.
- * Falls back to 'interaction' for unmapped categories.
- */
-function mapBehaviorCategoryToTraitCategory(category: BehaviorCategory): TraitCategory {
-  const mapping: Record<BehaviorCategory, TraitCategory> = {
-    'ui-interaction': 'interaction',
-    'data-management': 'lifecycle',
-    'async': 'integration',
-    'feedback': 'notification',
-    'game-core': 'game-core',
-    'game-entity': 'game-character',
-    'game-ui': 'interaction',
-  };
-  return mapping[category] || 'interaction';
 }

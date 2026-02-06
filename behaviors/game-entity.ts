@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/Health - Entity Health System
@@ -18,16 +18,9 @@ import type { StandardBehavior } from './types.js';
  *
  * States: Alive → Damaged → Dead
  */
-export const HEALTH_BEHAVIOR: StandardBehavior = {
+export const HEALTH_BEHAVIOR: BehaviorTrait = {
     name: 'std/Health',
-    category: 'game-entity',
     description: 'Entity health with damage, healing, invulnerability, and death',
-    suggestedFor: [
-        'Player characters',
-        'Enemies',
-        'Destructible objects',
-        'Bosses',
-    ],
 
     dataEntities: [
         {
@@ -182,16 +175,6 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [
-            { name: 'maxHealth', type: 'number', description: 'Maximum health points' },
-        ],
-        optional: [
-            { name: 'invulnerabilityTime', type: 'number', description: 'Invulnerability duration after damage (ms)', default: 500 },
-            { name: 'onDeath', type: 'event', description: 'Event to emit on death', default: 'ENTITY_DIED' },
-            { name: 'showHealthBar', type: 'boolean', description: 'Render health bar', default: true },
-        ],
-    },
 };
 
 // ============================================================================
@@ -201,16 +184,9 @@ export const HEALTH_BEHAVIOR: StandardBehavior = {
 /**
  * std/Score - Manages score with points, combos, and multipliers.
  */
-export const SCORE_BEHAVIOR: StandardBehavior = {
+export const SCORE_BEHAVIOR: BehaviorTrait = {
     name: 'std/Score',
-    category: 'game-entity',
     description: 'Score tracking with points, combos, and multipliers',
-    suggestedFor: [
-        'Arcade games',
-        'Puzzle games',
-        'Platformers with collectibles',
-        'Competitive games',
-    ],
 
     dataEntities: [
         {
@@ -322,14 +298,6 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'comboTimeWindow', type: 'number', description: 'Time window for combos (ms)', default: 2000 },
-            { name: 'maxMultiplier', type: 'number', description: 'Maximum combo multiplier', default: 10 },
-            { name: 'persistHighScore', type: 'boolean', description: 'Save high score to storage', default: true },
-        ],
-    },
 };
 
 // ============================================================================
@@ -341,16 +309,9 @@ export const SCORE_BEHAVIOR: StandardBehavior = {
  *
  * Handles position updates based on input or AI.
  */
-export const MOVEMENT_BEHAVIOR: StandardBehavior = {
+export const MOVEMENT_BEHAVIOR: BehaviorTrait = {
     name: 'std/Movement',
-    category: 'game-entity',
     description: 'Entity movement with speed and direction',
-    suggestedFor: [
-        'Player characters',
-        'NPCs',
-        'Enemies',
-        'Moving platforms',
-    ],
 
     requiredFields: [
         { name: 'x', type: 'number', description: 'Entity X position' },
@@ -469,15 +430,6 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'moveSpeed', type: 'number', description: 'Movement speed (pixels/frame)', default: 5 },
-            { name: 'jumpForce', type: 'number', description: 'Jump velocity', default: -12 },
-            { name: 'acceleration', type: 'number', description: 'Acceleration rate', default: 0.5 },
-            { name: 'deceleration', type: 'number', description: 'Deceleration rate', default: 0.3 },
-        ],
-    },
 };
 
 // ============================================================================
@@ -487,16 +439,9 @@ export const MOVEMENT_BEHAVIOR: StandardBehavior = {
 /**
  * std/Combat - Handles attacks, cooldowns, and hit detection.
  */
-export const COMBAT_BEHAVIOR: StandardBehavior = {
+export const COMBAT_BEHAVIOR: BehaviorTrait = {
     name: 'std/Combat',
-    category: 'game-entity',
     description: 'Combat system with attacks, cooldowns, and hitboxes',
-    suggestedFor: [
-        'Fighting games',
-        'Action RPGs',
-        'Beat-em-ups',
-        'Boss encounters',
-    ],
 
     dataEntities: [
         {
@@ -587,16 +532,6 @@ export const COMBAT_BEHAVIOR: StandardBehavior = {
         },
     ],
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'attackDamage', type: 'number', description: 'Damage per attack', default: 10 },
-            { name: 'attackDuration', type: 'number', description: 'Attack animation duration (ms)', default: 200 },
-            { name: 'cooldownDuration', type: 'number', description: 'Cooldown between attacks (ms)', default: 300 },
-            { name: 'hitboxOffset', type: 'object', description: 'Hitbox offset from entity', default: { x: 20, y: 0 } },
-            { name: 'hitboxSize', type: 'object', description: 'Hitbox dimensions', default: { width: 30, height: 40 } },
-        ],
-    },
 };
 
 // ============================================================================
@@ -606,16 +541,9 @@ export const COMBAT_BEHAVIOR: StandardBehavior = {
 /**
  * std/Inventory - Manages collected items and equipment.
  */
-export const INVENTORY_BEHAVIOR: StandardBehavior = {
+export const INVENTORY_BEHAVIOR: BehaviorTrait = {
     name: 'std/Inventory',
-    category: 'game-entity',
     description: 'Item collection, storage, and usage',
-    suggestedFor: [
-        'RPGs',
-        'Adventure games',
-        'Survival games',
-        'Collectible-based games',
-    ],
 
     dataEntities: [
         {
@@ -794,21 +722,13 @@ export const INVENTORY_BEHAVIOR: StandardBehavior = {
         ],
     },
 
-    configSchema: {
-        required: [],
-        optional: [
-            { name: 'maxSlots', type: 'number', description: 'Maximum inventory slots', default: 20 },
-            { name: 'stackable', type: 'boolean', description: 'Allow item stacking', default: true },
-            { name: 'maxStack', type: 'number', description: 'Maximum stack size', default: 99 },
-        ],
-    },
 };
 
 // ============================================================================
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_ENTITY_BEHAVIORS: StandardBehavior[] = [
+export const GAME_ENTITY_BEHAVIORS: BehaviorTrait[] = [
     HEALTH_BEHAVIOR,
     SCORE_BEHAVIOR,
     MOVEMENT_BEHAVIOR,

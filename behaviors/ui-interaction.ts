@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { StandardBehavior } from './types.js';
+import type { BehaviorTrait } from './types.js';
 
 // ============================================================================
 // std/List - Entity List Management
@@ -25,16 +25,9 @@ import type { StandardBehavior } from './types.js';
  * States: Browsing → Creating/Viewing/Editing/Deleting
  * Implements complete CRUD operations with modal/drawer UI patterns.
  */
-export const LIST_BEHAVIOR: StandardBehavior = {
+export const LIST_BEHAVIOR: BehaviorTrait = {
   name: 'std/List',
-  category: 'ui-interaction',
   description: 'Entity list management with CRUD operations',
-  suggestedFor: [
-    'Entity listing pages',
-    'Admin panels',
-    'Data management screens',
-    'Table views with inline actions',
-  ],
 
   dataEntities: [
     {
@@ -234,35 +227,15 @@ export const LIST_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'entity', description: 'Entity type to list' },
-      { name: 'columns', type: 'array', description: 'Fields to display as columns' },
-    ],
-    optional: [
-      { name: 'title', type: 'string', description: 'Page title', default: '' },
-      { name: 'display', type: 'string', description: 'Display mode', default: 'table', enum: ['table', 'cards', 'list'] },
-      { name: 'actions', type: 'action[]', description: 'Available actions', default: ['view', 'edit', 'delete'] },
-      { name: 'createInModal', type: 'boolean', description: 'Show create form in modal', default: true },
-      { name: 'editInDrawer', type: 'boolean', description: 'Show edit form in drawer', default: true },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Detail - Single Entity View
 // ============================================================================
 
-export const DETAIL_BEHAVIOR: StandardBehavior = {
+export const DETAIL_BEHAVIOR: BehaviorTrait = {
   name: 'std/Detail',
-  category: 'ui-interaction',
   description: 'Single entity view with edit/delete capabilities',
-  suggestedFor: [
-    'Entity detail pages',
-    'Profile views',
-    'Settings pages',
-    'Single record screens',
-  ],
 
   dataEntities: [
     {
@@ -377,33 +350,15 @@ export const DETAIL_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'entity', description: 'Entity type' },
-      { name: 'fields', type: 'array', description: 'Fields to display' },
-    ],
-    optional: [
-      { name: 'layout', type: 'string', description: 'Layout mode', default: 'two-column', enum: ['single-column', 'two-column', 'grid'] },
-      { name: 'allowEdit', type: 'boolean', description: 'Allow editing', default: true },
-      { name: 'allowDelete', type: 'boolean', description: 'Allow deletion', default: true },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Form - Form State Management
 // ============================================================================
 
-export const FORM_BEHAVIOR: StandardBehavior = {
+export const FORM_BEHAVIOR: BehaviorTrait = {
   name: 'std/Form',
-  category: 'ui-interaction',
   description: 'Form state management with validation and submission',
-  suggestedFor: [
-    'Create/edit forms',
-    'Settings forms',
-    'Multi-field input',
-    'Validated data entry',
-  ],
 
   dataEntities: [
     {
@@ -551,34 +506,15 @@ export const FORM_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'entity', description: 'Entity type' },
-      { name: 'fields', type: 'array', description: 'Form fields' },
-    ],
-    optional: [
-      { name: 'mode', type: 'string', description: 'Form mode', default: 'create', enum: ['create', 'edit'] },
-      { name: 'validation', type: 'object', description: 'Validation rules', default: {} },
-      { name: 'submitEvent', type: 'event', description: 'Event to emit on successful submit', default: 'SAVE' },
-      { name: 'cancelEvent', type: 'event', description: 'Event to emit on cancel', default: 'CANCEL' },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Modal - Modal Dialog
 // ============================================================================
 
-export const MODAL_BEHAVIOR: StandardBehavior = {
+export const MODAL_BEHAVIOR: BehaviorTrait = {
   name: 'std/Modal',
-  category: 'ui-interaction',
   description: 'Modal dialog with open/close state management',
-  suggestedFor: [
-    'Confirmation dialogs',
-    'Create forms',
-    'Detail views',
-    'Any overlay content',
-  ],
 
   dataEntities: [
     {
@@ -632,30 +568,15 @@ export const MODAL_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'size', type: 'string', description: 'Modal size', default: 'md', enum: ['sm', 'md', 'lg', 'xl', 'full'] },
-      { name: 'closeOnOverlay', type: 'boolean', description: 'Close on overlay click', default: true },
-      { name: 'closeOnEscape', type: 'boolean', description: 'Close on escape key', default: true },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Drawer - Side Drawer Panel
 // ============================================================================
 
-export const DRAWER_BEHAVIOR: StandardBehavior = {
+export const DRAWER_BEHAVIOR: BehaviorTrait = {
   name: 'std/Drawer',
-  category: 'ui-interaction',
   description: 'Side drawer panel for detail views and forms',
-  suggestedFor: [
-    'Detail panels',
-    'Edit forms',
-    'Property panels',
-    'Side navigation',
-  ],
 
   dataEntities: [
     {
@@ -700,30 +621,15 @@ export const DRAWER_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [],
-    optional: [
-      { name: 'position', type: 'string', description: 'Drawer position', default: 'right', enum: ['left', 'right'] },
-      { name: 'size', type: 'string', description: 'Drawer size', default: 'md', enum: ['sm', 'md', 'lg'] },
-      { name: 'overlay', type: 'boolean', description: 'Show overlay', default: true },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Tabs - Tabbed Navigation
 // ============================================================================
 
-export const TABS_BEHAVIOR: StandardBehavior = {
+export const TABS_BEHAVIOR: BehaviorTrait = {
   name: 'std/Tabs',
-  category: 'ui-interaction',
   description: 'Tabbed navigation within a page',
-  suggestedFor: [
-    'Multi-view pages',
-    'Settings with sections',
-    'Dashboard tabs',
-    'Profile sections',
-  ],
 
   dataEntities: [
     {
@@ -772,14 +678,6 @@ export const TABS_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'tabs', type: 'array', description: 'Tab definitions with id, label, content' },
-    ],
-    optional: [
-      { name: 'defaultTab', type: 'string', description: 'Default active tab ID' },
-    ],
-  },
 };
 
 // ============================================================================
@@ -787,16 +685,9 @@ export const TABS_BEHAVIOR: StandardBehavior = {
 // IMPORTANT: Each step is a STATE, not an index number
 // ============================================================================
 
-export const WIZARD_BEHAVIOR: StandardBehavior = {
+export const WIZARD_BEHAVIOR: BehaviorTrait = {
   name: 'std/Wizard',
-  category: 'ui-interaction',
   description: 'Multi-step wizard flow - each step is a state',
-  suggestedFor: [
-    'Onboarding flows',
-    'Multi-step forms',
-    'Setup wizards',
-    'Checkout flows',
-  ],
 
   dataEntities: [
     {
@@ -935,32 +826,15 @@ export const WIZARD_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'entity', description: 'Entity to create' },
-      { name: 'step1Fields', type: 'array', description: 'Fields for step 1' },
-      { name: 'step2Fields', type: 'array', description: 'Fields for step 2' },
-    ],
-    optional: [
-      { name: 'completionUrl', type: 'string', description: 'URL to navigate on completion', default: '/' },
-    ],
-  },
 };
 
 // ============================================================================
 // std/MasterDetail - List + Detail Layout
 // ============================================================================
 
-export const MASTER_DETAIL_BEHAVIOR: StandardBehavior = {
+export const MASTER_DETAIL_BEHAVIOR: BehaviorTrait = {
   name: 'std/MasterDetail',
-  category: 'ui-interaction',
   description: 'Master-detail layout with synchronized list and detail views',
-  suggestedFor: [
-    'Email clients',
-    'File managers',
-    'Two-panel layouts',
-    'List-detail views',
-  ],
 
   dataEntities: [
     {
@@ -1046,32 +920,15 @@ export const MASTER_DETAIL_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'entity', type: 'entity', description: 'Entity type' },
-      { name: 'masterColumns', type: 'array', description: 'Columns for master list' },
-      { name: 'detailFields', type: 'array', description: 'Fields for detail panel' },
-    ],
-    optional: [
-      { name: 'masterWidth', type: 'string', description: 'Master panel width', default: '350px' },
-    ],
-  },
 };
 
 // ============================================================================
 // std/Filter - Filter Management
 // ============================================================================
 
-export const FILTER_BEHAVIOR: StandardBehavior = {
+export const FILTER_BEHAVIOR: BehaviorTrait = {
   name: 'std/Filter',
-  category: 'ui-interaction',
   description: 'Filter and search management for lists',
-  suggestedFor: [
-    'Filtered lists',
-    'Search interfaces',
-    'Faceted navigation',
-    'Advanced filtering',
-  ],
 
   dataEntities: [
     {
@@ -1152,21 +1009,13 @@ export const FILTER_BEHAVIOR: StandardBehavior = {
     ],
   },
 
-  configSchema: {
-    required: [
-      { name: 'filters', type: 'array', description: 'Filter definitions' },
-    ],
-    optional: [
-      { name: 'searchable', type: 'boolean', description: 'Enable search', default: true },
-    ],
-  },
 };
 
 // ============================================================================
 // Export All Behaviors
 // ============================================================================
 
-export const UI_INTERACTION_BEHAVIORS: StandardBehavior[] = [
+export const UI_INTERACTION_BEHAVIORS: BehaviorTrait[] = [
   LIST_BEHAVIOR,
   DETAIL_BEHAVIOR,
   FORM_BEHAVIOR,
