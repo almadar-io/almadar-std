@@ -93,10 +93,10 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                                     ['set', '@entity.lastState', 'Playing'],
                                     ['emit', 'GAME_LOOP_PAUSE'],
                                     ['render-ui', 'overlay', {
-                                        type: 'game-pause-overlay',
+                                        type: 'game-over-screen',
                                         title: 'Paused',
-                                        visible: true,
-                                        options: [
+                                        variant: 'pause',
+                                        actions: [
                                             { event: 'RESUME', label: 'Resume' },
                                             { event: 'QUIT', label: 'Quit' },
                                         ],
@@ -460,9 +460,9 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                                 event: 'INIT',
                                 effects: [
                                     ['render-ui', 'screen', {
-                                        type: 'level-select',
+                                        type: 'game-menu',
                                         title: 'Select Level',
-                                        levels: '@entity.levels',
+                                        options: '@entity.levels',
                                         onSelect: 'SELECT_LEVEL',
                                     }],
                                 ],

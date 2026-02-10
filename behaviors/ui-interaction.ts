@@ -104,7 +104,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'drawer', {
-                    type: 'entity-detail',
+                    type: 'detail-panel',
                     entity: '@entity.entityType',
                     data: '@payload.id',
                     actions: [
@@ -284,7 +284,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
                     ],
                   }],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    type: 'detail-panel',
                     entity: '@entity.entityType',
                     fieldNames: '@entity.fields',
                   }],
@@ -821,7 +821,7 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
                     currentStep: 2,
                   }],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    type: 'detail-panel',
                     entity: '@entity.entityType',
                     fieldNames: ['step1', 'step2'],
                     title: 'Review',
@@ -915,7 +915,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    type: 'detail-panel',
                     entity: '@entity.entityType',
                     data: '@payload.id',
                     fieldNames: '@entity.detailFields',
@@ -929,7 +929,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.selectedId', '@payload.id'],
                   ['render-ui', 'main', {
-                    type: 'entity-detail',
+                    type: 'detail-panel',
                     entity: '@entity.entityType',
                     data: '@payload.id',
                     fieldNames: '@entity.detailFields',
