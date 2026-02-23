@@ -123,6 +123,17 @@ export {
   GAME_UI_BEHAVIORS,
 } from './game-ui.js';
 
+// Infrastructure Behaviors
+export {
+  CIRCUIT_BREAKER_BEHAVIOR,
+  HEALTH_CHECK_BEHAVIOR,
+  RATE_LIMITER_BEHAVIOR,
+  CACHE_ASIDE_BEHAVIOR,
+  SAGA_BEHAVIOR,
+  METRICS_COLLECTOR_BEHAVIOR,
+  INFRASTRUCTURE_BEHAVIORS,
+} from './infrastructure.js';
+
 // Registry
 export {
   STANDARD_BEHAVIORS,

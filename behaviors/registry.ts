@@ -16,6 +16,7 @@ import { FEEDBACK_BEHAVIORS } from './feedback.js';
 import { GAME_CORE_BEHAVIORS } from './game-core.js';
 import { GAME_ENTITY_BEHAVIORS } from './game-entity.js';
 import { GAME_UI_BEHAVIORS } from './game-ui.js';
+import { INFRASTRUCTURE_BEHAVIORS } from './infrastructure.js';
 
 // ============================================================================
 // Combined Registry
@@ -33,6 +34,7 @@ export const STANDARD_BEHAVIORS: OrbitalSchema[] = [
   ...GAME_CORE_BEHAVIORS,
   ...GAME_ENTITY_BEHAVIORS,
   ...GAME_UI_BEHAVIORS,
+  ...INFRASTRUCTURE_BEHAVIORS,
 ];
 
 /**
