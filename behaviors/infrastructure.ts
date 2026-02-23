@@ -140,7 +140,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
               },
               // Reset from any state
               {
-                from: ['Closed', 'Open', 'HalfOpen'],
+                from: ['Closed', 'Open', 'HalfOpen'] as unknown as string,
                 to: 'Closed',
                 event: 'RESET',
                 effects: [
@@ -367,7 +367,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
               },
               // Reset from any state
               {
-                from: ['Unknown', 'Healthy', 'Degraded', 'Unhealthy'],
+                from: ['Unknown', 'Healthy', 'Degraded', 'Unhealthy'] as unknown as string,
                 to: 'Unknown',
                 event: 'RESET',
                 effects: [
@@ -634,7 +634,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
               },
               // Invalidate from any cached state
               {
-                from: ['Fresh', 'Stale'],
+                from: ['Fresh', 'Stale'] as unknown as string,
                 to: 'Empty',
                 event: 'INVALIDATE',
                 effects: [
@@ -645,7 +645,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
               },
               // Evict (with event)
               {
-                from: ['Fresh', 'Stale'],
+                from: ['Fresh', 'Stale'] as unknown as string,
                 to: 'Empty',
                 event: 'EVICT',
                 effects: [
@@ -837,7 +837,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
               },
               // Reset from terminal states
               {
-                from: ['Completed', 'Failed'],
+                from: ['Completed', 'Failed'] as unknown as string,
                 to: 'Idle',
                 event: 'RESET',
                 effects: [
