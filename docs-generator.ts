@@ -88,6 +88,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Training loops, loss functions, and optimization for neural networks.',
         icon: '🎯',
     },
+    prob: {
+        name: 'Probabilistic',
+        displayName: 'Probabilistic Programming',
+        description: 'Distribution sampling, Bayesian inference via rejection sampling, and statistical summaries.',
+        icon: '🎲',
+    },
 };
 
 /**

@@ -19,3 +19,6 @@ export { ASYNC_OPERATORS, getAsyncOperators } from './async.js';
 export { NN_OPERATORS, getNnOperators } from './nn.js';
 export { TENSOR_OPERATORS, getTensorOperators } from './tensor.js';
 export { TRAIN_OPERATORS, getTrainOperators } from './train.js';
+
+// Probabilistic programming module
+export { PROB_OPERATORS, getProbOperators } from './prob.js';

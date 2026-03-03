@@ -32,6 +32,7 @@ export const OPERATOR_CATEGORIES = [
   'std-nn',
   'std-tensor',
   'std-train',
+  'std-prob',
 ] as const;
 
 export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
@@ -80,6 +81,7 @@ export const STD_MODULES = [
   'nn',
   'tensor',
   'train',
+  'prob',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];
@@ -100,6 +102,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-nn',
   'std-tensor',
   'std-train',
+  'std-prob',
 ] as const;
 
 export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];
