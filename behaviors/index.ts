@@ -134,6 +134,155 @@ export {
   INFRASTRUCTURE_BEHAVIORS,
 } from './infrastructure.js';
 
+// Domain: Game 2D Platformer
+export {
+  PLATFORMER_BEHAVIOR,
+  TILEMAP_BEHAVIOR,
+  POWERUP_BEHAVIOR,
+  ENEMY_AI_BEHAVIOR,
+  GAME_2D_PLATFORMER_BEHAVIORS,
+} from './domain/game-2d-platformer.js';
+
+// Domain: Game 2D RPG
+export {
+  OVERWORLD_BEHAVIOR,
+  QUEST_BEHAVIOR,
+  NPC_BEHAVIOR,
+  CRAFTING_BEHAVIOR,
+  GAME_2D_RPG_BEHAVIORS,
+} from './domain/game-2d-rpg.js';
+
+// Domain: Game 2D Strategy
+export {
+  TURN_SYSTEM_BEHAVIOR,
+  UNIT_COMMAND_BEHAVIOR,
+  FOG_OF_WAR_BEHAVIOR,
+  RESOURCE_BEHAVIOR,
+  GAME_2D_STRATEGY_BEHAVIORS,
+} from './domain/game-2d-strategy.js';
+
+// Domain: Game 2D Puzzle
+export {
+  GRID_PUZZLE_BEHAVIOR,
+  TIMER_BEHAVIOR,
+  SCORING_CHAIN_BEHAVIOR,
+  GAME_2D_PUZZLE_BEHAVIORS,
+} from './domain/game-2d-puzzle.js';
+
+// Domain: Commerce
+export {
+  CART_BEHAVIOR,
+  CHECKOUT_BEHAVIOR,
+  CATALOG_BEHAVIOR,
+  PRICING_BEHAVIOR,
+  ORDER_TRACKING_BEHAVIOR,
+  COMMERCE_BEHAVIORS,
+} from './domain/commerce.js';
+
+// Domain: Content
+export {
+  ARTICLE_BEHAVIOR,
+  READER_BEHAVIOR,
+  BOOKMARK_BEHAVIOR,
+  ANNOTATION_BEHAVIOR,
+  CONTENT_FEED_BEHAVIOR,
+  CONTENT_BEHAVIORS,
+} from './domain/content.js';
+
+// Domain: Dashboard
+export {
+  STATS_PANEL_BEHAVIOR,
+  CHART_VIEW_BEHAVIOR,
+  KPI_BEHAVIOR,
+  REPORT_BEHAVIOR,
+  DASHBOARD_BEHAVIORS,
+} from './domain/dashboard.js';
+
+// Domain: Scheduling
+export {
+  CALENDAR_BEHAVIOR,
+  BOOKING_BEHAVIOR,
+  AVAILABILITY_BEHAVIOR,
+  REMINDER_BEHAVIOR,
+  SCHEDULING_BEHAVIORS,
+} from './domain/scheduling.js';
+
+// Domain: Workflow
+export {
+  APPROVAL_BEHAVIOR,
+  PIPELINE_BEHAVIOR,
+  KANBAN_BEHAVIOR,
+  REVIEW_BEHAVIOR,
+  WORKFLOW_BEHAVIORS,
+} from './domain/workflow.js';
+
+// Domain: Social
+export {
+  FEED_BEHAVIOR,
+  MESSAGING_BEHAVIOR,
+  PROFILE_BEHAVIOR,
+  REACTIONS_BEHAVIOR,
+  SOCIAL_BEHAVIORS,
+} from './domain/social.js';
+
+// Domain: Education
+export {
+  QUIZ_BEHAVIOR,
+  PROGRESS_TRACKER_BEHAVIOR,
+  GRADING_BEHAVIOR,
+  CURRICULUM_BEHAVIOR,
+  EDUCATION_BEHAVIORS,
+} from './domain/education.js';
+
+// Domain: Media
+export {
+  GALLERY_BEHAVIOR,
+  PLAYER_BEHAVIOR,
+  PLAYLIST_BEHAVIOR,
+  UPLOAD_BEHAVIOR,
+  MEDIA_BEHAVIORS,
+} from './domain/media.js';
+
+// Domain: Geospatial
+export {
+  MAP_VIEW_BEHAVIOR,
+  LOCATION_PICKER_BEHAVIOR,
+  ROUTE_PLANNER_BEHAVIOR,
+  GEOSPATIAL_BEHAVIORS,
+} from './domain/geospatial.js';
+
+// Domain: Finance
+export {
+  LEDGER_BEHAVIOR,
+  TRANSACTION_BEHAVIOR,
+  PORTFOLIO_BEHAVIOR,
+  FINANCE_BEHAVIORS,
+} from './domain/finance.js';
+
+// Domain: Healthcare
+export {
+  VITALS_BEHAVIOR,
+  INTAKE_FORM_BEHAVIOR,
+  PRESCRIPTION_BEHAVIOR,
+  HEALTHCARE_BEHAVIORS,
+} from './domain/healthcare.js';
+
+// Domain: IoT
+export {
+  SENSOR_FEED_BEHAVIOR,
+  ALERT_THRESHOLD_BEHAVIOR,
+  DEVICE_MGMT_BEHAVIOR,
+  IOT_BEHAVIORS,
+} from './domain/iot.js';
+
+// Domain: Simulation
+export {
+  AGENT_SIM_BEHAVIOR,
+  RULE_ENGINE_BEHAVIOR,
+  TIME_STEP_BEHAVIOR,
+  SIMULATION_BEHAVIORS,
+} from './domain/simulation.js';
+
 // Registry
 export {
   STANDARD_BEHAVIORS,

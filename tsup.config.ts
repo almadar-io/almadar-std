@@ -6,6 +6,7 @@ export default defineConfig({
     'registry.ts',
     'modules/*.ts',
     'behaviors/*.ts',
+    'behaviors/domain/*.ts',
   ],
   format: ['esm'],
   dts: true,

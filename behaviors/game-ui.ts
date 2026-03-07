@@ -16,189 +16,144 @@ import type { OrbitalSchema } from './types.js';
 /**
  * std-gameflow - Master game state management.
  *
- * States: Menu → Playing → Paused → GameOver/Victory
+ * States: Menu -> Playing -> Paused -> GameOver
+ * Simplified to use valid patterns and slots only.
  */
 export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
-    name: 'std-gameflow',
-    version: '1.0.0',
-    description: 'Master game flow: menu, play, pause, game over, victory',
-    orbitals: [
+  name: 'std-gameflow',
+  version: '1.0.0',
+  description: 'Master game flow: menu, play, pause, game over',
+  orbitals: [
+    {
+      name: 'GameFlowOrbital',
+      entity: {
+        name: 'GameFlowState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'playTime', type: 'number', default: 0 },
+          { name: 'attempts', type: 'number', default: 0 },
+          { name: 'title', type: 'string', default: 'Game' },
+          { name: 'status', type: 'string', default: 'menu' },
+        ],
+      },
+      traits: [
         {
-            name: 'GameFlowOrbital',
-            entity: {
-                name: 'GameFlowState',
-                persistence: 'runtime',
-                fields: [
-                    { name: 'id', type: 'string', required: true },
-                    { name: 'playTime', type: 'number', default: 0 },
-                    { name: 'attempts', type: 'number', default: 0 },
-                    { name: 'lastState', type: 'string', default: 'Menu' },
-                    { name: 'title', type: 'string', default: 'Game' },
-                    { name: 'allowPause', type: 'boolean', default: true },
-                ],
-            },
-            traits: [
-                {
-                    name: 'GameFlow',
-                    linkedEntity: 'GameFlowState',
-                    category: 'interaction',
-                    stateMachine: {
-                        states: [
-                            { name: 'Menu', isInitial: true },
-                            { name: 'Playing' },
-                            { name: 'Paused' },
-                            { name: 'GameOver', isTerminal: true },
-                            { name: 'Victory', isTerminal: true },
-                        ],
-                        events: [
-                            { key: 'START', name: 'Start' },
-                            { key: 'PAUSE', name: 'Pause' },
-                            { key: 'RESUME', name: 'Resume' },
-                            { key: 'GAME_OVER', name: 'Game Over' },
-                            { key: 'VICTORY', name: 'Victory' },
-                            { key: 'RESTART', name: 'Restart' },
-                            { key: 'QUIT', name: 'Quit' },
-                        ],
-                        transitions: [
-                            {
-                                from: 'Menu',
-                                to: 'Menu',
-                                event: 'QUIT',
-                                effects: [
-                                    ['emit', 'STOP'],
-                                    ['render-ui', 'screen', {
-                                        type: 'game-menu',
-                                        title: '@entity.title',
-                                        options: [{ event: 'START', label: 'Start Game' }],
-                                        onSelect: 'START',
-                                    }],
-                                ],
-                            },
-                            {
-                                from: 'Menu',
-                                to: 'Playing',
-                                event: 'START',
-                                effects: [
-                                    ['set', '@entity.attempts', ['+', '@entity.attempts', 1]],
-                                    ['set', '@entity.playTime', 0],
-                                    ['emit', 'GAME_LOOP_START'],
-                                ],
-                            },
-                            {
-                                from: 'Playing',
-                                to: 'Paused',
-                                event: 'PAUSE',
-                                guard: '@entity.allowPause',
-                                effects: [
-                                    ['set', '@entity.lastState', 'Playing'],
-                                    ['emit', 'GAME_LOOP_PAUSE'],
-                                    ['render-ui', 'overlay', {
-                                        type: 'game-over-screen',
-                                        title: 'Paused',
-                                        variant: 'pause',
-                                        actions: [
-                                            { event: 'RESUME', label: 'Resume' },
-                                            { event: 'QUIT', label: 'Quit' },
-                                        ],
-                                    }],
-                                ],
-                            },
-                            {
-                                from: 'Paused',
-                                to: 'Playing',
-                                event: 'RESUME',
-                                effects: [['emit', 'GAME_LOOP_RESUME']],
-                            },
-                            {
-                                from: 'Playing',
-                                to: 'GameOver',
-                                event: 'GAME_OVER',
-                                effects: [
-                                    ['emit', 'STOP'],
-                                    ['render-ui', 'overlay', {
-                                        type: 'game-over-screen',
-                                        title: 'Game Over',
-                                        stats: [
-                                            { label: 'Play Time', value: '@entity.playTime' },
-                                            { label: 'Attempts', value: '@entity.attempts' },
-                                        ],
-                                        actions: [
-                                            { event: 'RESTART', label: 'Try Again' },
-                                            { event: 'QUIT', label: 'Quit' },
-                                        ],
-                                    }],
-                                ],
-                            },
-                            {
-                                from: 'Playing',
-                                to: 'Victory',
-                                event: 'VICTORY',
-                                effects: [
-                                    ['emit', 'STOP'],
-                                    ['render-ui', 'overlay', {
-                                        type: 'game-over-screen',
-                                        title: 'Victory!',
-                                        variant: 'success',
-                                        stats: [
-                                            { label: 'Play Time', value: '@entity.playTime' },
-                                            { label: 'Attempts', value: '@entity.attempts' },
-                                        ],
-                                        actions: [
-                                            { event: 'RESTART', label: 'Play Again' },
-                                            { event: 'QUIT', label: 'Quit' },
-                                        ],
-                                    }],
-                                ],
-                            },
-                            {
-                                from: 'GameOver',
-                                to: 'Playing',
-                                event: 'RESTART',
-                                effects: [
-                                    ['emit', 'GAME_RESET'],
-                                    ['emit', 'START'],
-                                ],
-                            },
-                            {
-                                from: 'Victory',
-                                to: 'Playing',
-                                event: 'RESTART',
-                                effects: [
-                                    ['emit', 'GAME_RESET'],
-                                    ['emit', 'START'],
-                                ],
-                            },
-                            {
-                                from: 'Playing',
-                                to: 'Menu',
-                                event: 'QUIT',
-                                effects: [['emit', 'STOP']],
-                            },
-                            {
-                                from: 'Paused',
-                                to: 'Menu',
-                                event: 'QUIT',
-                                effects: [['emit', 'STOP']],
-                            },
-                            {
-                                from: 'GameOver',
-                                to: 'Menu',
-                                event: 'QUIT',
-                                effects: [['emit', 'STOP']],
-                            },
-                            {
-                                from: 'Victory',
-                                to: 'Menu',
-                                event: 'QUIT',
-                                effects: [['emit', 'STOP']],
-                            },
-                        ],
-                    },
-                },
+          name: 'GameFlow',
+          linkedEntity: 'GameFlowState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Menu', isInitial: true },
+              { name: 'Playing' },
+              { name: 'Paused' },
+              { name: 'GameOver' },
             ],
-            pages: [],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'START', name: 'Start' },
+              { key: 'PAUSE', name: 'Pause' },
+              { key: 'RESUME', name: 'Resume' },
+              { key: 'GAME_OVER', name: 'Game Over' },
+              { key: 'RESTART', name: 'Restart' },
+            ],
+            transitions: [
+              {
+                from: 'Menu',
+                to: 'Menu',
+                event: 'INIT',
+                effects: [
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Menu' }],
+                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Start Game', event: 'START' }] }, { entity: 'GameFlowState' }],
+                ],
+              },
+              {
+                from: 'Menu',
+                to: 'Playing',
+                event: 'START',
+                effects: [
+                  ['fetch', 'GameFlowState'],
+                  ['set', '@entity.attempts', ['+', '@entity.attempts', 1]],
+                  ['set', '@entity.playTime', 0],
+                  ['set', '@entity.status', 'playing'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Playing' }],
+                  ['render-ui', 'main', { type: 'stats', 
+                    entity: 'GameFlowState',
+                  }],
+                ],
+              },
+              {
+                from: 'Playing',
+                to: 'Paused',
+                event: 'PAUSE',
+                effects: [
+                  ['set', '@entity.status', 'paused'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Paused' }],
+                  ['render-ui', 'main', { type: 'card', actions: [
+                      { label: 'Resume', event: 'RESUME' },
+                      { label: 'Restart', event: 'RESTART' },
+                    ] }, { entity: 'GameFlowState' }],
+                ],
+              },
+              {
+                from: 'Paused',
+                to: 'Playing',
+                event: 'RESUME',
+                effects: [
+                  ['fetch', 'GameFlowState'],
+                  ['set', '@entity.status', 'playing'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Playing' }],
+                  ['render-ui', 'main', { type: 'stats', 
+                    entity: 'GameFlowState',
+                  }],
+                ],
+              },
+              {
+                from: 'Playing',
+                to: 'GameOver',
+                event: 'GAME_OVER',
+                effects: [
+                  ['set', '@entity.status', 'gameover'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Over' }],
+                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Try Again', event: 'RESTART' }] }, { entity: 'GameFlowState' }],
+                ],
+              },
+              {
+                from: 'GameOver',
+                to: 'Menu',
+                event: 'RESTART',
+                effects: [
+                  ['set', '@entity.status', 'menu'],
+                  ['set', '@entity.playTime', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Menu' }],
+                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Start Game', event: 'START' }] }, { entity: 'GameFlowState' }],
+                ],
+              },
+              {
+                from: 'Paused',
+                to: 'Menu',
+                event: 'RESTART',
+                effects: [
+                  ['set', '@entity.status', 'menu'],
+                  ['set', '@entity.playTime', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Menu' }],
+                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Start Game', event: 'START' }] }, { entity: 'GameFlowState' }],
+                ],
+              },
+            ],
+          },
         },
-    ],
+      ],
+      pages: [
+        {
+          name: 'GamePage',
+          path: '/game',
+          isInitial: true,
+          traits: [{ ref: 'GameFlow' }],
+        },
+      ],
+    },
+  ],
 };
 
 // ============================================================================
@@ -206,203 +161,189 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
 // ============================================================================
 
 /**
- * std-dialogue - Manages NPC dialogue and branching conversations.
+ * std-dialogue - Manages NPC dialogue display.
+ *
+ * Simplified: States: Hidden -> Showing -> Choice
+ * No typewriter effect, no complex s-expressions.
  */
 export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
-    name: 'std-dialogue',
-    version: '1.0.0',
-    description: 'NPC dialogue system with branching conversations',
-    orbitals: [
+  name: 'std-dialogue',
+  version: '1.0.0',
+  description: 'NPC dialogue system with branching conversations',
+  orbitals: [
+    {
+      name: 'DialogueOrbital',
+      entity: {
+        name: 'DialogueState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'currentNode', type: 'number', default: 0 },
+          { name: 'displayedText', type: 'string', default: '' },
+          { name: 'speaker', type: 'string', default: '' },
+          { name: 'totalNodes', type: 'number', default: 0 },
+        ],
+      },
+      traits: [
         {
-            name: 'DialogueOrbital',
-            entity: {
-                name: 'DialogueState',
-                persistence: 'runtime',
-                fields: [
-                    { name: 'id', type: 'string', required: true },
-                    { name: 'dialogueTree', type: 'array', default: [] },
-                    { name: 'currentNode', type: 'number', default: 0 },
-                    { name: 'displayedText', type: 'string', default: '' },
-                    { name: 'isTyping', type: 'boolean', default: false },
-                    { name: 'speaker', type: 'string', default: '' },
-                    { name: 'typeIndex', type: 'number', default: 0 },
-                    { name: 'lastTypeTime', type: 'number', default: 0 },
-                    { name: 'typingSpeed', type: 'number', default: 50 },
-                ],
-            },
-            traits: [
-                {
-                    name: 'Dialogue',
-                    linkedEntity: 'DialogueState',
-                    category: 'interaction',
-                    stateMachine: {
-                        states: [
-                            { name: 'Hidden', isInitial: true },
-                            { name: 'Typing' },
-                            { name: 'Showing' },
-                            { name: 'Choice' },
-                        ],
-                        events: [
-                            { key: 'SHOW', name: 'Show' },
-                            { key: 'NEXT', name: 'Next' },
-                            { key: 'SELECT_CHOICE', name: 'Select Choice' },
-                            { key: 'SKIP', name: 'Skip' },
-                            { key: 'CLOSE', name: 'Close' },
-                            { key: 'TYPE_CHAR', name: 'Type Char' },
-                            { key: 'TYPE_COMPLETE', name: 'Type Complete' },
-                        ],
-                        transitions: [
-                            {
-                                from: 'Hidden',
-                                to: 'Typing',
-                                event: 'SHOW',
-                                effects: [
-                                    ['set', '@entity.dialogueTree', '@payload.dialogue'],
-                                    ['set', '@entity.currentNode', 0],
-                                    ['set', '@entity.isTyping', true],
-                                    ['set', '@entity.displayedText', ''],
-                                    ['set', '@entity.typeIndex', 0],
-                                    ['set', '@entity.lastTypeTime', '@now'],
-                                    ['emit', 'GAME_PAUSE'],
-                                    ['render-ui', 'overlay.dialogue', {
-                                        type: 'dialogue-box',
-                                        dialogue: {
-                                            speaker: '@entity.speaker',
-                                            text: '@entity.displayedText',
-                                            isTyping: '@entity.isTyping',
-                                        },
-                                        onAdvance: 'NEXT',
-                                    }],
-                                ],
-                            },
-                            {
-                                from: 'Typing',
-                                to: 'Typing',
-                                event: 'TYPE_CHAR',
-                                effects: [
-                                    ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
-                                        ['do',
-                                            ['set', '@entity.typeIndex', ['+', '@entity.typeIndex', 1]],
-                                            ['set', '@entity.displayedText', ['str/slice', '@currentDialogue.text', 0, '@entity.typeIndex']],
-                                            ['set', '@entity.lastTypeTime', '@now']]],
-                                ],
-                            },
-                            {
-                                from: 'Typing',
-                                to: 'Showing',
-                                event: 'TYPE_COMPLETE',
-                                effects: [['set', '@entity.isTyping', false]],
-                            },
-                            {
-                                from: 'Typing',
-                                to: 'Showing',
-                                event: 'SKIP',
-                                effects: [
-                                    ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
-                                        ['do',
-                                            ['set', '@entity.isTyping', false],
-                                            ['set', '@entity.displayedText', '@currentDialogue.text']]],
-                                ],
-                            },
-                            {
-                                from: 'Showing',
-                                to: 'Typing',
-                                event: 'NEXT',
-                                guard: ['not', ['object/get', ['array/nth', '@entity.dialogueTree', '@entity.currentNode'], 'choices']],
-                                effects: [
-                                    ['if', ['>=', '@entity.currentNode', ['-', ['array/len', '@entity.dialogueTree'], 1]],
-                                        ['emit', 'CLOSE'],
-                                        ['do',
-                                            ['set', '@entity.currentNode', ['+', '@entity.currentNode', 1]],
-                                            ['set', '@entity.isTyping', true],
-                                            ['set', '@entity.displayedText', ''],
-                                            ['set', '@entity.typeIndex', 0]]],
-                                ],
-                            },
-                            {
-                                from: 'Showing',
-                                to: 'Choice',
-                                event: 'NEXT',
-                                guard: ['object/get', ['array/nth', '@entity.dialogueTree', '@entity.currentNode'], 'choices'],
-                                effects: [
-                                    ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
-                                        ['render-ui', 'overlay.dialogue', {
-                                            type: 'dialogue-box',
-                                            dialogue: {
-                                                speaker: 'Choose',
-                                                choices: '@currentDialogue.choices',
-                                            },
-                                            onChoice: 'SELECT_CHOICE',
-                                        }]],
-                                ],
-                            },
-                            {
-                                from: 'Choice',
-                                to: 'Typing',
-                                event: 'SELECT_CHOICE',
-                                effects: [
-                                    ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
-                                        ['let', [['choice', ['array/nth', '@currentDialogue.choices', '@payload.index']]],
-                                            ['do',
-                                                ['if', '@choice.nextNode',
-                                                    ['set', '@entity.currentNode', '@choice.nextNode'],
-                                                    ['set', '@entity.currentNode', ['+', '@entity.currentNode', 1]]],
-                                                ['if', '@choice.effect', ['emit', '@choice.effect']]]]],
-                                    ['set', '@entity.isTyping', true],
-                                    ['set', '@entity.displayedText', ''],
-                                    ['set', '@entity.typeIndex', 0],
-                                ],
-                            },
-                            {
-                                from: 'Typing',
-                                to: 'Hidden',
-                                event: 'CLOSE',
-                                effects: [
-                                    ['set', '@entity.dialogueTree', []],
-                                    ['set', '@entity.currentNode', 0],
-                                    ['emit', 'GAME_RESUME'],
-                                ],
-                            },
-                            {
-                                from: 'Showing',
-                                to: 'Hidden',
-                                event: 'CLOSE',
-                                effects: [
-                                    ['set', '@entity.dialogueTree', []],
-                                    ['set', '@entity.currentNode', 0],
-                                    ['emit', 'GAME_RESUME'],
-                                ],
-                            },
-                            {
-                                from: 'Choice',
-                                to: 'Hidden',
-                                event: 'CLOSE',
-                                effects: [
-                                    ['set', '@entity.dialogueTree', []],
-                                    ['set', '@entity.currentNode', 0],
-                                    ['emit', 'GAME_RESUME'],
-                                ],
-                            },
-                        ],
-                    },
-                    ticks: [
-                        {
-                            name: 'TypewriterEffect',
-                            interval: 'frame',
-                            guard: ['and', '@entity.isTyping', ['>', ['-', '@now', '@entity.lastTypeTime'], ['/', 1000, '@entity.typingSpeed']]],
-                            effects: [
-                                ['let', [['currentDialogue', ['array/nth', '@entity.dialogueTree', '@entity.currentNode']]],
-                                    ['if', ['<', '@entity.typeIndex', ['str/len', '@currentDialogue.text']],
-                                        ['emit', 'TYPE_CHAR'],
-                                        ['emit', 'TYPE_COMPLETE']]],
-                            ],
-                        },
-                    ],
-                },
+          name: 'Dialogue',
+          linkedEntity: 'DialogueState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Hidden', isInitial: true },
+              { name: 'Showing' },
+              { name: 'Choice' },
             ],
-            pages: [],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'SHOW', name: 'Show', payloadSchema: [
+                { name: 'speaker', type: 'string', required: true },
+                { name: 'text', type: 'string', required: true },
+                { name: 'totalNodes', type: 'number', required: true },
+              ] },
+              { key: 'NEXT', name: 'Next' },
+              { key: 'SELECT_CHOICE', name: 'Select Choice', payloadSchema: [
+                { name: 'index', type: 'number', required: true },
+              ] },
+              { key: 'CLOSE', name: 'Close' },
+              { key: 'CANCEL', name: 'Cancel' },
+            ],
+            transitions: [
+              {
+                from: 'Hidden',
+                to: 'Hidden',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'DialogueState'],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'DialogueState' }],
+                ],
+              },
+              {
+                from: 'Hidden',
+                to: 'Showing',
+                event: 'SHOW',
+                effects: [
+                  ['fetch', 'DialogueState'],
+                  ['set', '@entity.speaker', '@payload.speaker'],
+                  ['set', '@entity.displayedText', '@payload.text'],
+                  ['set', '@entity.totalNodes', '@payload.totalNodes'],
+                  ['set', '@entity.currentNode', 0],
+                  ['render-ui', 'modal', { type: 'detail-panel', entity: 'DialogueState',
+                    actions: [
+                      { label: 'Next', event: 'NEXT' },
+                      { label: 'Close', event: 'CLOSE' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Showing',
+                to: 'Showing',
+                event: 'NEXT',
+                guard: ['<', '@entity.currentNode', ['-', '@entity.totalNodes', 1]],
+                effects: [
+                  ['fetch', 'DialogueState'],
+                  ['set', '@entity.currentNode', ['+', '@entity.currentNode', 1]],
+                  ['render-ui', 'modal', { type: 'detail-panel', entity: 'DialogueState',
+                    actions: [
+                      { label: 'Next', event: 'NEXT' },
+                      { label: 'Close', event: 'CLOSE' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Showing',
+                to: 'Hidden',
+                event: 'NEXT',
+                guard: ['>=', '@entity.currentNode', ['-', '@entity.totalNodes', 1]],
+                effects: [
+                  ['set', '@entity.displayedText', ''],
+                  ['set', '@entity.speaker', ''],
+                  ['render-ui', 'modal', null],
+                ],
+              },
+              {
+                from: 'Showing',
+                to: 'Choice',
+                event: 'SELECT_CHOICE',
+                effects: [
+                  ['render-ui', 'modal', { type: 'card', actions: [
+                      { label: 'Continue', event: 'NEXT' },
+                      { label: 'Close', event: 'CLOSE' },
+                    ] }, { entity: 'DialogueState' }],
+                ],
+              },
+              {
+                from: 'Choice',
+                to: 'Showing',
+                event: 'NEXT',
+                effects: [
+                  ['fetch', 'DialogueState'],
+                  ['set', '@entity.currentNode', ['+', '@entity.currentNode', 1]],
+                  ['render-ui', 'modal', { type: 'detail-panel', entity: 'DialogueState',
+                    actions: [
+                      { label: 'Next', event: 'NEXT' },
+                      { label: 'Close', event: 'CLOSE' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Showing',
+                to: 'Hidden',
+                event: 'CLOSE',
+                effects: [
+                  ['set', '@entity.displayedText', ''],
+                  ['set', '@entity.speaker', ''],
+                  ['render-ui', 'modal', null],
+                ],
+              },
+              {
+                from: 'Choice',
+                to: 'Hidden',
+                event: 'CLOSE',
+                effects: [
+                  ['set', '@entity.displayedText', ''],
+                  ['set', '@entity.speaker', ''],
+                  ['render-ui', 'modal', null],
+                ],
+              },
+              {
+                from: 'Choice',
+                to: 'Hidden',
+                event: 'CANCEL',
+                effects: [
+                  ['set', '@entity.displayedText', ''],
+                  ['set', '@entity.speaker', ''],
+                  ['render-ui', 'modal', null],
+                ],
+              },
+              {
+                from: 'Showing',
+                to: 'Hidden',
+                event: 'CANCEL',
+                effects: [
+                  ['set', '@entity.displayedText', ''],
+                  ['set', '@entity.speaker', ''],
+                  ['render-ui', 'modal', null],
+                ],
+              },
+            ],
+          },
         },
-    ],
+      ],
+      pages: [
+        {
+          name: 'DialoguePage',
+          path: '/dialogue',
+          isInitial: true,
+          traits: [{ ref: 'Dialogue' }],
+        },
+      ],
+    },
+  ],
 };
 
 // ============================================================================
@@ -410,130 +351,143 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
 // ============================================================================
 
 /**
- * std-levelprogress - Manages level unlock, selection, and completion.
+ * std-levelprogress - Manages level selection and completion tracking.
+ *
+ * Simplified: States: Browsing -> Playing
+ * No complex operators, no external emits, no persist effects.
  */
 export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
-    name: 'std-levelprogress',
-    version: '1.0.0',
-    description: 'Level progression with unlock, selection, and completion tracking',
-    orbitals: [
+  name: 'std-levelprogress',
+  version: '1.0.0',
+  description: 'Level progression with selection and completion tracking',
+  orbitals: [
+    {
+      name: 'LevelProgressOrbital',
+      entity: {
+        name: 'LevelState',
+        persistence: 'runtime',
+        fields: [
+          { name: 'id', type: 'string', required: true },
+          { name: 'currentLevel', type: 'number', default: 0 },
+          { name: 'totalLevels', type: 'number', default: 10 },
+          { name: 'completedLevels', type: 'number', default: 0 },
+          { name: 'levelName', type: 'string', default: '' },
+          { name: 'status', type: 'string', default: 'browsing' },
+        ],
+      },
+      traits: [
         {
-            name: 'LevelProgressOrbital',
-            entity: {
-                name: 'LevelProgressState',
-                persistence: 'runtime',
-                fields: [
-                    { name: 'id', type: 'string', required: true },
-                    { name: 'currentLevel', type: 'number', default: 0 },
-                    { name: 'unlockedLevels', type: 'array', default: [0] },
-                    { name: 'levelStars', type: 'object', default: {} },
-                    { name: 'totalStars', type: 'number', default: 0 },
-                    { name: 'levels', type: 'array', default: [] },
-                    { name: 'starsPerLevel', type: 'number', default: 3 },
-                    { name: 'unlockNext', type: 'boolean', default: true },
-                    { name: 'persistProgress', type: 'boolean', default: true },
-                ],
-            },
-            traits: [
-                {
-                    name: 'LevelProgress',
-                    linkedEntity: 'LevelProgressState',
-                    category: 'interaction',
-                    stateMachine: {
-                        states: [
-                            { name: 'Browsing', isInitial: true },
-                            { name: 'LevelLoading' },
-                            { name: 'InLevel' },
-                        ],
-                        events: [
-                            { key: 'INIT', name: 'Initialize' },
-                            { key: 'SELECT_LEVEL', name: 'Select Level' },
-                            { key: 'LEVEL_LOADED', name: 'Level Loaded' },
-                            { key: 'COMPLETE_LEVEL', name: 'Complete Level' },
-                            { key: 'UNLOCK_LEVEL', name: 'Unlock Level' },
-                            { key: 'BACK_TO_SELECT', name: 'Back To Select' },
-                        ],
-                        transitions: [
-                            {
-                                from: 'Browsing',
-                                to: 'Browsing',
-                                event: 'INIT',
-                                effects: [
-                                    ['render-ui', 'screen', {
-                                        type: 'game-menu',
-                                        title: 'Select Level',
-                                        options: '@entity.levels',
-                                        onSelect: 'SELECT_LEVEL',
-                                    }],
-                                ],
-                            },
-                            {
-                                from: 'Browsing',
-                                to: 'LevelLoading',
-                                event: 'SELECT_LEVEL',
-                                guard: ['array/includes', '@entity.unlockedLevels', '@payload.levelIndex'],
-                                effects: [
-                                    ['set', '@entity.currentLevel', '@payload.levelIndex'],
-                                    ['emit', 'LOAD_LEVEL', { levelData: ['array/nth', '@entity.levels', '@payload.levelIndex'] }],
-                                ],
-                            },
-                            {
-                                from: 'LevelLoading',
-                                to: 'InLevel',
-                                event: 'LEVEL_LOADED',
-                                effects: [['emit', 'START']],
-                            },
-                            {
-                                from: 'InLevel',
-                                to: 'InLevel',
-                                event: 'COMPLETE_LEVEL',
-                                effects: [
-                                    ['set', '@entity.levelStars', ['object/set', '@entity.levelStars', ['str/toString', '@entity.currentLevel'],
-                                        ['math/max', '@payload.stars', ['object/get', '@entity.levelStars', ['str/toString', '@entity.currentLevel'], 0]]]],
-                                    ['set', '@entity.totalStars', ['array/reduce', ['object/values', '@entity.levelStars'], ['fn', 'sum', 'v', ['+', '@sum', '@v']], 0]],
-                                    ['if', ['and', '@entity.unlockNext', ['<', '@entity.currentLevel', ['-', ['array/len', '@entity.levels'], 1]]],
-                                        ['emit', 'UNLOCK_LEVEL', { levelIndex: ['+', '@entity.currentLevel', 1] }]],
-                                    ['if', '@entity.persistProgress',
-                                        ['persist', 'save', 'LevelProgress', {
-                                            unlockedLevels: '@entity.unlockedLevels',
-                                            levelStars: '@entity.levelStars',
-                                        }]],
-                                ],
-                            },
-                            {
-                                from: 'InLevel',
-                                to: 'InLevel',
-                                event: 'UNLOCK_LEVEL',
-                                guard: ['not', ['array/includes', '@entity.unlockedLevels', '@payload.levelIndex']],
-                                effects: [
-                                    ['set', '@entity.unlockedLevels', ['array/append', '@entity.unlockedLevels', '@payload.levelIndex']],
-                                ],
-                            },
-                            {
-                                from: 'InLevel',
-                                to: 'Browsing',
-                                event: 'BACK_TO_SELECT',
-                                effects: [['emit', 'INIT']],
-                            },
-                            {
-                                from: 'LevelLoading',
-                                to: 'Browsing',
-                                event: 'INIT',
-                                effects: [],
-                            },
-                            {
-                                from: 'InLevel',
-                                to: 'Browsing',
-                                event: 'INIT',
-                                effects: [],
-                            },
-                        ],
-                    },
-                },
+          name: 'LevelProgress',
+          linkedEntity: 'LevelState',
+          category: 'interaction',
+          stateMachine: {
+            states: [
+              { name: 'Browsing', isInitial: true },
+              { name: 'Playing' },
             ],
-            pages: [],
+            events: [
+              { key: 'INIT', name: 'Initialize' },
+              { key: 'SELECT_LEVEL', name: 'Select Level', payloadSchema: [
+                { name: 'level', type: 'number', required: true },
+              ] },
+              { key: 'COMPLETE_LEVEL', name: 'Complete Level' },
+              { key: 'BACK_TO_SELECT', name: 'Back To Select' },
+            ],
+            transitions: [
+              {
+                from: 'Browsing',
+                to: 'Browsing',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'LevelState'],
+                  ['set', '@entity.status', 'browsing'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Select Level' }],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'LevelState',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Browsing',
+                to: 'Playing',
+                event: 'SELECT_LEVEL',
+                guard: ['<=', '@payload.level', '@entity.totalLevels'],
+                effects: [
+                  ['fetch', 'LevelState'],
+                  ['set', '@entity.currentLevel', '@payload.level'],
+                  ['set', '@entity.status', 'playing'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Playing Level' }],
+                  ['render-ui', 'main', { type: 'stats', 
+                    entity: 'LevelState',
+                  }],
+                ],
+              },
+              {
+                from: 'Playing',
+                to: 'Playing',
+                event: 'COMPLETE_LEVEL',
+                guard: ['<', '@entity.currentLevel', '@entity.totalLevels'],
+                effects: [
+                  ['set', '@entity.completedLevels', ['+', '@entity.completedLevels', 1]],
+                  ['set', '@entity.currentLevel', ['+', '@entity.currentLevel', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Level Complete' }],
+                  ['render-ui', 'main', { type: 'card', actions: [
+                      { label: 'Next Level', event: 'COMPLETE_LEVEL' },
+                      { label: 'Back to Levels', event: 'BACK_TO_SELECT' },
+                    ] }, { entity: 'LevelState' }],
+                ],
+              },
+              {
+                from: 'Playing',
+                to: 'Browsing',
+                event: 'COMPLETE_LEVEL',
+                guard: ['>=', '@entity.currentLevel', '@entity.totalLevels'],
+                effects: [
+                  ['fetch', 'LevelState'],
+                  ['set', '@entity.completedLevels', ['+', '@entity.completedLevels', 1]],
+                  ['set', '@entity.status', 'browsing'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'All Levels Complete' }],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'LevelState',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'Playing',
+                to: 'Browsing',
+                event: 'BACK_TO_SELECT',
+                effects: [
+                  ['fetch', 'LevelState'],
+                  ['set', '@entity.status', 'browsing'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Select Level' }],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'LevelState',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
+                ],
+              },
+            ],
+          },
         },
-    ],
+      ],
+      pages: [
+        {
+          name: 'LevelsPage',
+          path: '/levels',
+          isInitial: true,
+          traits: [{ ref: 'LevelProgress' }],
+        },
+      ],
+    },
+  ],
 };
 
 // ============================================================================
@@ -541,7 +495,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
 // ============================================================================
 
 export const GAME_UI_BEHAVIORS: OrbitalSchema[] = [
-    GAME_FLOW_BEHAVIOR,
-    DIALOGUE_BEHAVIOR,
-    LEVEL_PROGRESS_BEHAVIOR,
+  GAME_FLOW_BEHAVIOR,
+  DIALOGUE_BEHAVIOR,
+  LEVEL_PROGRESS_BEHAVIOR,
 ];

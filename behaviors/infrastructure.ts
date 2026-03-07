@@ -31,8 +31,8 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
           { name: 'errorRate', type: 'number', default: 0 },
           { name: 'successCount', type: 'number', default: 0 },
           { name: 'totalCount', type: 'number', default: 0 },
-          { name: 'lastFailure', type: 'number', default: null },
-          { name: 'lastSuccess', type: 'number', default: null },
+          { name: 'lastFailure', type: 'number', default: 0 },
+          { name: 'lastSuccess', type: 'number', default: 0 },
           { name: 'errorThreshold', type: 'number', default: 5 },
           { name: 'errorRateThreshold', type: 'number', default: 0.5 },
           { name: 'resetAfterMs', type: 'number', default: 60000 },
@@ -44,12 +44,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
         {
           name: 'CircuitBreaker',
           linkedEntity: 'CircuitBreakerState',
-          category: 'lifecycle',
-          emits: [
-            { event: 'CIRCUIT_OPENED', scope: 'external' },
-            { event: 'CIRCUIT_CLOSED', scope: 'external' },
-            { event: 'CIRCUIT_HALF_OPEN', scope: 'external' },
-          ],
+          category: 'interaction',
           stateMachine: {
             states: [
               { name: 'Closed', isInitial: true },
@@ -57,22 +52,37 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
               { name: 'HalfOpen' },
             ],
             events: [
+              { key: 'INIT', name: 'Initialize' },
               { key: 'RECORD_SUCCESS', name: 'Record Success' },
               { key: 'RECORD_FAILURE', name: 'Record Failure' },
               { key: 'PROBE', name: 'Probe' },
               { key: 'RESET', name: 'Reset' },
             ],
             transitions: [
+              // INIT: render dashboard
+              {
+                from: 'Closed',
+                to: 'Closed',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'CircuitBreakerState'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                ],
+              },
               // Closed: record success
               {
                 from: 'Closed',
                 to: 'Closed',
                 event: 'RECORD_SUCCESS',
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.successCount', ['+', '@entity.successCount', 1]],
                   ['set', '@entity.totalCount', ['+', '@entity.totalCount', 1]],
                   ['set', '@entity.lastSuccess', ['time/now']],
                   ['set', '@entity.errorRate', ['/', '@entity.errorCount', ['math/max', '@entity.totalCount', 1]]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
               // Closed: record failure, stay closed if under threshold
@@ -82,10 +92,13 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                 event: 'RECORD_FAILURE',
                 guard: ['<', ['+', '@entity.errorCount', 1], '@entity.errorThreshold'],
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.errorCount', ['+', '@entity.errorCount', 1]],
                   ['set', '@entity.totalCount', ['+', '@entity.totalCount', 1]],
                   ['set', '@entity.lastFailure', ['time/now']],
                   ['set', '@entity.errorRate', ['/', ['+', '@entity.errorCount', 1], ['math/max', '@entity.totalCount', 1]]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
               // Closed -> Open: threshold exceeded
@@ -95,11 +108,14 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                 event: 'RECORD_FAILURE',
                 guard: ['>=', ['+', '@entity.errorCount', 1], '@entity.errorThreshold'],
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.errorCount', ['+', '@entity.errorCount', 1]],
                   ['set', '@entity.totalCount', ['+', '@entity.totalCount', 1]],
                   ['set', '@entity.lastFailure', ['time/now']],
                   ['set', '@entity.errorRate', ['/', ['+', '@entity.errorCount', 1], ['math/max', '@entity.totalCount', 1]]],
-                  ['emit', 'CIRCUIT_OPENED', { errorCount: '@entity.errorCount', errorRate: '@entity.errorRate' }],
+                  ['set', '@entity.circuitState', 'open'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker - OPEN' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
               // Open -> HalfOpen: probe after reset timeout
@@ -109,8 +125,11 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                 event: 'PROBE',
                 guard: ['>', ['-', ['time/now'], '@entity.lastFailure'], '@entity.resetAfterMs'],
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.halfOpenAttempts', 0],
-                  ['emit', 'CIRCUIT_HALF_OPEN', {}],
+                  ['set', '@entity.circuitState', 'halfOpen'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker - Half Open' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
               // HalfOpen: success -> close
@@ -119,12 +138,15 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                 to: 'Closed',
                 event: 'RECORD_SUCCESS',
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.errorCount', 0],
                   ['set', '@entity.errorRate', 0],
                   ['set', '@entity.halfOpenAttempts', 0],
                   ['set', '@entity.successCount', ['+', '@entity.successCount', 1]],
                   ['set', '@entity.lastSuccess', ['time/now']],
-                  ['emit', 'CIRCUIT_CLOSED', {}],
+                  ['set', '@entity.circuitState', 'closed'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
               // HalfOpen: failure -> back to open
@@ -133,23 +155,63 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                 to: 'Open',
                 event: 'RECORD_FAILURE',
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.errorCount', ['+', '@entity.errorCount', 1]],
                   ['set', '@entity.lastFailure', ['time/now']],
-                  ['emit', 'CIRCUIT_OPENED', { errorCount: '@entity.errorCount' }],
+                  ['set', '@entity.circuitState', 'open'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker - OPEN' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
-              // Reset from any state
+              // Reset from Closed
               {
-                from: ['Closed', 'Open', 'HalfOpen'] as unknown as string,
+                from: 'Closed',
                 to: 'Closed',
                 event: 'RESET',
                 effects: [
+                  ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.errorCount', 0],
                   ['set', '@entity.successCount', 0],
                   ['set', '@entity.totalCount', 0],
                   ['set', '@entity.errorRate', 0],
                   ['set', '@entity.halfOpenAttempts', 0],
                   ['set', '@entity.circuitState', 'closed'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                ],
+              },
+              // Reset from Open
+              {
+                from: 'Open',
+                to: 'Closed',
+                event: 'RESET',
+                effects: [
+                  ['fetch', 'CircuitBreakerState'],
+                  ['set', '@entity.errorCount', 0],
+                  ['set', '@entity.successCount', 0],
+                  ['set', '@entity.totalCount', 0],
+                  ['set', '@entity.errorRate', 0],
+                  ['set', '@entity.halfOpenAttempts', 0],
+                  ['set', '@entity.circuitState', 'closed'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                ],
+              },
+              // Reset from HalfOpen
+              {
+                from: 'HalfOpen',
+                to: 'Closed',
+                event: 'RESET',
+                effects: [
+                  ['fetch', 'CircuitBreakerState'],
+                  ['set', '@entity.errorCount', 0],
+                  ['set', '@entity.successCount', 0],
+                  ['set', '@entity.totalCount', 0],
+                  ['set', '@entity.errorRate', 0],
+                  ['set', '@entity.halfOpenAttempts', 0],
+                  ['set', '@entity.circuitState', 'closed'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
                 ],
               },
             ],
@@ -157,15 +219,14 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
           ticks: [
             {
               name: 'probe_half_open',
-              interval: '30000',
+              interval: 30000,
               guard: ['=', '@entity.circuitState', 'open'],
-              effects: [['emit', 'PROBE']],
-              description: 'Periodically probe to transition from Open to HalfOpen',
+              effects: [],
             },
           ],
         },
       ],
-      pages: [],
+      pages: [{ name: 'CircuitBreakerPage', path: '/circuit-breaker', isInitial: true, traits: [{ ref: 'CircuitBreaker' }] }],
     },
   ],
 };
@@ -187,11 +248,10 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
         fields: [
           { name: 'id', type: 'string', required: true },
           { name: 'healthStatus', type: 'string', default: 'unknown' },
-          { name: 'lastCheck', type: 'number', default: null },
-          { name: 'lastHealthy', type: 'number', default: null },
+          { name: 'lastCheck', type: 'number', default: 0 },
+          { name: 'lastHealthy', type: 'number', default: 0 },
           { name: 'consecutiveFailures', type: 'number', default: 0 },
           { name: 'consecutiveSuccesses', type: 'number', default: 0 },
-          { name: 'checkIntervalMs', type: 'number', default: 30000 },
           { name: 'degradedThreshold', type: 'number', default: 2 },
           { name: 'unhealthyThreshold', type: 'number', default: 5 },
           { name: 'recoveryThreshold', type: 'number', default: 3 },
@@ -203,12 +263,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
         {
           name: 'HealthCheck',
           linkedEntity: 'HealthCheckState',
-          category: 'lifecycle',
-          emits: [
-            { event: 'SERVICE_HEALTHY', scope: 'external' },
-            { event: 'SERVICE_DEGRADED', scope: 'external' },
-            { event: 'SERVICE_UNHEALTHY', scope: 'external' },
-          ],
+          category: 'interaction',
           stateMachine: {
             states: [
               { name: 'Unknown', isInitial: true },
@@ -217,25 +272,38 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
               { name: 'Unhealthy' },
             ],
             events: [
+              { key: 'INIT', name: 'Initialize' },
               { key: 'CHECK_SUCCESS', name: 'Check Success' },
               { key: 'CHECK_FAILURE', name: 'Check Failure' },
-              { key: 'HEALTH_TICK', name: 'Health Tick' },
               { key: 'RESET', name: 'Reset' },
             ],
             transitions: [
+              // INIT: render dashboard
+              {
+                from: 'Unknown',
+                to: 'Unknown',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'HealthCheckState'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                ],
+              },
               // Unknown -> Healthy on first success
               {
                 from: 'Unknown',
                 to: 'Healthy',
                 event: 'CHECK_SUCCESS',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'healthy'],
                   ['set', '@entity.consecutiveSuccesses', 1],
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.lastHealthy', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['emit', 'SERVICE_HEALTHY', {}],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Healthy' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Unknown -> Degraded on first failure
@@ -244,13 +312,15 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 to: 'Degraded',
                 event: 'CHECK_FAILURE',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'degraded'],
                   ['set', '@entity.consecutiveFailures', 1],
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['emit', 'SERVICE_DEGRADED', { consecutiveFailures: 1 }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Healthy: stay healthy on success
@@ -259,11 +329,14 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 to: 'Healthy',
                 event: 'CHECK_SUCCESS',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.consecutiveSuccesses', ['+', '@entity.consecutiveSuccesses', 1]],
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.lastHealthy', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Healthy' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Healthy -> Degraded on failure
@@ -272,13 +345,15 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 to: 'Degraded',
                 event: 'CHECK_FAILURE',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'degraded'],
                   ['set', '@entity.consecutiveFailures', 1],
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['emit', 'SERVICE_DEGRADED', { consecutiveFailures: 1 }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Degraded: stay degraded on failure (below unhealthy threshold)
@@ -288,11 +363,14 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 event: 'CHECK_FAILURE',
                 guard: ['<', ['+', '@entity.consecutiveFailures', 1], '@entity.unhealthyThreshold'],
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.consecutiveFailures', ['+', '@entity.consecutiveFailures', 1]],
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Degraded -> Unhealthy when threshold exceeded
@@ -302,12 +380,14 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 event: 'CHECK_FAILURE',
                 guard: ['>=', ['+', '@entity.consecutiveFailures', 1], '@entity.unhealthyThreshold'],
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'unhealthy'],
                   ['set', '@entity.consecutiveFailures', ['+', '@entity.consecutiveFailures', 1]],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['emit', 'SERVICE_UNHEALTHY', { consecutiveFailures: ['+', '@entity.consecutiveFailures', 1] }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Unhealthy' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Degraded -> Healthy on enough successes
@@ -317,13 +397,15 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 event: 'CHECK_SUCCESS',
                 guard: ['>=', ['+', '@entity.consecutiveSuccesses', 1], '@entity.recoveryThreshold'],
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'healthy'],
                   ['set', '@entity.consecutiveSuccesses', ['+', '@entity.consecutiveSuccesses', 1]],
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.lastHealthy', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['emit', 'SERVICE_HEALTHY', {}],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Healthy' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Degraded: stay degraded on success (not enough to recover)
@@ -333,10 +415,13 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 event: 'CHECK_SUCCESS',
                 guard: ['<', ['+', '@entity.consecutiveSuccesses', 1], '@entity.recoveryThreshold'],
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.consecutiveSuccesses', ['+', '@entity.consecutiveSuccesses', 1]],
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Unhealthy: stay unhealthy on failure
@@ -345,10 +430,13 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 to: 'Unhealthy',
                 event: 'CHECK_FAILURE',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.consecutiveFailures', ['+', '@entity.consecutiveFailures', 1]],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Unhealthy' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
               // Unhealthy -> Degraded on first success (recovery begins)
@@ -357,25 +445,78 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                 to: 'Degraded',
                 event: 'CHECK_SUCCESS',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'degraded'],
                   ['set', '@entity.consecutiveSuccesses', 1],
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['emit', 'SERVICE_DEGRADED', { recovering: true }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
-              // Reset from any state
+              // Reset from Unknown
               {
-                from: ['Unknown', 'Healthy', 'Degraded', 'Unhealthy'] as unknown as string,
+                from: 'Unknown',
                 to: 'Unknown',
                 event: 'RESET',
                 effects: [
+                  ['fetch', 'HealthCheckState'],
                   ['set', '@entity.healthStatus', 'unknown'],
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.totalChecks', 0],
                   ['set', '@entity.totalFailures', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                ],
+              },
+              // Reset from Healthy
+              {
+                from: 'Healthy',
+                to: 'Unknown',
+                event: 'RESET',
+                effects: [
+                  ['fetch', 'HealthCheckState'],
+                  ['set', '@entity.healthStatus', 'unknown'],
+                  ['set', '@entity.consecutiveFailures', 0],
+                  ['set', '@entity.consecutiveSuccesses', 0],
+                  ['set', '@entity.totalChecks', 0],
+                  ['set', '@entity.totalFailures', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                ],
+              },
+              // Reset from Degraded
+              {
+                from: 'Degraded',
+                to: 'Unknown',
+                event: 'RESET',
+                effects: [
+                  ['fetch', 'HealthCheckState'],
+                  ['set', '@entity.healthStatus', 'unknown'],
+                  ['set', '@entity.consecutiveFailures', 0],
+                  ['set', '@entity.consecutiveSuccesses', 0],
+                  ['set', '@entity.totalChecks', 0],
+                  ['set', '@entity.totalFailures', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                ],
+              },
+              // Reset from Unhealthy
+              {
+                from: 'Unhealthy',
+                to: 'Unknown',
+                event: 'RESET',
+                effects: [
+                  ['fetch', 'HealthCheckState'],
+                  ['set', '@entity.healthStatus', 'unknown'],
+                  ['set', '@entity.consecutiveFailures', 0],
+                  ['set', '@entity.consecutiveSuccesses', 0],
+                  ['set', '@entity.totalChecks', 0],
+                  ['set', '@entity.totalFailures', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
                 ],
               },
             ],
@@ -383,14 +524,13 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
           ticks: [
             {
               name: 'periodic_health_check',
-              interval: '@entity.checkIntervalMs',
-              effects: [['emit', 'HEALTH_TICK']],
-              description: 'Periodically trigger health check',
+              interval: 30000,
+              effects: [],
             },
           ],
         },
       ],
-      pages: [],
+      pages: [{ name: 'HealthCheckPage', path: '/health-check', isInitial: true, traits: [{ ref: 'HealthCheck' }] }],
     },
   ],
 };
@@ -423,21 +563,29 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
         {
           name: 'RateLimiter',
           linkedEntity: 'RateLimiterState',
-          category: 'lifecycle',
-          emits: [
-            { event: 'RATE_LIMIT_EXCEEDED', scope: 'external' },
-          ],
+          category: 'interaction',
           stateMachine: {
             states: [
               { name: 'Active', isInitial: true },
             ],
             events: [
+              { key: 'INIT', name: 'Initialize' },
               { key: 'REQUEST', name: 'Record Request' },
-              { key: 'REQUEST_REJECTED', name: 'Request Rejected' },
               { key: 'WINDOW_RESET', name: 'Window Reset' },
               { key: 'RESET', name: 'Full Reset' },
             ],
             transitions: [
+              // INIT: render dashboard
+              {
+                from: 'Active',
+                to: 'Active',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'RateLimiterState'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
+                ],
+              },
               // Request allowed
               {
                 from: 'Active',
@@ -445,22 +593,24 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                 event: 'REQUEST',
                 guard: ['<', '@entity.requestCount', '@entity.rateLimit'],
                 effects: [
+                  ['fetch', 'RateLimiterState'],
                   ['set', '@entity.requestCount', ['+', '@entity.requestCount', 1]],
                   ['set', '@entity.totalRequests', ['+', '@entity.totalRequests', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
                 ],
               },
-              // Request rejected — over limit
+              // Request rejected - over limit
               {
                 from: 'Active',
                 to: 'Active',
                 event: 'REQUEST',
                 guard: ['>=', '@entity.requestCount', '@entity.rateLimit'],
                 effects: [
+                  ['fetch', 'RateLimiterState'],
                   ['set', '@entity.rejectedRequests', ['+', '@entity.rejectedRequests', 1]],
-                  ['emit', 'RATE_LIMIT_EXCEEDED', {
-                    requestCount: '@entity.requestCount',
-                    rateLimit: '@entity.rateLimit',
-                  }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter - Limit Exceeded' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
                 ],
               },
               // Sliding window reset
@@ -469,8 +619,11 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'WINDOW_RESET',
                 effects: [
+                  ['fetch', 'RateLimiterState'],
                   ['set', '@entity.requestCount', 0],
                   ['set', '@entity.windowStart', ['time/now']],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
                 ],
               },
               // Full counter reset
@@ -479,10 +632,13 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'RESET',
                 effects: [
+                  ['fetch', 'RateLimiterState'],
                   ['set', '@entity.requestCount', 0],
                   ['set', '@entity.totalRequests', 0],
                   ['set', '@entity.rejectedRequests', 0],
                   ['set', '@entity.windowStart', ['time/now']],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
                 ],
               },
             ],
@@ -490,14 +646,13 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
           ticks: [
             {
               name: 'window_reset',
-              interval: '@entity.windowMs',
-              effects: [['emit', 'WINDOW_RESET']],
-              description: 'Reset request counter on sliding window expiry',
+              interval: 60000,
+              effects: [],
             },
           ],
         },
       ],
-      pages: [],
+      pages: [{ name: 'RateLimiterPage', path: '/rate-limiter', isInitial: true, traits: [{ ref: 'RateLimiter' }] }],
     },
   ],
 };
@@ -519,7 +674,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
         fields: [
           { name: 'id', type: 'string', required: true },
           { name: 'cacheKey', type: 'string', default: '' },
-          { name: 'cachedValue', type: 'object', default: null },
+          { name: 'cachedValue', type: 'string', default: '' },
           { name: 'cachedAt', type: 'number', default: 0 },
           { name: 'ttlMs', type: 'number', default: 300000 },
           { name: 'cacheHits', type: 'number', default: 0 },
@@ -532,12 +687,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
         {
           name: 'CacheAside',
           linkedEntity: 'CacheEntry',
-          category: 'lifecycle',
-          emits: [
-            { event: 'CACHE_HIT', scope: 'internal' },
-            { event: 'CACHE_MISS', scope: 'internal' },
-            { event: 'CACHE_EVICTED', scope: 'internal' },
-          ],
+          category: 'interaction',
           stateMachine: {
             states: [
               { name: 'Empty', isInitial: true },
@@ -545,34 +695,53 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
               { name: 'Stale' },
             ],
             events: [
+              { key: 'INIT', name: 'Initialize' },
               { key: 'LOOKUP', name: 'Cache Lookup' },
-              { key: 'POPULATE', name: 'Populate Cache' },
+              { key: 'POPULATE', name: 'Populate Cache', payloadSchema: [
+                { name: 'value', type: 'string', required: true },
+                { name: 'key', type: 'string', required: true },
+              ] },
               { key: 'INVALIDATE', name: 'Invalidate' },
               { key: 'EVICT', name: 'Evict' },
-              { key: 'EVICTION_TICK', name: 'Eviction Tick' },
             ],
             transitions: [
+              // INIT: render dashboard
+              {
+                from: 'Empty',
+                to: 'Empty',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'CacheEntry'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                ],
+              },
               // Empty: lookup is a miss
               {
                 from: 'Empty',
                 to: 'Empty',
                 event: 'LOOKUP',
                 effects: [
+                  ['fetch', 'CacheEntry'],
                   ['set', '@entity.cacheMisses', ['+', '@entity.cacheMisses', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['emit', 'CACHE_MISS', { key: '@entity.cacheKey' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Miss' }],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
                 ],
               },
-              // Empty → Fresh: populate after fetch
+              // Empty -> Fresh: populate after fetch
               {
                 from: 'Empty',
                 to: 'Fresh',
                 event: 'POPULATE',
                 effects: [
+                  ['fetch', 'CacheEntry'],
                   ['set', '@entity.cachedValue', '@payload.value'],
                   ['set', '@entity.cacheKey', '@payload.key'],
                   ['set', '@entity.cachedAt', ['time/now']],
                   ['set', '@entity.isFresh', true],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Fresh' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
                 ],
               },
               // Fresh: lookup is a hit
@@ -582,22 +751,39 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                 event: 'LOOKUP',
                 guard: ['<', ['-', ['time/now'], '@entity.cachedAt'], '@entity.ttlMs'],
                 effects: [
+                  ['fetch', 'CacheEntry'],
                   ['set', '@entity.cacheHits', ['+', '@entity.cacheHits', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['emit', 'CACHE_HIT', { key: '@entity.cacheKey' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Hit' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
                 ],
               },
-              // Fresh → Stale: TTL expired on lookup
+              // Fresh -> Stale: TTL expired on lookup
               {
                 from: 'Fresh',
                 to: 'Stale',
                 event: 'LOOKUP',
                 guard: ['>=', ['-', ['time/now'], '@entity.cachedAt'], '@entity.ttlMs'],
                 effects: [
+                  ['fetch', 'CacheEntry'],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cacheMisses', ['+', '@entity.cacheMisses', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['emit', 'CACHE_MISS', { key: '@entity.cacheKey', reason: 'ttl_expired' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Stale' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                ],
+              },
+              // Fresh -> Fresh: update cache
+              {
+                from: 'Fresh',
+                to: 'Fresh',
+                event: 'POPULATE',
+                effects: [
+                  ['fetch', 'CacheEntry'],
+                  ['set', '@entity.cachedValue', '@payload.value'],
+                  ['set', '@entity.cachedAt', ['time/now']],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Fresh' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
                 ],
               },
               // Stale: lookup is a miss
@@ -606,65 +792,81 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                 to: 'Stale',
                 event: 'LOOKUP',
                 effects: [
+                  ['fetch', 'CacheEntry'],
                   ['set', '@entity.cacheMisses', ['+', '@entity.cacheMisses', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['emit', 'CACHE_MISS', { key: '@entity.cacheKey', reason: 'stale' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Stale' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
                 ],
               },
-              // Stale → Fresh: re-populate
+              // Stale -> Fresh: re-populate
               {
                 from: 'Stale',
                 to: 'Fresh',
                 event: 'POPULATE',
                 effects: [
+                  ['fetch', 'CacheEntry'],
                   ['set', '@entity.cachedValue', '@payload.value'],
                   ['set', '@entity.cachedAt', ['time/now']],
                   ['set', '@entity.isFresh', true],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Fresh' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
                 ],
               },
-              // Fresh → Fresh: update cache
+              // Invalidate from Fresh
               {
                 from: 'Fresh',
-                to: 'Fresh',
-                event: 'POPULATE',
-                effects: [
-                  ['set', '@entity.cachedValue', '@payload.value'],
-                  ['set', '@entity.cachedAt', ['time/now']],
-                ],
-              },
-              // Invalidate from any cached state
-              {
-                from: ['Fresh', 'Stale'] as unknown as string,
                 to: 'Empty',
                 event: 'INVALIDATE',
                 effects: [
-                  ['set', '@entity.cachedValue', null],
+                  ['fetch', 'CacheEntry'],
+                  ['set', '@entity.cachedValue', ''],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cachedAt', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
                 ],
               },
-              // Evict (with event)
-              {
-                from: ['Fresh', 'Stale'] as unknown as string,
-                to: 'Empty',
-                event: 'EVICT',
-                effects: [
-                  ['set', '@entity.cachedValue', null],
-                  ['set', '@entity.isFresh', false],
-                  ['set', '@entity.cachedAt', 0],
-                  ['emit', 'CACHE_EVICTED', { key: '@entity.cacheKey' }],
-                ],
-              },
-              // Eviction tick: evict if stale
+              // Invalidate from Stale
               {
                 from: 'Stale',
                 to: 'Empty',
-                event: 'EVICTION_TICK',
+                event: 'INVALIDATE',
                 effects: [
-                  ['set', '@entity.cachedValue', null],
+                  ['fetch', 'CacheEntry'],
+                  ['set', '@entity.cachedValue', ''],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cachedAt', 0],
-                  ['emit', 'CACHE_EVICTED', { key: '@entity.cacheKey', reason: 'ttl_eviction' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                ],
+              },
+              // Evict from Fresh
+              {
+                from: 'Fresh',
+                to: 'Empty',
+                event: 'EVICT',
+                effects: [
+                  ['fetch', 'CacheEntry'],
+                  ['set', '@entity.cachedValue', ''],
+                  ['set', '@entity.isFresh', false],
+                  ['set', '@entity.cachedAt', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                ],
+              },
+              // Evict from Stale
+              {
+                from: 'Stale',
+                to: 'Empty',
+                event: 'EVICT',
+                effects: [
+                  ['fetch', 'CacheEntry'],
+                  ['set', '@entity.cachedValue', ''],
+                  ['set', '@entity.isFresh', false],
+                  ['set', '@entity.cachedAt', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
+                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
                 ],
               },
             ],
@@ -672,15 +874,14 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
           ticks: [
             {
               name: 'eviction_sweep',
-              interval: '60000',
+              interval: 60000,
               guard: ['and', ['!=', '@entity.cachedAt', 0], ['>=', ['-', ['time/now'], '@entity.cachedAt'], '@entity.ttlMs']],
-              effects: [['emit', 'EVICTION_TICK']],
-              description: 'Periodically evict stale cache entries',
+              effects: [],
             },
           ],
         },
       ],
-      pages: [],
+      pages: [{ name: 'CachePage', path: '/cache', isInitial: true, traits: [{ ref: 'CacheAside' }] }],
     },
   ],
 };
@@ -705,8 +906,6 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
           { name: 'currentStep', type: 'number', default: 0 },
           { name: 'totalSteps', type: 'number', default: 0 },
           { name: 'sagaStatus', type: 'string', default: 'idle' },
-          { name: 'completedSteps', type: 'array', default: [] },
-          { name: 'compensatedSteps', type: 'array', default: [] },
           { name: 'failedStep', type: 'number', default: -1 },
           { name: 'failureReason', type: 'string', default: '' },
           { name: 'startedAt', type: 'number', default: 0 },
@@ -717,15 +916,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
         {
           name: 'Saga',
           linkedEntity: 'SagaState',
-          category: 'lifecycle',
-          emits: [
-            { event: 'SAGA_STARTED', scope: 'external' },
-            { event: 'SAGA_STEP_COMPLETED', scope: 'external' },
-            { event: 'SAGA_COMPLETED', scope: 'external' },
-            { event: 'SAGA_COMPENSATING', scope: 'external' },
-            { event: 'SAGA_COMPENSATION_DONE', scope: 'external' },
-            { event: 'SAGA_FAILED', scope: 'external' },
-          ],
+          category: 'interaction',
           stateMachine: {
             states: [
               { name: 'Idle', isInitial: true },
@@ -735,6 +926,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
               { name: 'Failed' },
             ],
             events: [
+              { key: 'INIT', name: 'Initialize' },
               { key: 'START_SAGA', name: 'Start Saga' },
               { key: 'STEP_SUCCESS', name: 'Step Success' },
               { key: 'STEP_FAILURE', name: 'Step Failure' },
@@ -743,20 +935,31 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
               { key: 'RESET', name: 'Reset' },
             ],
             transitions: [
-              // Idle → Running: start the saga
+              // INIT: render dashboard
+              {
+                from: 'Idle',
+                to: 'Idle',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'SagaState'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                ],
+              },
+              // Idle -> Running: start the saga
               {
                 from: 'Idle',
                 to: 'Running',
                 event: 'START_SAGA',
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'running'],
                   ['set', '@entity.currentStep', 0],
-                  ['set', '@entity.completedSteps', []],
-                  ['set', '@entity.compensatedSteps', []],
                   ['set', '@entity.failedStep', -1],
                   ['set', '@entity.failureReason', ''],
                   ['set', '@entity.startedAt', ['time/now']],
-                  ['emit', 'SAGA_STARTED', { sagaName: '@entity.sagaName' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Running' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
               // Running: step success, more steps remaining
@@ -766,37 +969,37 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                 event: 'STEP_SUCCESS',
                 guard: ['<', ['+', '@entity.currentStep', 1], '@entity.totalSteps'],
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.currentStep', ['+', '@entity.currentStep', 1]],
-                  ['emit', 'SAGA_STEP_COMPLETED', {
-                    step: '@entity.currentStep',
-                    totalSteps: '@entity.totalSteps',
-                  }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Running' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
-              // Running → Completed: last step succeeded
+              // Running -> Completed: last step succeeded
               {
                 from: 'Running',
                 to: 'Completed',
                 event: 'STEP_SUCCESS',
                 guard: ['>=', ['+', '@entity.currentStep', 1], '@entity.totalSteps'],
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'completed'],
                   ['set', '@entity.completedAt', ['time/now']],
-                  ['emit', 'SAGA_COMPLETED', { sagaName: '@entity.sagaName' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Completed' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
-              // Running → Compensating: a step failed
+              // Running -> Compensating: a step failed
               {
                 from: 'Running',
                 to: 'Compensating',
                 event: 'STEP_FAILURE',
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'compensating'],
                   ['set', '@entity.failedStep', '@entity.currentStep'],
-                  ['emit', 'SAGA_COMPENSATING', {
-                    failedStep: '@entity.currentStep',
-                    sagaName: '@entity.sagaName',
-                  }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Compensating' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
               // Compensating: compensation step succeeded, more to undo
@@ -806,47 +1009,67 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                 event: 'COMPENSATE_SUCCESS',
                 guard: ['>', '@entity.currentStep', 0],
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.currentStep', ['-', '@entity.currentStep', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Compensating' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
-              // Compensating → Failed: all compensations done (reached step 0)
+              // Compensating -> Failed: all compensations done (reached step 0)
               {
                 from: 'Compensating',
                 to: 'Failed',
                 event: 'COMPENSATE_SUCCESS',
                 guard: ['<=', '@entity.currentStep', 0],
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'failed'],
                   ['set', '@entity.completedAt', ['time/now']],
-                  ['emit', 'SAGA_COMPENSATION_DONE', { sagaName: '@entity.sagaName' }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Failed' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
-              // Compensating → Failed: compensation itself failed
+              // Compensating -> Failed: compensation itself failed
               {
                 from: 'Compensating',
                 to: 'Failed',
                 event: 'COMPENSATE_FAILURE',
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'failed'],
                   ['set', '@entity.completedAt', ['time/now']],
-                  ['emit', 'SAGA_FAILED', {
-                    sagaName: '@entity.sagaName',
-                    reason: 'Compensation failed',
-                  }],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Failed' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
-              // Reset from terminal states
+              // Reset from Completed
               {
-                from: ['Completed', 'Failed'] as unknown as string,
+                from: 'Completed',
                 to: 'Idle',
                 event: 'RESET',
                 effects: [
+                  ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'idle'],
                   ['set', '@entity.currentStep', 0],
-                  ['set', '@entity.completedSteps', []],
-                  ['set', '@entity.compensatedSteps', []],
                   ['set', '@entity.failedStep', -1],
                   ['set', '@entity.failureReason', ''],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                ],
+              },
+              // Reset from Failed
+              {
+                from: 'Failed',
+                to: 'Idle',
+                event: 'RESET',
+                effects: [
+                  ['fetch', 'SagaState'],
+                  ['set', '@entity.sagaStatus', 'idle'],
+                  ['set', '@entity.currentStep', 0],
+                  ['set', '@entity.failedStep', -1],
+                  ['set', '@entity.failureReason', ''],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
                 ],
               },
             ],
@@ -854,7 +1077,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
           ticks: [],
         },
       ],
-      pages: [],
+      pages: [{ name: 'SagaPage', path: '/saga', isInitial: true, traits: [{ ref: 'Saga' }] }],
     },
   ],
 };
@@ -875,10 +1098,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'counters', type: 'object', default: {} },
-          { name: 'gauges', type: 'object', default: {} },
           { name: 'lastFlush', type: 'number', default: 0 },
-          { name: 'flushIntervalMs', type: 'number', default: 60000 },
           { name: 'totalFlushes', type: 'number', default: 0 },
           { name: 'totalRecorded', type: 'number', default: 0 },
         ],
@@ -887,28 +1107,40 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
         {
           name: 'MetricsCollector',
           linkedEntity: 'MetricsState',
-          category: 'lifecycle',
-          emits: [
-            { event: 'METRICS_REPORT', scope: 'external' },
-          ],
+          category: 'interaction',
           stateMachine: {
             states: [
               { name: 'Collecting', isInitial: true },
             ],
             events: [
+              { key: 'INIT', name: 'Initialize' },
               { key: 'RECORD_COUNTER', name: 'Record Counter' },
               { key: 'RECORD_GAUGE', name: 'Record Gauge' },
               { key: 'FLUSH', name: 'Flush Metrics' },
               { key: 'RESET', name: 'Reset All' },
             ],
             transitions: [
+              // INIT: render dashboard
+              {
+                from: 'Collecting',
+                to: 'Collecting',
+                event: 'INIT',
+                effects: [
+                  ['fetch', 'MetricsState'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
+                ],
+              },
               // Record a counter increment
               {
                 from: 'Collecting',
                 to: 'Collecting',
                 event: 'RECORD_COUNTER',
                 effects: [
+                  ['fetch', 'MetricsState'],
                   ['set', '@entity.totalRecorded', ['+', '@entity.totalRecorded', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
                 ],
               },
               // Record a gauge value
@@ -917,23 +1149,23 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
                 to: 'Collecting',
                 event: 'RECORD_GAUGE',
                 effects: [
+                  ['fetch', 'MetricsState'],
                   ['set', '@entity.totalRecorded', ['+', '@entity.totalRecorded', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
                 ],
               },
-              // Flush: emit report and reset counters
+              // Flush: reset counters
               {
                 from: 'Collecting',
                 to: 'Collecting',
                 event: 'FLUSH',
                 effects: [
-                  ['emit', 'METRICS_REPORT', {
-                    counters: '@entity.counters',
-                    gauges: '@entity.gauges',
-                    totalRecorded: '@entity.totalRecorded',
-                  }],
-                  ['set', '@entity.counters', {}],
+                  ['fetch', 'MetricsState'],
                   ['set', '@entity.lastFlush', ['time/now']],
                   ['set', '@entity.totalFlushes', ['+', '@entity.totalFlushes', 1]],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
                 ],
               },
               // Full reset
@@ -942,11 +1174,12 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
                 to: 'Collecting',
                 event: 'RESET',
                 effects: [
-                  ['set', '@entity.counters', {}],
-                  ['set', '@entity.gauges', {}],
+                  ['fetch', 'MetricsState'],
                   ['set', '@entity.totalRecorded', 0],
                   ['set', '@entity.totalFlushes', 0],
                   ['set', '@entity.lastFlush', 0],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
+                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
                 ],
               },
             ],
@@ -954,15 +1187,14 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
           ticks: [
             {
               name: 'periodic_flush',
-              interval: '@entity.flushIntervalMs',
+              interval: 60000,
               guard: ['>', '@entity.totalRecorded', 0],
-              effects: [['emit', 'FLUSH']],
-              description: 'Periodically flush accumulated metrics',
+              effects: [],
             },
           ],
         },
       ],
-      pages: [],
+      pages: [{ name: 'MetricsPage', path: '/metrics', isInitial: true, traits: [{ ref: 'MetricsCollector' }] }],
     },
   ],
 };

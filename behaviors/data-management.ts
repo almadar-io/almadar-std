@@ -3,7 +3,8 @@
  *
  * Standard behaviors for data operations like pagination, selection,
  * sorting, filtering, and search.
- * Each behavior is a self-contained OrbitalSchema that can function as a standalone .orb file.
+ * Each behavior is a self-contained OrbitalSchema that passes orbital validate
+ * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
  * @packageDocumentation
  */
@@ -16,6 +17,7 @@ import type { OrbitalSchema } from './types.js';
 
 /**
  * std-pagination - Page navigation behavior for large data sets.
+ * Uses a concrete Product entity to demonstrate paginated browsing.
  */
 export const PAGINATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-pagination',
@@ -25,77 +27,127 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
     {
       name: 'PaginationOrbital',
       entity: {
-        name: 'PaginationState',
-        persistence: 'runtime',
+        name: 'Product',
+        persistence: 'persistent',
+        collection: 'products',
         fields: [
           { name: 'id', type: 'string', required: true },
+          { name: 'name', type: 'string', default: '' },
+          { name: 'price', type: 'number', default: 0 },
           { name: 'page', type: 'number', default: 1 },
           { name: 'pageSize', type: 'number', default: 20 },
           { name: 'totalItems', type: 'number', default: 0 },
-          { name: 'defaultPageSize', type: 'number', default: 20 },
         ],
       },
       traits: [
         {
-          name: 'Pagination',
-          linkedEntity: 'PaginationState',
+          name: 'PaginationControl',
+          linkedEntity: 'Product',
           category: 'interaction',
           stateMachine: {
-            states: [{ name: 'Active', isInitial: true }],
+            states: [{ name: 'browsing', isInitial: true }],
             events: [
               { key: 'INIT', name: 'Initialize' },
               { key: 'NEXT_PAGE', name: 'Next Page' },
               { key: 'PREV_PAGE', name: 'Previous Page' },
-              { key: 'GO_TO_PAGE', name: 'Go to Page' },
-              { key: 'SET_PAGE_SIZE', name: 'Set Page Size' },
+              { key: 'GO_TO_PAGE', name: 'Go to Page', payloadSchema: [{ name: 'page', type: 'number', required: true }] },
+              { key: 'SET_PAGE_SIZE', name: 'Set Page Size', payloadSchema: [{ name: 'size', type: 'number', required: true }] },
             ],
             transitions: [
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'INIT',
                 effects: [
+                  ['fetch', 'Product'],
                   ['set', '@entity.page', 1],
-                  ['set', '@entity.pageSize', '@entity.defaultPageSize'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Products' }],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'Product',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'NEXT_PAGE',
                 guard: ['<', '@entity.page', ['math/ceil', ['/', '@entity.totalItems', '@entity.pageSize']]],
-                effects: [['set', '@entity.page', ['+', '@entity.page', 1]]],
+                effects: [
+                  ['fetch', 'Product'],
+                  ['set', '@entity.page', ['+', '@entity.page', 1]],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'Product',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
+                ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'PREV_PAGE',
                 guard: ['>', '@entity.page', 1],
-                effects: [['set', '@entity.page', ['-', '@entity.page', 1]]],
+                effects: [
+                  ['fetch', 'Product'],
+                  ['set', '@entity.page', ['-', '@entity.page', 1]],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'Product',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
+                ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'GO_TO_PAGE',
                 guard: ['and',
                   ['>=', '@payload.page', 1],
                   ['<=', '@payload.page', ['math/ceil', ['/', '@entity.totalItems', '@entity.pageSize']]]],
-                effects: [['set', '@entity.page', '@payload.page']],
+                effects: [
+                  ['fetch', 'Product'],
+                  ['set', '@entity.page', '@payload.page'],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'Product',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
+                ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'SET_PAGE_SIZE',
                 effects: [
+                  ['fetch', 'Product'],
                   ['set', '@entity.pageSize', '@payload.size'],
                   ['set', '@entity.page', 1],
+                  ['render-ui', 'main', { type: 'entity-cards', 
+                    entity: 'Product',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
                 ],
               },
             ],
           },
         },
       ],
-      pages: [],
+      pages: [
+        {
+          name: 'ProductsPage',
+          path: '/products',
+          isInitial: true,
+          traits: [{ ref: 'PaginationControl' }],
+        },
+      ],
     },
   ],
 };
@@ -104,6 +156,10 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
 // std-selection - Single/Multi Selection
 // ============================================================================
 
+/**
+ * std-selection - Selection management for entity lists.
+ * Uses a concrete File entity to demonstrate single/multi selection.
+ */
 export const SELECTION_BEHAVIOR: OrbitalSchema = {
   name: 'std-selection',
   version: '1.0.0',
@@ -112,105 +168,134 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
     {
       name: 'SelectionOrbital',
       entity: {
-        name: 'SelectionState',
-        persistence: 'runtime',
+        name: 'File',
+        persistence: 'persistent',
+        collection: 'files',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'selected', type: 'array', default: [] },
-          { name: 'lastSelected', type: 'string', default: null },
-          { name: 'mode', type: 'string', default: 'multi' },
-          { name: 'maxSelection', type: 'number', default: null },
+          { name: 'name', type: 'string', default: '' },
+          { name: 'size', type: 'number', default: 0 },
+          { name: 'isSelected', type: 'boolean', default: false },
         ],
       },
       traits: [
         {
-          name: 'Selection',
-          linkedEntity: 'SelectionState',
+          name: 'SelectionControl',
+          linkedEntity: 'File',
           category: 'interaction',
           stateMachine: {
-            states: [{ name: 'Active', isInitial: true }],
+            states: [
+              { name: 'idle', isInitial: true },
+              { name: 'selected' },
+              { name: 'viewing' },
+            ],
             events: [
               { key: 'INIT', name: 'Initialize' },
-              { key: 'SELECT', name: 'Select' },
+              { key: 'SELECT', name: 'Select', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
               { key: 'DESELECT', name: 'Deselect' },
-              { key: 'TOGGLE', name: 'Toggle' },
-              { key: 'SELECT_ALL', name: 'Select All' },
-              { key: 'CLEAR', name: 'Clear' },
+              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
+              { key: 'CLOSE', name: 'Close' },
+              { key: 'CANCEL', name: 'Cancel' },
             ],
             transitions: [
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'idle',
+                to: 'idle',
                 event: 'INIT',
                 effects: [
-                  ['set', '@entity.selected', []],
-                  ['set', '@entity.lastSelected', null],
+                  ['fetch', 'File'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Files' }],
+                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
+                    itemActions: [
+                      { label: 'Select', event: 'SELECT' },
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'idle',
+                to: 'selected',
                 event: 'SELECT',
                 effects: [
-                  ['if', ['=', '@entity.mode', 'single'],
-                    ['do',
-                      ['set', '@entity.selected', ['@payload.id']],
-                      ['set', '@entity.lastSelected', '@payload.id']],
-                    ['if', ['or',
-                      ['not', '@entity.maxSelection'],
-                      ['<', ['array/len', '@entity.selected'], '@entity.maxSelection']],
-                      ['do',
-                        ['set', '@entity.selected', ['array/append', '@entity.selected', '@payload.id']],
-                        ['set', '@entity.lastSelected', '@payload.id']],
-                      ['notify', 'in_app', 'Maximum selection reached']]],
+                  ['fetch', 'File'],
+                  ['set', '@entity.isSelected', true],
+                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
+                    itemActions: [
+                      { label: 'Deselect', event: 'DESELECT' },
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'selected',
+                to: 'selected',
+                event: 'SELECT',
+                effects: [
+                  ['fetch', 'File'],
+                  ['set', '@entity.isSelected', true],
+                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
+                    itemActions: [
+                      { label: 'Deselect', event: 'DESELECT' },
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
+                ],
+              },
+              {
+                from: 'selected',
+                to: 'idle',
                 event: 'DESELECT',
                 effects: [
-                  ['set', '@entity.selected', ['array/filter', '@entity.selected', ['fn', 'id', ['!=', '@id', '@payload.id']]]],
+                  ['fetch', 'File'],
+                  ['set', '@entity.isSelected', false],
+                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
+                    itemActions: [
+                      { label: 'Select', event: 'SELECT' },
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
-                event: 'TOGGLE',
+                from: 'idle',
+                to: 'viewing',
+                event: 'VIEW',
                 effects: [
-                  ['if', ['array/includes', '@entity.selected', '@payload.id'],
-                    ['set', '@entity.selected', ['array/filter', '@entity.selected', ['fn', 'id', ['!=', '@id', '@payload.id']]]],
-                    ['if', ['or', ['=', '@entity.mode', 'single'], ['or',
-                      ['not', '@entity.maxSelection'],
-                      ['<', ['array/len', '@entity.selected'], '@entity.maxSelection']]],
-                      ['set', '@entity.selected',
-                        ['if', ['=', '@entity.mode', 'single'],
-                          ['@payload.id'],
-                          ['array/append', '@entity.selected', '@payload.id']]],
-                      ['notify', 'in_app', 'Maximum selection reached']]],
+                  ['fetch', 'File'],
+                  ['render-ui', 'modal', { type: 'detail-panel', 
+                    entity: 'File',
+                    actions: [{ label: 'Close', event: 'CLOSE' }],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
-                event: 'SELECT_ALL',
-                guard: ['=', '@entity.mode', 'multi'],
-                effects: [['set', '@entity.selected', '@payload.ids']],
-              },
-              {
-                from: 'Active',
-                to: 'Active',
-                event: 'CLEAR',
+                from: 'selected',
+                to: 'viewing',
+                event: 'VIEW',
                 effects: [
-                  ['set', '@entity.selected', []],
-                  ['set', '@entity.lastSelected', null],
+                  ['fetch', 'File'],
+                  ['render-ui', 'modal', { type: 'detail-panel', 
+                    entity: 'File',
+                    actions: [{ label: 'Close', event: 'CLOSE' }],
+                  }],
                 ],
               },
+              { from: 'viewing', to: 'idle', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
+              { from: 'viewing', to: 'idle', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
             ],
           },
         },
       ],
-      pages: [],
+      pages: [
+        {
+          name: 'FilesPage',
+          path: '/files',
+          isInitial: true,
+          traits: [{ ref: 'SelectionControl' }],
+        },
+      ],
     },
   ],
 };
@@ -219,6 +304,10 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
 // std-sort - Sorting
 // ============================================================================
 
+/**
+ * std-sort - Sorting behavior for entity lists.
+ * Uses a concrete Contact entity to demonstrate sortable columns.
+ */
 export const SORT_BEHAVIOR: OrbitalSchema = {
   name: 'std-sort',
   version: '1.0.0',
@@ -227,74 +316,106 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
     {
       name: 'SortOrbital',
       entity: {
-        name: 'SortState',
-        persistence: 'runtime',
+        name: 'Contact',
+        persistence: 'persistent',
+        collection: 'contacts',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'sortField', type: 'string', default: null },
+          { name: 'name', type: 'string', default: '' },
+          { name: 'email', type: 'string', default: '' },
+          { name: 'sortField', type: 'string', default: 'name' },
           { name: 'sortDirection', type: 'string', default: 'asc' },
-          { name: 'defaultField', type: 'string', default: null },
-          { name: 'defaultDirection', type: 'string', default: 'asc' },
         ],
       },
       traits: [
         {
-          name: 'Sort',
-          linkedEntity: 'SortState',
+          name: 'SortControl',
+          linkedEntity: 'Contact',
           category: 'interaction',
           stateMachine: {
-            states: [{ name: 'Active', isInitial: true }],
+            states: [{ name: 'browsing', isInitial: true }],
             events: [
               { key: 'INIT', name: 'Initialize' },
-              { key: 'SORT', name: 'Sort' },
+              { key: 'SORT', name: 'Sort', payloadSchema: [{ name: 'field', type: 'string', required: true }] },
               { key: 'TOGGLE_DIRECTION', name: 'Toggle Direction' },
               { key: 'CLEAR_SORT', name: 'Clear Sort' },
             ],
             transitions: [
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'INIT',
                 effects: [
-                  ['set', '@entity.sortField', '@entity.defaultField'],
-                  ['set', '@entity.sortDirection', '@entity.defaultDirection'],
+                  ['fetch', 'Contact'],
+                  ['set', '@entity.sortField', 'name'],
+                  ['set', '@entity.sortDirection', 'asc'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Contacts' }],
+                  ['render-ui', 'main', { type: 'entity-table', 
+                    entity: 'Contact',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'SORT',
                 effects: [
-                  ['if', ['=', '@entity.sortField', '@payload.field'],
-                    ['set', '@entity.sortDirection', ['if', ['=', '@entity.sortDirection', 'asc'], 'desc', 'asc']],
-                    ['do',
-                      ['set', '@entity.sortField', '@payload.field'],
-                      ['set', '@entity.sortDirection', 'asc']]],
+                  ['fetch', 'Contact'],
+                  ['set', '@entity.sortField', '@payload.field'],
+                  ['render-ui', 'main', { type: 'entity-table', 
+                    entity: 'Contact',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'TOGGLE_DIRECTION',
-                guard: ['!=', '@entity.sortField', null],
                 effects: [
+                  ['fetch', 'Contact'],
                   ['set', '@entity.sortDirection', ['if', ['=', '@entity.sortDirection', 'asc'], 'desc', 'asc']],
+                  ['render-ui', 'main', { type: 'entity-table', 
+                    entity: 'Contact',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'CLEAR_SORT',
                 effects: [
-                  ['set', '@entity.sortField', null],
+                  ['fetch', 'Contact'],
+                  ['set', '@entity.sortField', 'name'],
                   ['set', '@entity.sortDirection', 'asc'],
+                  ['render-ui', 'main', { type: 'entity-table', 
+                    entity: 'Contact',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
+                  }],
                 ],
               },
             ],
           },
         },
       ],
-      pages: [],
+      pages: [
+        {
+          name: 'ContactsPage',
+          path: '/contacts',
+          isInitial: true,
+          traits: [{ ref: 'SortControl' }],
+        },
+      ],
     },
   ],
 };
@@ -304,214 +425,235 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
 // ============================================================================
 
 /**
- * std-filter - Query Singleton pattern for explicit filtering.
- *
- * This behavior uses a singleton entity to hold filter state, making filtering
- * explicit in the schema rather than implicit in component behavior.
+ * std-filter - Filtering behavior for entity lists.
+ * Uses a concrete Task entity to demonstrate filter and search operations.
  */
 export const FILTER_BEHAVIOR: OrbitalSchema = {
   name: 'std-filter',
   version: '1.0.0',
-  description: 'Query Singleton pattern for explicit filtering - use with entity-table query prop',
+  description: 'Query Singleton pattern for explicit filtering',
   orbitals: [
     {
       name: 'FilterOrbital',
       entity: {
-        name: 'QueryState',
-        persistence: 'runtime',
+        name: 'Task',
+        persistence: 'persistent',
+        collection: 'tasks',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'status', type: 'string', default: null },
-          { name: 'priority', type: 'string', default: null },
-          { name: 'search', type: 'string', default: '' },
-          { name: 'sortBy', type: 'string', default: 'createdAt' },
-          { name: 'sortOrder', type: 'string', default: 'desc' },
-          { name: 'entityType', type: 'string', default: '' },
-          { name: 'filters', type: 'array', default: [] },
-          { name: 'columns', type: 'array', default: [] },
+          { name: 'title', type: 'string', default: '' },
+          { name: 'status', type: 'string', default: 'open' },
+          { name: 'priority', type: 'string', default: 'medium' },
         ],
       },
       traits: [
         {
-          name: 'Filter',
-          linkedEntity: 'QueryState',
+          name: 'FilterControl',
+          linkedEntity: 'Task',
           category: 'interaction',
           stateMachine: {
-            states: [{ name: 'Active', isInitial: true }],
+            states: [
+              { name: 'browsing', isInitial: true },
+              { name: 'filtered' },
+            ],
             events: [
               { key: 'INIT', name: 'Initialize' },
-              { key: 'FILTER', name: 'Filter' },
-              { key: 'SEARCH', name: 'Search' },
-              { key: 'SORT', name: 'Sort' },
+              { key: 'FILTER', name: 'Filter', payloadSchema: [{ name: 'status', type: 'string', required: true }] },
               { key: 'CLEAR_FILTERS', name: 'Clear Filters' },
+              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
             ],
             transitions: [
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'browsing',
                 event: 'INIT',
                 effects: [
-                  ['render-ui', 'sidebar', {
-                    type: 'filter-group',
-                    entity: '@entity.entityType',
-                    query: '@QueryState',
-                    filters: '@entity.filters',
+                  ['fetch', 'Task'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Tasks', 
+                    actions: [{ label: 'Filter', event: 'FILTER' }],
                   }],
-                  ['render-ui', 'main', {
-                    type: 'entity-table',
-                    entity: '@entity.entityType',
-                    query: '@QueryState',
-                    columns: '@entity.columns',
+                  ['render-ui', 'main', { type: 'entity-table', 
+                    entity: 'Task',
+                    itemActions: [
+                      { label: 'Refresh', event: 'INIT' },
+                    ],
                   }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'browsing',
+                to: 'filtered',
                 event: 'FILTER',
                 effects: [
-                  ['set', '@QueryState.status', '@payload.status'],
-                  ['set', '@QueryState.priority', '@payload.priority'],
+                  ['fetch', 'Task'],
+                  ['set', '@entity.status', '@payload.status'],
+                  ['render-ui', 'main', { type: 'entity-table',
+                    entity: 'Task',
+                    itemActions: [{ label: 'View', event: 'VIEW' }],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
-                event: 'SEARCH',
-                effects: [['set', '@QueryState.search', '@payload.searchTerm']],
-              },
-              {
-                from: 'Active',
-                to: 'Active',
-                event: 'SORT',
+                from: 'filtered',
+                to: 'filtered',
+                event: 'FILTER',
                 effects: [
-                  ['set', '@QueryState.sortBy', '@payload.field'],
-                  ['set', '@QueryState.sortOrder', '@payload.order'],
+                  ['fetch', 'Task'],
+                  ['set', '@entity.status', '@payload.status'],
+                  ['render-ui', 'main', { type: 'entity-table',
+                    entity: 'Task',
+                    itemActions: [{ label: 'View', event: 'VIEW' }],
+                  }],
                 ],
               },
               {
-                from: 'Active',
-                to: 'Active',
+                from: 'filtered',
+                to: 'browsing',
                 event: 'CLEAR_FILTERS',
                 effects: [
-                  ['set', '@QueryState.status', null],
-                  ['set', '@QueryState.priority', null],
-                  ['set', '@QueryState.search', ''],
+                  ['set', '@entity.status', 'open'],
+                  ['fetch', 'Task'],
+                  ['render-ui', 'main', { type: 'entity-table',
+                    entity: 'Task',
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
+              // VIEW self-transitions
+              { from: 'browsing', to: 'browsing', event: 'VIEW', effects: [['fetch', 'Task'], ['render-ui', 'main', { type: 'entity-table', entity: 'Task', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'filtered', to: 'filtered', event: 'VIEW', effects: [['fetch', 'Task'], ['render-ui', 'main', { type: 'entity-table', entity: 'Task', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
             ],
           },
         },
       ],
-      pages: [],
+      pages: [
+        {
+          name: 'TasksPage',
+          path: '/tasks',
+          isInitial: true,
+          traits: [{ ref: 'FilterControl' }],
+        },
+      ],
     },
   ],
 };
 
 // ============================================================================
-// std-search - Search with Debounce
+// std-search - Search
 // ============================================================================
 
 /**
- * std-search - Search with debounce.
+ * std-search - Search behavior for entity lists.
+ * Uses a concrete Article entity to demonstrate search operations.
  */
 export const SEARCH_BEHAVIOR: OrbitalSchema = {
   name: 'std-search',
   version: '1.0.0',
-  description: 'Search with debounce - updates QueryState.search field',
+  description: 'Search behavior for entity lists',
   orbitals: [
     {
       name: 'SearchOrbital',
       entity: {
-        name: 'SearchState',
-        persistence: 'runtime',
+        name: 'Article',
+        persistence: 'persistent',
+        collection: 'articles',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'search', type: 'string', default: '' },
-          { name: 'isSearching', type: 'boolean', default: false },
-          { name: 'minLength', type: 'number', default: 2 },
-          { name: 'debounceMs', type: 'number', default: 300 },
-          { name: 'placeholder', type: 'string', default: 'Search...' },
+          { name: 'title', type: 'string', default: '' },
+          { name: 'content', type: 'string', default: '' },
+          { name: 'searchTerm', type: 'string', default: '' },
         ],
       },
       traits: [
         {
-          name: 'Search',
-          linkedEntity: 'SearchState',
+          name: 'SearchControl',
+          linkedEntity: 'Article',
           category: 'interaction',
           stateMachine: {
             states: [
-              { name: 'Idle', isInitial: true },
-              { name: 'Searching' },
+              { name: 'idle', isInitial: true },
+              { name: 'searching' },
             ],
             events: [
               { key: 'INIT', name: 'Initialize' },
-              { key: 'SEARCH', name: 'Search' },
+              { key: 'SEARCH', name: 'Search', payloadSchema: [{ name: 'term', type: 'string', required: true }] },
               { key: 'CLEAR_SEARCH', name: 'Clear Search' },
-              { key: 'SEARCH_COMPLETE', name: 'Search Complete' },
+              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
             ],
             transitions: [
               {
-                from: 'Idle',
-                to: 'Idle',
+                from: 'idle',
+                to: 'idle',
                 event: 'INIT',
                 effects: [
-                  ['set', '@entity.search', ''],
-                  ['set', '@entity.isSearching', false],
-                  ['render-ui', 'main', {
-                    type: 'search-input',
-                    query: '@SearchState',
-                    placeholder: '@entity.placeholder',
+                  ['fetch', 'Article'],
+                  ['render-ui', 'main', { type: 'page-header',  title: 'Articles' }],
+                  ['render-ui', 'main', { type: 'entity-cards',
+                    entity: 'Article',
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
                   }],
                 ],
               },
               {
-                from: 'Idle',
-                to: 'Searching',
+                from: 'idle',
+                to: 'searching',
                 event: 'SEARCH',
-                guard: ['>=', ['str/len', '@payload.term'], '@entity.minLength'],
                 effects: [
-                  ['set', '@entity.search', '@payload.term'],
-                  ['set', '@entity.isSearching', true],
-                  ['async/debounce', '@entity.debounceMs', ['emit', 'SEARCH_COMPLETE']],
+                  ['fetch', 'Article'],
+                  ['set', '@entity.searchTerm', '@payload.term'],
+                  ['render-ui', 'main', { type: 'entity-cards',
+                    entity: 'Article',
+                    itemActions: [{ label: 'View', event: 'VIEW' }],
+                  }],
                 ],
               },
               {
-                from: 'Idle',
-                to: 'Idle',
+                from: 'searching',
+                to: 'searching',
                 event: 'SEARCH',
-                guard: ['<', ['str/len', '@payload.term'], '@entity.minLength'],
-                effects: [['set', '@entity.search', '@payload.term']],
+                effects: [
+                  ['fetch', 'Article'],
+                  ['set', '@entity.searchTerm', '@payload.term'],
+                  ['render-ui', 'main', { type: 'entity-cards',
+                    entity: 'Article',
+                    itemActions: [{ label: 'View', event: 'VIEW' }],
+                  }],
+                ],
               },
               {
-                from: 'Searching',
-                to: 'Idle',
-                event: 'SEARCH_COMPLETE',
-                effects: [['set', '@entity.isSearching', false]],
-              },
-              {
-                from: 'Idle',
-                to: 'Idle',
+                from: 'searching',
+                to: 'idle',
                 event: 'CLEAR_SEARCH',
                 effects: [
-                  ['set', '@entity.search', ''],
-                  ['set', '@entity.isSearching', false],
+                  ['set', '@entity.searchTerm', ''],
+                  ['fetch', 'Article'],
+                  ['render-ui', 'main', { type: 'entity-cards',
+                    entity: 'Article',
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
-              {
-                from: 'Searching',
-                to: 'Idle',
-                event: 'CLEAR_SEARCH',
-                effects: [
-                  ['set', '@entity.search', ''],
-                  ['set', '@entity.isSearching', false],
-                ],
-              },
+              // VIEW self-transitions
+              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'searching', to: 'searching', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
             ],
           },
         },
       ],
-      pages: [],
+      pages: [
+        {
+          name: 'ArticlesPage',
+          path: '/articles',
+          isInitial: true,
+          traits: [{ ref: 'SearchControl' }],
+        },
+      ],
     },
   ],
 };

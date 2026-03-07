@@ -18,6 +18,25 @@ import { GAME_ENTITY_BEHAVIORS } from './game-entity.js';
 import { GAME_UI_BEHAVIORS } from './game-ui.js';
 import { INFRASTRUCTURE_BEHAVIORS } from './infrastructure.js';
 
+// Domain-specific behaviors
+import { GAME_2D_PLATFORMER_BEHAVIORS } from './domain/game-2d-platformer.js';
+import { GAME_2D_RPG_BEHAVIORS } from './domain/game-2d-rpg.js';
+import { GAME_2D_STRATEGY_BEHAVIORS } from './domain/game-2d-strategy.js';
+import { GAME_2D_PUZZLE_BEHAVIORS } from './domain/game-2d-puzzle.js';
+import { COMMERCE_BEHAVIORS } from './domain/commerce.js';
+import { CONTENT_BEHAVIORS } from './domain/content.js';
+import { DASHBOARD_BEHAVIORS } from './domain/dashboard.js';
+import { SCHEDULING_BEHAVIORS } from './domain/scheduling.js';
+import { WORKFLOW_BEHAVIORS } from './domain/workflow.js';
+import { SOCIAL_BEHAVIORS } from './domain/social.js';
+import { EDUCATION_BEHAVIORS } from './domain/education.js';
+import { MEDIA_BEHAVIORS } from './domain/media.js';
+import { GEOSPATIAL_BEHAVIORS } from './domain/geospatial.js';
+import { FINANCE_BEHAVIORS } from './domain/finance.js';
+import { HEALTHCARE_BEHAVIORS } from './domain/healthcare.js';
+import { IOT_BEHAVIORS } from './domain/iot.js';
+import { SIMULATION_BEHAVIORS } from './domain/simulation.js';
+
 // ============================================================================
 // Combined Registry
 // ============================================================================
@@ -27,6 +46,7 @@ import { INFRASTRUCTURE_BEHAVIORS } from './infrastructure.js';
  * Each behavior is now a OrbitalSchema (OrbitalSchema).
  */
 export const STANDARD_BEHAVIORS: OrbitalSchema[] = [
+  // Core behaviors (40)
   ...UI_INTERACTION_BEHAVIORS,
   ...DATA_MANAGEMENT_BEHAVIORS,
   ...ASYNC_BEHAVIORS,
@@ -35,6 +55,24 @@ export const STANDARD_BEHAVIORS: OrbitalSchema[] = [
   ...GAME_ENTITY_BEHAVIORS,
   ...GAME_UI_BEHAVIORS,
   ...INFRASTRUCTURE_BEHAVIORS,
+  // Domain behaviors (65+)
+  ...GAME_2D_PLATFORMER_BEHAVIORS,
+  ...GAME_2D_RPG_BEHAVIORS,
+  ...GAME_2D_STRATEGY_BEHAVIORS,
+  ...GAME_2D_PUZZLE_BEHAVIORS,
+  ...COMMERCE_BEHAVIORS,
+  ...CONTENT_BEHAVIORS,
+  ...DASHBOARD_BEHAVIORS,
+  ...SCHEDULING_BEHAVIORS,
+  ...WORKFLOW_BEHAVIORS,
+  ...SOCIAL_BEHAVIORS,
+  ...EDUCATION_BEHAVIORS,
+  ...MEDIA_BEHAVIORS,
+  ...GEOSPATIAL_BEHAVIORS,
+  ...FINANCE_BEHAVIORS,
+  ...HEALTHCARE_BEHAVIORS,
+  ...IOT_BEHAVIORS,
+  ...SIMULATION_BEHAVIORS,
 ];
 
 /**
