@@ -60,7 +60,8 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                 to: 'hidden',
                 event: 'INIT',
                 effects: [
-                  ['render-ui', 'main', { type: 'empty-state', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
+                  ['render-ui', 'main', { type: 'empty-state',
                     title: 'No Notifications',
                     message: 'Nothing to display',
                   }],
@@ -75,7 +76,12 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.message', '@payload.message'],
                   ['set', '@entity.type', '@payload.type'],
                   ['set', '@entity.title', '@payload.title'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Notification' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
+                  ['render-ui', 'main', { type: 'entity-list', entity: 'Notification',
+                    itemActions: [
+                      { label: 'Hide', event: 'HIDE' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -87,7 +93,12 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.message', '@payload.message'],
                   ['set', '@entity.type', '@payload.type'],
                   ['set', '@entity.title', '@payload.title'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Notification' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
+                  ['render-ui', 'main', { type: 'entity-list', entity: 'Notification',
+                    itemActions: [
+                      { label: 'Hide', event: 'HIDE' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -97,7 +108,8 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.message', ''],
                   ['set', '@entity.title', ''],
-                  ['render-ui', 'main', { type: 'empty-state', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
+                  ['render-ui', 'main', { type: 'empty-state',
                     title: 'No Notifications',
                     message: 'Nothing to display',
                   }],

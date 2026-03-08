@@ -64,6 +64,7 @@ export const STATS_PANEL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'StatMetric'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Statistics' }],
+                  ['render-ui', 'main', { type: 'dashboard-grid', entity: 'StatMetric', cells: [] }],
                   ['render-ui', 'main', { type: 'stats', entity: 'StatMetric' }],
                 ],
               },
@@ -73,7 +74,9 @@ export const STATS_PANEL_BEHAVIOR: OrbitalSchema = {
                 event: 'LOADED',
                 effects: [
                   ['fetch', 'StatMetric'],
+                  ['render-ui', 'main', { type: 'dashboard-grid', entity: 'StatMetric', cells: [] }],
                   ['render-ui', 'main', { type: 'stats', entity: 'StatMetric' }],
+                  ['render-ui', 'main', { type: 'meter', entity: 'StatMetric', value: 0 }],
                 ],
               },
               {
@@ -83,6 +86,7 @@ export const STATS_PANEL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'StatMetric'],
                   ['render-ui', 'main', { type: 'stats', entity: 'StatMetric' }],
+                  ['render-ui', 'main', { type: 'meter', entity: 'StatMetric', value: 0 }],
                 ],
               },
               {
@@ -91,7 +95,9 @@ export const STATS_PANEL_BEHAVIOR: OrbitalSchema = {
                 event: 'REFRESHED',
                 effects: [
                   ['fetch', 'StatMetric'],
+                  ['render-ui', 'main', { type: 'dashboard-grid', entity: 'StatMetric', cells: [] }],
                   ['render-ui', 'main', { type: 'stats', entity: 'StatMetric' }],
+                  ['render-ui', 'main', { type: 'meter', entity: 'StatMetric', value: 0 }],
                 ],
               },
             ],
@@ -169,6 +175,8 @@ export const CHART_VIEW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'ChartData'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Charts' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'ChartData' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'chart', entity: 'ChartData' }],
                 ],
               },
@@ -178,6 +186,8 @@ export const CHART_VIEW_BEHAVIOR: OrbitalSchema = {
                 event: 'LOADED',
                 effects: [
                   ['fetch', 'ChartData'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'ChartData' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'chart', entity: 'ChartData' }],
                 ],
               },
@@ -188,6 +198,8 @@ export const CHART_VIEW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.period', '@payload.period'],
                   ['fetch', 'ChartData'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'ChartData' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'chart', entity: 'ChartData' }],
                 ],
               },
@@ -283,6 +295,9 @@ export const KPI_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'KpiTarget'],
                   ['render-ui', 'main', { type: 'page-header', title: 'KPI Dashboard' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'KpiTarget' }],
+                  ['render-ui', 'main', { type: 'dashboard-grid', entity: 'KpiTarget', cells: [] }],
+                  ['render-ui', 'main', { type: 'meter', entity: 'KpiTarget', value: 0 }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'KpiTarget',
                     itemActions: [
@@ -330,6 +345,8 @@ export const KPI_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.name', '@payload.name'],
                   ['set', '@entity.target', '@payload.target'],
                   ['render-ui', 'modal', null],
+                  ['render-ui', 'main', { type: 'stats', entity: 'KpiTarget' }],
+                  ['render-ui', 'main', { type: 'meter', entity: 'KpiTarget', value: 0 }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'KpiTarget',
                     itemActions: [
@@ -347,6 +364,8 @@ export const KPI_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'KpiTarget'],
                   ['render-ui', 'modal', null],
+                  ['render-ui', 'main', { type: 'stats', entity: 'KpiTarget' }],
+                  ['render-ui', 'main', { type: 'meter', entity: 'KpiTarget', value: 0 }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'KpiTarget',
                     itemActions: [
@@ -434,6 +453,7 @@ export const REPORT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Report'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Reports' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Report' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Report',
                     itemActions: [
@@ -472,6 +492,7 @@ export const REPORT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Report'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Reports' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Report' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Report',
                     itemActions: [
@@ -488,6 +509,7 @@ export const REPORT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Report'],
                   ['set', '@entity.status', 'complete'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Report' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Report' }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'Report' }],
                 ],
               },
@@ -498,6 +520,7 @@ export const REPORT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Report'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Report' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Report' }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'Report' }],
                 ],
               },
@@ -508,6 +531,7 @@ export const REPORT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Report'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Reports' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Report' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Report',
                     itemActions: [

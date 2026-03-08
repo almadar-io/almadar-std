@@ -80,15 +80,17 @@ export const CALENDAR_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'CalendarEvent'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Calendar', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Calendar',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'CalendarEvent' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'CalendarEvent',
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
                     ],
                   }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'CalendarEvent' }],
                 ],
               },
               {
@@ -117,6 +119,7 @@ export const CALENDAR_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isAllDay', '@payload.isAllDay'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'CalendarEvent'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'CalendarEvent' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'CalendarEvent',
                     itemActions: [
@@ -173,6 +176,7 @@ export const CALENDAR_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isAllDay', '@payload.isAllDay'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'CalendarEvent'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'CalendarEvent' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'CalendarEvent',
                     itemActions: [
@@ -282,13 +286,17 @@ export const BOOKING_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Booking'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Bookings' }],
-                  ['render-ui', 'main', { type: 'entity-list',
+                  ['render-ui', 'main', { type: 'page-header', title: 'Bookings',
+                    actions: [{ label: 'Select', event: 'SELECT' }],
+                  }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Booking' }],
+                  ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Booking',
                     itemActions: [
                       { label: 'Select', event: 'SELECT' },
                     ],
                   }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'Booking' }],
                 ],
               },
               {
@@ -374,7 +382,7 @@ export const BOOKING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'Booking'],
-                  ['render-ui', 'main', { type: 'entity-list',
+                  ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Booking',
                     itemActions: [
                       { label: 'Select', event: 'SELECT' },
@@ -389,7 +397,7 @@ export const BOOKING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'Booking'],
-                  ['render-ui', 'main', { type: 'entity-list',
+                  ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Booking',
                     itemActions: [
                       { label: 'Select', event: 'SELECT' },
@@ -470,7 +478,8 @@ export const AVAILABILITY_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'TimeSlot'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Availability' }],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', entity: 'TimeSlot' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'TimeSlot',
                     itemActions: [
                       { label: 'Edit', event: 'EDIT' },
@@ -503,7 +512,8 @@ export const AVAILABILITY_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isAvailable', '@payload.isAvailable'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'TimeSlot'],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', entity: 'TimeSlot' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'TimeSlot',
                     itemActions: [
                       { label: 'Edit', event: 'EDIT' },
@@ -601,7 +611,7 @@ export const REMINDER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Reminder'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Reminders', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Reminders',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
                   ['render-ui', 'main', { type: 'entity-list',
@@ -609,6 +619,9 @@ export const REMINDER_BEHAVIOR: OrbitalSchema = {
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
                     ],
+                  }],
+                  ['render-ui', 'main', { type: 'timeline',
+                    entity: 'Reminder',
                   }],
                 ],
               },
@@ -641,6 +654,9 @@ export const REMINDER_BEHAVIOR: OrbitalSchema = {
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
                     ],
+                  }],
+                  ['render-ui', 'main', { type: 'timeline',
+                    entity: 'Reminder',
                   }],
                 ],
               },
@@ -679,6 +695,9 @@ export const REMINDER_BEHAVIOR: OrbitalSchema = {
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
                     ],
+                  }],
+                  ['render-ui', 'main', { type: 'timeline',
+                    entity: 'Reminder',
                   }],
                 ],
               },

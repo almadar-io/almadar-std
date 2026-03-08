@@ -72,6 +72,7 @@ export const CART_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'CartItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Shopping Cart' }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Total', value: '@entity.price' }],
                   ['render-ui', 'main', { type: 'empty-state', title: 'No items in cart', message: 'Add items to get started' }],
                 ],
               },
@@ -85,7 +86,10 @@ export const CART_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.price', '@payload.price'],
                   ['set', '@entity.productId', '@payload.productId'],
                   ['set', '@entity.quantity', 1],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Shopping Cart' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Shopping Cart',
+                    actions: [{ label: 'Checkout', event: 'PROCEED_CHECKOUT' }],
+                  }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Cart Total', value: '@entity.price' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'CartItem',
                     itemActions: [
@@ -104,6 +108,7 @@ export const CART_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.price', '@payload.price'],
                   ['set', '@entity.productId', '@payload.productId'],
                   ['set', '@entity.quantity', 1],
+                  ['render-ui', 'main', { type: 'stats', label: 'Cart Total', value: '@entity.price' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'CartItem',
                     itemActions: [
@@ -118,6 +123,7 @@ export const CART_BEHAVIOR: OrbitalSchema = {
                 event: 'REMOVE_ITEM',
                 effects: [
                   ['fetch', 'CartItem'],
+                  ['render-ui', 'main', { type: 'stats', label: 'Cart Total', value: '@entity.price' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'CartItem',
                     itemActions: [
@@ -132,7 +138,10 @@ export const CART_BEHAVIOR: OrbitalSchema = {
                 event: 'PROCEED_CHECKOUT',
                 effects: [
                   ['fetch', 'CartItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Checkout' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Checkout',
+                    actions: [{ label: 'Back to Cart', event: 'BACK_TO_CART' }],
+                  }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Cart Total', value: '@entity.price' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'CartItem',
                     itemActions: [{ label: 'View', event: 'VIEW' }],
@@ -156,7 +165,10 @@ export const CART_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK_TO_CART',
                 effects: [
                   ['fetch', 'CartItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Shopping Cart' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Shopping Cart',
+                    actions: [{ label: 'Checkout', event: 'PROCEED_CHECKOUT' }],
+                  }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Cart Total', value: '@entity.price' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'CartItem',
                     itemActions: [
@@ -242,6 +254,7 @@ export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Order'],
                   ['render-ui', 'main', { type: 'wizard-container', steps: [], entity: 'Order' }],
+                  ['render-ui', 'main', { type: 'wizard-progress', currentStep: 0, steps: [{ label: 'Shipping' }, { label: 'Payment' }, { label: 'Review' }] }],
                   ['render-ui', 'main', { type: 'form-section', entity: 'Order' }],
                 ],
               },
@@ -253,6 +266,7 @@ export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Order'],
                   ['set', '@entity.shippingAddress', '@payload.shippingAddress'],
                   ['render-ui', 'main', { type: 'wizard-container', steps: [], entity: 'Order' }],
+                  ['render-ui', 'main', { type: 'wizard-progress', currentStep: 1, steps: [{ label: 'Shipping' }, { label: 'Payment' }, { label: 'Review' }] }],
                   ['render-ui', 'main', { type: 'form-section', entity: 'Order' }],
                 ],
               },
@@ -264,6 +278,7 @@ export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Order'],
                   ['set', '@entity.paymentMethod', '@payload.paymentMethod'],
                   ['render-ui', 'main', { type: 'wizard-container', steps: [], entity: 'Order' }],
+                  ['render-ui', 'main', { type: 'wizard-progress', currentStep: 2, steps: [{ label: 'Shipping' }, { label: 'Payment' }, { label: 'Review' }] }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'Order' }],
                 ],
               },
@@ -274,6 +289,7 @@ export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Order'],
                   ['render-ui', 'main', { type: 'wizard-container', steps: [], entity: 'Order' }],
+                  ['render-ui', 'main', { type: 'wizard-progress', currentStep: 0, steps: [{ label: 'Shipping' }, { label: 'Payment' }, { label: 'Review' }] }],
                   ['render-ui', 'main', { type: 'form-section', entity: 'Order' }],
                 ],
               },
@@ -295,6 +311,7 @@ export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Order'],
                   ['render-ui', 'main', { type: 'wizard-container', steps: [], entity: 'Order' }],
+                  ['render-ui', 'main', { type: 'wizard-progress', currentStep: 1, steps: [{ label: 'Shipping' }, { label: 'Payment' }, { label: 'Review' }] }],
                   ['render-ui', 'main', { type: 'form-section', entity: 'Order' }],
                 ],
               },
@@ -305,6 +322,7 @@ export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Order'],
                   ['render-ui', 'main', { type: 'wizard-container', steps: [], entity: 'Order' }],
+                  ['render-ui', 'main', { type: 'wizard-progress', currentStep: 0, steps: [{ label: 'Shipping' }, { label: 'Payment' }, { label: 'Review' }] }],
                   ['render-ui', 'main', { type: 'form-section', entity: 'Order' }],
                 ],
               },
@@ -384,10 +402,11 @@ export const CATALOG_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Product'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Product Catalog' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search products', event: 'APPLY_FILTER' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Product',
                     itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
+                      { label: 'View', event: 'VIEW_PRODUCT' },
                     ],
                   }],
                 ],
@@ -451,10 +470,12 @@ export const CATALOG_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.category', ''],
                   ['fetch', 'Product'],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Product Catalog' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search products', event: 'APPLY_FILTER' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Product',
                     itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
+                      { label: 'View', event: 'VIEW_PRODUCT' },
                     ],
                   }],
                 ],
@@ -537,6 +558,8 @@ export const PRICING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PriceRule'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Price Rules' }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Total Rules', value: '@entity.name' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'PriceRule' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'PriceRule',
                     itemActions: [
@@ -568,6 +591,8 @@ export const PRICING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.name', '@payload.name'],
                   ['set', '@entity.value', '@payload.value'],
                   ['render-ui', 'modal', null],
+                  ['render-ui', 'main', { type: 'stats', label: 'Total Rules', value: '@entity.name' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'PriceRule' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'PriceRule',
                     itemActions: [
@@ -600,6 +625,8 @@ export const PRICING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PriceRule'],
                   ['render-ui', 'modal', null],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Price Rules' }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Total Rules', value: '@entity.name' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'PriceRule',
                     itemActions: [
@@ -679,6 +706,8 @@ export const ORDER_TRACKING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'OrderStatus'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Order Tracking' }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Orders', value: '@entity.status' }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'OrderStatus' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'OrderStatus',
                     itemActions: [
@@ -693,6 +722,7 @@ export const ORDER_TRACKING_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW_ORDER',
                 effects: [
                   ['fetch', 'OrderStatus'],
+                  ['render-ui', 'modal', { type: 'timeline', entity: 'OrderStatus', title: 'Order History' }],
                   ['render-ui', 'modal', { type: 'detail-panel',
                     entity: 'OrderStatus',
                     actions: [{ label: 'Close', event: 'CLOSE' }],

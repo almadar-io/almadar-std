@@ -34,7 +34,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
         fields: [
           { name: 'id', type: 'string', required: true },
           { name: 'name', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'active' },
+          { name: 'status', type: 'enum', default: 'active', values: ['active', 'inactive', 'archived'] },
           { name: 'createdAt', type: 'date', default: '' },
         ],
       },

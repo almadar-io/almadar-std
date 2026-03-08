@@ -67,7 +67,9 @@ export const APPROVAL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'ApprovalRequest'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Approvals' }],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', label: 'Pending', value: '@entity.status' }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'ApprovalRequest' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ApprovalRequest',
                     itemActions: [
                       { label: 'Review', event: 'REVIEW' },
@@ -143,7 +145,9 @@ export const APPROVAL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'ApprovalRequest'],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', label: 'Pending', value: '@entity.status' }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'ApprovalRequest' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ApprovalRequest',
                     itemActions: [
                       { label: 'Review', event: 'REVIEW' },
@@ -158,7 +162,9 @@ export const APPROVAL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'ApprovalRequest'],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', label: 'Pending', value: '@entity.status' }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'ApprovalRequest' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ApprovalRequest',
                     itemActions: [
                       { label: 'Review', event: 'REVIEW' },
@@ -173,7 +179,9 @@ export const APPROVAL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'ApprovalRequest'],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', label: 'Pending', value: '@entity.status' }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'ApprovalRequest' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ApprovalRequest',
                     itemActions: [
                       { label: 'Review', event: 'REVIEW' },
@@ -188,7 +196,9 @@ export const APPROVAL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'ApprovalRequest'],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', label: 'Pending', value: '@entity.status' }],
+                  ['render-ui', 'main', { type: 'timeline', entity: 'ApprovalRequest' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ApprovalRequest',
                     itemActions: [
                       { label: 'Review', event: 'REVIEW' },
@@ -266,6 +276,8 @@ export const PIPELINE_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PipelineItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Pipeline' }],
+                  ['render-ui', 'main', { type: 'stats', label: 'Stage', value: '@entity.stage' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Pipeline Progress' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'PipelineItem',
                     itemActions: [
@@ -310,6 +322,8 @@ export const PIPELINE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.stage', '@payload.stage'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'PipelineItem'],
+                  ['render-ui', 'main', { type: 'stats', label: 'Stage', value: '@entity.stage' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Pipeline Progress' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'PipelineItem',
                     itemActions: [
@@ -424,10 +438,18 @@ export const KANBAN_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'KanbanCard'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Kanban Board', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Kanban Board',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
-                  ['render-ui', 'main', { type: 'entity-cards',
+                  ['render-ui', 'main', { type: 'stats', entity: 'KanbanCard' }],
+                  ['render-ui', 'main', { type: 'tabs',
+                    tabs: [
+                      { label: 'To Do', value: 'todo' },
+                      { label: 'In Progress', value: 'in-progress' },
+                      { label: 'Done', value: 'done' },
+                    ],
+                  }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'KanbanCard',
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
@@ -460,7 +482,15 @@ export const KANBAN_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.dueDate', '@payload.dueDate'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'KanbanCard'],
-                  ['render-ui', 'main', { type: 'entity-cards',
+                  ['render-ui', 'main', { type: 'stats', entity: 'KanbanCard' }],
+                  ['render-ui', 'main', { type: 'tabs',
+                    tabs: [
+                      { label: 'To Do', value: 'todo' },
+                      { label: 'In Progress', value: 'in-progress' },
+                      { label: 'Done', value: 'done' },
+                    ],
+                  }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'KanbanCard',
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
@@ -515,7 +545,15 @@ export const KANBAN_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.dueDate', '@payload.dueDate'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'KanbanCard'],
-                  ['render-ui', 'main', { type: 'entity-cards',
+                  ['render-ui', 'main', { type: 'stats', entity: 'KanbanCard' }],
+                  ['render-ui', 'main', { type: 'tabs',
+                    tabs: [
+                      { label: 'To Do', value: 'todo' },
+                      { label: 'In Progress', value: 'in-progress' },
+                      { label: 'Done', value: 'done' },
+                    ],
+                  }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'KanbanCard',
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
@@ -621,6 +659,8 @@ export const REVIEW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'ReviewItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Reviews' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'ReviewItem' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'ReviewItem' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ReviewItem',
                     itemActions: [
@@ -674,6 +714,8 @@ export const REVIEW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'ReviewItem'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'ReviewItem' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'ReviewItem' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ReviewItem',
                     itemActions: [
@@ -689,6 +731,8 @@ export const REVIEW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'ReviewItem'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'ReviewItem' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'ReviewItem' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'ReviewItem',
                     itemActions: [

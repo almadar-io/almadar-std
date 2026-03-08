@@ -66,6 +66,7 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'MediaItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Media Gallery' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'MediaItem' }],
                   ['render-ui', 'main', { type: 'media-gallery', title: 'Gallery' }],
                 ],
               },
@@ -118,6 +119,7 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.url', '@payload.url'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'MediaItem'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'MediaItem' }],
                   ['render-ui', 'main', { type: 'media-gallery', title: 'Gallery' }],
                 ],
               },
@@ -206,6 +208,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.currentTime', 0],
                   ['set', '@entity.isPlaying', false],
                   ['render-ui', 'main', { type: 'page-header', title: 'Media Player' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Volume' }],
                   ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
                 ],
               },
@@ -216,6 +219,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isPlaying', true],
                   ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.currentTime', label: 'Playback' }],
                 ],
               },
               {
@@ -225,6 +229,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isPlaying', false],
                   ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.currentTime', label: 'Paused' }],
                 ],
               },
               {
@@ -234,6 +239,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isPlaying', true],
                   ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.currentTime', label: 'Playback' }],
                 ],
               },
               {
@@ -325,13 +331,13 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PlaylistItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'PlaylistItem',
-                  
-  itemActions: [
-    { label: 'View', event: 'VIEW' },
-  ],
-}],
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -366,13 +372,13 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.artist', '@payload.artist'],
                   ['fetch', 'PlaylistItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'PlaylistItem',
-                  
-  itemActions: [
-    { label: 'View', event: 'VIEW' },
-  ],
-}],
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -382,13 +388,13 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PlaylistItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'PlaylistItem',
-                  
-  itemActions: [
-    { label: 'View', event: 'VIEW' },
-  ],
-}],
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -398,13 +404,13 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PlaylistItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'PlaylistItem',
-                  
-  itemActions: [
-    { label: 'View', event: 'VIEW' },
-  ],
-}],
+                    itemActions: [
+                      { label: 'View', event: 'VIEW' },
+                    ],
+                  }],
                 ],
               },
             ],
@@ -478,7 +484,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'idle'],
                   ['render-ui', 'main', { type: 'page-header', title: 'File Upload' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.id' }],
+['fetch', 'UploadState'],
+                  ['render-ui', 'main', { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' }],
                 ],
               },
               {
@@ -489,6 +496,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.fileName', '@payload.fileName'],
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'uploading'],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Uploading...' }],
+                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
                   ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Upload Progress' }],
                 ],
               },
@@ -499,7 +508,9 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 100],
                   ['set', '@entity.status', 'completed'],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.id' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Upload Complete' }],
+                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: 100, label: 'Complete' }],
                 ],
               },
               {
@@ -508,7 +519,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 event: 'FAIL',
                 effects: [
                   ['set', '@entity.status', 'failed'],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.id' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Upload Failed' }],
+                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
                 ],
               },
               {
@@ -518,6 +530,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'uploading'],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Uploading...' }],
+                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
                   ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Upload Progress' }],
                 ],
               },
@@ -528,7 +542,9 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.id' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'File Upload' }],
+['fetch', 'UploadState'],
+                  ['render-ui', 'main', { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' }],
                 ],
               },
               {
@@ -538,7 +554,9 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.id' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'File Upload' }],
+['fetch', 'UploadState'],
+                  ['render-ui', 'main', { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' }],
                 ],
               },
             ],

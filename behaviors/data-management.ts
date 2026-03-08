@@ -589,7 +589,8 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Articles' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Search Articles' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Article',
                     itemActions: [
@@ -605,6 +606,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['set', '@entity.searchTerm', '@payload.term'],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Article',
                     itemActions: [{ label: 'View', event: 'VIEW' }],
@@ -618,6 +620,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['set', '@entity.searchTerm', '@payload.term'],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Article',
                     itemActions: [{ label: 'View', event: 'VIEW' }],
@@ -631,6 +634,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.searchTerm', ''],
                   ['fetch', 'Article'],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Article',
                     itemActions: [
@@ -640,8 +644,8 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 ],
               },
               // VIEW self-transitions
-              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'searching', to: 'searching', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'searching', to: 'searching', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
             ],
           },
         },

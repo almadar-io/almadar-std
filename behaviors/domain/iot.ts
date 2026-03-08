@@ -66,6 +66,10 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'SensorReading'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Sensor Dashboard' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'SensorReading' }],
+                  ['render-ui', 'main', { type: 'line-chart',
+                    data: [],
+                  }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'SensorReading',
                     itemActions: [
@@ -85,6 +89,10 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
                       { label: 'Configure', event: 'CONFIGURE' },
                       { label: 'Close', event: 'CLOSE' },
                     ],
+                  }],
+                  ['render-ui', 'modal', { type: 'meter',
+                    value: '@entity.value',
+                    label: 'Current Value',
                   }],
                 ],
               },
@@ -109,6 +117,10 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.unit', '@payload.unit'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'SensorReading'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'SensorReading' }],
+                  ['render-ui', 'main', { type: 'line-chart',
+                    data: [],
+                  }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'SensorReading',
                     itemActions: [
@@ -219,9 +231,11 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'AlertRule'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Alert Rules', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Alert Rules',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'AlertRule' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Threshold Level' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'AlertRule',
                     itemActions: [
@@ -252,6 +266,8 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.threshold', '@payload.threshold'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'AlertRule'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'AlertRule' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Threshold Level' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'AlertRule',
                     itemActions: [
@@ -298,6 +314,8 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.threshold', '@payload.threshold'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'AlertRule'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'AlertRule' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Threshold Level' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'AlertRule',
                     itemActions: [
@@ -393,6 +411,8 @@ export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Device'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Devices' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Device' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Online Devices' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Device',
                     itemActions: [
@@ -436,6 +456,8 @@ export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.name', '@payload.name'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'Device'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Device' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Online Devices' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Device',
                     itemActions: [

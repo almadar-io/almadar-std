@@ -69,11 +69,10 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                   ['render-ui', 'main', { type: 'page-header', title: 'Quizzes' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Quiz',
-                  
-  itemActions: [
-    { label: 'Refresh', event: 'INIT' },
-  ],
-}],
+                    itemActions: [
+                      { label: 'Start', event: 'START' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -83,8 +82,18 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.currentQuestion', 1],
                   ['set', '@entity.score', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Taking Quiz' }],
-                  ['render-ui', 'main', { type: 'card', title: 'Quiz Question' }],
+                  ['render-ui', 'main', { type: 'wizard-progress',
+                    currentStep: 1,
+                    steps: [{ label: 'Question 1' }, { label: 'Question 2' }, { label: 'Question 3' }],
+                  }],
+                  ['render-ui', 'main', { type: 'flip-card',
+                    front: 'Question',
+                    back: 'Answer',
+                  }],
+                  ['render-ui', 'main', { type: 'progress-dots',
+                    count: 3,
+                    currentIndex: 0,
+                  }],
                 ],
               },
               {
@@ -94,7 +103,18 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 guard: ['<', '@entity.currentQuestion', '@entity.totalQuestions'],
                 effects: [
                   ['set', '@entity.currentQuestion', ['+', '@entity.currentQuestion', 1]],
-                  ['render-ui', 'main', { type: 'card', title: 'Quiz Question' }],
+                  ['render-ui', 'main', { type: 'wizard-progress',
+                    currentStep: '@entity.currentQuestion',
+                    steps: [{ label: 'Question 1' }, { label: 'Question 2' }, { label: 'Question 3' }],
+                  }],
+                  ['render-ui', 'main', { type: 'flip-card',
+                    front: 'Question',
+                    back: 'Answer',
+                  }],
+                  ['render-ui', 'main', { type: 'progress-dots',
+                    count: 3,
+                    currentIndex: '@entity.currentQuestion',
+                  }],
                 ],
               },
               {
@@ -105,6 +125,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Quiz'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Quiz Review' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Quiz' }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'Quiz' }],
                 ],
               },
@@ -129,11 +150,10 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                   ['render-ui', 'main', { type: 'page-header', title: 'Quizzes' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Quiz',
-                  
-  itemActions: [
-    { label: 'Refresh', event: 'INIT' },
-  ],
-}],
+                    itemActions: [
+                      { label: 'Start', event: 'START' },
+                    ],
+                  }],
                 ],
               },
             ],
@@ -202,6 +222,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'LearningProgress'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Learning Progress' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'LearningProgress' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'LearningProgress',
                     itemActions: [
@@ -220,6 +241,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
                     actions: [{ label: 'Back', event: 'BACK' }],
                   }],
                   ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Progress' }],
+                  ['render-ui', 'main', { type: 'meter', value: '@entity.percentage', label: 'Completion' }],
                   ['render-ui', 'main', { type: 'stats', entity: 'LearningProgress' }],
                 ],
               },
@@ -230,6 +252,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'LearningProgress'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Learning Progress' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'LearningProgress' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'LearningProgress',
                     itemActions: [
@@ -307,10 +330,13 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Grade'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Grades' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Average Score' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Grade',
                     itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
+                      { label: 'Grade', event: 'START_GRADING' },
                     ],
                   }],
                 ],
@@ -321,7 +347,9 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 event: 'START_GRADING',
                 effects: [
                   ['fetch', 'Grade'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Enter Grade' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Enter Grade',
+                    actions: [{ label: 'Back', event: 'BACK' }],
+                  }],
                   ['render-ui', 'main', { type: 'form-section', entity: 'Grade' }],
                 ],
               },
@@ -333,10 +361,30 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Grade'],
                   ['set', '@entity.score', '@payload.score'],
                   ['set', '@entity.feedback', '@payload.feedback'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Grade Submitted', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Grade Submitted',
                     actions: [{ label: 'Back', event: 'BACK' }],
                   }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'meter', value: '@entity.score', label: 'Score' }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'Grade' }],
+                ],
+              },
+              {
+                from: 'grading',
+                to: 'browsing',
+                event: 'BACK',
+                effects: [
+                  ['fetch', 'Grade'],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Grades' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Average Score' }],
+                  ['render-ui', 'main', { type: 'entity-table',
+                    entity: 'Grade',
+                    itemActions: [
+                      { label: 'Grade', event: 'START_GRADING' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -346,10 +394,13 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Grade'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Grades' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Average Score' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Grade',
                     itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
+                      { label: 'Grade', event: 'START_GRADING' },
                     ],
                   }],
                 ],
@@ -439,10 +490,20 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'Course'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Details', 
-                    actions: [{ label: 'Back', event: 'BACK' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Course Details',
+                    actions: [{ label: 'Back', event: 'BACK' }, { label: 'Enroll', event: 'ENROLL' }],
                   }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'Course' }],
+                  ['render-ui', 'main', { type: 'progress-bar',
+                    value: 0,
+                    label: 'Course Progress',
+                  }],
+                  ['render-ui', 'main', { type: 'accordion',
+                    items: [
+                      { id: 'overview', title: 'Course Overview', content: 'Overview' },
+                      { id: 'modules', title: 'Modules', content: 'Module list' },
+                      { id: 'requirements', title: 'Requirements', content: 'Prerequisites' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -481,10 +542,20 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Course'],
                   ['render-ui', 'modal', null],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Details', 
-                    actions: [{ label: 'Back', event: 'BACK' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Course Details',
+                    actions: [{ label: 'Back', event: 'BACK' }, { label: 'Enroll', event: 'ENROLL' }],
                   }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'Course' }],
+                  ['render-ui', 'main', { type: 'progress-bar',
+                    value: 0,
+                    label: 'Course Progress',
+                  }],
+                  ['render-ui', 'main', { type: 'accordion',
+                    items: [
+                      { id: 'overview', title: 'Course Overview', content: 'Overview' },
+                      { id: 'modules', title: 'Modules', content: 'Module list' },
+                      { id: 'requirements', title: 'Requirements', content: 'Prerequisites' },
+                    ],
+                  }],
                 ],
               },
               {

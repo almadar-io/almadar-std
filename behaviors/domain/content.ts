@@ -74,7 +74,9 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Articles' }],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', entity: 'Article' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles', event: 'EDIT_ARTICLE' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Article',
                     itemActions: [
                       { label: 'Edit', event: 'EDIT_ARTICLE' },
@@ -142,7 +144,8 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Articles' }],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', entity: 'Article' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Article',
                     itemActions: [
                       { label: 'Edit', event: 'EDIT_ARTICLE' },
@@ -157,7 +160,8 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Articles' }],
-                  ['render-ui', 'main', { type: 'entity-table',
+                  ['render-ui', 'main', { type: 'stats', entity: 'Article' }],
+                  ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Article',
                     itemActions: [
                       { label: 'Edit', event: 'EDIT_ARTICLE' },
@@ -253,6 +257,7 @@ export const READER_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'ReadingState'],
                   ['set', '@entity.articleId', '@payload.articleId'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Reading' }],
+                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.scrollPosition', label: 'Reading Progress' }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'ReadingState' }],
                 ],
               },
@@ -263,6 +268,7 @@ export const READER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'ReadingState'],
                   ['set', '@entity.fontSize', '@payload.fontSize'],
+                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.scrollPosition', label: 'Reading Progress' }],
                   ['render-ui', 'main', { type: 'detail-panel', entity: 'ReadingState' }],
                 ],
               },
@@ -357,9 +363,11 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Bookmark'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Bookmarks', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Bookmarks',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Bookmark' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search bookmarks', event: 'VIEW' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Bookmark',
                     itemActions: [
@@ -391,6 +399,7 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.url', '@payload.url'],
                   ['set', '@entity.category', '@payload.category'],
                   ['render-ui', 'modal', null],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Bookmark' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'Bookmark',
                     itemActions: [
@@ -492,6 +501,8 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Annotation'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Annotations' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Annotation' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search annotations', event: 'VIEW_ANNOTATION' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Annotation',
                     itemActions: [
@@ -523,6 +534,7 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.note', '@payload.note'],
                   ['set', '@entity.color', '@payload.color'],
                   ['render-ui', 'modal', null],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Annotation' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Annotation',
                     itemActions: [
@@ -622,6 +634,8 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FeedItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Content Feed' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'FeedItem' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search feed', event: 'READ_ITEM' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'FeedItem',
                     itemActions: [
@@ -662,6 +676,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'FeedItem'],
                   ['render-ui', 'modal', null],
                   ['render-ui', 'main', { type: 'page-header', title: 'Content Feed' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'FeedItem' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'FeedItem',
                     itemActions: [
@@ -679,6 +694,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FeedItem'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Content Feed' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'FeedItem' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'FeedItem',
                     itemActions: [

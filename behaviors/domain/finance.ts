@@ -65,7 +65,11 @@ export const LEDGER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'LedgerEntry'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Ledger' }],
+                  ['render-ui', 'main', { type: 'page-header', title: 'Ledger',
+                    actions: [{ label: 'New Entry', event: 'NEW_ENTRY' }],
+                  }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'LedgerEntry' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'LedgerEntry',
                     itemActions: [
@@ -97,6 +101,8 @@ export const LEDGER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.credit', '@payload.credit'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'LedgerEntry'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'LedgerEntry' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'LedgerEntry',
                     itemActions: [
@@ -131,6 +137,7 @@ export const LEDGER_BEHAVIOR: OrbitalSchema = {
                     entity: 'LedgerEntry',
                     actions: [{ label: 'Close', event: 'CLOSE' }],
                   }],
+                  ['render-ui', 'modal', { type: 'meter', value: '@entity.balance', label: 'Current Balance' }],
                 ],
               },
               {
@@ -219,9 +226,12 @@ export const TRANSACTION_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Transaction'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Transactions', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Transactions',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search transactions', event: 'VIEW' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Transaction' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Transaction' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Transaction',
                     itemActions: [
@@ -280,6 +290,8 @@ export const TRANSACTION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.category', '@payload.category'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'Transaction'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Transaction' }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Transaction' }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Transaction',
                     itemActions: [
@@ -374,13 +386,14 @@ export const PORTFOLIO_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Holding'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Portfolio' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Holding' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Holding',
                     itemActions: [
                       { label: 'View', event: 'VIEW' },
                     ],
                   }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Holding' }],
                 ],
               },
               {
@@ -419,6 +432,8 @@ export const PORTFOLIO_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.shares', '@payload.shares'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'Holding'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Holding' }],
+                  ['render-ui', 'main', { type: 'line-chart', data: [] }],
                   ['render-ui', 'main', { type: 'entity-table',
                     entity: 'Holding',
                     itemActions: [

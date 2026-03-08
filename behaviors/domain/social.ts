@@ -68,9 +68,11 @@ export const FEED_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'FeedPost'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Feed', 
+                  ['render-ui', 'main', { type: 'page-header', title: 'Feed',
                     actions: [{ label: 'Create', event: 'CREATE' }],
                   }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'FeedPost' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search posts', event: 'VIEW' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'FeedPost',
                     itemActions: [
@@ -148,6 +150,7 @@ export const FEED_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.likeCount', 0],
                   ['render-ui', 'modal', null],
                   ['fetch', 'FeedPost'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'FeedPost' }],
                   ['render-ui', 'main', { type: 'entity-cards',
                     entity: 'FeedPost',
                     itemActions: [
@@ -238,6 +241,8 @@ export const MESSAGING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Message'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Messages' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Message' }],
+                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search messages', event: 'OPEN_CHAT' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Message',
                     itemActions: [
@@ -316,6 +321,7 @@ export const MESSAGING_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isRead', false],
                   ['render-ui', 'modal', null],
                   ['fetch', 'Message'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'Message' }],
                   ['render-ui', 'main', { type: 'entity-list',
                     entity: 'Message',
                     itemActions: [
@@ -404,6 +410,7 @@ export const PROFILE_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'UserProfile'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Profile' }],
+                  ['render-ui', 'main', { type: 'stats', entity: 'UserProfile' }],
                   ['render-ui', 'main', { type: 'detail-panel',
                     title: '@entity.id',
                     actions: [
@@ -436,6 +443,7 @@ export const PROFILE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.avatarUrl', '@payload.avatarUrl'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'UserProfile'],
+                  ['render-ui', 'main', { type: 'stats', entity: 'UserProfile' }],
                   ['render-ui', 'main', { type: 'detail-panel',
                     title: '@entity.id',
                     actions: [
@@ -497,7 +505,7 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
         collection: 'reactions',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'type', type: 'string', default: '' },
+          { name: 'reactionType', type: 'string', default: '' },
           { name: 'userId', type: 'string', default: '' },
           { name: 'targetId', type: 'string', default: '' },
           { name: 'timestamp', type: 'string', default: '' },
@@ -516,7 +524,7 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
             events: [
               { key: 'INIT', name: 'Initialize' },
               { key: 'REACT', name: 'Add Reaction', payloadSchema: [
-                { name: 'type', type: 'string', required: true },
+                { name: 'reactionType', type: 'string', required: true },
                 { name: 'userId', type: 'string', required: true },
                 { name: 'targetId', type: 'string', required: true },
               ] },
@@ -533,12 +541,11 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Reaction'],
                   ['render-ui', 'main', { type: 'page-header', title: 'Reactions' }],
-                  ['render-ui', 'main', { type: 'entity-list',
+                  ['render-ui', 'main', { type: 'stats',
                     entity: 'Reaction',
-                    itemActions: [
-                      { label: 'React', event: 'REACT' },
-                    ],
                   }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Reaction' }],
+                  ['render-ui', 'main', { type: 'entity-cards', entity: 'Reaction', itemActions: [{ label: 'React', event: 'REACT' }] }],
                 ],
               },
               {
@@ -546,7 +553,7 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
                 to: 'reacting',
                 event: 'REACT',
                 effects: [
-                  ['set', '@entity.type', '@payload.type'],
+                  ['set', '@entity.reactionType', '@payload.reactionType'],
                   ['set', '@entity.userId', '@payload.userId'],
                   ['set', '@entity.targetId', '@payload.targetId'],
                   ['render-ui', 'modal', { type: 'detail-panel',
@@ -566,12 +573,11 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['render-ui', 'modal', null],
                   ['fetch', 'Reaction'],
-                  ['render-ui', 'main', { type: 'entity-list',
+                  ['render-ui', 'main', { type: 'stats',
                     entity: 'Reaction',
-                    itemActions: [
-                      { label: 'React', event: 'REACT' },
-                    ],
                   }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Reaction' }],
+                  ['render-ui', 'main', { type: 'entity-cards', entity: 'Reaction', itemActions: [{ label: 'React', event: 'REACT' }] }],
                 ],
               },
               {
@@ -579,17 +585,16 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'REMOVE',
                 effects: [
-                  ['set', '@entity.type', ''],
+                  ['set', '@entity.reactionType', ''],
                   ['set', '@entity.userId', ''],
                   ['set', '@entity.targetId', ''],
                   ['render-ui', 'modal', null],
                   ['fetch', 'Reaction'],
-                  ['render-ui', 'main', { type: 'entity-list',
+                  ['render-ui', 'main', { type: 'stats',
                     entity: 'Reaction',
-                    itemActions: [
-                      { label: 'React', event: 'REACT' },
-                    ],
                   }],
+                  ['render-ui', 'main', { type: 'chart', entity: 'Reaction' }],
+                  ['render-ui', 'main', { type: 'entity-cards', entity: 'Reaction', itemActions: [{ label: 'React', event: 'REACT' }] }],
                 ],
               },
               {
