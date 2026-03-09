@@ -55,16 +55,13 @@ const mapBrowsingMainEffect = [
       { type: 'stats', label: 'Categories', icon: 'layers', entity: 'MapMarker' },
     ]},
     { type: 'divider' },
-    // Map visualization placeholder
-    { type: 'stack', direction: 'vertical', gap: 'md', align: 'center', children: [
-      { type: 'icon', name: 'map', size: 'xl' },
-      { type: 'typography', variant: 'body', content: 'Map visualization area' },
-    ]},
+    // Interactive map
+    { type: 'map-view', height: '400px', centerLat: 51.505, centerLng: -0.09, zoom: 13 },
     { type: 'divider' },
     // Selected marker coordinates
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stat-card', label: 'Latitude', value: '@entity.latitude', icon: 'navigation' },
-      { type: 'stat-card', label: 'Longitude', value: '@entity.longitude', icon: 'compass' },
+      { type: 'stats', label: 'Latitude', value: '@entity.latitude', icon: 'navigation' },
+      { type: 'stats', label: 'Longitude', value: '@entity.longitude', icon: 'compass' },
     ]},
     { type: 'divider' },
     // Data zone: marker cards
@@ -251,25 +248,33 @@ const locationIdleMainEffect = [
     // Header: icon + title + select button
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'target', size: 'lg' },
+        { type: 'icon', name: 'map-pin', size: 'lg' },
         { type: 'typography', variant: 'h2', content: 'Location Picker' },
       ]},
-      { type: 'button', label: 'Select Location', icon: 'map-pin', variant: 'primary', action: 'START_SELECTION' },
+      { type: 'button', label: 'Select Location', icon: 'target', variant: 'primary', action: 'START_SELECTION' },
     ]},
     { type: 'divider' },
-    // Coordinate display
-    { type: 'form-section', entity: 'SelectedLocation', title: 'Coordinates' },
+    // Static map preview (no interaction in idle)
+    { type: 'map-view', height: '300px', centerLat: 51.505, centerLng: -0.09, zoom: 10 },
+    { type: 'divider' },
+    // Empty state hint
+    { type: 'typography', variant: 'body', content: 'No location selected. Tap the button above to pick a point on the map.' },
   ]},
 ] as const;
 
 /**
- * std-location-picker - Location selection input.
- * States: idle -> selecting -> confirmed
+ * std-location-picker - Location selection via interactive map.
+ *
+ * UX: User clicks "Select Location", an interactive map appears.
+ * Clicking the map drops a pin and captures the coordinates.
+ * User reviews the picked location, then confirms or retries.
+ *
+ * States: idle -> selecting -> picked -> confirmed
  */
 export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
   name: 'std-location-picker',
-  version: '1.0.0',
-  description: 'Location selection with address and coordinates',
+  version: '2.0.0',
+  description: 'Location selection via interactive map click',
   theme: GEOSPATIAL_THEME,
   orbitals: [
     {
@@ -279,10 +284,8 @@ export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'address', type: 'string', default: '' },
           { name: 'latitude', type: 'number', default: 0 },
           { name: 'longitude', type: 'number', default: 0 },
-          { name: 'label', type: 'string', default: '' },
         ],
       },
       traits: [
@@ -294,12 +297,17 @@ export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
             states: [
               { name: 'idle', isInitial: true },
               { name: 'selecting' },
+              { name: 'picked' },
               { name: 'confirmed' },
             ],
             events: [
               { key: 'INIT', name: 'Initialize' },
               { key: 'START_SELECTION', name: 'Start Selection' },
-              { key: 'PICK_LOCATION', name: 'Pick Location', payloadSchema: [{ name: 'address', type: 'string', required: true }, { name: 'latitude', type: 'number', required: true }, { name: 'longitude', type: 'number', required: true }] },
+              { key: 'PICK_LOCATION', name: 'Pick Location', payloadSchema: [
+                { name: 'latitude', type: 'number', required: true },
+                { name: 'longitude', type: 'number', required: true },
+              ]},
+              { key: 'CANCEL', name: 'Cancel Selection' },
               { key: 'CONFIRM', name: 'Confirm Location' },
               { key: 'CLEAR_SELECTION', name: 'Clear Selection' },
             ],
@@ -309,7 +317,6 @@ export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
                 to: 'idle',
                 event: 'INIT',
                 effects: [
-                  ['set', '@entity.address', ''],
                   ['set', '@entity.latitude', 0],
                   ['set', '@entity.longitude', 0],
                   [...locationIdleMainEffect],
@@ -322,50 +329,83 @@ export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
                 effects: [
                   ['fetch', 'SelectedLocation'],
                   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'globe', size: 'lg' },
-                      { type: 'typography', variant: 'h2', content: 'Select Location' },
+                    // Header with cancel
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'target', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Click the Map' },
+                      ]},
+                      { type: 'button', label: 'Cancel', icon: 'x', variant: 'secondary', action: 'CANCEL' },
                     ]},
                     { type: 'divider' },
-                    // Search input for address
-                    { type: 'search-input', placeholder: 'Search address...', icon: 'search' },
-                    // Form for coordinate entry
-                    { type: 'form-section', entity: 'SelectedLocation' },
+                    // Instruction
+                    { type: 'typography', variant: 'body', content: 'Click anywhere on the map to drop a pin and select that location.' },
+                    // Interactive map: clicking dispatches PICK_LOCATION with { latitude, longitude }
+                    { type: 'map-view', height: '400px', centerLat: 51.505, centerLng: -0.09, zoom: 13, mapClickEvent: 'PICK_LOCATION', showClickedPin: true },
                   ]}],
                 ],
               },
               {
                 from: 'selecting',
-                to: 'selecting',
+                to: 'idle',
+                event: 'CANCEL',
+                effects: [
+                  [...locationIdleMainEffect],
+                ],
+              },
+              {
+                from: 'selecting',
+                to: 'picked',
                 event: 'PICK_LOCATION',
                 effects: [
-                  ['set', '@entity.address', '@payload.address'],
                   ['set', '@entity.latitude', '@payload.latitude'],
                   ['set', '@entity.longitude', '@payload.longitude'],
                   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Header with confirm
+                    // Header with actions
                     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
                       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
                         { type: 'icon', name: 'map-pin', size: 'lg' },
-                        { type: 'typography', variant: 'h2', content: 'Selected Location' },
+                        { type: 'typography', variant: 'h2', content: 'Review Location' },
                       ]},
-                      { type: 'button', label: 'Confirm', icon: 'check', variant: 'primary', action: 'CONFIRM' },
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'button', label: 'Try Again', icon: 'rotate-ccw', variant: 'secondary', action: 'START_SELECTION' },
+                        { type: 'button', label: 'Confirm', icon: 'check', variant: 'primary', action: 'CONFIRM' },
+                      ]},
                     ]},
                     { type: 'divider' },
-                    // Location details
-                    { type: 'data-list', fields: [
-                      { name: 'address', label: 'Address', icon: 'map-pin' },
+                    // Selected coordinates
+                    { type: 'data-list', entity: 'SelectedLocation', fields: [
                       { name: 'latitude', label: 'Latitude', icon: 'navigation', format: 'number' },
                       { name: 'longitude', label: 'Longitude', icon: 'compass', format: 'number' },
                     ]},
-                    // Coordinate meter
-                    { type: 'meter', value: 0, label: 'Accuracy', icon: 'target', entity: 'SelectedLocation' },
+                    { type: 'divider' },
+                    // Map showing the picked point
+                    { type: 'map-view', height: '300px', centerLat: 51.505, centerLng: -0.09, zoom: 14 },
                   ]}],
                 ],
               },
               {
-                from: 'selecting',
+                // "Try Again" goes back to selecting
+                from: 'picked',
+                to: 'selecting',
+                event: 'START_SELECTION',
+                effects: [
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'target', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Click the Map' },
+                      ]},
+                      { type: 'button', label: 'Cancel', icon: 'x', variant: 'secondary', action: 'CANCEL' },
+                    ]},
+                    { type: 'divider' },
+                    { type: 'typography', variant: 'body', content: 'Click anywhere on the map to drop a pin and select that location.' },
+                    { type: 'map-view', height: '400px', centerLat: 51.505, centerLng: -0.09, zoom: 13, mapClickEvent: 'PICK_LOCATION', showClickedPin: true },
+                  ]}],
+                ],
+              },
+              {
+                from: 'picked',
                 to: 'confirmed',
                 event: 'CONFIRM',
                 effects: [
@@ -373,20 +413,21 @@ export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
                     // Confirmed header
                     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
                       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'check', size: 'lg' },
+                        { type: 'icon', name: 'check-circle', size: 'lg' },
                         { type: 'typography', variant: 'h2', content: 'Location Confirmed' },
                       ]},
                       { type: 'button', label: 'Clear', icon: 'x', variant: 'secondary', action: 'CLEAR_SELECTION' },
                     ]},
                     { type: 'divider' },
-                    // Confirmed location details
                     { type: 'badge', label: 'Confirmed', variant: 'success', icon: 'check' },
-                    { type: 'data-list', fields: [
-                      { name: 'address', label: 'Address', icon: 'map-pin' },
+                    // Confirmed coordinates
+                    { type: 'data-list', entity: 'SelectedLocation', fields: [
                       { name: 'latitude', label: 'Latitude', icon: 'navigation', format: 'number' },
                       { name: 'longitude', label: 'Longitude', icon: 'compass', format: 'number' },
-                      { name: 'label', label: 'Label', icon: 'tag' },
                     ]},
+                    { type: 'divider' },
+                    // Map showing confirmed point
+                    { type: 'map-view', height: '250px', centerLat: 51.505, centerLng: -0.09, zoom: 14 },
                   ]}],
                 ],
               },
@@ -395,7 +436,6 @@ export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
                 to: 'idle',
                 event: 'CLEAR_SELECTION',
                 effects: [
-                  ['set', '@entity.address', ''],
                   ['set', '@entity.latitude', 0],
                   ['set', '@entity.longitude', 0],
                   [...locationIdleMainEffect],
@@ -439,6 +479,9 @@ const routeBrowsingMainEffect = [
       { type: 'stats', label: 'Route Points', icon: 'map-pin', entity: 'RoutePoint' },
       { type: 'stats', label: 'Distance', icon: 'navigation', entity: 'RoutePoint' },
     ]},
+    { type: 'divider' },
+    // Route map overview
+    { type: 'map-view', height: '300px', centerLat: 51.505, centerLng: -0.09, zoom: 11 },
     { type: 'divider' },
     // Route point list
     { type: 'data-list', entity: 'RoutePoint',
@@ -617,8 +660,8 @@ export const ROUTE_PLANNER_BEHAVIOR: BehaviorSchema = {
                       ],
                       itemActions: [{ label: 'View', event: 'VIEW' }],
                     },
-                    // Route completeness meter
-                    { type: 'meter', value: 0, label: 'Route Progress', icon: 'navigation', entity: 'RoutePoint' },
+                    // Route completeness
+                    { type: 'progress-bar', value: 50, max: 100, label: 'Route Progress', icon: 'navigation' },
                   ]}],
                 ],
               },

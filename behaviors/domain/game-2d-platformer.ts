@@ -37,72 +37,82 @@ const PLATFORMER_THEME = {
 // std-platformer - Platform Game Character State
 // ============================================================================
 
-// ── Reusable main-view effects (platformer: HUD) ──────────────────
+// ── Level layout (static platforms) ──────────────────────────────────
 
-const platformerHudEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Header: gamepad icon + title
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'gamepad-2', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Platformer' },
-      ]},
-      { type: 'badge', label: 'Active', variant: 'success', icon: 'zap' },
+const LEVEL_PLATFORMS = [
+  // Ground
+  { x: 0, y: 368, width: 800, height: 32, type: 'ground' },
+  // Floating platforms
+  { x: 150, y: 288, width: 120, height: 16, type: 'platform' },
+  { x: 350, y: 240, width: 100, height: 16, type: 'platform' },
+  { x: 520, y: 300, width: 80, height: 16, type: 'platform' },
+  { x: 680, y: 200, width: 100, height: 16, type: 'platform' },
+  // Hazard
+  { x: 300, y: 352, width: 60, height: 16, type: 'hazard' },
+  // Goal
+  { x: 720, y: 184, width: 32, height: 16, type: 'goal' },
+];
+
+// ── Reusable render-ui effects ──────────────────────────────────────
+
+const platformerPlayingEffects: BehaviorEffect[] = [
+  ['render-ui', 'main', {
+    type: 'platformer-canvas',
+    entity: 'PlatformerData',
+    platforms: LEVEL_PLATFORMS,
+    worldWidth: 800,
+    worldHeight: 400,
+    canvasWidth: 800,
+    canvasHeight: 400,
+    followCamera: false,
+    leftEvent: 'MOVE_LEFT',
+    rightEvent: 'MOVE_RIGHT',
+    jumpEvent: 'JUMP',
+    stopEvent: 'STOP_MOVE',
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'heart', label: 'Lives', value: '@entity.lives' },
+      { icon: 'map-pin', label: 'X', value: '@entity.x' },
+      { icon: 'arrow-down', label: 'Y', value: '@entity.y' },
+      { icon: 'zap', label: 'VY', value: '@entity.vy' },
     ]},
-    { type: 'divider' },
-    // Stats row: lives, position, jump status
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Lives', icon: 'heart', entity: 'PlatformerData' },
-      { type: 'stats', label: 'Level', icon: 'flag', entity: 'PlatformerData' },
-      { type: 'stats', label: 'Position X', icon: 'map', entity: 'PlatformerData' },
-      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'PlatformerData' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'd-pad', size: 'md', directionEvent: 'MOVE' },
+      { type: 'action-buttons', layout: 'diamond', size: 'md', buttons: [
+        { id: 'jump', label: 'Jump', icon: 'arrow-up' },
+      ], actionEvent: 'JUMP' },
     ]},
-    { type: 'divider' },
-    // Character info grid
-    { type: 'data-grid', entity: 'PlatformerData', cols: 2, gap: 'md',
-      fields: [
-        { name: 'id', label: 'Character', icon: 'sword', variant: 'h4' },
-        { name: 'level', label: 'Level', icon: 'flag', variant: 'body', format: 'number' },
-        { name: 'lives', label: 'Lives', icon: 'heart', variant: 'body', format: 'number' },
-        { name: 'isJumping', label: 'Jumping', icon: 'zap', variant: 'badge' },
-      ],
-    },
-    { type: 'divider' },
-    // Health meter
-    { type: 'meter', value: 0, label: 'Lives Remaining', icon: 'heart', entity: 'PlatformerData' },
   ]}],
 ];
 
-const platformerGameOverEffects: BehaviorEffect[] = [
+const platformerDeadEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Game over header
     { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
-      { type: 'icon', name: 'trophy', size: 'lg' },
+      { type: 'icon', name: 'skull', size: 'lg' },
       { type: 'typography', variant: 'h1', content: 'Game Over' },
     ]},
     { type: 'divider' },
-    // Final stats
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Final Level', icon: 'flag', entity: 'PlatformerData' },
       { type: 'stats', label: 'Lives Left', icon: 'heart', entity: 'PlatformerData' },
     ]},
     { type: 'divider' },
-    // Respawn button
-    { type: 'button', label: 'Respawn', icon: 'star', variant: 'primary', action: 'RESPAWN' },
+    { type: 'button', label: 'Respawn', icon: 'rotate-ccw', variant: 'primary', action: 'RESPAWN' },
   ]}],
 ];
 
 /**
- * std-platformer - Platform game character state machine.
+ * std-platformer - 2D platformer with physics tick loop.
  *
- * States: idle -> running -> jumping -> falling -> dead
- * Tracks position, lives, and jump state.
- * Tick applies gravity when not grounded.
+ * States: Playing, Dead
+ * PhysicsTick: gravity (vy += 0.5), velocity (x += vx, y += vy) every frame.
+ * GroundClampTick: clamp to ground (y >= 350 -> y = 350, vy = 0, grounded = true).
+ * Keyboard: arrow keys / WASD for movement, space for jump.
  */
 export const PLATFORMER_BEHAVIOR: BehaviorSchema = {
   name: 'std-platformer',
-  version: '1.0.0',
-  description: 'Platform game character state with movement and gravity',
+  version: '2.0.0',
+  description: '2D platformer with physics, gravity, and keyboard controls',
   theme: PLATFORMER_THEME,
   orbitals: [
     {
@@ -112,11 +122,15 @@ export const PLATFORMER_BEHAVIOR: BehaviorSchema = {
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
-          { name: 'level', type: 'number', default: 1 },
+          { name: 'x', type: 'number', default: 50 },
+          { name: 'y', type: 'number', default: 336 },
+          { name: 'vx', type: 'number', default: 0 },
+          { name: 'vy', type: 'number', default: 0 },
+          { name: 'grounded', type: 'boolean', default: true },
+          { name: 'facingRight', type: 'boolean', default: true },
           { name: 'lives', type: 'number', default: 3 },
-          { name: 'x', type: 'number', default: 0 },
-          { name: 'y', type: 'number', default: 0 },
-          { name: 'isJumping', type: 'boolean', default: false },
+          { name: 'score', type: 'number', default: 0 },
+          { name: 'groundLevel', type: 'number', default: 336 },
         ],
       },
       traits: [
@@ -126,156 +140,128 @@ export const PLATFORMER_BEHAVIOR: BehaviorSchema = {
           category: 'interaction',
           stateMachine: {
             states: [
-              { name: 'Idle', isInitial: true },
-              { name: 'Running' },
-              { name: 'Jumping' },
-              { name: 'Falling' },
+              { name: 'Playing', isInitial: true },
               { name: 'Dead' },
             ],
             events: [
               { key: 'INIT', name: 'Initialize' },
-              { key: 'RUN', name: 'Run', payloadSchema: [
-                { name: 'direction', type: 'number', required: true },
-              ] },
-              { key: 'STOP', name: 'Stop' },
+              { key: 'MOVE_LEFT', name: 'Move Left' },
+              { key: 'MOVE_RIGHT', name: 'Move Right' },
+              { key: 'STOP_MOVE', name: 'Stop Moving' },
               { key: 'JUMP', name: 'Jump' },
-              { key: 'LAND', name: 'Land' },
-              { key: 'FALL', name: 'Fall' },
               { key: 'DIE', name: 'Die' },
               { key: 'RESPAWN', name: 'Respawn' },
             ],
             transitions: [
               {
-                from: 'Idle',
-                to: 'Idle',
+                from: 'Playing',
+                to: 'Playing',
                 event: 'INIT',
                 effects: [
-                  ['set', '@entity.x', 0],
-                  ['set', '@entity.y', 0],
-                  ['set', '@entity.isJumping', false],
-                  ...platformerHudEffects,
+                  ['fetch', 'PlatformerData'],
+                  ['set', '@entity.x', 50],
+                  ['set', '@entity.y', 336],
+                  ['set', '@entity.vx', 0],
+                  ['set', '@entity.vy', 0],
+                  ['set', '@entity.grounded', true],
+                  ...platformerPlayingEffects,
                 ],
               },
               {
-                from: 'Idle',
-                to: 'Running',
-                event: 'RUN',
+                from: 'Playing',
+                to: 'Playing',
+                event: 'MOVE_LEFT',
                 effects: [
-                  ['set', '@entity.x', ['+', '@entity.x', '@payload.direction']],
-                  ...platformerHudEffects,
+                  ['fetch', 'PlatformerData'],
+                  ['set', '@entity.vx', -3],
+                  ['set', '@entity.facingRight', false],
+                  ...platformerPlayingEffects,
                 ],
               },
               {
-                from: 'Running',
-                to: 'Running',
-                event: 'RUN',
+                from: 'Playing',
+                to: 'Playing',
+                event: 'MOVE_RIGHT',
                 effects: [
-                  ['set', '@entity.x', ['+', '@entity.x', '@payload.direction']],
-                  ...platformerHudEffects,
+                  ['fetch', 'PlatformerData'],
+                  ['set', '@entity.vx', 3],
+                  ['set', '@entity.facingRight', true],
+                  ...platformerPlayingEffects,
                 ],
               },
               {
-                from: 'Running',
-                to: 'Idle',
-                event: 'STOP',
+                from: 'Playing',
+                to: 'Playing',
+                event: 'STOP_MOVE',
                 effects: [
-                  ...platformerHudEffects,
+                  ['fetch', 'PlatformerData'],
+                  ['set', '@entity.vx', 0],
+                  ...platformerPlayingEffects,
                 ],
               },
               {
-                from: 'Idle',
-                to: 'Jumping',
+                from: 'Playing',
+                to: 'Playing',
                 event: 'JUMP',
+                guard: ['=', '@entity.grounded', true],
                 effects: [
-                  ['set', '@entity.isJumping', true],
-                  ['set', '@entity.y', ['-', '@entity.y', 10]],
-                  ...platformerHudEffects,
+                  ['fetch', 'PlatformerData'],
+                  ['set', '@entity.vy', -8],
+                  ['set', '@entity.grounded', false],
+                  ...platformerPlayingEffects,
                 ],
               },
               {
-                from: 'Running',
-                to: 'Jumping',
-                event: 'JUMP',
-                effects: [
-                  ['set', '@entity.isJumping', true],
-                  ['set', '@entity.y', ['-', '@entity.y', 10]],
-                  ...platformerHudEffects,
-                ],
-              },
-              {
-                from: 'Jumping',
-                to: 'Falling',
-                event: 'FALL',
-                effects: [
-                  ...platformerHudEffects,
-                ],
-              },
-              {
-                from: 'Falling',
-                to: 'Idle',
-                event: 'LAND',
-                effects: [
-                  ['set', '@entity.isJumping', false],
-                  ...platformerHudEffects,
-                ],
-              },
-              {
-                from: 'Jumping',
-                to: 'Idle',
-                event: 'LAND',
-                effects: [
-                  ['set', '@entity.isJumping', false],
-                  ...platformerHudEffects,
-                ],
-              },
-              {
-                from: 'Idle',
+                from: 'Playing',
                 to: 'Dead',
                 event: 'DIE',
                 effects: [
+                  ['fetch', 'PlatformerData'],
                   ['set', '@entity.lives', ['-', '@entity.lives', 1]],
-                  ...platformerGameOverEffects,
-                ],
-              },
-              {
-                from: 'Running',
-                to: 'Dead',
-                event: 'DIE',
-                effects: [
-                  ['set', '@entity.lives', ['-', '@entity.lives', 1]],
-                  ...platformerGameOverEffects,
-                ],
-              },
-              {
-                from: 'Falling',
-                to: 'Dead',
-                event: 'DIE',
-                effects: [
-                  ['set', '@entity.lives', ['-', '@entity.lives', 1]],
-                  ...platformerGameOverEffects,
+                  ['set', '@entity.vx', 0],
+                  ['set', '@entity.vy', 0],
+                  ...platformerDeadEffects,
                 ],
               },
               {
                 from: 'Dead',
-                to: 'Idle',
+                to: 'Playing',
                 event: 'RESPAWN',
                 guard: ['>', '@entity.lives', 0],
                 effects: [
-                  ['set', '@entity.x', 0],
-                  ['set', '@entity.y', 0],
-                  ['set', '@entity.isJumping', false],
-                  ...platformerHudEffects,
+                  ['fetch', 'PlatformerData'],
+                  ['set', '@entity.x', 50],
+                  ['set', '@entity.y', 336],
+                  ['set', '@entity.vx', 0],
+                  ['set', '@entity.vy', 0],
+                  ['set', '@entity.grounded', true],
+                  ...platformerPlayingEffects,
                 ],
               },
             ],
           },
           ticks: [
             {
-              name: 'GravityTick',
+              name: 'PhysicsTick',
               interval: 'frame',
-              guard: ['and', ['=', '@state', 'Falling'], ['=', '@entity.isJumping', false]],
+              guard: ['=', '@state', 'Playing'],
               effects: [
-                ['set', '@entity.y', ['+', '@entity.y', 1]],
+                // Gravity: vy += 0.5 each frame
+                ['set', '@entity.vy', ['+', '@entity.vy', 0.5]],
+                // Apply velocity to position
+                ['set', '@entity.x', ['+', '@entity.x', '@entity.vx']],
+                ['set', '@entity.y', ['+', '@entity.y', '@entity.vy']],
+              ],
+            },
+            {
+              name: 'GroundClampTick',
+              interval: 'frame',
+              guard: ['>', '@entity.y', '@entity.groundLevel'],
+              effects: [
+                // Snap to ground and stop vertical movement
+                ['set', '@entity.y', '@entity.groundLevel'],
+                ['set', '@entity.vy', 0],
+                ['set', '@entity.grounded', true],
               ],
             },
           ],
@@ -297,57 +283,75 @@ export const PLATFORMER_BEHAVIOR: BehaviorSchema = {
 // std-tilemap - Tile Map Management
 // ============================================================================
 
-// ── Reusable main-view effects (tilemap: map display) ──────────────
+// ── Shared asset constants ───────────────────────────────────────────
+
+const ASSET_BASE_URL = 'https://almadar-kflow-assets.web.app/shared';
+
+const GAME_ASSET_MANIFEST = {
+  terrain: {
+    dirt: '/terrain/Isometric/dirt_N.png',
+    stone: '/terrain/Isometric/stoneSide_N.png',
+    bridge: '/terrain/Isometric/stoneStep_N.png',
+    wall: '/terrain/Isometric/stoneWallArchway_N.png',
+  },
+  units: {
+    guardian: '/sprite-sheets/guardian-sprite-sheet-se.png',
+    breaker: '/sprite-sheets/breaker-sprite-sheet-se.png',
+  },
+  features: {
+    gold_mine: '/world-map/gold_mine.png',
+    portal: '/world-map/portal_open.png',
+  },
+};
+
+// ── 5x5 mixed terrain grid ──────────────────────────────────────────
+
+const TILEMAP_5X5_TILES = [
+  { x: 0, y: 0, terrain: 'dirt' },  { x: 1, y: 0, terrain: 'dirt' },  { x: 2, y: 0, terrain: 'stone' }, { x: 3, y: 0, terrain: 'dirt' },  { x: 4, y: 0, terrain: 'wall' },
+  { x: 0, y: 1, terrain: 'dirt' },  { x: 1, y: 1, terrain: 'bridge' },{ x: 2, y: 1, terrain: 'bridge' },{ x: 3, y: 1, terrain: 'bridge' },{ x: 4, y: 1, terrain: 'dirt' },
+  { x: 0, y: 2, terrain: 'stone' }, { x: 1, y: 2, terrain: 'dirt' },  { x: 2, y: 2, terrain: 'dirt' },  { x: 3, y: 2, terrain: 'dirt' },  { x: 4, y: 2, terrain: 'stone' },
+  { x: 0, y: 3, terrain: 'dirt' },  { x: 1, y: 3, terrain: 'wall' },  { x: 2, y: 3, terrain: 'dirt' },  { x: 3, y: 3, terrain: 'wall' },  { x: 4, y: 3, terrain: 'dirt' },
+  { x: 0, y: 4, terrain: 'stone' }, { x: 1, y: 4, terrain: 'dirt' },  { x: 2, y: 4, terrain: 'stone' }, { x: 3, y: 4, terrain: 'dirt' },  { x: 4, y: 4, terrain: 'stone' },
+];
+
+// ── Reusable render-ui effects (tilemap: isometric canvas) ──────────
 
 const tilemapDisplayEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Header: map icon + title + reset button
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'map', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Tile Map' },
-      ]},
-      { type: 'button', label: 'Reset View', icon: 'star', variant: 'secondary', action: 'RESET_SCROLL' },
+  ['render-ui', 'main', {
+    type: 'isometric-canvas',
+    entity: 'TileMapData',
+    boardWidth: 5,
+    boardHeight: 5,
+    tiles: TILEMAP_5X5_TILES,
+    units: [],
+    scale: 1,
+    enableCamera: true,
+    assetBaseUrl: ASSET_BASE_URL,
+    assetManifest: GAME_ASSET_MANIFEST,
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'map', label: 'Width', value: '@entity.width' },
+      { icon: 'map', label: 'Height', value: '@entity.height' },
+      { icon: 'move', label: 'Scroll X', value: '@entity.scrollX' },
+      { icon: 'move', label: 'Scroll Y', value: '@entity.scrollY' },
     ]},
-    { type: 'divider' },
-    // Map stats row
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Width', icon: 'shield', entity: 'TileMapData' },
-      { type: 'stats', label: 'Height', icon: 'shield', entity: 'TileMapData' },
-      { type: 'stats', label: 'Tile Size', icon: 'gamepad-2', entity: 'TileMapData' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'd-pad', size: 'md', directionEvent: 'SCROLL' },
+      { type: 'action-buttons', layout: 'diamond', size: 'md', buttons: [
+        { id: 'reset', label: 'Reset', icon: 'rotate-ccw' },
+      ], actionEvent: 'RESET_SCROLL' },
     ]},
-    { type: 'divider' },
-    // Scroll position info
-    { type: 'data-grid', entity: 'TileMapData', cols: 2, gap: 'md',
-      fields: [
-        { name: 'id', label: 'Map ID', icon: 'map', variant: 'h4' },
-        { name: 'width', label: 'Width', icon: 'shield', variant: 'body', format: 'number' },
-        { name: 'height', label: 'Height', icon: 'shield', variant: 'body', format: 'number' },
-        { name: 'scrollX', label: 'Scroll X', icon: 'zap', variant: 'body', format: 'number' },
-        { name: 'scrollY', label: 'Scroll Y', icon: 'zap', variant: 'body', format: 'number' },
-      ],
-    },
-    { type: 'divider' },
-    // Scroll progress meter
-    { type: 'meter', value: 0, label: 'Scroll Progress', icon: 'map', entity: 'TileMapData' },
   ]}],
 ];
 
 const tilemapLoadingEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Loading header
-    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
       { type: 'icon', name: 'map', size: 'lg' },
-      { type: 'typography', variant: 'h2', content: 'Tile Map' },
+      { type: 'typography', variant: 'h2', content: 'Loading Map...' },
     ]},
-    { type: 'divider' },
-    // Loading indicator
     { type: 'progress-bar', value: 0, label: 'Loading Map...', icon: 'map' },
-    // Map dimensions preview
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Width', icon: 'shield', entity: 'TileMapData' },
-      { type: 'stats', label: 'Height', icon: 'shield', entity: 'TileMapData' },
-    ]},
   ]}],
 ];
 
@@ -399,11 +403,11 @@ export const TILEMAP_BEHAVIOR: BehaviorSchema = {
             transitions: [
               {
                 from: 'Loading',
-                to: 'Loading',
+                to: 'Ready',
                 event: 'INIT',
                 effects: [
                   ['fetch', 'TileMapData'],
-                  ...tilemapLoadingEffects,
+                  ...tilemapDisplayEffects,
                 ],
               },
               {
@@ -457,68 +461,42 @@ export const TILEMAP_BEHAVIOR: BehaviorSchema = {
 // std-powerup - Power-Up Collection
 // ============================================================================
 
-// ── Reusable main-view effects (powerup: HUD) ─────────────────────
+// ── Reusable render-ui effects (powerup: game HUD) ──────────────────
 
 const powerupHudEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Header: zap icon + title
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'zap', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Power-Ups' },
-      ]},
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
       { type: 'badge', label: 'Ready', variant: 'primary', icon: 'star' },
+      { type: 'typography', variant: 'h3', content: 'No Active Power-Up' },
     ]},
     { type: 'divider' },
-    // Power-up stats
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
       { type: 'stats', label: 'Type', icon: 'star', entity: 'PowerUpData' },
       { type: 'stats', label: 'Duration', icon: 'zap', entity: 'PowerUpData' },
       { type: 'stats', label: 'Remaining', icon: 'heart', entity: 'PowerUpData' },
     ]},
     { type: 'divider' },
-    // Power-up details grid
-    { type: 'data-grid', entity: 'PowerUpData', cols: 2, gap: 'md',
-      fields: [
-        { name: 'id', label: 'Power-Up', icon: 'star', variant: 'h4' },
-        { name: 'type', label: 'Type', icon: 'zap', variant: 'badge' },
-        { name: 'duration', label: 'Duration', icon: 'shield', variant: 'body', format: 'number' },
-        { name: 'remainingTime', label: 'Time Left', icon: 'heart', variant: 'body', format: 'number' },
-        { name: 'isActive', label: 'Active', icon: 'zap', variant: 'badge' },
-      ],
-    },
-    { type: 'divider' },
-    // Duration meter
-    { type: 'meter', value: 0, label: 'Time Remaining', icon: 'zap', entity: 'PowerUpData' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
+      { type: 'button', label: 'Collect', icon: 'zap', variant: 'primary', action: 'COLLECT' },
+      { type: 'button', label: 'Reset', icon: 'rotate-ccw', variant: 'secondary', action: 'RESET' },
+    ]},
   ]}],
 ];
 
 const powerupActiveEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Active header
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'zap', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Power-Ups' },
-      ]},
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
       { type: 'badge', label: 'Active', variant: 'success', icon: 'zap' },
+      { type: 'typography', variant: 'h3', content: 'Power-Up Active!' },
     ]},
     { type: 'divider' },
-    // Active power-up stats
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Type', icon: 'star', entity: 'PowerUpData' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+      { type: 'stats', label: 'Type', icon: 'zap', entity: 'PowerUpData' },
       { type: 'stats', label: 'Remaining', icon: 'heart', entity: 'PowerUpData' },
+      { type: 'stats', label: 'Duration', icon: 'shield', entity: 'PowerUpData' },
     ]},
     { type: 'divider' },
-    // Duration countdown bar
-    { type: 'progress-bar', value: 0, label: 'Power-Up Duration', icon: 'zap', entity: 'PowerUpData' },
-    // Details
-    { type: 'data-grid', entity: 'PowerUpData', cols: 2, gap: 'md',
-      fields: [
-        { name: 'type', label: 'Type', icon: 'star', variant: 'badge' },
-        { name: 'remainingTime', label: 'Time Left', icon: 'heart', variant: 'body', format: 'number' },
-      ],
-    },
+    { type: 'progress-bar', value: '@entity.remainingTime', max: '@entity.duration', label: 'Time Left', icon: 'zap' },
   ]}],
 ];
 
@@ -639,90 +617,81 @@ export const POWERUP_BEHAVIOR: BehaviorSchema = {
 // std-enemy-ai - Enemy Behavior
 // ============================================================================
 
-// ── Reusable main-view effects (enemy AI: patrol HUD) ──────────────
+// ── Reusable render-ui effects (enemy AI: isometric canvas + HUD) ───
+
+const ENEMY_TILES = [
+  { x: 0, y: 0, terrain: 'dirt' },  { x: 1, y: 0, terrain: 'dirt' },  { x: 2, y: 0, terrain: 'dirt' },  { x: 3, y: 0, terrain: 'dirt' },  { x: 4, y: 0, terrain: 'dirt' },
+  { x: 0, y: 1, terrain: 'dirt' },  { x: 1, y: 1, terrain: 'stone' }, { x: 2, y: 1, terrain: 'dirt' },  { x: 3, y: 1, terrain: 'stone' }, { x: 4, y: 1, terrain: 'dirt' },
+  { x: 0, y: 2, terrain: 'dirt' },  { x: 1, y: 2, terrain: 'dirt' },  { x: 2, y: 2, terrain: 'bridge' },{ x: 3, y: 2, terrain: 'dirt' },  { x: 4, y: 2, terrain: 'dirt' },
+  { x: 0, y: 3, terrain: 'dirt' },  { x: 1, y: 3, terrain: 'stone' }, { x: 2, y: 3, terrain: 'dirt' },  { x: 3, y: 3, terrain: 'stone' }, { x: 4, y: 3, terrain: 'dirt' },
+  { x: 0, y: 4, terrain: 'dirt' },  { x: 1, y: 4, terrain: 'dirt' },  { x: 2, y: 4, terrain: 'dirt' },  { x: 3, y: 4, terrain: 'dirt' },  { x: 4, y: 4, terrain: 'dirt' },
+];
 
 const enemyPatrolHudEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Header: sword icon + title + state badge
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'sword', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Enemy AI' },
-      ]},
-      { type: 'badge', label: 'Patrolling', variant: 'primary', icon: 'shield' },
+  ['render-ui', 'main', {
+    type: 'isometric-canvas',
+    entity: 'EnemyData',
+    boardWidth: 5,
+    boardHeight: 5,
+    tiles: ENEMY_TILES,
+    units: [{ id: 'enemy-1', x: 2, y: 2, unitType: 'guardian' }],
+    scale: 1,
+    enableCamera: false,
+    assetBaseUrl: ASSET_BASE_URL,
+    assetManifest: GAME_ASSET_MANIFEST,
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'sword', label: 'State', value: 'Patrol' },
+      { icon: 'map-pin', label: 'X', value: '@entity.x' },
+      { icon: 'zap', label: 'Speed', value: '@entity.speed' },
+      { icon: 'flag', label: 'Dir', value: '@entity.direction' },
     ]},
-    { type: 'divider' },
-    // Enemy stats row
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Position X', icon: 'map', entity: 'EnemyData' },
-      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'EnemyData' },
-      { type: 'stats', label: 'Speed', icon: 'zap', entity: 'EnemyData' },
-      { type: 'stats', label: 'Direction', icon: 'flag', entity: 'EnemyData' },
-    ]},
-    { type: 'divider' },
-    // Enemy details grid
-    { type: 'data-grid', entity: 'EnemyData', cols: 2, gap: 'md',
-      fields: [
-        { name: 'id', label: 'Enemy', icon: 'sword', variant: 'h4' },
-        { name: 'speed', label: 'Speed', icon: 'zap', variant: 'body', format: 'number' },
-        { name: 'patrolStart', label: 'Patrol Start', icon: 'flag', variant: 'body', format: 'number' },
-        { name: 'patrolEnd', label: 'Patrol End', icon: 'flag', variant: 'body', format: 'number' },
-        { name: 'direction', label: 'Direction', icon: 'map', variant: 'badge' },
-      ],
-    },
-    { type: 'divider' },
-    // Patrol progress meter
-    { type: 'meter', value: 0, label: 'Patrol Progress', icon: 'shield', entity: 'EnemyData' },
   ]}],
 ];
 
 const enemyChaseHudEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Chase header
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'sword', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Enemy AI' },
-      ]},
-      { type: 'badge', label: 'Chasing', variant: 'warning', icon: 'zap' },
+  ['render-ui', 'main', {
+    type: 'isometric-canvas',
+    entity: 'EnemyData',
+    boardWidth: 5,
+    boardHeight: 5,
+    tiles: ENEMY_TILES,
+    units: [{ id: 'enemy-1', x: 2, y: 2, unitType: 'guardian' }],
+    scale: 1,
+    enableCamera: false,
+    assetBaseUrl: ASSET_BASE_URL,
+    assetManifest: GAME_ASSET_MANIFEST,
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'sword', label: 'State', value: 'Chase' },
+      { icon: 'map-pin', label: 'X', value: '@entity.x' },
+      { icon: 'zap', label: 'Speed', value: '@entity.speed' },
     ]},
-    { type: 'divider' },
-    // Chase stats
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Position X', icon: 'map', entity: 'EnemyData' },
-      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'EnemyData' },
-      { type: 'stats', label: 'Speed', icon: 'zap', entity: 'EnemyData' },
-    ]},
-    { type: 'divider' },
-    // Enemy data
-    { type: 'data-grid', entity: 'EnemyData', cols: 2, gap: 'md',
-      fields: [
-        { name: 'id', label: 'Enemy', icon: 'sword', variant: 'h4' },
-        { name: 'speed', label: 'Speed', icon: 'zap', variant: 'body', format: 'number' },
-        { name: 'direction', label: 'Direction', icon: 'map', variant: 'badge' },
-      ],
-    },
+    { type: 'badge', label: 'Chasing Player!', variant: 'warning', icon: 'zap' },
   ]}],
 ];
 
 const enemyStunnedHudEffects: BehaviorEffect[] = [
-  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-    // Stunned header
-    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-        { type: 'icon', name: 'sword', size: 'lg' },
-        { type: 'typography', variant: 'h2', content: 'Enemy AI' },
-      ]},
-      { type: 'badge', label: 'Stunned', variant: 'error', icon: 'star' },
+  ['render-ui', 'main', {
+    type: 'isometric-canvas',
+    entity: 'EnemyData',
+    boardWidth: 5,
+    boardHeight: 5,
+    tiles: ENEMY_TILES,
+    units: [{ id: 'enemy-1', x: 2, y: 2, unitType: 'guardian' }],
+    scale: 1,
+    enableCamera: false,
+    assetBaseUrl: ASSET_BASE_URL,
+    assetManifest: GAME_ASSET_MANIFEST,
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'sword', label: 'State', value: 'Stunned' },
+      { icon: 'map-pin', label: 'X', value: '@entity.x' },
     ]},
-    { type: 'divider' },
-    // Stunned stats
-    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-      { type: 'stats', label: 'Position X', icon: 'map', entity: 'EnemyData' },
-      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'EnemyData' },
-    ]},
-    { type: 'divider' },
-    // Recovery button
+    { type: 'badge', label: 'Stunned!', variant: 'error', icon: 'star' },
     { type: 'button', label: 'Recover', icon: 'heart', variant: 'primary', action: 'RECOVER' },
   ]}],
 ];

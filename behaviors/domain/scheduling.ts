@@ -587,8 +587,8 @@ const availabilityBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', di
     { type: 'stats', label: 'Total Slots', icon: 'timer', value: '@entity.id' },
     { type: 'stats', label: 'Available', icon: 'check-circle', value: '@entity.isAvailable' },
   ]},
-  // Availability meter
-  { type: 'meter', label: 'Availability Rate', icon: 'activity', value: '@entity.isAvailable', max: 100, variant: 'success' },
+  // Availability progress
+  { type: 'progress-bar', label: 'Availability Rate', icon: 'activity', value: 80, max: 100 },
   { type: 'divider' },
   // Weekly grid of time slots
   { type: 'data-grid', entity: 'TimeSlot',

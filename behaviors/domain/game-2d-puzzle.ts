@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { BehaviorSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Puzzle Theme ─────────────────────────────────────────────
 
@@ -37,78 +37,100 @@ const PUZZLE_THEME = {
 // std-grid-puzzle - Grid-Based Puzzle
 // ============================================================================
 
-// ── Reusable main-view effects (grid puzzle board) ──────────────────
+// ── Shared asset constants ───────────────────────────────────────────
 
-const gridPuzzleMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-  // Header: puzzle icon + title
-  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-      { type: 'icon', name: 'puzzle', size: 'lg' },
-      { type: 'typography', variant: 'h2', content: 'Grid Puzzle' },
+const PUZZLE_ASSET_BASE_URL = 'https://almadar-kflow-assets.web.app/shared';
+
+const PUZZLE_ASSET_MANIFEST = {
+  terrain: {
+    dirt: '/terrain/Isometric/dirt_N.png',
+    stone: '/terrain/Isometric/stoneSide_N.png',
+    bridge: '/terrain/Isometric/stoneStep_N.png',
+    wall: '/terrain/Isometric/stoneWallArchway_N.png',
+  },
+  units: {
+    guardian: '/sprite-sheets/guardian-sprite-sheet-se.png',
+    breaker: '/sprite-sheets/breaker-sprite-sheet-se.png',
+  },
+  features: {
+    gold_mine: '/world-map/gold_mine.png',
+    portal: '/world-map/portal_open.png',
+  },
+};
+
+// ── 4x4 puzzle board tiles ──────────────────────────────────────────
+
+const PUZZLE_BOARD_TILES = [
+  { x: 0, y: 0, terrain: 'stone' }, { x: 1, y: 0, terrain: 'dirt' },   { x: 2, y: 0, terrain: 'dirt' },   { x: 3, y: 0, terrain: 'stone' },
+  { x: 0, y: 1, terrain: 'dirt' },  { x: 1, y: 1, terrain: 'bridge' }, { x: 2, y: 1, terrain: 'bridge' }, { x: 3, y: 1, terrain: 'dirt' },
+  { x: 0, y: 2, terrain: 'dirt' },  { x: 1, y: 2, terrain: 'bridge' }, { x: 2, y: 2, terrain: 'bridge' }, { x: 3, y: 2, terrain: 'dirt' },
+  { x: 0, y: 3, terrain: 'stone' }, { x: 1, y: 3, terrain: 'dirt' },   { x: 2, y: 3, terrain: 'dirt' },   { x: 3, y: 3, terrain: 'stone' },
+];
+
+// ── Reusable render-ui effects (grid puzzle: isometric canvas + HUD) ─
+
+const gridPuzzleMainEffects: BehaviorEffect[] = [
+  ['render-ui', 'main', {
+    type: 'isometric-canvas',
+    entity: 'GridPuzzleData',
+    boardWidth: 4,
+    boardHeight: 4,
+    tiles: PUZZLE_BOARD_TILES,
+    units: [],
+    scale: 1,
+    enableCamera: false,
+    assetBaseUrl: PUZZLE_ASSET_BASE_URL,
+    assetManifest: PUZZLE_ASSET_MANIFEST,
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'grid-3x3', label: 'Grid', value: '@entity.gridSize' },
+      { icon: 'target', label: 'Moves', value: '@entity.moves' },
+      { icon: 'star', label: 'Matches', value: '@entity.matchCount' },
     ]},
     { type: 'badge', label: 'Playing', variant: 'success', icon: 'zap' },
-  ]},
-  { type: 'divider' },
-  // Stats row: grid size, moves, matches
-  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-    { type: 'stats', label: 'Grid Size', icon: 'grid-3x3', value: '@entity.gridSize' },
-    { type: 'stats', label: 'Moves', icon: 'target', value: '@entity.moves' },
-    { type: 'stats', label: 'Matches', icon: 'star', value: '@entity.matchCount' },
-  ]},
-  { type: 'divider' },
-  // Puzzle grid area
-  { type: 'data-grid', entity: 'GridPuzzleData', columns: 3,
-    fields: [
-      { name: 'gridSize', label: 'Grid', icon: 'grid-3x3', variant: 'h4' },
-      { name: 'moves', label: 'Moves', icon: 'target', variant: 'body' },
-      { name: 'matchCount', label: 'Matches', icon: 'star', variant: 'badge' },
-    ],
-  },
-]}];
+  ]}],
+];
 
-const gridPuzzleMatchedMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-  // Header with match indicator
-  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-      { type: 'icon', name: 'star', size: 'lg' },
-      { type: 'typography', variant: 'h2', content: 'Match Found!' },
+const gridPuzzleMatchedEffects: BehaviorEffect[] = [
+  ['render-ui', 'main', {
+    type: 'isometric-canvas',
+    entity: 'GridPuzzleData',
+    boardWidth: 4,
+    boardHeight: 4,
+    tiles: PUZZLE_BOARD_TILES,
+    units: [],
+    scale: 1,
+    enableCamera: false,
+    assetBaseUrl: PUZZLE_ASSET_BASE_URL,
+    assetManifest: PUZZLE_ASSET_MANIFEST,
+  }],
+  ['render-ui', 'overlay', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'target', label: 'Moves', value: '@entity.moves' },
+      { icon: 'star', label: 'Matches', value: '@entity.matchCount' },
     ]},
-    { type: 'badge', label: 'Matched', variant: 'warning', icon: 'zap' },
-  ]},
-  { type: 'divider' },
-  // Stats row
-  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-    { type: 'stats', label: 'Moves', icon: 'target', value: '@entity.moves' },
-    { type: 'stats', label: 'Matches', icon: 'star', value: '@entity.matchCount' },
-  ]},
-  { type: 'divider' },
-  { type: 'data-grid', entity: 'GridPuzzleData', columns: 3,
-    fields: [
-      { name: 'gridSize', label: 'Grid', icon: 'grid-3x3', variant: 'h4' },
-      { name: 'moves', label: 'Moves', icon: 'target', variant: 'body' },
-      { name: 'matchCount', label: 'Matches', icon: 'star', variant: 'badge' },
-    ],
-  },
-]}];
+    { type: 'badge', label: 'Match Found!', variant: 'warning', icon: 'star' },
+  ]}],
+];
 
-const gridPuzzleCompletedMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-  // Victory header
-  { type: 'stack', direction: 'horizontal', justify: 'center', gap: 'sm', children: [
-    { type: 'icon', name: 'trophy', size: 'xl' },
-    { type: 'typography', variant: 'h1', content: 'Puzzle Complete!' },
-  ]},
-  { type: 'divider' },
-  // Final stats
-  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-    { type: 'stats', label: 'Total Moves', icon: 'target', value: '@entity.moves' },
-    { type: 'stats', label: 'Total Matches', icon: 'star', value: '@entity.matchCount' },
-  ]},
-  { type: 'divider' },
-  // Restart button
-  { type: 'stack', direction: 'horizontal', justify: 'center', children: [
-    { type: 'button', label: 'Play Again', icon: 'refresh-cw', variant: 'primary', action: 'RESTART' },
-  ]},
-]}];
+const gridPuzzleCompletedEffects: BehaviorEffect[] = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'center', gap: 'sm', children: [
+      { type: 'icon', name: 'trophy', size: 'xl' },
+      { type: 'typography', variant: 'h1', content: 'Puzzle Complete!' },
+    ]},
+    { type: 'divider' },
+    { type: 'game-hud', position: 'top', elements: [
+      { icon: 'target', label: 'Total Moves', value: '@entity.moves' },
+      { icon: 'star', label: 'Total Matches', value: '@entity.matchCount' },
+    ]},
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', justify: 'center', children: [
+      { type: 'button', label: 'Play Again', icon: 'refresh-cw', variant: 'primary', action: 'RESTART' },
+    ]},
+  ]}],
+];
 
 /**
  * std-grid-puzzle - Grid-based match puzzle mechanics.
@@ -167,7 +189,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                   ['set', '@entity.moves', 0],
                   ['set', '@entity.matchCount', 0],
                   ['set', '@entity.isComplete', false],
-                  gridPuzzleMainEffect,
+                  ...gridPuzzleMainEffects,
                 ],
               },
               {
@@ -177,7 +199,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                 effects: [
                   ['fetch', 'GridPuzzleData'],
                   ['set', '@entity.moves', ['+', '@entity.moves', 1]],
-                  gridPuzzleMainEffect,
+                  ...gridPuzzleMainEffects,
                 ],
               },
               {
@@ -187,7 +209,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                 effects: [
                   ['fetch', 'GridPuzzleData'],
                   ['set', '@entity.matchCount', ['+', '@entity.matchCount', 1]],
-                  gridPuzzleMatchedMainEffect,
+                  ...gridPuzzleMatchedEffects,
                 ],
               },
               {
@@ -196,7 +218,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                 event: 'SETTLE',
                 effects: [
                   ['fetch', 'GridPuzzleData'],
-                  gridPuzzleMainEffect,
+                  ...gridPuzzleMainEffects,
                 ],
               },
               {
@@ -205,7 +227,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                 event: 'WIN',
                 effects: [
                   ['set', '@entity.isComplete', true],
-                  gridPuzzleCompletedMainEffect,
+                  ...gridPuzzleCompletedEffects,
                 ],
               },
               {
@@ -214,7 +236,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                 event: 'WIN',
                 effects: [
                   ['set', '@entity.isComplete', true],
-                  gridPuzzleCompletedMainEffect,
+                  ...gridPuzzleCompletedEffects,
                 ],
               },
               {
@@ -226,7 +248,7 @@ export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
                   ['set', '@entity.moves', 0],
                   ['set', '@entity.matchCount', 0],
                   ['set', '@entity.isComplete', false],
-                  gridPuzzleMainEffect,
+                  ...gridPuzzleMainEffects,
                 ],
               },
             ],
