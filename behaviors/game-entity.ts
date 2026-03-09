@@ -8,7 +8,227 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { OrbitalSchema, Effect } from './types.js';
+
+// ============================================================================
+// Shared theme for all game-entity behaviors
+// ============================================================================
+
+const GAME_ENTITY_THEME = {
+  name: 'game-entity-rose',
+  tokens: {
+    colors: {
+      primary: '#e11d48',
+      'primary-hover': '#be123c',
+      'primary-foreground': '#ffffff',
+      accent: '#fb7185',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ============================================================================
+// Game Asset Constants
+// ============================================================================
+
+const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
+
+const GAME_MANIFEST = {
+  terrain: {
+    stone: '/terrain/Isometric/stoneSide_N.png',
+    dirt: '/terrain/Isometric/dirt_N.png',
+    bridge: '/terrain/Isometric/stoneStep_N.png',
+    wall: '/terrain/Isometric/stoneWallArchway_N.png',
+  },
+  units: {
+    guardian: '/sprite-sheets/guardian-sprite-sheet-se.png',
+    breaker: '/sprite-sheets/breaker-sprite-sheet-se.png',
+    archivist: '/sprite-sheets/archivist-sprite-sheet-se.png',
+  },
+  features: {
+    gold_mine: '/world-map/gold_mine.png',
+    portal: '/world-map/portal_open.png',
+    treasure: '/world-map/treasure_chest_closed.png',
+  },
+};
+
+const TILES_5X5 = [
+  { x: 0, y: 0, terrain: 'stone' }, { x: 1, y: 0, terrain: 'dirt' }, { x: 2, y: 0, terrain: 'stone' }, { x: 3, y: 0, terrain: 'dirt' }, { x: 4, y: 0, terrain: 'stone' },
+  { x: 0, y: 1, terrain: 'dirt' }, { x: 1, y: 1, terrain: 'stone' }, { x: 2, y: 1, terrain: 'dirt' }, { x: 3, y: 1, terrain: 'stone' }, { x: 4, y: 1, terrain: 'dirt' },
+  { x: 0, y: 2, terrain: 'stone' }, { x: 1, y: 2, terrain: 'dirt' }, { x: 2, y: 2, terrain: 'bridge' }, { x: 3, y: 2, terrain: 'dirt' }, { x: 4, y: 2, terrain: 'stone' },
+  { x: 0, y: 3, terrain: 'dirt' }, { x: 1, y: 3, terrain: 'stone' }, { x: 2, y: 3, terrain: 'dirt' }, { x: 3, y: 3, terrain: 'stone' }, { x: 4, y: 3, terrain: 'dirt' },
+  { x: 0, y: 4, terrain: 'stone' }, { x: 1, y: 4, terrain: 'dirt' }, { x: 2, y: 4, terrain: 'stone' }, { x: 3, y: 4, terrain: 'wall' }, { x: 4, y: 4, terrain: 'stone' },
+];
+
+// ============================================================================
+// Shared render-ui compositions
+// ============================================================================
+
+const healthCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'guardian-1', unitType: 'guardian', x: 2, y: 2 }],
+  scale: 1,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+  tileClickEvent: 'TILE_CLICK',
+  unitClickEvent: 'UNIT_CLICK',
+}];
+
+const healthOverlayView: Effect = ['render-ui', 'overlay', {
+  type: 'game-hud',
+  elements: [
+    { type: 'stat', label: 'HP', value: '@entity.currentHealth', icon: 'heart' },
+    { type: 'stat', label: 'Max HP', value: '@entity.maxHealth', icon: 'heart' },
+    { type: 'stat', label: 'Invulnerable', value: '@entity.isInvulnerable', icon: 'shield' },
+    { type: 'button', label: 'Damage', action: 'DAMAGE', icon: 'sword', variant: 'secondary' },
+    { type: 'button', label: 'Heal', action: 'HEAL', icon: 'heart', variant: 'primary' },
+    { type: 'button', label: 'Respawn', action: 'RESPAWN', icon: 'refresh-cw', variant: 'secondary' },
+  ],
+}];
+
+const healthDamageEffectOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'canvas-effect',
+  actionType: 'hit',
+  x: 200,
+  y: 200,
+  duration: 600,
+}];
+
+const scoreCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'scorer-1', unitType: 'guardian', x: 2, y: 2 }],
+  scale: 1,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+  tileClickEvent: 'TILE_CLICK',
+  unitClickEvent: 'UNIT_CLICK',
+}];
+
+const scoreOverlayView: Effect = ['render-ui', 'overlay', {
+  type: 'game-hud',
+  elements: [
+    { type: 'stat', label: 'Score', value: '@entity.currentScore', icon: 'star' },
+    { type: 'stat', label: 'High Score', value: '@entity.highScore', icon: 'award' },
+    { type: 'stat', label: 'Combo', value: '@entity.comboCount', icon: 'zap' },
+    { type: 'stat', label: 'Multiplier', value: '@entity.multiplier', icon: 'trending-up' },
+    { type: 'button', label: 'Add Points', action: 'ADD_POINTS', icon: 'plus', variant: 'primary' },
+    { type: 'button', label: 'Reset', action: 'RESET', icon: 'refresh-cw', variant: 'secondary' },
+  ],
+}];
+
+const movementCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'mover-1', unitType: 'guardian', x: 2, y: 2 }],
+  scale: 1,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+  tileClickEvent: 'TILE_CLICK',
+  unitClickEvent: 'UNIT_CLICK',
+}];
+
+const movementOverlayView: Effect = ['render-ui', 'overlay', {
+  type: 'game-hud',
+  elements: [
+    { type: 'stat', label: 'X', value: '@entity.x', icon: 'arrow-right' },
+    { type: 'stat', label: 'Y', value: '@entity.y', icon: 'arrow-up' },
+    { type: 'stat', label: 'Speed', value: '@entity.moveSpeed', icon: 'gauge' },
+    { type: 'stat', label: 'Direction', value: '@entity.direction', icon: 'compass' },
+    { type: 'button', label: 'Move Left', action: 'MOVE_LEFT', icon: 'arrow-left', variant: 'secondary' },
+    { type: 'button', label: 'Move Right', action: 'MOVE_RIGHT', icon: 'arrow-right', variant: 'secondary' },
+    { type: 'button', label: 'Jump', action: 'JUMP', icon: 'arrow-big-up', variant: 'primary' },
+    { type: 'button', label: 'Stop', action: 'STOP', icon: 'square', variant: 'secondary' },
+  ],
+}];
+
+const combatCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [
+    { id: 'attacker-1', unitType: 'guardian', x: 1, y: 2 },
+    { id: 'target-1', unitType: 'breaker', x: 3, y: 2 },
+  ],
+  scale: 1,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+  tileClickEvent: 'TILE_CLICK',
+  unitClickEvent: 'UNIT_CLICK',
+}];
+
+const combatLogOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'combat-log',
+  events: [],
+  maxVisible: 10,
+  title: 'Battle Log',
+}];
+
+const combatHudOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'game-hud',
+  elements: [
+    { type: 'stat', label: 'Damage', value: '@entity.attackDamage', icon: 'sword' },
+    { type: 'stat', label: 'Duration', value: '@entity.attackDuration', icon: 'timer' },
+    { type: 'stat', label: 'Cooldown', value: '@entity.cooldownDuration', icon: 'clock' },
+    { type: 'stat', label: 'Hit Count', value: '@entity.hitCount', icon: 'target' },
+    { type: 'button', label: 'Attack', action: 'ATTACK', icon: 'sword', variant: 'primary' },
+    { type: 'button', label: 'Defend', action: 'DEFEND', icon: 'shield', variant: 'secondary' },
+  ],
+}];
+
+const combatAttackEffect: Effect = ['render-ui', 'overlay', {
+  type: 'canvas-effect',
+  actionType: 'melee',
+  x: 200,
+  y: 200,
+  duration: 600,
+}];
+
+const inventoryBrowseView: Effect = ['render-ui', 'main', {
+  type: 'inventory-panel',
+  items: '@entity',
+  slots: 12,
+  columns: 4,
+  selectSlotEvent: 'SELECT',
+  showTooltips: true,
+}];
+
+const inventoryDetailView: Effect = ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', children: [
+    { type: 'stack', direction: 'horizontal', children: [
+      { type: 'icon', name: 'package' },
+      { type: 'typography', content: 'Item Detail', variant: 'h2' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'vertical', gap: 'md', children: [
+      { type: 'typography', content: '@entity.name', variant: 'h2' },
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'typography', content: 'Quantity:', variant: 'body' },
+        { type: 'typography', content: '@entity.quantity', variant: 'body' },
+      ] },
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'typography', content: 'Slot:', variant: 'body' },
+        { type: 'typography', content: '@entity.slot', variant: 'body' },
+      ] },
+      { type: 'badge', label: '@entity.isEquipped', variant: 'outline' },
+    ] },
+  ],
+}];
 
 // ============================================================================
 // std-health - Entity Health System
@@ -26,8 +246,9 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'HealthOrbital',
+      theme: GAME_ENTITY_THEME,
       entity: {
-        name: 'HealthState',
+        name: 'HealthData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -41,7 +262,7 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Health',
-          linkedEntity: 'HealthState',
+          linkedEntity: 'HealthData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -71,12 +292,11 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Alive',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', '@entity.maxHealth'],
                   ['set', '@entity.isInvulnerable', false],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -85,13 +305,13 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 event: 'DAMAGE',
                 guard: ['not', '@entity.isInvulnerable'],
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', ['math/max', 0, ['-', '@entity.currentHealth', '@payload.amount']]],
                   ['set', '@entity.lastDamageTime', '@now'],
                   ['set', '@entity.isInvulnerable', true],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
+                  healthDamageEffectOverlay,
                 ],
               },
               {
@@ -100,11 +320,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 event: 'DAMAGE',
                 guard: ['<=', '@entity.currentHealth', 0],
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -113,13 +332,13 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 event: 'DAMAGE',
                 guard: ['and', ['not', '@entity.isInvulnerable'], ['>', '@entity.currentHealth', 0]],
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', ['math/max', 0, ['-', '@entity.currentHealth', '@payload.amount']]],
                   ['set', '@entity.lastDamageTime', '@now'],
                   ['set', '@entity.isInvulnerable', true],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
+                  healthDamageEffectOverlay,
                 ],
               },
               {
@@ -127,11 +346,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Alive',
                 event: 'INVULNERABILITY_END',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.isInvulnerable', false],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -139,11 +357,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Alive',
                 event: 'HEAL',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', ['math/min', '@entity.maxHealth', ['+', '@entity.currentHealth', '@payload.amount']]],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -151,11 +368,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Damaged',
                 event: 'HEAL',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', ['math/min', '@entity.maxHealth', ['+', '@entity.currentHealth', '@payload.amount']]],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -163,11 +379,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Dead',
                 event: 'DIE',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -175,11 +390,10 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Dead',
                 event: 'DIE',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
               {
@@ -187,12 +401,11 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
                 to: 'Alive',
                 event: 'RESPAWN',
                 effects: [
-                  ['fetch', 'HealthState'],
+                  ['fetch', 'HealthData'],
                   ['set', '@entity.currentHealth', '@entity.maxHealth'],
                   ['set', '@entity.isInvulnerable', false],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'HealthState',
-                  }],
+                  healthCanvasView,
+                  healthOverlayView,
                 ],
               },
             ],
@@ -235,8 +448,9 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'ScoreOrbital',
+      theme: GAME_ENTITY_THEME,
       entity: {
-        name: 'ScoreState',
+        name: 'ScoreData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -252,7 +466,7 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Score',
-          linkedEntity: 'ScoreState',
+          linkedEntity: 'ScoreData',
           category: 'interaction',
           stateMachine: {
             states: [{ name: 'Active', isInitial: true }],
@@ -273,13 +487,12 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'ScoreState'],
+                  ['fetch', 'ScoreData'],
                   ['set', '@entity.currentScore', 0],
                   ['set', '@entity.comboCount', 0],
                   ['set', '@entity.multiplier', 1],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'ScoreState',
-                  }],
+                  scoreCanvasView,
+                  scoreOverlayView,
                 ],
               },
               {
@@ -287,12 +500,11 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'ADD_POINTS',
                 effects: [
-                  ['fetch', 'ScoreState'],
+                  ['fetch', 'ScoreData'],
                   ['set', '@entity.currentScore', ['+', '@entity.currentScore', ['*', '@payload.points', '@entity.multiplier']]],
                   ['set', '@entity.lastScoreTime', '@now'],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'ScoreState',
-                  }],
+                  scoreCanvasView,
+                  scoreOverlayView,
                 ],
               },
               {
@@ -300,13 +512,12 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'COMBO_HIT',
                 effects: [
-                  ['fetch', 'ScoreState'],
+                  ['fetch', 'ScoreData'],
                   ['set', '@entity.comboCount', ['+', '@entity.comboCount', 1]],
                   ['set', '@entity.multiplier', ['math/min', '@entity.maxMultiplier', ['+', 1, ['/', '@entity.comboCount', 5]]]],
                   ['set', '@entity.lastScoreTime', '@now'],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'ScoreState',
-                  }],
+                  scoreCanvasView,
+                  scoreOverlayView,
                 ],
               },
               {
@@ -314,12 +525,11 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'COMBO_BREAK',
                 effects: [
-                  ['fetch', 'ScoreState'],
+                  ['fetch', 'ScoreData'],
                   ['set', '@entity.comboCount', 0],
                   ['set', '@entity.multiplier', 1],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'ScoreState',
-                  }],
+                  scoreCanvasView,
+                  scoreOverlayView,
                 ],
               },
               {
@@ -328,14 +538,13 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                 event: 'RESET',
                 guard: ['>', '@entity.currentScore', '@entity.highScore'],
                 effects: [
-                  ['fetch', 'ScoreState'],
+                  ['fetch', 'ScoreData'],
                   ['set', '@entity.highScore', '@entity.currentScore'],
                   ['set', '@entity.currentScore', 0],
                   ['set', '@entity.comboCount', 0],
                   ['set', '@entity.multiplier', 1],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'ScoreState',
-                  }],
+                  scoreCanvasView,
+                  scoreOverlayView,
                 ],
               },
               {
@@ -344,13 +553,12 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
                 event: 'RESET',
                 guard: ['<=', '@entity.currentScore', '@entity.highScore'],
                 effects: [
-                  ['fetch', 'ScoreState'],
+                  ['fetch', 'ScoreData'],
                   ['set', '@entity.currentScore', 0],
                   ['set', '@entity.comboCount', 0],
                   ['set', '@entity.multiplier', 1],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'ScoreState',
-                  }],
+                  scoreCanvasView,
+                  scoreOverlayView,
                 ],
               },
             ],
@@ -397,8 +605,9 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'MovementOrbital',
+      theme: GAME_ENTITY_THEME,
       entity: {
-        name: 'MovementState',
+        name: 'MovementData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -414,7 +623,7 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Movement',
-          linkedEntity: 'MovementState',
+          linkedEntity: 'MovementData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -444,15 +653,14 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 to: 'Idle',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.x', 0],
                   ['set', '@entity.y', 0],
                   ['set', '@entity.direction', 0],
                   ['set', '@entity.facingRight', true],
                   ['set', '@entity.canJump', true],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
               {
@@ -460,12 +668,11 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 to: 'Moving',
                 event: 'MOVE_RIGHT',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.direction', 1],
                   ['set', '@entity.facingRight', true],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
               {
@@ -473,12 +680,11 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 to: 'Moving',
                 event: 'MOVE_LEFT',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.direction', -1],
                   ['set', '@entity.facingRight', false],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
               {
@@ -504,11 +710,10 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 to: 'Idle',
                 event: 'STOP',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.direction', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
               {
@@ -517,12 +722,11 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 event: 'JUMP',
                 guard: '@entity.canJump',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.canJump', false],
                   ['set', '@entity.y', ['-', '@entity.y', '@entity.jumpForce']],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
               {
@@ -546,12 +750,11 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 to: 'Idle',
                 event: 'LAND',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.canJump', true],
                   ['set', '@entity.direction', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
               {
@@ -559,12 +762,11 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
                 to: 'Idle',
                 event: 'LAND',
                 effects: [
-                  ['fetch', 'MovementState'],
+                  ['fetch', 'MovementData'],
                   ['set', '@entity.canJump', true],
                   ['set', '@entity.direction', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'MovementState',
-                  }],
+                  movementCanvasView,
+                  movementOverlayView,
                 ],
               },
             ],
@@ -609,8 +811,9 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'CombatOrbital',
+      theme: GAME_ENTITY_THEME,
       entity: {
-        name: 'CombatState',
+        name: 'CombatData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -625,7 +828,7 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Combat',
-          linkedEntity: 'CombatState',
+          linkedEntity: 'CombatData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -645,13 +848,13 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'CombatState'],
+                  ['fetch', 'CombatData'],
                   ['set', '@entity.isAttacking', false],
                   ['set', '@entity.hitCount', 0],
                   ['set', '@entity.attackStartTime', 0],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'CombatState',
-                  }],
+                  combatCanvasView,
+                  combatLogOverlay,
+                  combatHudOverlay,
                 ],
               },
               {
@@ -659,12 +862,13 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
                 to: 'Attacking',
                 event: 'ATTACK',
                 effects: [
-                  ['fetch', 'CombatState'],
+                  ['fetch', 'CombatData'],
                   ['set', '@entity.isAttacking', true],
                   ['set', '@entity.attackStartTime', '@now'],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'CombatState',
-                  }],
+                  combatCanvasView,
+                  combatLogOverlay,
+                  combatHudOverlay,
+                  combatAttackEffect,
                 ],
               },
               {
@@ -672,12 +876,12 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
                 to: 'Cooldown',
                 event: 'ATTACK_END',
                 effects: [
-                  ['fetch', 'CombatState'],
+                  ['fetch', 'CombatData'],
                   ['set', '@entity.isAttacking', false],
                   ['set', '@entity.hitCount', ['+', '@entity.hitCount', 1]],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'CombatState',
-                  }],
+                  combatCanvasView,
+                  combatLogOverlay,
+                  combatHudOverlay,
                 ],
               },
               {
@@ -685,10 +889,10 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'COOLDOWN_END',
                 effects: [
-                  ['fetch', 'CombatState'],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'CombatState',
-                  }],
+                  ['fetch', 'CombatData'],
+                  combatCanvasView,
+                  combatLogOverlay,
+                  combatHudOverlay,
                 ],
               },
             ],
@@ -733,6 +937,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'InventoryOrbital',
+      theme: GAME_ENTITY_THEME,
       entity: {
         name: 'InventoryItem',
         persistence: 'runtime',
@@ -772,13 +977,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'InventoryItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Inventory' }],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'InventoryItem',
-                    itemActions: [
-                      { label: 'Select', event: 'SELECT' },
-                    ],
-                  }],
+                  inventoryBrowseView,
                 ],
               },
               {
@@ -787,9 +986,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                 event: 'SELECT',
                 effects: [
                   ['fetch', 'InventoryItem'],
-                  ['render-ui', 'main', { type: 'detail-panel', 
-                    entity: 'InventoryItem',
-                  }],
+                  inventoryDetailView,
                 ],
               },
               {
@@ -798,13 +995,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'InventoryItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Inventory' }],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'InventoryItem',
-                    itemActions: [
-                      { label: 'Select', event: 'SELECT' },
-                    ],
-                  }],
+                  inventoryBrowseView,
                 ],
               },
               {
@@ -814,9 +1005,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'InventoryItem'],
                   ['set', '@entity.isEquipped', true],
-                  ['render-ui', 'main', { type: 'detail-panel', 
-                    entity: 'InventoryItem',
-                  }],
+                  inventoryDetailView,
                 ],
               },
               {
@@ -826,9 +1015,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'InventoryItem'],
                   ['set', '@entity.isEquipped', false],
-                  ['render-ui', 'main', { type: 'detail-panel', 
-                    entity: 'InventoryItem',
-                  }],
+                  inventoryDetailView,
                 ],
               },
             ],

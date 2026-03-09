@@ -6,10 +6,319 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * Molecule-first UI: all render-ui effects use atom/molecule compositions
+ * (stack, typography, icon, button, badge, divider, data-grid, data-list,
+ * search-input, meter, stats, form-section) instead of organism patterns.
+ *
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { OrbitalSchema, Effect } from './types.js';
+
+// ============================================================================
+// Theme: data-zinc
+// ============================================================================
+
+const DATA_ZINC_THEME = {
+  name: 'data-zinc',
+  tokens: {
+    colors: {
+      primary: '#3f3f46',
+      'primary-hover': '#27272a',
+      'primary-foreground': '#ffffff',
+      accent: '#71717a',
+      'accent-foreground': '#ffffff',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ============================================================================
+// Shared render-ui effect fragments (extracted to avoid repetition)
+// ============================================================================
+
+/** Product main view: header + data-grid with refresh action */
+const PRODUCT_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'database', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Products' },
+        { type: 'badge', label: 'Paginated', variant: 'info' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm',
+      children: [
+        { type: 'stats', label: 'Page', value: '@entity.page' },
+        { type: 'stats', label: 'Page Size', value: '@entity.pageSize' },
+        { type: 'stats', label: 'Total', value: '@entity.totalItems' },
+        { type: 'stats', label: 'Total Pages', value: '@entity.totalPages' },
+      ],
+    },
+    { type: 'progress-bar', value: '@entity.page', max: '@entity.totalPages', label: 'Page Progress', icon: 'book-open' },
+    {
+      type: 'data-grid',
+      entity: 'Product',
+      columns: ['name', 'price'],
+      itemActions: [{ label: 'Refresh', event: 'INIT' }],
+    },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
+      children: [
+        { type: 'button', label: 'Previous', action: 'PREV_PAGE', variant: 'secondary', icon: 'arrow-left' },
+        { type: 'button', label: 'Next', action: 'NEXT_PAGE', variant: 'secondary', icon: 'arrow-right' },
+      ],
+    },
+  ],
+}];
+
+/** File list main view: header + data-list with select/view actions */
+const FILE_IDLE_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'folder', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Files' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'data-list',
+      entity: 'File',
+      fields: ['name', 'size'],
+      itemActions: [
+        { label: 'Select', event: 'SELECT' },
+        { label: 'View', event: 'VIEW' },
+      ],
+    },
+  ],
+}];
+
+/** File list main view when items are selected */
+const FILE_SELECTED_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'folder', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Files' },
+        { type: 'badge', label: 'Selected', variant: 'success' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'data-list',
+      entity: 'File',
+      fields: ['name', 'size', 'isSelected'],
+      itemActions: [
+        { label: 'Deselect', event: 'DESELECT' },
+        { label: 'View', event: 'VIEW' },
+      ],
+    },
+  ],
+}];
+
+/** File detail modal view */
+const FILE_DETAIL_MODAL: Effect = ['render-ui', 'modal', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'file', size: 'lg' },
+        { type: 'typography', variant: 'h3', content: 'File Details' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'stack', direction: 'vertical', gap: 'sm',
+      children: [
+        { type: 'typography', variant: 'body', content: '@entity.name' },
+        { type: 'stats', label: 'Size', value: '@entity.size' },
+      ],
+    },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
+      children: [
+        { type: 'button', label: 'Close', event: 'CLOSE', variant: 'secondary' },
+      ],
+    },
+  ],
+}];
+
+/** Contact table main view: header + data-grid with sortable columns */
+const CONTACT_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'table', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Contacts' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm',
+      children: [
+        { type: 'stats', label: 'Sort By', value: '@entity.sortField' },
+        { type: 'stats', label: 'Direction', value: '@entity.sortDirection' },
+      ],
+    },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm',
+      children: [
+        { type: 'button', label: 'Sort by Name', event: 'SORT', variant: 'secondary', icon: 'arrow-up' },
+        { type: 'button', label: 'Toggle Direction', event: 'TOGGLE_DIRECTION', variant: 'secondary', icon: 'filter' },
+        { type: 'button', label: 'Clear Sort', event: 'CLEAR_SORT', variant: 'ghost', icon: 'x' },
+      ],
+    },
+    {
+      type: 'data-grid',
+      entity: 'Contact',
+      columns: ['name', 'email'],
+      itemActions: [{ label: 'Refresh', event: 'INIT' }],
+    },
+  ],
+}];
+
+/** Task browsing main view: header + filter controls + data-grid */
+const TASK_BROWSING_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'table', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Tasks' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm',
+      children: [
+        { type: 'badge', label: 'All', variant: 'primary', icon: 'filter' },
+        { type: 'button', label: 'Filter', action: 'FILTER', variant: 'secondary', icon: 'filter' },
+        { type: 'button', label: 'Clear Filters', action: 'CLEAR_FILTERS', variant: 'ghost', icon: 'x' },
+      ],
+    },
+    {
+      type: 'data-grid',
+      entity: 'Task',
+      columns: ['title', 'status', 'priority'],
+      itemActions: [{ label: 'Refresh', event: 'INIT' }],
+    },
+  ],
+}];
+
+/** Task filtered main view: header + active filter badge + data-grid */
+const TASK_FILTERED_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'filter', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Tasks' },
+        { type: 'badge', label: 'Filtered', variant: 'warning' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm',
+      children: [
+        { type: 'badge', label: 'Filtered', variant: 'warning', icon: 'filter' },
+        { type: 'badge', label: '@entity.status', variant: 'info' },
+        { type: 'button', label: 'Change Filter', action: 'FILTER', variant: 'secondary', icon: 'filter' },
+        { type: 'button', label: 'Clear Filters', action: 'CLEAR_FILTERS', variant: 'ghost', icon: 'x' },
+      ],
+    },
+    {
+      type: 'data-grid',
+      entity: 'Task',
+      columns: ['title', 'status', 'priority'],
+      itemActions: [{ label: 'View', event: 'VIEW' }],
+    },
+  ],
+}];
+
+/** Article search idle view: header + search-input + data-list */
+const ARTICLE_IDLE_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'search', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Search Articles' },
+      ],
+    },
+    { type: 'divider' },
+    { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH', icon: 'search' },
+    {
+      type: 'data-list',
+      entity: 'Article',
+      fields: ['title', 'content'],
+      itemActions: [{ label: 'View', event: 'VIEW' }],
+    },
+  ],
+}];
+
+/** Article search active view: header + search-input + clear + data-list */
+const ARTICLE_SEARCHING_MAIN_VIEW: Effect = ['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'md',
+  children: [
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'icon', name: 'search', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Search Articles' },
+        { type: 'badge', label: 'Active Search', variant: 'info' },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+      children: [
+        { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH', icon: 'search' },
+        { type: 'button', label: 'Clear', event: 'CLEAR_SEARCH', variant: 'ghost', icon: 'x' },
+      ],
+    },
+    {
+      type: 'data-list',
+      entity: 'Article',
+      fields: ['title', 'content'],
+      itemActions: [{ label: 'View', event: 'VIEW' }],
+    },
+  ],
+}];
 
 // ============================================================================
 // std-pagination - Page Navigation
@@ -23,6 +332,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-pagination',
   version: '1.0.0',
   description: 'Page-based navigation for large data sets',
+  theme: DATA_ZINC_THEME,
   orbitals: [
     {
       name: 'PaginationOrbital',
@@ -37,6 +347,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
           { name: 'page', type: 'number', default: 1 },
           { name: 'pageSize', type: 'number', default: 20 },
           { name: 'totalItems', type: 'number', default: 0 },
+          { name: 'totalPages', type: 'number', default: 1 },
         ],
       },
       traits: [
@@ -61,13 +372,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Product'],
                   ['set', '@entity.page', 1],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Products' }],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'Product',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  PRODUCT_MAIN_VIEW,
                 ],
               },
               {
@@ -78,12 +383,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Product'],
                   ['set', '@entity.page', ['+', '@entity.page', 1]],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'Product',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  PRODUCT_MAIN_VIEW,
                 ],
               },
               {
@@ -94,12 +394,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Product'],
                   ['set', '@entity.page', ['-', '@entity.page', 1]],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'Product',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  PRODUCT_MAIN_VIEW,
                 ],
               },
               {
@@ -112,12 +407,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Product'],
                   ['set', '@entity.page', '@payload.page'],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'Product',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  PRODUCT_MAIN_VIEW,
                 ],
               },
               {
@@ -128,12 +418,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Product'],
                   ['set', '@entity.pageSize', '@payload.size'],
                   ['set', '@entity.page', 1],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'Product',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  PRODUCT_MAIN_VIEW,
                 ],
               },
             ],
@@ -164,6 +449,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
   name: 'std-selection',
   version: '1.0.0',
   description: 'Single or multi-selection management',
+  theme: DATA_ZINC_THEME,
   orbitals: [
     {
       name: 'SelectionOrbital',
@@ -204,13 +490,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'File'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Files' }],
-                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
-                    itemActions: [
-                      { label: 'Select', event: 'SELECT' },
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  FILE_IDLE_MAIN_VIEW,
                 ],
               },
               {
@@ -220,12 +500,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'File'],
                   ['set', '@entity.isSelected', true],
-                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
-                    itemActions: [
-                      { label: 'Deselect', event: 'DESELECT' },
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  FILE_SELECTED_MAIN_VIEW,
                 ],
               },
               {
@@ -235,12 +510,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'File'],
                   ['set', '@entity.isSelected', true],
-                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
-                    itemActions: [
-                      { label: 'Deselect', event: 'DESELECT' },
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  FILE_SELECTED_MAIN_VIEW,
                 ],
               },
               {
@@ -250,12 +520,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'File'],
                   ['set', '@entity.isSelected', false],
-                  ['render-ui', 'main', { type: 'entity-list', entity: 'File',
-                    itemActions: [
-                      { label: 'Select', event: 'SELECT' },
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  FILE_IDLE_MAIN_VIEW,
                 ],
               },
               {
@@ -264,10 +529,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'File'],
-                  ['render-ui', 'modal', { type: 'detail-panel', 
-                    entity: 'File',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
-                  }],
+                  FILE_DETAIL_MODAL,
                 ],
               },
               {
@@ -276,10 +538,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'File'],
-                  ['render-ui', 'modal', { type: 'detail-panel', 
-                    entity: 'File',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
-                  }],
+                  FILE_DETAIL_MODAL,
                 ],
               },
               { from: 'viewing', to: 'idle', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
@@ -312,6 +571,7 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
   name: 'std-sort',
   version: '1.0.0',
   description: 'Sorting by field with direction toggle',
+  theme: DATA_ZINC_THEME,
   orbitals: [
     {
       name: 'SortOrbital',
@@ -349,13 +609,7 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Contact'],
                   ['set', '@entity.sortField', 'name'],
                   ['set', '@entity.sortDirection', 'asc'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Contacts' }],
-                  ['render-ui', 'main', { type: 'entity-table', 
-                    entity: 'Contact',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  CONTACT_MAIN_VIEW,
                 ],
               },
               {
@@ -365,12 +619,7 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Contact'],
                   ['set', '@entity.sortField', '@payload.field'],
-                  ['render-ui', 'main', { type: 'entity-table', 
-                    entity: 'Contact',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  CONTACT_MAIN_VIEW,
                 ],
               },
               {
@@ -380,12 +629,7 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Contact'],
                   ['set', '@entity.sortDirection', ['if', ['=', '@entity.sortDirection', 'asc'], 'desc', 'asc']],
-                  ['render-ui', 'main', { type: 'entity-table', 
-                    entity: 'Contact',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  CONTACT_MAIN_VIEW,
                 ],
               },
               {
@@ -396,12 +640,7 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Contact'],
                   ['set', '@entity.sortField', 'name'],
                   ['set', '@entity.sortDirection', 'asc'],
-                  ['render-ui', 'main', { type: 'entity-table', 
-                    entity: 'Contact',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  CONTACT_MAIN_VIEW,
                 ],
               },
             ],
@@ -432,6 +671,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
   name: 'std-filter',
   version: '1.0.0',
   description: 'Query Singleton pattern for explicit filtering',
+  theme: DATA_ZINC_THEME,
   orbitals: [
     {
       name: 'FilterOrbital',
@@ -469,15 +709,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Task'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Tasks', 
-                    actions: [{ label: 'Filter', event: 'FILTER' }],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-table', 
-                    entity: 'Task',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  TASK_BROWSING_MAIN_VIEW,
                 ],
               },
               {
@@ -487,10 +719,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Task'],
                   ['set', '@entity.status', '@payload.status'],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Task',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
+                  TASK_FILTERED_MAIN_VIEW,
                 ],
               },
               {
@@ -500,10 +729,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Task'],
                   ['set', '@entity.status', '@payload.status'],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Task',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
+                  TASK_FILTERED_MAIN_VIEW,
                 ],
               },
               {
@@ -513,17 +739,28 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.status', 'open'],
                   ['fetch', 'Task'],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Task',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  TASK_BROWSING_MAIN_VIEW,
                 ],
               },
               // VIEW self-transitions
-              { from: 'browsing', to: 'browsing', event: 'VIEW', effects: [['fetch', 'Task'], ['render-ui', 'main', { type: 'entity-table', entity: 'Task', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'filtered', to: 'filtered', event: 'VIEW', effects: [['fetch', 'Task'], ['render-ui', 'main', { type: 'entity-table', entity: 'Task', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              {
+                from: 'browsing',
+                to: 'browsing',
+                event: 'VIEW',
+                effects: [
+                  ['fetch', 'Task'],
+                  TASK_BROWSING_MAIN_VIEW,
+                ],
+              },
+              {
+                from: 'filtered',
+                to: 'filtered',
+                event: 'VIEW',
+                effects: [
+                  ['fetch', 'Task'],
+                  TASK_FILTERED_MAIN_VIEW,
+                ],
+              },
             ],
           },
         },
@@ -552,6 +789,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
   name: 'std-search',
   version: '1.0.0',
   description: 'Search behavior for entity lists',
+  theme: DATA_ZINC_THEME,
   orbitals: [
     {
       name: 'SearchOrbital',
@@ -589,14 +827,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Search Articles' }],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Article',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ARTICLE_IDLE_MAIN_VIEW,
                 ],
               },
               {
@@ -606,11 +837,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['set', '@entity.searchTerm', '@payload.term'],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Article',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
+                  ARTICLE_SEARCHING_MAIN_VIEW,
                 ],
               },
               {
@@ -620,11 +847,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['set', '@entity.searchTerm', '@payload.term'],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Article',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
+                  ARTICLE_SEARCHING_MAIN_VIEW,
                 ],
               },
               {
@@ -634,18 +857,28 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.searchTerm', ''],
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Article',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ARTICLE_IDLE_MAIN_VIEW,
                 ],
               },
               // VIEW self-transitions
-              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'searching', to: 'searching', event: 'VIEW', effects: [['fetch', 'Article'], ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles...', event: 'SEARCH' }], ['render-ui', 'main', { type: 'entity-cards', entity: 'Article', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              {
+                from: 'idle',
+                to: 'idle',
+                event: 'VIEW',
+                effects: [
+                  ['fetch', 'Article'],
+                  ARTICLE_IDLE_MAIN_VIEW,
+                ],
+              },
+              {
+                from: 'searching',
+                to: 'searching',
+                event: 'VIEW',
+                effects: [
+                  ['fetch', 'Article'],
+                  ARTICLE_SEARCHING_MAIN_VIEW,
+                ],
+              },
             ],
           },
         },

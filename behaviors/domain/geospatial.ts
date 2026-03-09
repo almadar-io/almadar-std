@@ -5,14 +5,82 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * VStack/HStack/Box wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
 
+// ── Shared Geospatial Theme ─────────────────────────────────────────
+
+const GEOSPATIAL_THEME = {
+  name: 'geospatial-cyan',
+  tokens: {
+    colors: {
+      primary: '#0891b2',
+      'primary-hover': '#0e7490',
+      'primary-foreground': '#ffffff',
+      accent: '#06b6d4',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-map-view - Map Display with Markers
 // ============================================================================
+
+// ── Reusable main-view effects (map view: browsing) ─────────────────
+
+const mapBrowsingMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + create button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'map', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Map' },
+      ]},
+      { type: 'button', label: 'Create', icon: 'map-pin', variant: 'primary', action: 'CREATE' },
+    ]},
+    { type: 'divider' },
+    // Stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Markers', icon: 'map-pin', entity: 'MapMarker' },
+      { type: 'stats', label: 'Categories', icon: 'layers', entity: 'MapMarker' },
+    ]},
+    { type: 'divider' },
+    // Map visualization placeholder
+    { type: 'stack', direction: 'vertical', gap: 'md', align: 'center', children: [
+      { type: 'icon', name: 'map', size: 'xl' },
+      { type: 'typography', variant: 'body', content: 'Map visualization area' },
+    ]},
+    { type: 'divider' },
+    // Selected marker coordinates
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Latitude', value: '@entity.latitude', icon: 'navigation' },
+      { type: 'stat-card', label: 'Longitude', value: '@entity.longitude', icon: 'compass' },
+    ]},
+    { type: 'divider' },
+    // Data zone: marker cards
+    { type: 'data-grid', entity: 'MapMarker', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'latitude', label: 'Lat', icon: 'navigation', variant: 'body', format: 'number' },
+        { name: 'longitude', label: 'Lng', icon: 'compass', variant: 'body', format: 'number' },
+        { name: 'category', label: 'Category', icon: 'layers', variant: 'badge' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'SELECT_MARKER' },
+      ],
+    },
+  ]},
+] as const;
 
 /**
  * std-map-view - Map display with markers and creation.
@@ -22,6 +90,7 @@ export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
   name: 'std-map-view',
   version: '1.0.0',
   description: 'Map display with markers and creation',
+  theme: GEOSPATIAL_THEME,
   orbitals: [
     {
       name: 'MapViewOrbital',
@@ -63,16 +132,7 @@ export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'MapMarker'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Map',
-                    actions: [{ label: 'Create', event: 'CREATE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Markers', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'MapMarker',
-                    itemActions: [
-                      { label: 'View', event: 'SELECT_MARKER' },
-                    ],
-                  }],
+                  [...mapBrowsingMainEffect],
                 ],
               },
               {
@@ -80,10 +140,25 @@ export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
                 to: 'viewing',
                 event: 'SELECT_MARKER',
                 effects: [
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    title: '@entity.name',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    // Detail header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'map-pin', size: 'lg' },
+                      { type: 'typography', variant: 'h3', content: '@entity.name' },
+                    ]},
+                    { type: 'divider' },
+                    // Coordinate details
+                    { type: 'data-list', fields: [
+                      { name: 'latitude', label: 'Latitude', icon: 'navigation', format: 'number' },
+                      { name: 'longitude', label: 'Longitude', icon: 'compass', format: 'number' },
+                      { name: 'category', label: 'Category', icon: 'layers' },
+                    ]},
+                    { type: 'divider' },
+                    // Actions
+                    { type: 'stack', direction: 'horizontal', justify: 'end', gap: 'sm', children: [
+                      { type: 'button', label: 'Close', icon: 'x', variant: 'secondary', action: 'CLOSE' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -108,11 +183,16 @@ export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
                 event: 'CREATE',
                 effects: [
                   ['fetch', 'MapMarker'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'MapMarker',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    // Create header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'map-pin', size: 'lg' },
+                      { type: 'typography', variant: 'h3', content: 'New Marker' },
+                    ]},
+                    { type: 'divider' },
+                    // Creation form
+                    { type: 'form-section', entity: 'MapMarker', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
+                  ]}],
                 ],
               },
               {
@@ -125,13 +205,7 @@ export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.longitude', '@payload.longitude'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'MapMarker'],
-                  ['render-ui', 'main', { type: 'stats', label: 'Markers', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'MapMarker',
-                    itemActions: [
-                      { label: 'View', event: 'SELECT_MARKER' },
-                    ],
-                  }],
+                  [...mapBrowsingMainEffect],
                 ],
               },
               {
@@ -170,6 +244,24 @@ export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
 // std-location-picker - Location Selection
 // ============================================================================
 
+// ── Reusable main-view effects (location picker: idle) ──────────────
+
+const locationIdleMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + select button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'target', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Location Picker' },
+      ]},
+      { type: 'button', label: 'Select Location', icon: 'map-pin', variant: 'primary', action: 'START_SELECTION' },
+    ]},
+    { type: 'divider' },
+    // Coordinate display
+    { type: 'form-section', entity: 'SelectedLocation', title: 'Coordinates' },
+  ]},
+] as const;
+
 /**
  * std-location-picker - Location selection input.
  * States: idle -> selecting -> confirmed
@@ -178,6 +270,7 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
   name: 'std-location-picker',
   version: '1.0.0',
   description: 'Location selection with address and coordinates',
+  theme: GEOSPATIAL_THEME,
   orbitals: [
     {
       name: 'LocationPickerOrbital',
@@ -219,10 +312,7 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.address', ''],
                   ['set', '@entity.latitude', 0],
                   ['set', '@entity.longitude', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Location Picker',
-                    actions: [{ label: 'Select Location', event: 'START_SELECTION' }],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'SelectedLocation', title: 'Coordinates' }],
+                  [...locationIdleMainEffect],
                 ],
               },
               {
@@ -231,8 +321,18 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
                 event: 'START_SELECTION',
                 effects: [
                   ['fetch', 'SelectedLocation'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Select Location' }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'SelectedLocation' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'globe', size: 'lg' },
+                      { type: 'typography', variant: 'h2', content: 'Select Location' },
+                    ]},
+                    { type: 'divider' },
+                    // Search input for address
+                    { type: 'search-input', placeholder: 'Search address...', icon: 'search' },
+                    // Form for coordinate entry
+                    { type: 'form-section', entity: 'SelectedLocation' },
+                  ]}],
                 ],
               },
               {
@@ -243,9 +343,25 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.address', '@payload.address'],
                   ['set', '@entity.latitude', '@payload.latitude'],
                   ['set', '@entity.longitude', '@payload.longitude'],
-                  ['render-ui', 'main', { type: 'detail-panel', title: 'Selected Location',
-                    actions: [{ label: 'Confirm', event: 'CONFIRM' }],
-                  }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Header with confirm
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'map-pin', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Selected Location' },
+                      ]},
+                      { type: 'button', label: 'Confirm', icon: 'check', variant: 'primary', action: 'CONFIRM' },
+                    ]},
+                    { type: 'divider' },
+                    // Location details
+                    { type: 'data-list', fields: [
+                      { name: 'address', label: 'Address', icon: 'map-pin' },
+                      { name: 'latitude', label: 'Latitude', icon: 'navigation', format: 'number' },
+                      { name: 'longitude', label: 'Longitude', icon: 'compass', format: 'number' },
+                    ]},
+                    // Coordinate meter
+                    { type: 'meter', value: 0, label: 'Accuracy', icon: 'target', entity: 'SelectedLocation' },
+                  ]}],
                 ],
               },
               {
@@ -253,10 +369,25 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
                 to: 'confirmed',
                 event: 'CONFIRM',
                 effects: [
-                  ['render-ui', 'main', { type: 'page-header', title: 'Location Confirmed' }],
-                  ['render-ui', 'main', { type: 'detail-panel', title: 'Confirmed Location',
-                    actions: [{ label: 'Clear', event: 'CLEAR_SELECTION' }],
-                  }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Confirmed header
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'check', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Location Confirmed' },
+                      ]},
+                      { type: 'button', label: 'Clear', icon: 'x', variant: 'secondary', action: 'CLEAR_SELECTION' },
+                    ]},
+                    { type: 'divider' },
+                    // Confirmed location details
+                    { type: 'badge', label: 'Confirmed', variant: 'success', icon: 'check' },
+                    { type: 'data-list', fields: [
+                      { name: 'address', label: 'Address', icon: 'map-pin' },
+                      { name: 'latitude', label: 'Latitude', icon: 'navigation', format: 'number' },
+                      { name: 'longitude', label: 'Longitude', icon: 'compass', format: 'number' },
+                      { name: 'label', label: 'Label', icon: 'tag' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -267,10 +398,7 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.address', ''],
                   ['set', '@entity.latitude', 0],
                   ['set', '@entity.longitude', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Location Picker',
-                    actions: [{ label: 'Select Location', event: 'START_SELECTION' }],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'SelectedLocation', title: 'Coordinates' }],
+                  [...locationIdleMainEffect],
                 ],
               },
             ],
@@ -293,6 +421,58 @@ export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
 // std-route-planner - Route Planning
 // ============================================================================
 
+// ── Reusable main-view effects (route planner: browsing) ────────────
+
+const routeBrowsingMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + new route button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'navigation', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Routes' },
+      ]},
+      { type: 'button', label: 'New Route', icon: 'compass', variant: 'primary', action: 'NEW_ROUTE' },
+    ]},
+    { type: 'divider' },
+    // Stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Route Points', icon: 'map-pin', entity: 'RoutePoint' },
+      { type: 'stats', label: 'Distance', icon: 'navigation', entity: 'RoutePoint' },
+    ]},
+    { type: 'divider' },
+    // Route point list
+    { type: 'data-list', entity: 'RoutePoint',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag' },
+        { name: 'latitude', label: 'Lat', icon: 'navigation', format: 'number' },
+        { name: 'longitude', label: 'Lng', icon: 'compass', format: 'number' },
+        { name: 'order', label: 'Order', icon: 'hash', format: 'number' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'VIEW' },
+      ],
+    },
+  ]},
+] as const;
+
+// ── Reusable main-view: route point data-list with view action ──────
+
+const routePointListMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'data-list', entity: 'RoutePoint',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag' },
+        { name: 'latitude', label: 'Lat', icon: 'navigation', format: 'number' },
+        { name: 'longitude', label: 'Lng', icon: 'compass', format: 'number' },
+        { name: 'order', label: 'Order', icon: 'hash', format: 'number' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'VIEW' },
+      ],
+    },
+  ]},
+] as const;
+
 /**
  * std-route-planner - Route creation with waypoints.
  * States: browsing -> planning -> viewing
@@ -301,6 +481,7 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
   name: 'std-route-planner',
   version: '1.0.0',
   description: 'Route planning with ordered waypoints',
+  theme: GEOSPATIAL_THEME,
   orbitals: [
     {
       name: 'RoutePlannerOrbital',
@@ -342,16 +523,7 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'RoutePoint'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Routes',
-                    actions: [{ label: 'New Route', event: 'NEW_ROUTE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Route Points', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'RoutePoint',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  [...routeBrowsingMainEffect],
                 ],
               },
               {
@@ -360,10 +532,19 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
                 event: 'NEW_ROUTE',
                 effects: [
                   ['fetch', 'RoutePoint'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Plan Route', 
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'RoutePoint' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Planning header
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'compass', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Plan Route' },
+                      ]},
+                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+                    ]},
+                    { type: 'divider' },
+                    // Add point form
+                    { type: 'form-section', entity: 'RoutePoint' },
+                  ]}],
                 ],
               },
               {
@@ -375,13 +556,36 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.name', '@payload.name'],
                   ['set', '@entity.latitude', '@payload.latitude'],
                   ['set', '@entity.longitude', '@payload.longitude'],
-                  ['render-ui', 'main', { type: 'stats', label: 'Route Points', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'RoutePoint',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
-                  ['render-ui', 'main', { type: 'timeline', entity: 'RoutePoint' }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'RoutePoint' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Planning header with view route
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'compass', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Plan Route' },
+                      ]},
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'button', label: 'View Route', icon: 'eye', variant: 'primary', action: 'VIEW_ROUTE' },
+                        { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+                      ]},
+                    ]},
+                    { type: 'divider' },
+                    // Stats
+                    { type: 'stats', label: 'Route Points', icon: 'map-pin', entity: 'RoutePoint' },
+                    { type: 'divider' },
+                    // Current waypoints
+                    { type: 'data-list', entity: 'RoutePoint',
+                      fields: [
+                        { name: 'name', label: 'Name', icon: 'tag' },
+                        { name: 'latitude', label: 'Lat', icon: 'navigation', format: 'number' },
+                        { name: 'longitude', label: 'Lng', icon: 'compass', format: 'number' },
+                        { name: 'order', label: 'Order', icon: 'hash', format: 'number' },
+                      ],
+                      itemActions: [{ label: 'View', event: 'VIEW' }],
+                    },
+                    { type: 'divider' },
+                    // Add another point form
+                    { type: 'form-section', entity: 'RoutePoint' },
+                  ]}],
                 ],
               },
               {
@@ -390,15 +594,32 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW_ROUTE',
                 effects: [
                   ['fetch', 'RoutePoint'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Route Overview',
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Route Points', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'RoutePoint',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
-                  ['render-ui', 'main', { type: 'timeline', entity: 'RoutePoint' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Route overview header
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'satellite', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Route Overview' },
+                      ]},
+                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+                    ]},
+                    { type: 'divider' },
+                    // Stats
+                    { type: 'stats', label: 'Route Points', icon: 'map-pin', entity: 'RoutePoint' },
+                    { type: 'divider' },
+                    // Route point list
+                    { type: 'data-list', entity: 'RoutePoint',
+                      fields: [
+                        { name: 'name', label: 'Name', icon: 'tag' },
+                        { name: 'latitude', label: 'Lat', icon: 'navigation', format: 'number' },
+                        { name: 'longitude', label: 'Lng', icon: 'compass', format: 'number' },
+                        { name: 'order', label: 'Order', icon: 'hash', format: 'number' },
+                      ],
+                      itemActions: [{ label: 'View', event: 'VIEW' }],
+                    },
+                    // Route completeness meter
+                    { type: 'meter', value: 0, label: 'Route Progress', icon: 'navigation', entity: 'RoutePoint' },
+                  ]}],
                 ],
               },
               {
@@ -407,16 +628,7 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'RoutePoint'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Routes',
-                    actions: [{ label: 'New Route', event: 'NEW_ROUTE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Route Points', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'RoutePoint',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  [...routeBrowsingMainEffect],
                 ],
               },
               {
@@ -425,22 +637,13 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'RoutePoint'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Routes',
-                    actions: [{ label: 'New Route', event: 'NEW_ROUTE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Route Points', value: '@entity.name' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'RoutePoint',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  [...routeBrowsingMainEffect],
                 ],
               },
               // VIEW self-transitions
-              { from: 'browsing', to: 'browsing', event: 'VIEW', effects: [['fetch', 'RoutePoint'], ['render-ui', 'main', { type: 'entity-list', entity: 'RoutePoint', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'planning', to: 'planning', event: 'VIEW', effects: [['fetch', 'RoutePoint'], ['render-ui', 'main', { type: 'entity-list', entity: 'RoutePoint', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'viewing', to: 'viewing', event: 'VIEW', effects: [['fetch', 'RoutePoint'], ['render-ui', 'main', { type: 'entity-list', entity: 'RoutePoint', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'browsing', to: 'browsing', event: 'VIEW', effects: [['fetch', 'RoutePoint'], [...routePointListMainEffect]] },
+              { from: 'planning', to: 'planning', event: 'VIEW', effects: [['fetch', 'RoutePoint'], [...routePointListMainEffect]] },
+              { from: 'viewing', to: 'viewing', event: 'VIEW', effects: [['fetch', 'RoutePoint'], [...routePointListMainEffect]] },
             ],
           },
         },

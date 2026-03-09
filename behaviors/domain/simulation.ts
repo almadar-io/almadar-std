@@ -6,14 +6,160 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * VStack/HStack/Box wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
 
+// ── Shared Simulation Theme ────────────────────────────────────────
+
+const SIMULATION_THEME = {
+  name: 'simulation-lime',
+  tokens: {
+    colors: {
+      primary: '#65a30d',
+      'primary-hover': '#4d7c0f',
+      'primary-foreground': '#ffffff',
+      accent: '#84cc16',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-agent-sim - Agent Simulation
 // ============================================================================
+
+// ── Reusable main-view effects (agent sim: idle/reset) ─────────────
+
+const agentSimIdleMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: cpu icon + title + start button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'cpu', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Agent Simulation' },
+      ]},
+      { type: 'button', label: 'Start', icon: 'play', variant: 'primary', action: 'START' },
+    ]},
+    { type: 'divider' },
+    // Agent identity
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Agent', value: '@entity.name', icon: 'cpu' },
+      { type: 'stats', label: 'Status', value: '@entity.state', icon: 'activity' },
+    ]},
+    { type: 'divider' },
+    // Position and energy
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'X', value: '@entity.x', icon: 'move' },
+      { type: 'stats', label: 'Y', value: '@entity.y', icon: 'move' },
+      { type: 'stats', label: 'Energy', value: '@entity.energy', icon: 'zap' },
+    ]},
+    // Energy meter
+    { type: 'meter', value: '@entity.energy', max: 100, label: 'Energy', icon: 'zap' },
+  ]},
+] as const;
+
+// ── Reusable main-view effects (agent sim: running) ────────────────
+
+const agentSimRunningMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: running indicator + pause/stop controls
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'activity', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Simulation Running' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Pause', icon: 'pause', variant: 'secondary', action: 'PAUSE' },
+        { type: 'button', label: 'Stop', icon: 'square', variant: 'danger', action: 'STOP' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Live stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Agent', value: '@entity.name', icon: 'cpu' },
+      { type: 'badge', label: 'Running', variant: 'success' },
+    ]},
+    { type: 'divider' },
+    // Position and energy readout
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'X', value: '@entity.x', icon: 'move' },
+      { type: 'stats', label: 'Y', value: '@entity.y', icon: 'move' },
+      { type: 'stats', label: 'Energy', value: '@entity.energy', icon: 'zap' },
+    ]},
+    // Energy meter (drains over time)
+    { type: 'meter', value: '@entity.energy', max: 100, label: 'Energy Remaining', icon: 'zap' },
+  ]},
+] as const;
+
+// ── Reusable main-view effects (agent sim: paused) ─────────────────
+
+const agentSimPausedMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: paused indicator + resume/stop controls
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'pause', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Simulation Paused' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Resume', icon: 'play', variant: 'primary', action: 'RESUME' },
+        { type: 'button', label: 'Stop', icon: 'square', variant: 'danger', action: 'STOP' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Status
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Agent', value: '@entity.name', icon: 'cpu' },
+      { type: 'badge', label: 'Paused', variant: 'warning' },
+    ]},
+    { type: 'divider' },
+    // Frozen stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'X', value: '@entity.x', icon: 'move' },
+      { type: 'stats', label: 'Y', value: '@entity.y', icon: 'move' },
+      { type: 'stats', label: 'Energy', value: '@entity.energy', icon: 'zap' },
+    ]},
+    { type: 'meter', value: '@entity.energy', max: 100, label: 'Energy Remaining', icon: 'zap' },
+  ]},
+] as const;
+
+// ── Reusable main-view effects (agent sim: completed) ──────────────
+
+const agentSimCompletedMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: completed + reset
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'bar-chart-2', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Simulation Complete' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'primary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    // Final results
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Agent', value: '@entity.name', icon: 'cpu' },
+      { type: 'badge', label: 'Completed', variant: 'default' },
+    ]},
+    { type: 'divider' },
+    // Final position and energy
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Final X', value: '@entity.x', icon: 'move' },
+      { type: 'stats', label: 'Final Y', value: '@entity.y', icon: 'move' },
+      { type: 'stats', label: 'Final Energy', value: '@entity.energy', icon: 'zap' },
+    ]},
+    { type: 'meter', value: '@entity.energy', max: 100, label: 'Final Energy', icon: 'zap' },
+  ]},
+] as const;
 
 /**
  * std-agent-sim - Agent-based simulation with tick updates.
@@ -23,6 +169,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
   name: 'std-agent-sim',
   version: '1.0.0',
   description: 'Agent-based simulation with tick-driven updates',
+  theme: SIMULATION_THEME,
   orbitals: [
     {
       name: 'AgentSimOrbital',
@@ -68,8 +215,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.y', 0],
                   ['set', '@entity.energy', 100],
                   ['set', '@entity.state', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Agent Simulation' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.name' }],
+                  agentSimIdleMainEffect,
                 ],
               },
               {
@@ -78,7 +224,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                 event: 'START',
                 effects: [
                   ['set', '@entity.state', 'running'],
-                  ['render-ui', 'main', { type: 'stats', label: 'Agent', value: '@entity.id' }],
+                  agentSimRunningMainEffect,
                 ],
               },
               {
@@ -87,7 +233,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                 event: 'PAUSE',
                 effects: [
                   ['set', '@entity.state', 'paused'],
-                  ['render-ui', 'main', { type: 'stats', label: 'Agent', value: '@entity.id' }],
+                  agentSimPausedMainEffect,
                 ],
               },
               {
@@ -96,7 +242,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                 event: 'RESUME',
                 effects: [
                   ['set', '@entity.state', 'running'],
-                  ['render-ui', 'main', { type: 'stats', label: 'Agent', value: '@entity.id' }],
+                  agentSimRunningMainEffect,
                 ],
               },
               {
@@ -105,8 +251,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                 event: 'STOP',
                 effects: [
                   ['set', '@entity.state', 'completed'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Simulation Complete' }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Agent', value: '@entity.id' }],
+                  agentSimCompletedMainEffect,
                 ],
               },
               {
@@ -115,8 +260,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                 event: 'STOP',
                 effects: [
                   ['set', '@entity.state', 'completed'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Simulation Complete' }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Agent', value: '@entity.id' }],
+                  agentSimCompletedMainEffect,
                 ],
               },
               {
@@ -128,8 +272,7 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.y', 0],
                   ['set', '@entity.energy', 100],
                   ['set', '@entity.state', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Agent Simulation' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.name' }],
+                  agentSimIdleMainEffect,
                 ],
               },
             ],
@@ -162,6 +305,56 @@ export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
 // std-rule-engine - Rule Management
 // ============================================================================
 
+// ── Reusable main-view effects (rule engine: browsing) ─────────────
+
+const ruleEngineBrowsingMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: settings icon + title + create button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'settings', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Simulation Rules' },
+      ]},
+      { type: 'button', label: 'Create', icon: 'plus', variant: 'primary', action: 'CREATE' },
+    ]},
+    { type: 'divider' },
+    // Search
+    { type: 'search-input', placeholder: 'Search rules...', icon: 'search' },
+    // Rules data list
+    { type: 'data-list', entity: 'SimRule',
+      fields: [
+        { name: 'name', label: 'Rule', icon: 'tag', variant: 'h4' },
+        { name: 'condition', label: 'Condition', icon: 'git-branch', variant: 'body' },
+        { name: 'action', label: 'Action', icon: 'zap', variant: 'body' },
+        { name: 'priority', label: 'Priority', icon: 'bar-chart-2', variant: 'badge', format: 'number' },
+        { name: 'isActive', label: 'Active', icon: 'check-circle', variant: 'badge' },
+      ],
+      itemActions: [
+        { label: 'Edit', event: 'EDIT', icon: 'edit' },
+      ],
+    },
+  ]},
+] as const;
+
+// ── Reusable modal effects (rule engine: form) ─────────────────────
+
+const ruleEngineFormModalEffect = [
+  'render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Modal header
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'edit', size: 'md' },
+      { type: 'typography', variant: 'h3', content: 'Rule Editor' },
+    ]},
+    { type: 'divider' },
+    // Form
+    { type: 'form-section',
+      entity: 'SimRule',
+      submitEvent: 'SAVE',
+      cancelEvent: 'CANCEL',
+    },
+  ]},
+] as const;
+
 /**
  * std-rule-engine - Rule CRUD for simulation engines.
  * States: browsing -> creating -> editing
@@ -170,6 +363,7 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
   name: 'std-rule-engine',
   version: '1.0.0',
   description: 'Rule management for simulation engines',
+  theme: SIMULATION_THEME,
   orbitals: [
     {
       name: 'RuleEngineOrbital',
@@ -212,15 +406,7 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'SimRule'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Simulation Rules', 
-                    actions: [{ label: 'Create', event: 'CREATE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'SimRule',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT' },
-                    ],
-                  }],
+                  ruleEngineBrowsingMainEffect,
                 ],
               },
               {
@@ -229,11 +415,7 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
                 event: 'CREATE',
                 effects: [
                   ['fetch', 'SimRule'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'SimRule',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
-                  }],
+                  ruleEngineFormModalEffect,
                 ],
               },
               {
@@ -246,12 +428,7 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.action', '@payload.action'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'SimRule'],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'SimRule',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT' },
-                    ],
-                  }],
+                  ruleEngineBrowsingMainEffect,
                 ],
               },
               {
@@ -276,11 +453,7 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT',
                 effects: [
                   ['fetch', 'SimRule'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'SimRule',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
-                  }],
+                  ruleEngineFormModalEffect,
                 ],
               },
               {
@@ -293,12 +466,7 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.action', '@payload.action'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'SimRule'],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'SimRule',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT' },
-                    ],
-                  }],
+                  ruleEngineBrowsingMainEffect,
                 ],
               },
               {
@@ -337,6 +505,113 @@ export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
 // std-time-step - Time Control
 // ============================================================================
 
+// ── Reusable main-view effects (time step: idle/reset) ─────────────
+
+const timeStepIdleMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: clock icon + title + start button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'cpu', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Time Control' },
+      ]},
+      { type: 'button', label: 'Start', icon: 'play', variant: 'primary', action: 'START' },
+    ]},
+    { type: 'divider' },
+    // Config stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Current Step', value: '@entity.step', icon: 'hash' },
+      { type: 'stats', label: 'Max Steps', value: '@entity.maxSteps', icon: 'bar-chart-2' },
+      { type: 'stats', label: 'Speed', value: '@entity.speed', icon: 'zap' },
+    ]},
+    { type: 'divider' },
+    // Progress bar at zero
+    { type: 'progress-bar', value: 0, label: 'Progress' },
+  ]},
+] as const;
+
+// ── Reusable main-view effects (time step: running) ────────────────
+
+const timeStepRunningMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: activity icon + title + pause/stop
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'activity', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Running' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Pause', icon: 'pause', variant: 'secondary', action: 'PAUSE' },
+        { type: 'button', label: 'Stop', icon: 'square', variant: 'danger', action: 'STOP' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Live stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Step', value: '@entity.step', icon: 'hash' },
+      { type: 'stats', label: 'Max', value: '@entity.maxSteps', icon: 'bar-chart-2' },
+      { type: 'stats', label: 'Speed', value: '@entity.speed', icon: 'zap' },
+      { type: 'badge', label: 'Running', variant: 'success' },
+    ]},
+    { type: 'divider' },
+    // Progress bar
+    { type: 'progress-bar', value: '@entity.step', max: '@entity.maxSteps', label: 'Simulation Progress' },
+    // Line chart for step progression
+    { type: 'line-chart', label: 'Step Over Time', entity: 'TimeStepState', field: 'step' },
+  ]},
+] as const;
+
+// ── Reusable main-view effects (time step: paused) ─────────────────
+
+const timeStepPausedMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: paused + resume/stop
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'pause', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Paused' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Resume', icon: 'play', variant: 'primary', action: 'RESUME' },
+        { type: 'button', label: 'Stop', icon: 'square', variant: 'danger', action: 'STOP' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Stats with paused badge
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Step', value: '@entity.step', icon: 'hash' },
+      { type: 'stats', label: 'Max', value: '@entity.maxSteps', icon: 'bar-chart-2' },
+      { type: 'badge', label: 'Paused', variant: 'warning' },
+    ]},
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.step', max: '@entity.maxSteps', label: 'Simulation Progress' },
+  ]},
+] as const;
+
+// ── Reusable main-view effects (time step: completed) ──────────────
+
+const timeStepCompletedMainEffect = [
+  'render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: completed + reset
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'bar-chart-2', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Simulation Done' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'primary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    // Final stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Total Steps', value: '@entity.step', icon: 'hash' },
+      { type: 'stats', label: 'Max Steps', value: '@entity.maxSteps', icon: 'bar-chart-2' },
+      { type: 'badge', label: 'Completed', variant: 'default' },
+    ]},
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.step', max: '@entity.maxSteps', label: 'Final Progress' },
+  ]},
+] as const;
+
 /**
  * std-time-step - Time-step control for simulations.
  * States: idle -> running -> paused -> completed
@@ -345,6 +620,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
   name: 'std-time-step',
   version: '1.0.0',
   description: 'Time-step control for simulations with tick increment',
+  theme: SIMULATION_THEME,
   orbitals: [
     {
       name: 'TimeStepOrbital',
@@ -387,8 +663,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.step', 0],
                   ['set', '@entity.isRunning', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Time Control' }],
-                  ['render-ui', 'main', { type: 'card', title: 'Time Control' }],
+                  timeStepIdleMainEffect,
                 ],
               },
               {
@@ -398,8 +673,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isRunning', true],
                   ['set', '@entity.step', 0],
-                  ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Progress' }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Step', value: '@entity.id' }],
+                  timeStepRunningMainEffect,
                 ],
               },
               {
@@ -408,7 +682,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 event: 'PAUSE',
                 effects: [
                   ['set', '@entity.isRunning', false],
-                  ['render-ui', 'main', { type: 'stats', label: 'Step', value: '@entity.id' }],
+                  timeStepPausedMainEffect,
                 ],
               },
               {
@@ -417,7 +691,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 event: 'RESUME',
                 effects: [
                   ['set', '@entity.isRunning', true],
-                  ['render-ui', 'main', { type: 'stats', label: 'Step', value: '@entity.id' }],
+                  timeStepRunningMainEffect,
                 ],
               },
               {
@@ -426,8 +700,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 event: 'STOP',
                 effects: [
                   ['set', '@entity.isRunning', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Simulation Done' }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Step', value: '@entity.id' }],
+                  timeStepCompletedMainEffect,
                 ],
               },
               {
@@ -436,8 +709,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 event: 'STOP',
                 effects: [
                   ['set', '@entity.isRunning', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Simulation Done' }],
-                  ['render-ui', 'main', { type: 'stats', label: 'Step', value: '@entity.id' }],
+                  timeStepCompletedMainEffect,
                 ],
               },
               {
@@ -447,8 +719,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.step', 0],
                   ['set', '@entity.isRunning', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Time Control' }],
-                  ['render-ui', 'main', { type: 'card', title: 'Time Control' }],
+                  timeStepIdleMainEffect,
                 ],
               },
             ],

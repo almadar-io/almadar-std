@@ -5,19 +5,86 @@
  * confirmations, and undo functionality.
  * Each behavior is a self-contained OrbitalSchema that can function as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * stack wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from './types.js';
 
+// ── Shared Feedback Theme ──────────────────────────────────────────
+
+const FEEDBACK_THEME = {
+  name: 'feedback-amber',
+  tokens: {
+    colors: {
+      primary: '#d97706',
+      'primary-hover': '#b45309',
+      'primary-foreground': '#ffffff',
+      accent: '#f59e0b',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-notification - Toast Notifications
 // ============================================================================
+
+// ── Reusable main-view effects (notification: hidden/empty) ────────
+
+const notificationEmptyEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'bell-off', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Notifications' },
+    ]},
+    { type: 'divider' },
+    // Empty state
+    { type: 'stack', direction: 'vertical', gap: 'md', align: 'center', children: [
+      { type: 'icon', name: 'inbox', size: 'xl' },
+      { type: 'typography', variant: 'h3', content: 'No Notifications' },
+      { type: 'typography', variant: 'body', content: 'Nothing to display' },
+      { type: 'button', label: 'Send Test Notification', action: 'SHOW', icon: 'bell', variant: 'primary' },
+    ]},
+  ]}],
+];
+
+// ── Reusable main-view effects (notification: visible) ─────────────
+
+const notificationVisibleEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'bell', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Notifications' },
+    ]},
+    { type: 'divider' },
+    // Notification list
+    { type: 'data-list', entity: 'Notification',
+      fields: [
+        { name: 'title', label: 'Title', icon: 'tag', variant: 'h4' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+        { name: 'type', label: 'Type', icon: 'info', variant: 'badge' },
+      ],
+      actions: [
+        { label: 'Dismiss', event: 'HIDE', icon: 'x', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
 
 export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-notification',
   version: '1.0.0',
   description: 'Toast notification with auto-dismiss',
+  theme: FEEDBACK_THEME,
   orbitals: [
     {
       name: 'NotificationOrbital',
@@ -60,11 +127,7 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                 to: 'hidden',
                 event: 'INIT',
                 effects: [
-                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
-                  ['render-ui', 'main', { type: 'empty-state',
-                    title: 'No Notifications',
-                    message: 'Nothing to display',
-                  }],
+                  ...notificationEmptyEffects,
                 ],
               },
               {
@@ -76,12 +139,7 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.message', '@payload.message'],
                   ['set', '@entity.type', '@payload.type'],
                   ['set', '@entity.title', '@payload.title'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
-                  ['render-ui', 'main', { type: 'entity-list', entity: 'Notification',
-                    itemActions: [
-                      { label: 'Hide', event: 'HIDE' },
-                    ],
-                  }],
+                  ...notificationVisibleEffects,
                 ],
               },
               {
@@ -93,12 +151,7 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.message', '@payload.message'],
                   ['set', '@entity.type', '@payload.type'],
                   ['set', '@entity.title', '@payload.title'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
-                  ['render-ui', 'main', { type: 'entity-list', entity: 'Notification',
-                    itemActions: [
-                      { label: 'Hide', event: 'HIDE' },
-                    ],
-                  }],
+                  ...notificationVisibleEffects,
                 ],
               },
               {
@@ -108,11 +161,7 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.message', ''],
                   ['set', '@entity.title', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Notifications' }],
-                  ['render-ui', 'main', { type: 'empty-state',
-                    title: 'No Notifications',
-                    message: 'Nothing to display',
-                  }],
+                  ...notificationEmptyEffects,
                 ],
               },
             ],
@@ -135,10 +184,29 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
 // std-confirmation - Confirmation Dialog
 // ============================================================================
 
+// ── Reusable main-view effects (confirmation: closed) ──────────────
+
+const confirmationClosedEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'shield-check', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Confirmation' },
+    ]},
+    { type: 'divider' },
+    // Idle state
+    { type: 'stack', direction: 'vertical', gap: 'md', align: 'center', children: [
+      { type: 'icon', name: 'check-circle', size: 'xl' },
+      { type: 'typography', variant: 'body', content: 'No pending confirmations' },
+    ]},
+  ]}],
+];
+
 export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-confirmation',
   version: '1.0.0',
   description: 'Confirmation dialog with confirm/cancel actions',
+  theme: FEEDBACK_THEME,
   orbitals: [
     {
       name: 'ConfirmationOrbital',
@@ -181,9 +249,7 @@ export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
                 to: 'closed',
                 event: 'INIT',
                 effects: [
-                  ['render-ui', 'main', { type: 'page-header', 
-                    title: 'Confirmation',
-                  }],
+                  ...confirmationClosedEffects,
                 ],
               },
               {
@@ -193,7 +259,22 @@ export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.title', '@payload.title'],
                   ['set', '@entity.message', '@payload.message'],
-                  ['render-ui', 'modal', { type: 'confirm-dialog', title: '@entity.title', message: '@entity.message' }, { confirmEvent: 'CONFIRM', cancelEvent: 'CANCEL' }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Modal header: warning icon + title
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'alert-triangle', size: 'lg' },
+                      { type: 'typography', variant: 'h3', content: '@entity.title' },
+                    ]},
+                    { type: 'divider' },
+                    // Message body
+                    { type: 'typography', variant: 'body', content: '@entity.message' },
+                    { type: 'divider' },
+                    // Action buttons
+                    { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'end', children: [
+                      { type: 'button', label: 'Cancel', icon: 'x', variant: 'secondary', action: 'CANCEL' },
+                      { type: 'button', label: 'Confirm', icon: 'check', variant: 'primary', action: 'CONFIRM' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -246,10 +327,44 @@ export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
 // std-undo - Undo Stack
 // ============================================================================
 
+// ── Reusable main-view effects (undo: ready) ───────────────────────
+
+const undoReadyEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + clear button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'rotate-ccw', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Undo History' },
+      ]},
+      { type: 'button', label: 'Clear All', icon: 'trash-2', variant: 'ghost', action: 'CLEAR' },
+    ]},
+    { type: 'divider' },
+    // Stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Actions', icon: 'layers', entity: 'UndoEntry' },
+      { type: 'stats', label: 'Status', icon: 'activity', entity: 'UndoEntry' },
+    ]},
+    { type: 'divider' },
+    // Undo entries data grid
+    { type: 'data-grid', entity: 'UndoEntry', cols: 1, gap: 'sm',
+      fields: [
+        { name: 'action', label: 'Action', icon: 'zap', variant: 'h4' },
+        { name: 'description', label: 'Description', icon: 'file-text', variant: 'body' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+      ],
+      actions: [
+        { label: 'Undo', event: 'UNDO', icon: 'rotate-ccw', variant: 'secondary' },
+      ],
+    },
+  ]}],
+];
+
 export const UNDO_BEHAVIOR: OrbitalSchema = {
   name: 'std-undo',
   version: '1.0.0',
   description: 'Undo stack for reversible actions',
+  theme: FEEDBACK_THEME,
   orbitals: [
     {
       name: 'UndoOrbital',
@@ -292,15 +407,7 @@ export const UNDO_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'UndoEntry'],
-                  ['render-ui', 'main', { type: 'page-header', 
-                    title: 'Undo History',
-                  }],
-                  ['render-ui', 'main', { type: 'entity-cards', entity: 'UndoEntry',
-                  
-  itemActions: [
-    { label: 'Refresh', event: 'INIT' },
-  ],
-}],
+                  ...undoReadyEffects,
                 ],
               },
               {

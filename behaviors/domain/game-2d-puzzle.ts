@@ -6,14 +6,109 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * VStack/HStack/Box wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
 
+// ── Shared Puzzle Theme ─────────────────────────────────────────────
+
+const PUZZLE_THEME = {
+  name: 'game-puzzle-yellow',
+  tokens: {
+    colors: {
+      primary: '#ca8a04',
+      'primary-hover': '#a16207',
+      'primary-foreground': '#ffffff',
+      accent: '#eab308',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-grid-puzzle - Grid-Based Puzzle
 // ============================================================================
+
+// ── Reusable main-view effects (grid puzzle board) ──────────────────
+
+const gridPuzzleMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: puzzle icon + title
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'puzzle', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Grid Puzzle' },
+    ]},
+    { type: 'badge', label: 'Playing', variant: 'success', icon: 'zap' },
+  ]},
+  { type: 'divider' },
+  // Stats row: grid size, moves, matches
+  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+    { type: 'stats', label: 'Grid Size', icon: 'grid-3x3', value: '@entity.gridSize' },
+    { type: 'stats', label: 'Moves', icon: 'target', value: '@entity.moves' },
+    { type: 'stats', label: 'Matches', icon: 'star', value: '@entity.matchCount' },
+  ]},
+  { type: 'divider' },
+  // Puzzle grid area
+  { type: 'data-grid', entity: 'GridPuzzleData', columns: 3,
+    fields: [
+      { name: 'gridSize', label: 'Grid', icon: 'grid-3x3', variant: 'h4' },
+      { name: 'moves', label: 'Moves', icon: 'target', variant: 'body' },
+      { name: 'matchCount', label: 'Matches', icon: 'star', variant: 'badge' },
+    ],
+  },
+]}];
+
+const gridPuzzleMatchedMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header with match indicator
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'star', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Match Found!' },
+    ]},
+    { type: 'badge', label: 'Matched', variant: 'warning', icon: 'zap' },
+  ]},
+  { type: 'divider' },
+  // Stats row
+  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+    { type: 'stats', label: 'Moves', icon: 'target', value: '@entity.moves' },
+    { type: 'stats', label: 'Matches', icon: 'star', value: '@entity.matchCount' },
+  ]},
+  { type: 'divider' },
+  { type: 'data-grid', entity: 'GridPuzzleData', columns: 3,
+    fields: [
+      { name: 'gridSize', label: 'Grid', icon: 'grid-3x3', variant: 'h4' },
+      { name: 'moves', label: 'Moves', icon: 'target', variant: 'body' },
+      { name: 'matchCount', label: 'Matches', icon: 'star', variant: 'badge' },
+    ],
+  },
+]}];
+
+const gridPuzzleCompletedMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Victory header
+  { type: 'stack', direction: 'horizontal', justify: 'center', gap: 'sm', children: [
+    { type: 'icon', name: 'trophy', size: 'xl' },
+    { type: 'typography', variant: 'h1', content: 'Puzzle Complete!' },
+  ]},
+  { type: 'divider' },
+  // Final stats
+  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+    { type: 'stats', label: 'Total Moves', icon: 'target', value: '@entity.moves' },
+    { type: 'stats', label: 'Total Matches', icon: 'star', value: '@entity.matchCount' },
+  ]},
+  { type: 'divider' },
+  // Restart button
+  { type: 'stack', direction: 'horizontal', justify: 'center', children: [
+    { type: 'button', label: 'Play Again', icon: 'refresh-cw', variant: 'primary', action: 'RESTART' },
+  ]},
+]}];
 
 /**
  * std-grid-puzzle - Grid-based match puzzle mechanics.
@@ -25,11 +120,12 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
   name: 'std-grid-puzzle',
   version: '1.0.0',
   description: 'Grid-based puzzle with match detection',
+  theme: PUZZLE_THEME,
   orbitals: [
     {
       name: 'GridPuzzleOrbital',
       entity: {
-        name: 'GridPuzzleState',
+        name: 'GridPuzzleData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -42,7 +138,7 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'GridPuzzle',
-          linkedEntity: 'GridPuzzleState',
+          linkedEntity: 'GridPuzzleData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -67,17 +163,11 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 to: 'Playing',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'GridPuzzleState'],
+                  ['fetch', 'GridPuzzleData'],
                   ['set', '@entity.moves', 0],
                   ['set', '@entity.matchCount', 0],
                   ['set', '@entity.isComplete', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Grid Puzzle' }],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'GridPuzzleState',
-                  }],
-                  ['render-ui', 'hud-top', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  gridPuzzleMainEffect,
                 ],
               },
               {
@@ -85,14 +175,9 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 to: 'Playing',
                 event: 'SWAP',
                 effects: [
-                  ['fetch', 'GridPuzzleState'],
+                  ['fetch', 'GridPuzzleData'],
                   ['set', '@entity.moves', ['+', '@entity.moves', 1]],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'GridPuzzleState',
-                  }],
-                  ['render-ui', 'hud-top', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  gridPuzzleMainEffect,
                 ],
               },
               {
@@ -100,14 +185,9 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 to: 'Matched',
                 event: 'MATCH_FOUND',
                 effects: [
-                  ['fetch', 'GridPuzzleState'],
+                  ['fetch', 'GridPuzzleData'],
                   ['set', '@entity.matchCount', ['+', '@entity.matchCount', 1]],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'GridPuzzleState',
-                  }],
-                  ['render-ui', 'hud-top', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  gridPuzzleMatchedMainEffect,
                 ],
               },
               {
@@ -115,10 +195,8 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 to: 'Playing',
                 event: 'SETTLE',
                 effects: [
-                  ['fetch', 'GridPuzzleState'],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'GridPuzzleState',
-                  }],
+                  ['fetch', 'GridPuzzleData'],
+                  gridPuzzleMainEffect,
                 ],
               },
               {
@@ -127,9 +205,7 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 event: 'WIN',
                 effects: [
                   ['set', '@entity.isComplete', true],
-                  ['render-ui', 'main', { type: 'game-over-screen',
-                    title: 'Game Over',
-                  }],
+                  gridPuzzleCompletedMainEffect,
                 ],
               },
               {
@@ -138,9 +214,7 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 event: 'WIN',
                 effects: [
                   ['set', '@entity.isComplete', true],
-                  ['render-ui', 'main', { type: 'game-over-screen',
-                    title: 'Game Over',
-                  }],
+                  gridPuzzleCompletedMainEffect,
                 ],
               },
               {
@@ -148,16 +222,11 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
                 to: 'Playing',
                 event: 'RESTART',
                 effects: [
-                  ['fetch', 'GridPuzzleState'],
+                  ['fetch', 'GridPuzzleData'],
                   ['set', '@entity.moves', 0],
                   ['set', '@entity.matchCount', 0],
                   ['set', '@entity.isComplete', false],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'GridPuzzleState',
-                  }],
-                  ['render-ui', 'hud-top', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  gridPuzzleMainEffect,
                 ],
               },
             ],
@@ -180,6 +249,95 @@ export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
 // std-timer - Game Timer
 // ============================================================================
 
+// ── Reusable main-view effects (timer display) ──────────────────────
+
+const timerIdleMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: timer icon + title
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'timer', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Timer' },
+    ]},
+    { type: 'badge', label: 'Idle', variant: 'default', icon: 'timer' },
+  ]},
+  { type: 'divider' },
+  // Time display
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'stats', label: 'Remaining', icon: 'timer', value: '@entity.remaining' },
+    { type: 'stats', label: 'Total', icon: 'target', value: '@entity.total' },
+  ]},
+  // Progress bar
+  { type: 'progress-bar', value: 0, max: 100, label: 'Time', icon: 'timer' },
+]}];
+
+const timerRunningMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: running state
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'timer', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Timer' },
+    ]},
+    { type: 'badge', label: 'Running', variant: 'success', icon: 'zap' },
+  ]},
+  { type: 'divider' },
+  // Time display
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'stats', label: 'Remaining', icon: 'timer', value: '@entity.remaining' },
+    { type: 'stats', label: 'Total', icon: 'target', value: '@entity.total' },
+  ]},
+  // Progress bar
+  { type: 'progress-bar', value: '@entity.remaining', max: '@entity.total', label: 'Time Left', icon: 'timer' },
+  { type: 'divider' },
+  // Pause button
+  { type: 'stack', direction: 'horizontal', justify: 'center', children: [
+    { type: 'button', label: 'Pause', icon: 'pause-circle', variant: 'secondary', action: 'PAUSE' },
+  ]},
+]}];
+
+const timerPausedMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: paused state
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'timer', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Timer' },
+    ]},
+    { type: 'badge', label: 'Paused', variant: 'warning', icon: 'pause-circle' },
+  ]},
+  { type: 'divider' },
+  // Time display
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'stats', label: 'Remaining', icon: 'timer', value: '@entity.remaining' },
+    { type: 'stats', label: 'Total', icon: 'target', value: '@entity.total' },
+  ]},
+  // Progress bar
+  { type: 'progress-bar', value: '@entity.remaining', max: '@entity.total', label: 'Paused', icon: 'pause-circle' },
+  { type: 'divider' },
+  // Resume button
+  { type: 'stack', direction: 'horizontal', justify: 'center', children: [
+    { type: 'button', label: 'Resume', icon: 'play-circle', variant: 'primary', action: 'RESUME' },
+  ]},
+]}];
+
+const timerExpiredMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: expired state
+  { type: 'stack', direction: 'horizontal', justify: 'center', gap: 'sm', children: [
+    { type: 'icon', name: 'timer', size: 'xl' },
+    { type: 'typography', variant: 'h1', content: 'Time Expired' },
+  ]},
+  { type: 'divider' },
+  // Final stats
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'stats', label: 'Duration', icon: 'target', value: '@entity.total' },
+  ]},
+  // Progress bar at zero
+  { type: 'progress-bar', value: 0, max: '@entity.total', label: 'Expired', icon: 'timer' },
+  { type: 'divider' },
+  // Reset button
+  { type: 'stack', direction: 'horizontal', justify: 'center', children: [
+    { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'primary', action: 'RESET' },
+  ]},
+]}];
+
 /**
  * std-timer - Countdown timer for timed game modes.
  *
@@ -190,11 +348,12 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
   name: 'std-timer',
   version: '1.0.0',
   description: 'Countdown timer with pause and expiry',
+  theme: PUZZLE_THEME,
   orbitals: [
     {
       name: 'TimerOrbital',
       entity: {
-        name: 'TimerState',
+        name: 'TimerData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -207,7 +366,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Timer',
-          linkedEntity: 'TimerState',
+          linkedEntity: 'TimerData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -236,10 +395,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.total', 0],
                   ['set', '@entity.isRunning', false],
                   ['set', '@entity.isPaused', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Timer' }],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Time',
-                  }],
+                  timerIdleMainEffect,
                 ],
               },
               {
@@ -251,9 +407,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.remaining', '@payload.duration'],
                   ['set', '@entity.isRunning', true],
                   ['set', '@entity.isPaused', false],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Time',
-                  }],
+                  timerRunningMainEffect,
                 ],
               },
               {
@@ -263,9 +417,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isRunning', false],
                   ['set', '@entity.isPaused', true],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Time',
-                  }],
+                  timerPausedMainEffect,
                 ],
               },
               {
@@ -275,9 +427,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isRunning', true],
                   ['set', '@entity.isPaused', false],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Time',
-                  }],
+                  timerRunningMainEffect,
                 ],
               },
               {
@@ -287,9 +437,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.remaining', 0],
                   ['set', '@entity.isRunning', false],
-                  ['render-ui', 'main', { type: 'game-over-screen',
-                    title: 'Time Expired',
-                  }],
+                  timerExpiredMainEffect,
                 ],
               },
               {
@@ -301,9 +449,7 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.total', 0],
                   ['set', '@entity.isRunning', false],
                   ['set', '@entity.isPaused', false],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Time',
-                  }],
+                  timerIdleMainEffect,
                 ],
               },
             ],
@@ -336,6 +482,74 @@ export const TIMER_BEHAVIOR: OrbitalSchema = {
 // std-scoring-chain - Combo Scoring
 // ============================================================================
 
+// ── Reusable main-view effects (scoring display) ────────────────────
+
+const scoringIdleMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: scoring icon + title
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'trophy', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Combo Scoring' },
+    ]},
+    { type: 'badge', label: 'Ready', variant: 'default', icon: 'target' },
+  ]},
+  { type: 'divider' },
+  // Score stats
+  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+    { type: 'stats', label: 'Score', icon: 'trophy', value: '@entity.totalScore' },
+    { type: 'stats', label: 'Chain', icon: 'zap', value: '@entity.chainLength' },
+    { type: 'stats', label: 'Multiplier', icon: 'star', value: '@entity.multiplier' },
+  ]},
+  // Multiplier meter
+  { type: 'meter', value: '@entity.multiplier', max: 10, label: 'Combo Multiplier', icon: 'zap' },
+]}];
+
+const scoringChainingMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: chaining state
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'zap', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Combo Active!' },
+    ]},
+    { type: 'badge', label: 'Chaining', variant: 'success', icon: 'zap' },
+  ]},
+  { type: 'divider' },
+  // Score stats
+  { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+    { type: 'stats', label: 'Score', icon: 'trophy', value: '@entity.totalScore' },
+    { type: 'stats', label: 'Chain', icon: 'zap', value: '@entity.chainLength' },
+    { type: 'stats', label: 'Multiplier', icon: 'star', value: '@entity.multiplier' },
+  ]},
+  // Multiplier meter (growing)
+  { type: 'meter', value: '@entity.multiplier', max: 10, label: 'Combo Multiplier', icon: 'zap' },
+  { type: 'divider' },
+  // Chain progress
+  { type: 'progress-bar', value: '@entity.chainLength', max: 20, label: 'Chain Length', icon: 'zap' },
+]}];
+
+const scoringBreakingMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: chain broken
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'target', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Chain Broken' },
+    ]},
+    { type: 'badge', label: 'Broken', variant: 'error', icon: 'target' },
+  ]},
+  { type: 'divider' },
+  // Final score
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'stats', label: 'Total Score', icon: 'trophy', value: '@entity.totalScore' },
+  ]},
+  // Meter reset
+  { type: 'meter', value: 1, max: 10, label: 'Multiplier Reset', icon: 'target' },
+  { type: 'divider' },
+  // Resume button
+  { type: 'stack', direction: 'horizontal', justify: 'center', children: [
+    { type: 'button', label: 'Continue', icon: 'refresh-cw', variant: 'primary', action: 'RESUME' },
+  ]},
+]}];
+
 /**
  * std-scoring-chain - Combo-based scoring with multiplier.
  *
@@ -346,11 +560,12 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
   name: 'std-scoring-chain',
   version: '1.0.0',
   description: 'Combo scoring with chain multiplier',
+  theme: PUZZLE_THEME,
   orbitals: [
     {
       name: 'ScoringChainOrbital',
       entity: {
-        name: 'ScoringChainState',
+        name: 'ScoringChainData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -362,7 +577,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'ScoringChain',
-          linkedEntity: 'ScoringChainState',
+          linkedEntity: 'ScoringChainData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -388,10 +603,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.chainLength', 0],
                   ['set', '@entity.multiplier', 1],
                   ['set', '@entity.totalScore', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Scoring' }],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  scoringIdleMainEffect,
                 ],
               },
               {
@@ -402,9 +614,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.chainLength', 1],
                   ['set', '@entity.multiplier', 1],
                   ['set', '@entity.totalScore', ['+', '@entity.totalScore', '@payload.points']],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  scoringChainingMainEffect,
                 ],
               },
               {
@@ -415,9 +625,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.chainLength', ['+', '@entity.chainLength', 1]],
                   ['set', '@entity.multiplier', ['+', '@entity.multiplier', 1]],
                   ['set', '@entity.totalScore', ['+', '@entity.totalScore', ['*', '@payload.points', '@entity.multiplier']]],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  scoringChainingMainEffect,
                 ],
               },
               {
@@ -427,9 +635,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.chainLength', 0],
                   ['set', '@entity.multiplier', 1],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  scoringBreakingMainEffect,
                 ],
               },
               {
@@ -437,9 +643,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
                 to: 'Idle',
                 event: 'RESUME',
                 effects: [
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  scoringIdleMainEffect,
                 ],
               },
               {
@@ -450,9 +654,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.chainLength', 0],
                   ['set', '@entity.multiplier', 1],
                   ['set', '@entity.totalScore', 0],
-                  ['render-ui', 'main', { type: 'score-display',
-                    value: 0, label: 'Score',
-                  }],
+                  scoringIdleMainEffect,
                 ],
               },
             ],

@@ -6,14 +6,91 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * VStack/HStack/Box wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
 
+// ── Shared Platformer Theme ────────────────────────────────────────
+
+const PLATFORMER_THEME = {
+  name: 'game-platformer-red',
+  tokens: {
+    colors: {
+      primary: '#dc2626',
+      'primary-hover': '#b91c1c',
+      'primary-foreground': '#ffffff',
+      accent: '#f87171',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-platformer - Platform Game Character State
 // ============================================================================
+
+// ── Reusable main-view effects (platformer: HUD) ──────────────────
+
+const platformerHudEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: gamepad icon + title
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'gamepad-2', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Platformer' },
+      ]},
+      { type: 'badge', label: 'Active', variant: 'success', icon: 'zap' },
+    ]},
+    { type: 'divider' },
+    // Stats row: lives, position, jump status
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Lives', icon: 'heart', entity: 'PlatformerData' },
+      { type: 'stats', label: 'Level', icon: 'flag', entity: 'PlatformerData' },
+      { type: 'stats', label: 'Position X', icon: 'map', entity: 'PlatformerData' },
+      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'PlatformerData' },
+    ]},
+    { type: 'divider' },
+    // Character info grid
+    { type: 'data-grid', entity: 'PlatformerData', cols: 2, gap: 'md',
+      fields: [
+        { name: 'id', label: 'Character', icon: 'sword', variant: 'h4' },
+        { name: 'level', label: 'Level', icon: 'flag', variant: 'body', format: 'number' },
+        { name: 'lives', label: 'Lives', icon: 'heart', variant: 'body', format: 'number' },
+        { name: 'isJumping', label: 'Jumping', icon: 'zap', variant: 'badge' },
+      ],
+    },
+    { type: 'divider' },
+    // Health meter
+    { type: 'meter', value: 0, label: 'Lives Remaining', icon: 'heart', entity: 'PlatformerData' },
+  ]}],
+];
+
+const platformerGameOverEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Game over header
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
+      { type: 'icon', name: 'trophy', size: 'lg' },
+      { type: 'typography', variant: 'h1', content: 'Game Over' },
+    ]},
+    { type: 'divider' },
+    // Final stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Final Level', icon: 'flag', entity: 'PlatformerData' },
+      { type: 'stats', label: 'Lives Left', icon: 'heart', entity: 'PlatformerData' },
+    ]},
+    { type: 'divider' },
+    // Respawn button
+    { type: 'button', label: 'Respawn', icon: 'star', variant: 'primary', action: 'RESPAWN' },
+  ]}],
+];
 
 /**
  * std-platformer - Platform game character state machine.
@@ -26,11 +103,12 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
   name: 'std-platformer',
   version: '1.0.0',
   description: 'Platform game character state with movement and gravity',
+  theme: PLATFORMER_THEME,
   orbitals: [
     {
       name: 'PlatformerOrbital',
       entity: {
-        name: 'PlatformerState',
+        name: 'PlatformerData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -44,7 +122,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Platformer',
-          linkedEntity: 'PlatformerState',
+          linkedEntity: 'PlatformerData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -75,10 +153,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.x', 0],
                   ['set', '@entity.y', 0],
                   ['set', '@entity.isJumping', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Platformer' }],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -87,9 +162,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'RUN',
                 effects: [
                   ['set', '@entity.x', ['+', '@entity.x', '@payload.direction']],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -98,9 +171,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'RUN',
                 effects: [
                   ['set', '@entity.x', ['+', '@entity.x', '@payload.direction']],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -108,9 +179,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 to: 'Idle',
                 event: 'STOP',
                 effects: [
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -120,9 +189,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isJumping', true],
                   ['set', '@entity.y', ['-', '@entity.y', 10]],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -132,9 +199,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isJumping', true],
                   ['set', '@entity.y', ['-', '@entity.y', 10]],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -142,9 +207,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 to: 'Falling',
                 event: 'FALL',
                 effects: [
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -153,9 +216,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'LAND',
                 effects: [
                   ['set', '@entity.isJumping', false],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -164,9 +225,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'LAND',
                 effects: [
                   ['set', '@entity.isJumping', false],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
               {
@@ -175,9 +234,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'DIE',
                 effects: [
                   ['set', '@entity.lives', ['-', '@entity.lives', 1]],
-                  ['render-ui', 'main', { type: 'game-over-screen',
-                    title: 'Game Over',
-                  }],
+                  ...platformerGameOverEffects,
                 ],
               },
               {
@@ -186,9 +243,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'DIE',
                 effects: [
                   ['set', '@entity.lives', ['-', '@entity.lives', 1]],
-                  ['render-ui', 'main', { type: 'game-over-screen',
-                    title: 'Game Over',
-                  }],
+                  ...platformerGameOverEffects,
                 ],
               },
               {
@@ -197,9 +252,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                 event: 'DIE',
                 effects: [
                   ['set', '@entity.lives', ['-', '@entity.lives', 1]],
-                  ['render-ui', 'main', { type: 'game-over-screen',
-                    title: 'Game Over',
-                  }],
+                  ...platformerGameOverEffects,
                 ],
               },
               {
@@ -211,9 +264,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.x', 0],
                   ['set', '@entity.y', 0],
                   ['set', '@entity.isJumping', false],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...platformerHudEffects,
                 ],
               },
             ],
@@ -246,6 +297,60 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
 // std-tilemap - Tile Map Management
 // ============================================================================
 
+// ── Reusable main-view effects (tilemap: map display) ──────────────
+
+const tilemapDisplayEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: map icon + title + reset button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'map', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Tile Map' },
+      ]},
+      { type: 'button', label: 'Reset View', icon: 'star', variant: 'secondary', action: 'RESET_SCROLL' },
+    ]},
+    { type: 'divider' },
+    // Map stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Width', icon: 'shield', entity: 'TileMapData' },
+      { type: 'stats', label: 'Height', icon: 'shield', entity: 'TileMapData' },
+      { type: 'stats', label: 'Tile Size', icon: 'gamepad-2', entity: 'TileMapData' },
+    ]},
+    { type: 'divider' },
+    // Scroll position info
+    { type: 'data-grid', entity: 'TileMapData', cols: 2, gap: 'md',
+      fields: [
+        { name: 'id', label: 'Map ID', icon: 'map', variant: 'h4' },
+        { name: 'width', label: 'Width', icon: 'shield', variant: 'body', format: 'number' },
+        { name: 'height', label: 'Height', icon: 'shield', variant: 'body', format: 'number' },
+        { name: 'scrollX', label: 'Scroll X', icon: 'zap', variant: 'body', format: 'number' },
+        { name: 'scrollY', label: 'Scroll Y', icon: 'zap', variant: 'body', format: 'number' },
+      ],
+    },
+    { type: 'divider' },
+    // Scroll progress meter
+    { type: 'meter', value: 0, label: 'Scroll Progress', icon: 'map', entity: 'TileMapData' },
+  ]}],
+];
+
+const tilemapLoadingEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Loading header
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'map', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Tile Map' },
+    ]},
+    { type: 'divider' },
+    // Loading indicator
+    { type: 'progress-bar', value: 0, label: 'Loading Map...', icon: 'map' },
+    // Map dimensions preview
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Width', icon: 'shield', entity: 'TileMapData' },
+      { type: 'stats', label: 'Height', icon: 'shield', entity: 'TileMapData' },
+    ]},
+  ]}],
+];
+
 /**
  * std-tilemap - Tile map loading and scroll management.
  *
@@ -256,11 +361,12 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
   name: 'std-tilemap',
   version: '1.0.0',
   description: 'Tile map management with scroll and dimensions',
+  theme: PLATFORMER_THEME,
   orbitals: [
     {
       name: 'TileMapOrbital',
       entity: {
-        name: 'TileMapState',
+        name: 'TileMapData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -274,7 +380,7 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'TileMap',
-          linkedEntity: 'TileMapState',
+          linkedEntity: 'TileMapData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -296,11 +402,8 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
                 to: 'Loading',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'TileMapState'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Tile Map' }],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'TileMapState',
-                  }],
+                  ['fetch', 'TileMapData'],
+                  ...tilemapLoadingEffects,
                 ],
               },
               {
@@ -308,10 +411,8 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'LOADED',
                 effects: [
-                  ['fetch', 'TileMapState'],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'TileMapState',
-                  }],
+                  ['fetch', 'TileMapData'],
+                  ...tilemapDisplayEffects,
                 ],
               },
               {
@@ -319,12 +420,10 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'SCROLL',
                 effects: [
-                  ['fetch', 'TileMapState'],
+                  ['fetch', 'TileMapData'],
                   ['set', '@entity.scrollX', ['+', '@entity.scrollX', '@payload.dx']],
                   ['set', '@entity.scrollY', ['+', '@entity.scrollY', '@payload.dy']],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'TileMapState',
-                  }],
+                  ...tilemapDisplayEffects,
                 ],
               },
               {
@@ -332,12 +431,10 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'RESET_SCROLL',
                 effects: [
-                  ['fetch', 'TileMapState'],
+                  ['fetch', 'TileMapData'],
                   ['set', '@entity.scrollX', 0],
                   ['set', '@entity.scrollY', 0],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'TileMapState',
-                  }],
+                  ...tilemapDisplayEffects,
                 ],
               },
             ],
@@ -360,6 +457,71 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
 // std-powerup - Power-Up Collection
 // ============================================================================
 
+// ── Reusable main-view effects (powerup: HUD) ─────────────────────
+
+const powerupHudEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: zap icon + title
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'zap', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Power-Ups' },
+      ]},
+      { type: 'badge', label: 'Ready', variant: 'primary', icon: 'star' },
+    ]},
+    { type: 'divider' },
+    // Power-up stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Type', icon: 'star', entity: 'PowerUpData' },
+      { type: 'stats', label: 'Duration', icon: 'zap', entity: 'PowerUpData' },
+      { type: 'stats', label: 'Remaining', icon: 'heart', entity: 'PowerUpData' },
+    ]},
+    { type: 'divider' },
+    // Power-up details grid
+    { type: 'data-grid', entity: 'PowerUpData', cols: 2, gap: 'md',
+      fields: [
+        { name: 'id', label: 'Power-Up', icon: 'star', variant: 'h4' },
+        { name: 'type', label: 'Type', icon: 'zap', variant: 'badge' },
+        { name: 'duration', label: 'Duration', icon: 'shield', variant: 'body', format: 'number' },
+        { name: 'remainingTime', label: 'Time Left', icon: 'heart', variant: 'body', format: 'number' },
+        { name: 'isActive', label: 'Active', icon: 'zap', variant: 'badge' },
+      ],
+    },
+    { type: 'divider' },
+    // Duration meter
+    { type: 'meter', value: 0, label: 'Time Remaining', icon: 'zap', entity: 'PowerUpData' },
+  ]}],
+];
+
+const powerupActiveEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Active header
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'zap', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Power-Ups' },
+      ]},
+      { type: 'badge', label: 'Active', variant: 'success', icon: 'zap' },
+    ]},
+    { type: 'divider' },
+    // Active power-up stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Type', icon: 'star', entity: 'PowerUpData' },
+      { type: 'stats', label: 'Remaining', icon: 'heart', entity: 'PowerUpData' },
+    ]},
+    { type: 'divider' },
+    // Duration countdown bar
+    { type: 'progress-bar', value: 0, label: 'Power-Up Duration', icon: 'zap', entity: 'PowerUpData' },
+    // Details
+    { type: 'data-grid', entity: 'PowerUpData', cols: 2, gap: 'md',
+      fields: [
+        { name: 'type', label: 'Type', icon: 'star', variant: 'badge' },
+        { name: 'remainingTime', label: 'Time Left', icon: 'heart', variant: 'body', format: 'number' },
+      ],
+    },
+  ]}],
+];
+
 /**
  * std-powerup - Power-up activation and duration tracking.
  *
@@ -370,11 +532,12 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
   name: 'std-powerup',
   version: '1.0.0',
   description: 'Power-up collection with duration countdown',
+  theme: PLATFORMER_THEME,
   orbitals: [
     {
       name: 'PowerUpOrbital',
       entity: {
-        name: 'PowerUpState',
+        name: 'PowerUpData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -387,7 +550,7 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'PowerUp',
-          linkedEntity: 'PowerUpState',
+          linkedEntity: 'PowerUpData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -412,10 +575,7 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isActive', false],
                   ['set', '@entity.remainingTime', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Power-Ups' }],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...powerupHudEffects,
                 ],
               },
               {
@@ -427,9 +587,7 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.duration', '@payload.duration'],
                   ['set', '@entity.remainingTime', '@payload.duration'],
                   ['set', '@entity.isActive', true],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...powerupActiveEffects,
                 ],
               },
               {
@@ -439,9 +597,7 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isActive', false],
                   ['set', '@entity.remainingTime', 0],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...powerupHudEffects,
                 ],
               },
               {
@@ -450,9 +606,7 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
                 event: 'RESET',
                 effects: [
                   ['set', '@entity.type', 'none'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...powerupHudEffects,
                 ],
               },
             ],
@@ -485,6 +639,94 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
 // std-enemy-ai - Enemy Behavior
 // ============================================================================
 
+// ── Reusable main-view effects (enemy AI: patrol HUD) ──────────────
+
+const enemyPatrolHudEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: sword icon + title + state badge
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'sword', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Enemy AI' },
+      ]},
+      { type: 'badge', label: 'Patrolling', variant: 'primary', icon: 'shield' },
+    ]},
+    { type: 'divider' },
+    // Enemy stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Position X', icon: 'map', entity: 'EnemyData' },
+      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'EnemyData' },
+      { type: 'stats', label: 'Speed', icon: 'zap', entity: 'EnemyData' },
+      { type: 'stats', label: 'Direction', icon: 'flag', entity: 'EnemyData' },
+    ]},
+    { type: 'divider' },
+    // Enemy details grid
+    { type: 'data-grid', entity: 'EnemyData', cols: 2, gap: 'md',
+      fields: [
+        { name: 'id', label: 'Enemy', icon: 'sword', variant: 'h4' },
+        { name: 'speed', label: 'Speed', icon: 'zap', variant: 'body', format: 'number' },
+        { name: 'patrolStart', label: 'Patrol Start', icon: 'flag', variant: 'body', format: 'number' },
+        { name: 'patrolEnd', label: 'Patrol End', icon: 'flag', variant: 'body', format: 'number' },
+        { name: 'direction', label: 'Direction', icon: 'map', variant: 'badge' },
+      ],
+    },
+    { type: 'divider' },
+    // Patrol progress meter
+    { type: 'meter', value: 0, label: 'Patrol Progress', icon: 'shield', entity: 'EnemyData' },
+  ]}],
+];
+
+const enemyChaseHudEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Chase header
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'sword', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Enemy AI' },
+      ]},
+      { type: 'badge', label: 'Chasing', variant: 'warning', icon: 'zap' },
+    ]},
+    { type: 'divider' },
+    // Chase stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Position X', icon: 'map', entity: 'EnemyData' },
+      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'EnemyData' },
+      { type: 'stats', label: 'Speed', icon: 'zap', entity: 'EnemyData' },
+    ]},
+    { type: 'divider' },
+    // Enemy data
+    { type: 'data-grid', entity: 'EnemyData', cols: 2, gap: 'md',
+      fields: [
+        { name: 'id', label: 'Enemy', icon: 'sword', variant: 'h4' },
+        { name: 'speed', label: 'Speed', icon: 'zap', variant: 'body', format: 'number' },
+        { name: 'direction', label: 'Direction', icon: 'map', variant: 'badge' },
+      ],
+    },
+  ]}],
+];
+
+const enemyStunnedHudEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Stunned header
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'sword', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Enemy AI' },
+      ]},
+      { type: 'badge', label: 'Stunned', variant: 'error', icon: 'star' },
+    ]},
+    { type: 'divider' },
+    // Stunned stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Position X', icon: 'map', entity: 'EnemyData' },
+      { type: 'stats', label: 'Position Y', icon: 'map', entity: 'EnemyData' },
+    ]},
+    { type: 'divider' },
+    // Recovery button
+    { type: 'button', label: 'Recover', icon: 'heart', variant: 'primary', action: 'RECOVER' },
+  ]}],
+];
+
 /**
  * std-enemy-ai - Enemy patrol and chase behavior.
  *
@@ -495,11 +737,12 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
   name: 'std-enemy-ai',
   version: '1.0.0',
   description: 'Enemy AI with patrol, chase, and stun behavior',
+  theme: PLATFORMER_THEME,
   orbitals: [
     {
       name: 'EnemyAIOrbital',
       entity: {
-        name: 'EnemyState',
+        name: 'EnemyData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -514,7 +757,7 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'EnemyAI',
-          linkedEntity: 'EnemyState',
+          linkedEntity: 'EnemyData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -535,13 +778,10 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
                 to: 'Patrolling',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'EnemyState'],
+                  ['fetch', 'EnemyData'],
                   ['set', '@entity.x', '@entity.patrolStart'],
                   ['set', '@entity.direction', 1],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Enemy AI' }],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ...enemyPatrolHudEffects,
                 ],
               },
               {
@@ -549,10 +789,8 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
                 to: 'Chasing',
                 event: 'DETECT_PLAYER',
                 effects: [
-                  ['fetch', 'EnemyState'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ['fetch', 'EnemyData'],
+                  ...enemyChaseHudEffects,
                 ],
               },
               {
@@ -560,10 +798,8 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
                 to: 'Patrolling',
                 event: 'LOSE_PLAYER',
                 effects: [
-                  ['fetch', 'EnemyState'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ['fetch', 'EnemyData'],
+                  ...enemyPatrolHudEffects,
                 ],
               },
               {
@@ -571,10 +807,8 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
                 to: 'Stunned',
                 event: 'STUN',
                 effects: [
-                  ['fetch', 'EnemyState'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ['fetch', 'EnemyData'],
+                  ...enemyStunnedHudEffects,
                 ],
               },
               {
@@ -582,10 +816,8 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
                 to: 'Stunned',
                 event: 'STUN',
                 effects: [
-                  ['fetch', 'EnemyState'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ['fetch', 'EnemyData'],
+                  ...enemyStunnedHudEffects,
                 ],
               },
               {
@@ -593,10 +825,8 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
                 to: 'Patrolling',
                 event: 'RECOVER',
                 effects: [
-                  ['fetch', 'EnemyState'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  ['fetch', 'EnemyData'],
+                  ...enemyPatrolHudEffects,
                 ],
               },
             ],

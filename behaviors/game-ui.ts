@@ -7,7 +7,282 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { OrbitalSchema, Effect } from './types.js';
+
+// ============================================================================
+// Shared theme for all game-ui behaviors
+// ============================================================================
+
+const GAME_UI_THEME = {
+  name: 'game-ui-amber',
+  tokens: {
+    colors: {
+      primary: '#d97706',
+      'primary-hover': '#b45309',
+      'primary-foreground': '#ffffff',
+      accent: '#f59e0b',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ============================================================================
+// Asset constants
+// ============================================================================
+
+const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
+const GAME_MANIFEST = {
+  terrain: {
+    stone: '/terrain/Isometric/stoneSide_N.png',
+    dirt: '/terrain/Isometric/dirt_N.png',
+    bridge: '/terrain/Isometric/stoneStep_N.png',
+    wall: '/terrain/Isometric/stoneWallArchway_N.png',
+  },
+  units: {
+    guardian: '/sprite-sheets/guardian-sprite-sheet-se.png',
+    breaker: '/sprite-sheets/breaker-sprite-sheet-se.png',
+    archivist: '/sprite-sheets/archivist-sprite-sheet-se.png',
+  },
+  features: {
+    gold_mine: '/world-map/gold_mine.png',
+    portal: '/world-map/portal_open.png',
+    treasure: '/world-map/treasure_chest_closed.png',
+    battle_marker: '/world-map/battle_marker.png',
+    power_node: '/world-map/power_node.png',
+  },
+};
+
+const TILES_5X5 = [
+  { x: 0, y: 0, terrain: 'stone' }, { x: 1, y: 0, terrain: 'dirt' }, { x: 2, y: 0, terrain: 'stone' }, { x: 3, y: 0, terrain: 'dirt' }, { x: 4, y: 0, terrain: 'stone' },
+  { x: 0, y: 1, terrain: 'dirt' }, { x: 1, y: 1, terrain: 'stone' }, { x: 2, y: 1, terrain: 'dirt' }, { x: 3, y: 1, terrain: 'stone' }, { x: 4, y: 1, terrain: 'dirt' },
+  { x: 0, y: 2, terrain: 'stone' }, { x: 1, y: 2, terrain: 'dirt' }, { x: 2, y: 2, terrain: 'bridge' }, { x: 3, y: 2, terrain: 'dirt' }, { x: 4, y: 2, terrain: 'stone' },
+  { x: 0, y: 3, terrain: 'dirt' }, { x: 1, y: 3, terrain: 'stone' }, { x: 2, y: 3, terrain: 'dirt' }, { x: 3, y: 3, terrain: 'stone' }, { x: 4, y: 3, terrain: 'dirt' },
+  { x: 0, y: 4, terrain: 'stone' }, { x: 1, y: 4, terrain: 'dirt' }, { x: 2, y: 4, terrain: 'stone' }, { x: 3, y: 4, terrain: 'wall' }, { x: 4, y: 4, terrain: 'stone' },
+];
+
+// ============================================================================
+// Shared render-ui compositions
+// ============================================================================
+
+const gameMenuView: Effect = ['render-ui', 'main', {
+  type: 'game-menu',
+  title: '@entity.title',
+  subtitle: 'Press Start to begin',
+  menuItems: [
+    { label: 'Start Game', event: 'START', variant: 'primary' },
+  ],
+}];
+
+const gamePlayingCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'player', x: 2, y: 2, unitType: 'guardian' }],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const gamePlayingHud: Effect = ['render-ui', 'overlay', {
+  type: 'game-hud',
+  position: 'top',
+  elements: [
+    { label: 'Status', value: '@entity.status', icon: 'activity' },
+    { label: 'Time', value: '@entity.playTime', icon: 'clock' },
+    { label: 'Attempts', value: '@entity.attempts', icon: 'hash' },
+  ],
+}];
+
+const gamePlayingActions: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'button', label: 'Pause', action: 'PAUSE', icon: 'pause', variant: 'secondary' },
+    { type: 'button', label: 'End Game', action: 'GAME_OVER', icon: 'square', variant: 'destructive' },
+  ],
+}];
+
+const gamePausedView: Effect = ['render-ui', 'main', {
+  type: 'game-menu',
+  title: 'Paused',
+  subtitle: 'Game is paused',
+  menuItems: [
+    { label: 'Resume', event: 'RESUME', variant: 'primary' },
+    { label: 'Restart', event: 'RESTART', variant: 'secondary' },
+  ],
+}];
+
+const gameOverView: Effect = ['render-ui', 'main', {
+  type: 'game-over-screen',
+  title: 'Game Over',
+  message: 'Better luck next time!',
+  variant: 'defeat',
+  menuItems: [
+    { label: 'Try Again', event: 'RESTART' },
+  ],
+}];
+
+const dialogueModalView: Effect = ['render-ui', 'modal', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'message-square' },
+        { type: 'typography', content: '@entity.speaker', variant: 'h2' },
+      ] },
+    ] },
+    { type: 'divider' },
+    { type: 'typography', content: '@entity.displayedText', variant: 'body' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'typography', content: '@entity.currentNode', variant: 'label' },
+      { type: 'typography', content: '/', variant: 'label' },
+      { type: 'typography', content: '@entity.totalNodes', variant: 'label' },
+    ] },
+    { type: 'progress-bar', value: '@entity.currentNode', max: '@entity.totalNodes' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Next', action: 'NEXT', icon: 'arrow-right', variant: 'primary' },
+      { type: 'button', label: 'Close', action: 'CLOSE', icon: 'x', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const dialogueChoiceModalView: Effect = ['render-ui', 'modal', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'list' },
+        { type: 'typography', content: 'Choose Response', variant: 'h3' },
+      ] },
+    ] },
+    { type: 'divider' },
+    { type: 'typography', content: '@entity.displayedText', variant: 'body' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Continue', action: 'NEXT', icon: 'arrow-right', variant: 'primary' },
+      { type: 'button', label: 'Close', action: 'CLOSE', icon: 'x', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const dialogueHiddenCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'npc', x: 2, y: 2, unitType: 'archivist' }],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: false,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const dialogueHiddenOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'typography', content: 'No active dialogue', variant: 'body' },
+    { type: 'button', label: 'Start Dialogue', action: 'SHOW', icon: 'message-square', variant: 'primary' },
+  ],
+}];
+
+const dialogueShowingCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'npc', x: 2, y: 2, unitType: 'archivist' }],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: false,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const levelBrowsingView: Effect = ['render-ui', 'main', {
+  type: 'game-menu',
+  title: 'Select Level',
+  subtitle: 'Choose your challenge',
+  menuItems: [
+    { label: 'Level 1', event: 'SELECT_LEVEL' },
+    { label: 'Level 2', event: 'SELECT_LEVEL' },
+    { label: 'Level 3', event: 'SELECT_LEVEL' },
+  ],
+}];
+
+const levelBrowsingHud: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Current', value: '@entity.currentLevel', icon: 'target' },
+      { label: 'Total', value: '@entity.totalLevels', icon: 'layers' },
+      { label: 'Completed', value: '@entity.completedLevels', icon: 'check-circle' },
+    ] },
+    { type: 'progress-bar', value: '@entity.completedLevels', max: '@entity.totalLevels' },
+  ],
+}];
+
+const levelPlayingCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'player', x: 2, y: 2, unitType: 'guardian' }],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const levelPlayingHud: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Level', value: '@entity.currentLevel', icon: 'target' },
+      { label: 'Name', value: '@entity.levelName', icon: 'tag' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Complete Level', action: 'COMPLETE_LEVEL', icon: 'check', variant: 'primary' },
+      { type: 'button', label: 'Back to Levels', action: 'BACK_TO_SELECT', icon: 'arrow-left', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const levelCompleteView: Effect = ['render-ui', 'main', {
+  type: 'game-over-screen',
+  title: 'Level Complete',
+  message: 'Well done! Ready for the next challenge?',
+  variant: 'victory',
+  menuItems: [
+    { label: 'Next Level', event: 'COMPLETE_LEVEL' },
+    { label: 'Back to Levels', event: 'BACK_TO_SELECT' },
+  ],
+}];
+
+const levelCompleteHud: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Level', value: '@entity.currentLevel', icon: 'target' },
+      { label: 'Completed', value: '@entity.completedLevels', icon: 'check-circle' },
+    ] },
+    { type: 'progress-bar', value: '@entity.completedLevels', max: '@entity.totalLevels' },
+  ],
+}];
+
+const allLevelsCompleteView: Effect = ['render-ui', 'main', {
+  type: 'game-over-screen',
+  title: 'All Levels Complete',
+  message: 'Congratulations! You conquered every challenge!',
+  variant: 'victory',
+  menuItems: [
+    { label: 'Refresh', event: 'INIT' },
+  ],
+}];
+
+const allLevelsCompleteHud: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Completed', value: '@entity.completedLevels', icon: 'check-circle' },
+      { label: 'Total', value: '@entity.totalLevels', icon: 'layers' },
+    ] },
+    { type: 'progress-bar', value: '@entity.completedLevels', max: '@entity.totalLevels' },
+  ],
+}];
 
 // ============================================================================
 // std-gameflow - Game State Machine
@@ -26,8 +301,9 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'GameFlowOrbital',
+      theme: GAME_UI_THEME,
       entity: {
-        name: 'GameFlowState',
+        name: 'GameFlowData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -40,7 +316,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'GameFlow',
-          linkedEntity: 'GameFlowState',
+          linkedEntity: 'GameFlowData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -63,8 +339,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 to: 'Menu',
                 event: 'INIT',
                 effects: [
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Menu' }],
-                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Start Game', event: 'START' }] }, { entity: 'GameFlowState' }],
+                  gameMenuView,
                 ],
               },
               {
@@ -72,14 +347,12 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 to: 'Playing',
                 event: 'START',
                 effects: [
-                  ['fetch', 'GameFlowState'],
+                  ['fetch', 'GameFlowData'],
                   ['set', '@entity.attempts', ['+', '@entity.attempts', 1]],
                   ['set', '@entity.playTime', 0],
                   ['set', '@entity.status', 'playing'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Playing' }],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'GameFlowState',
-                  }],
+                  gamePlayingCanvasView,
+                  gamePlayingHud,
                 ],
               },
               {
@@ -88,11 +361,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 event: 'PAUSE',
                 effects: [
                   ['set', '@entity.status', 'paused'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Paused' }],
-                  ['render-ui', 'main', { type: 'card', actions: [
-                      { label: 'Resume', event: 'RESUME' },
-                      { label: 'Restart', event: 'RESTART' },
-                    ] }, { entity: 'GameFlowState' }],
+                  gamePausedView,
                 ],
               },
               {
@@ -100,12 +369,10 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 to: 'Playing',
                 event: 'RESUME',
                 effects: [
-                  ['fetch', 'GameFlowState'],
+                  ['fetch', 'GameFlowData'],
                   ['set', '@entity.status', 'playing'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Playing' }],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'GameFlowState',
-                  }],
+                  gamePlayingCanvasView,
+                  gamePlayingHud,
                 ],
               },
               {
@@ -114,8 +381,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 event: 'GAME_OVER',
                 effects: [
                   ['set', '@entity.status', 'gameover'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Over' }],
-                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Try Again', event: 'RESTART' }] }, { entity: 'GameFlowState' }],
+                  gameOverView,
                 ],
               },
               {
@@ -125,8 +391,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.status', 'menu'],
                   ['set', '@entity.playTime', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Menu' }],
-                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Start Game', event: 'START' }] }, { entity: 'GameFlowState' }],
+                  gameMenuView,
                 ],
               },
               {
@@ -136,8 +401,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.status', 'menu'],
                   ['set', '@entity.playTime', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Menu' }],
-                  ['render-ui', 'main', { type: 'card', actions: [{ label: 'Start Game', event: 'START' }] }, { entity: 'GameFlowState' }],
+                  gameMenuView,
                 ],
               },
             ],
@@ -173,8 +437,9 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'DialogueOrbital',
+      theme: GAME_UI_THEME,
       entity: {
-        name: 'DialogueState',
+        name: 'DialogueData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -187,7 +452,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Dialogue',
-          linkedEntity: 'DialogueState',
+          linkedEntity: 'DialogueData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -215,8 +480,9 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                 to: 'Hidden',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'DialogueState'],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'DialogueState' }],
+                  ['fetch', 'DialogueData'],
+                  dialogueHiddenCanvasView,
+                  dialogueHiddenOverlay,
                 ],
               },
               {
@@ -224,17 +490,13 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                 to: 'Showing',
                 event: 'SHOW',
                 effects: [
-                  ['fetch', 'DialogueState'],
+                  ['fetch', 'DialogueData'],
                   ['set', '@entity.speaker', '@payload.speaker'],
                   ['set', '@entity.displayedText', '@payload.text'],
                   ['set', '@entity.totalNodes', '@payload.totalNodes'],
                   ['set', '@entity.currentNode', 0],
-                  ['render-ui', 'modal', { type: 'detail-panel', entity: 'DialogueState',
-                    actions: [
-                      { label: 'Next', event: 'NEXT' },
-                      { label: 'Close', event: 'CLOSE' },
-                    ],
-                  }],
+                  dialogueShowingCanvasView,
+                  dialogueModalView,
                 ],
               },
               {
@@ -243,14 +505,10 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                 event: 'NEXT',
                 guard: ['<', '@entity.currentNode', ['-', '@entity.totalNodes', 1]],
                 effects: [
-                  ['fetch', 'DialogueState'],
+                  ['fetch', 'DialogueData'],
                   ['set', '@entity.currentNode', ['+', '@entity.currentNode', 1]],
-                  ['render-ui', 'modal', { type: 'detail-panel', entity: 'DialogueState',
-                    actions: [
-                      { label: 'Next', event: 'NEXT' },
-                      { label: 'Close', event: 'CLOSE' },
-                    ],
-                  }],
+                  dialogueShowingCanvasView,
+                  dialogueModalView,
                 ],
               },
               {
@@ -269,10 +527,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                 to: 'Choice',
                 event: 'SELECT_CHOICE',
                 effects: [
-                  ['render-ui', 'modal', { type: 'card', actions: [
-                      { label: 'Continue', event: 'NEXT' },
-                      { label: 'Close', event: 'CLOSE' },
-                    ] }, { entity: 'DialogueState' }],
+                  dialogueChoiceModalView,
                 ],
               },
               {
@@ -280,14 +535,10 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
                 to: 'Showing',
                 event: 'NEXT',
                 effects: [
-                  ['fetch', 'DialogueState'],
+                  ['fetch', 'DialogueData'],
                   ['set', '@entity.currentNode', ['+', '@entity.currentNode', 1]],
-                  ['render-ui', 'modal', { type: 'detail-panel', entity: 'DialogueState',
-                    actions: [
-                      { label: 'Next', event: 'NEXT' },
-                      { label: 'Close', event: 'CLOSE' },
-                    ],
-                  }],
+                  dialogueShowingCanvasView,
+                  dialogueModalView,
                 ],
               },
               {
@@ -363,8 +614,9 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'LevelProgressOrbital',
+      theme: GAME_UI_THEME,
       entity: {
-        name: 'LevelState',
+        name: 'LevelData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -378,7 +630,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'LevelProgress',
-          linkedEntity: 'LevelState',
+          linkedEntity: 'LevelData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -399,15 +651,10 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                 to: 'Browsing',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'LevelState'],
+                  ['fetch', 'LevelData'],
                   ['set', '@entity.status', 'browsing'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Select Level' }],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'LevelState',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  levelBrowsingView,
+                  levelBrowsingHud,
                 ],
               },
               {
@@ -416,13 +663,11 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                 event: 'SELECT_LEVEL',
                 guard: ['<=', '@payload.level', '@entity.totalLevels'],
                 effects: [
-                  ['fetch', 'LevelState'],
+                  ['fetch', 'LevelData'],
                   ['set', '@entity.currentLevel', '@payload.level'],
                   ['set', '@entity.status', 'playing'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Playing Level' }],
-                  ['render-ui', 'main', { type: 'stats', 
-                    entity: 'LevelState',
-                  }],
+                  levelPlayingCanvasView,
+                  levelPlayingHud,
                 ],
               },
               {
@@ -433,11 +678,8 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.completedLevels', ['+', '@entity.completedLevels', 1]],
                   ['set', '@entity.currentLevel', ['+', '@entity.currentLevel', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Level Complete' }],
-                  ['render-ui', 'main', { type: 'card', actions: [
-                      { label: 'Next Level', event: 'COMPLETE_LEVEL' },
-                      { label: 'Back to Levels', event: 'BACK_TO_SELECT' },
-                    ] }, { entity: 'LevelState' }],
+                  levelCompleteView,
+                  levelCompleteHud,
                 ],
               },
               {
@@ -446,16 +688,11 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                 event: 'COMPLETE_LEVEL',
                 guard: ['>=', '@entity.currentLevel', '@entity.totalLevels'],
                 effects: [
-                  ['fetch', 'LevelState'],
+                  ['fetch', 'LevelData'],
                   ['set', '@entity.completedLevels', ['+', '@entity.completedLevels', 1]],
                   ['set', '@entity.status', 'browsing'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'All Levels Complete' }],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'LevelState',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  allLevelsCompleteView,
+                  allLevelsCompleteHud,
                 ],
               },
               {
@@ -463,15 +700,10 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
                 to: 'Browsing',
                 event: 'BACK_TO_SELECT',
                 effects: [
-                  ['fetch', 'LevelState'],
+                  ['fetch', 'LevelData'],
                   ['set', '@entity.status', 'browsing'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Select Level' }],
-                  ['render-ui', 'main', { type: 'entity-cards', 
-                    entity: 'LevelState',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  levelBrowsingView,
+                  levelBrowsingHud,
                 ],
               },
             ],

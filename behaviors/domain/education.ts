@@ -6,10 +6,228 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * VStack/HStack/Box wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
+
+// ── Shared Education Theme ──────────────────────────────────────────
+
+const EDUCATION_THEME = {
+  name: 'education-blue',
+  tokens: {
+    colors: {
+      primary: '#2563eb',
+      'primary-hover': '#1d4ed8',
+      'primary-foreground': '#ffffff',
+      accent: '#3b82f6',
+      'accent-foreground': '#ffffff',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ── Reusable main-view effects (quiz browsing) ──────────────────────
+
+const quizBrowsingEffects = [
+  ['fetch', 'Quiz'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: graduation cap icon + title
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'graduation-cap', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Quizzes' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Quiz card list
+    { type: 'data-list', entity: 'Quiz', variant: 'card',
+      fields: [
+        { name: 'title', label: 'Title', icon: 'book-open', variant: 'h4' },
+        { name: 'totalQuestions', label: 'Questions', icon: 'clipboard', variant: 'body' },
+        { name: 'score', label: 'Best Score', icon: 'award', variant: 'badge' },
+      ],
+      itemActions: [
+        { label: 'Start', event: 'START', icon: 'play' },
+      ],
+    },
+  ]}],
+];
+
+// ── Reusable main-view effects (quiz taking) ────────────────────────
+
+const quizTakingEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: brain icon + "Taking Quiz"
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'brain', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Taking Quiz' },
+    ]},
+    { type: 'divider' },
+    // Wizard progress bar
+    { type: 'wizard-progress',
+      currentStep: '@entity.currentQuestion',
+      steps: [{ label: 'Question 1' }, { label: 'Question 2' }, { label: 'Question 3' }],
+    },
+    // Question area
+    { type: 'stack', direction: 'vertical', gap: 'md', children: [
+      { type: 'typography', variant: 'h3', content: 'Question' },
+      { type: 'typography', variant: 'body', content: 'Answer the question below.' },
+    ]},
+    // Progress indicator
+    { type: 'progress-bar', value: '@entity.currentQuestion', max: '@entity.totalQuestions', label: 'Progress' },
+  ]}],
+];
+
+// ── Reusable main-view effects (progress browsing) ──────────────────
+
+const progressBrowsingEffects = [
+  ['fetch', 'LearningProgress'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: book icon + title
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'book-open', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Learning Progress' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Summary stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Courses', icon: 'graduation-cap', entity: 'LearningProgress' },
+      { type: 'stats', label: 'Completed', icon: 'check-circle', entity: 'LearningProgress' },
+      { type: 'stats', label: 'In Progress', icon: 'clock', entity: 'LearningProgress' },
+    ]},
+    { type: 'divider' },
+    // Progress card list
+    { type: 'data-list', entity: 'LearningProgress', variant: 'card',
+      fields: [
+        { name: 'courseName', label: 'Course', icon: 'book-open', variant: 'h4' },
+        { name: 'completed', label: 'Completed', icon: 'check-circle', variant: 'body' },
+        { name: 'total', label: 'Total', icon: 'clipboard', variant: 'body' },
+        { name: 'percentage', label: 'Completion', icon: 'award', variant: 'badge', format: 'percent' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'VIEW', icon: 'eye' },
+      ],
+    },
+  ]}],
+];
+
+// ── Reusable main-view effects (grades browsing) ────────────────────
+
+const gradesBrowsingEffects = [
+  ['fetch', 'Grade'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: award icon + title
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'award', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Grades' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Stats row + chart
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Students', icon: 'users', entity: 'Grade' },
+      { type: 'stats', label: 'Avg Score', icon: 'bar-chart-2', entity: 'Grade' },
+      { type: 'stats', label: 'Submissions', icon: 'clipboard', entity: 'Grade' },
+    ]},
+    { type: 'line-chart', entity: 'Grade' },
+    { type: 'meter', value: 0, label: 'Average Score' },
+    { type: 'divider' },
+    // Grade data grid
+    { type: 'data-grid', entity: 'Grade',
+      columns: [
+        { name: 'studentName', label: 'Student', icon: 'users' },
+        { name: 'assignment', label: 'Assignment', icon: 'pen-tool' },
+        { name: 'score', label: 'Score', icon: 'award', format: 'number' },
+        { name: 'maxScore', label: 'Max', icon: 'target', format: 'number' },
+      ],
+      itemActions: [
+        { label: 'Grade', event: 'START_GRADING', icon: 'pen-tool' },
+      ],
+    },
+  ]}],
+];
+
+// ── Reusable main-view effects (curriculum browsing) ────────────────
+
+const curriculumBrowsingEffects = [
+  ['fetch', 'Course'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: graduation cap + title + search
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'graduation-cap', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Course Catalog' },
+      ]},
+      { type: 'search-input', placeholder: 'Search courses...', entity: 'Course' },
+    ]},
+    { type: 'divider' },
+    // Course card list
+    { type: 'data-list', entity: 'Course', variant: 'card',
+      fields: [
+        { name: 'title', label: 'Title', icon: 'book-open', variant: 'h4' },
+        { name: 'description', label: 'Description', icon: 'file-text', variant: 'body' },
+        { name: 'modules', label: 'Modules', icon: 'layers', variant: 'body' },
+        { name: 'duration', label: 'Duration', icon: 'clock', variant: 'caption' },
+        { name: 'level', label: 'Level', icon: 'bar-chart-2', variant: 'badge' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'VIEW', icon: 'eye' },
+      ],
+    },
+  ]}],
+];
+
+// ── Course detail view effects ──────────────────────────────────────
+
+const courseDetailEffects = [
+  ['fetch', 'Course'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header with back + enroll buttons
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'book-open', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Course Details' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+        { type: 'button', label: 'Enroll', icon: 'check-circle', variant: 'primary', action: 'ENROLL' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Course progress
+    { type: 'progress-bar', value: 0, label: 'Course Progress' },
+    // Course info fields
+    { type: 'stack', direction: 'vertical', gap: 'md', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'layers' },
+        { type: 'typography', variant: 'body', content: 'Modules' },
+        { type: 'badge', content: '@entity.modules' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'clock' },
+        { type: 'typography', variant: 'body', content: 'Duration' },
+        { type: 'badge', content: '@entity.duration' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'bar-chart-2' },
+        { type: 'typography', variant: 'body', content: 'Level' },
+        { type: 'badge', content: '@entity.level' },
+      ]},
+    ]},
+    { type: 'divider' },
+    { type: 'typography', variant: 'body', content: '@entity.description' },
+  ]}],
+];
 
 // ============================================================================
 // std-quiz - Quiz System
@@ -26,6 +244,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'QuizOrbital',
+      theme: EDUCATION_THEME,
       entity: {
         name: 'Quiz',
         persistence: 'persistent',
@@ -65,14 +284,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 to: 'idle',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'Quiz'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Quizzes' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Quiz',
-                    itemActions: [
-                      { label: 'Start', event: 'START' },
-                    ],
-                  }],
+                  ...quizBrowsingEffects,
                 ],
               },
               {
@@ -82,18 +294,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.currentQuestion', 1],
                   ['set', '@entity.score', 0],
-                  ['render-ui', 'main', { type: 'wizard-progress',
-                    currentStep: 1,
-                    steps: [{ label: 'Question 1' }, { label: 'Question 2' }, { label: 'Question 3' }],
-                  }],
-                  ['render-ui', 'main', { type: 'flip-card',
-                    front: 'Question',
-                    back: 'Answer',
-                  }],
-                  ['render-ui', 'main', { type: 'progress-dots',
-                    count: 3,
-                    currentIndex: 0,
-                  }],
+                  ...quizTakingEffects,
                 ],
               },
               {
@@ -103,18 +304,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 guard: ['<', '@entity.currentQuestion', '@entity.totalQuestions'],
                 effects: [
                   ['set', '@entity.currentQuestion', ['+', '@entity.currentQuestion', 1]],
-                  ['render-ui', 'main', { type: 'wizard-progress',
-                    currentStep: '@entity.currentQuestion',
-                    steps: [{ label: 'Question 1' }, { label: 'Question 2' }, { label: 'Question 3' }],
-                  }],
-                  ['render-ui', 'main', { type: 'flip-card',
-                    front: 'Question',
-                    back: 'Answer',
-                  }],
-                  ['render-ui', 'main', { type: 'progress-dots',
-                    count: 3,
-                    currentIndex: '@entity.currentQuestion',
-                  }],
+                  ...quizTakingEffects,
                 ],
               },
               {
@@ -124,9 +314,35 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 guard: ['>=', '@entity.currentQuestion', '@entity.totalQuestions'],
                 effects: [
                   ['fetch', 'Quiz'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Quiz Review' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Quiz' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'Quiz' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Review header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'clipboard', size: 'lg' },
+                      { type: 'typography', variant: 'h2', content: 'Quiz Review' },
+                    ]},
+                    { type: 'divider' },
+                    // Score stats
+                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+                      { type: 'stats', label: 'Score', icon: 'award', entity: 'Quiz' },
+                      { type: 'stats', label: 'Questions', icon: 'clipboard', entity: 'Quiz' },
+                    ]},
+                    // Score meter
+                    { type: 'meter', value: '@entity.score', label: 'Score' },
+                    // Detail fields
+                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'book-open' },
+                        { type: 'typography', variant: 'body', content: '@entity.title' },
+                      ]},
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'check-circle' },
+                        { type: 'typography', variant: 'body', content: 'Correct answers:' },
+                        { type: 'badge', content: '@entity.score' },
+                      ]},
+                    ]},
+                    // Action button
+                    { type: 'button', label: 'Finish', icon: 'check-circle', variant: 'primary', action: 'FINISH' },
+                  ]}],
                 ],
               },
               {
@@ -135,8 +351,21 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 event: 'FINISH',
                 effects: [
                   ['fetch', 'Quiz'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Quiz Complete' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Quiz' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Completed header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'check-circle', size: 'lg' },
+                      { type: 'typography', variant: 'h2', content: 'Quiz Complete' },
+                    ]},
+                    { type: 'divider' },
+                    // Final stats
+                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+                      { type: 'stats', label: 'Final Score', icon: 'award', entity: 'Quiz' },
+                      { type: 'stats', label: 'Total Questions', icon: 'clipboard', entity: 'Quiz' },
+                    ]},
+                    // Reset button
+                    { type: 'button', label: 'Try Again', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
+                  ]}],
                 ],
               },
               {
@@ -146,14 +375,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.currentQuestion', 0],
                   ['set', '@entity.score', 0],
-                  ['fetch', 'Quiz'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Quizzes' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Quiz',
-                    itemActions: [
-                      { label: 'Start', event: 'START' },
-                    ],
-                  }],
+                  ...quizBrowsingEffects,
                 ],
               },
             ],
@@ -187,6 +409,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'ProgressTrackerOrbital',
+      theme: EDUCATION_THEME,
       entity: {
         name: 'LearningProgress',
         persistence: 'persistent',
@@ -220,15 +443,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'LearningProgress'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Learning Progress' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'LearningProgress' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LearningProgress',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...progressBrowsingEffects,
                 ],
               },
               {
@@ -237,12 +452,31 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'LearningProgress'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Progress Detail',
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Progress' }],
-                  ['render-ui', 'main', { type: 'meter', value: '@entity.percentage', label: 'Completion' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'LearningProgress' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Detail header with back button
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'book-open', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Progress Detail' },
+                      ]},
+                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+                    ]},
+                    { type: 'divider' },
+                    // Course name
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'graduation-cap' },
+                      { type: 'typography', variant: 'h3', content: '@entity.courseName' },
+                    ]},
+                    // Progress visuals
+                    { type: 'progress-bar', value: '@entity.percentage', label: 'Progress' },
+                    { type: 'meter', value: '@entity.percentage', label: 'Completion' },
+                    // Detail stats
+                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+                      { type: 'stats', label: 'Completed', icon: 'check-circle', entity: 'LearningProgress' },
+                      { type: 'stats', label: 'Remaining', icon: 'clock', entity: 'LearningProgress' },
+                      { type: 'stats', label: 'Percentage', icon: 'award', entity: 'LearningProgress' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -250,15 +484,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'BACK',
                 effects: [
-                  ['fetch', 'LearningProgress'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Learning Progress' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'LearningProgress' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LearningProgress',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...progressBrowsingEffects,
                 ],
               },
             ],
@@ -292,6 +518,7 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'GradingOrbital',
+      theme: EDUCATION_THEME,
       entity: {
         name: 'Grade',
         persistence: 'persistent',
@@ -328,17 +555,7 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'Grade'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Grades' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'chart', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Average Score' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Grade',
-                    itemActions: [
-                      { label: 'Grade', event: 'START_GRADING' },
-                    ],
-                  }],
+                  ...gradesBrowsingEffects,
                 ],
               },
               {
@@ -347,10 +564,25 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 event: 'START_GRADING',
                 effects: [
                   ['fetch', 'Grade'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Enter Grade',
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Grading header with back
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'pen-tool', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Enter Grade' },
+                      ]},
+                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+                    ]},
+                    { type: 'divider' },
+                    // Student info
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'users' },
+                      { type: 'typography', variant: 'h3', content: '@entity.studentName' },
+                      { type: 'badge', content: '@entity.assignment' },
+                    ]},
+                    // Grade form
+                    { type: 'form-section', entity: 'Grade' },
+                  ]}],
                 ],
               },
               {
@@ -361,12 +593,39 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Grade'],
                   ['set', '@entity.score', '@payload.score'],
                   ['set', '@entity.feedback', '@payload.feedback'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Grade Submitted',
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'meter', value: '@entity.score', label: 'Score' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'Grade' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Submitted header with back
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'check-circle', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Grade Submitted' },
+                      ]},
+                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
+                    ]},
+                    { type: 'divider' },
+                    // Result stats
+                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+                      { type: 'stats', label: 'Score', icon: 'award', entity: 'Grade' },
+                      { type: 'stats', label: 'Max Score', icon: 'target', entity: 'Grade' },
+                    ]},
+                    // Score meter
+                    { type: 'meter', value: '@entity.score', label: 'Score' },
+                    // Detail fields
+                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'users' },
+                        { type: 'typography', variant: 'body', content: '@entity.studentName' },
+                      ]},
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'pen-tool' },
+                        { type: 'typography', variant: 'body', content: '@entity.assignment' },
+                      ]},
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'message-square' },
+                        { type: 'typography', variant: 'body', content: '@entity.feedback' },
+                      ]},
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -374,17 +633,7 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'BACK',
                 effects: [
-                  ['fetch', 'Grade'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Grades' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'chart', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Average Score' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Grade',
-                    itemActions: [
-                      { label: 'Grade', event: 'START_GRADING' },
-                    ],
-                  }],
+                  ...gradesBrowsingEffects,
                 ],
               },
               {
@@ -392,17 +641,7 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'BACK',
                 effects: [
-                  ['fetch', 'Grade'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Grades' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'chart', entity: 'Grade' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Average Score' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Grade',
-                    itemActions: [
-                      { label: 'Grade', event: 'START_GRADING' },
-                    ],
-                  }],
+                  ...gradesBrowsingEffects,
                 ],
               },
             ],
@@ -436,6 +675,7 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'CurriculumOrbital',
+      theme: EDUCATION_THEME,
       entity: {
         name: 'Course',
         persistence: 'persistent',
@@ -474,14 +714,7 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'Course'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Catalog' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Course',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...curriculumBrowsingEffects,
                 ],
               },
               {
@@ -489,21 +722,7 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 to: 'viewing',
                 event: 'VIEW',
                 effects: [
-                  ['fetch', 'Course'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Details',
-                    actions: [{ label: 'Back', event: 'BACK' }, { label: 'Enroll', event: 'ENROLL' }],
-                  }],
-                  ['render-ui', 'main', { type: 'progress-bar',
-                    value: 0,
-                    label: 'Course Progress',
-                  }],
-                  ['render-ui', 'main', { type: 'accordion',
-                    items: [
-                      { id: 'overview', title: 'Course Overview', content: 'Overview' },
-                      { id: 'modules', title: 'Modules', content: 'Module list' },
-                      { id: 'requirements', title: 'Requirements', content: 'Prerequisites' },
-                    ],
-                  }],
+                  ...courseDetailEffects,
                 ],
               },
               {
@@ -511,12 +730,19 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 to: 'enrolling',
                 event: 'ENROLL',
                 effects: [
-                  ['render-ui', 'modal', { type: 'confirm-dialog',
-                    title: 'Enroll in Course',
-                    message: 'Are you sure you want to enroll in this course?',
-                    confirmText: 'Confirm',
-                    cancelText: 'Cancel',
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    // Enrollment confirmation modal
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'graduation-cap', size: 'lg' },
+                      { type: 'typography', variant: 'h3', content: 'Enroll in Course' },
+                    ]},
+                    { type: 'divider' },
+                    { type: 'typography', variant: 'body', content: 'Are you sure you want to enroll in this course?' },
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
+                      { type: 'button', label: 'Cancel', icon: 'x', variant: 'secondary', action: 'CANCEL' },
+                      { type: 'button', label: 'Confirm', icon: 'check-circle', variant: 'primary', action: 'CONFIRM' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -525,14 +751,7 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 event: 'CONFIRM',
                 effects: [
                   ['render-ui', 'modal', null],
-                  ['fetch', 'Course'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Catalog' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Course',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...curriculumBrowsingEffects,
                 ],
               },
               {
@@ -540,22 +759,8 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 to: 'viewing',
                 event: 'CANCEL',
                 effects: [
-                  ['fetch', 'Course'],
                   ['render-ui', 'modal', null],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Details',
-                    actions: [{ label: 'Back', event: 'BACK' }, { label: 'Enroll', event: 'ENROLL' }],
-                  }],
-                  ['render-ui', 'main', { type: 'progress-bar',
-                    value: 0,
-                    label: 'Course Progress',
-                  }],
-                  ['render-ui', 'main', { type: 'accordion',
-                    items: [
-                      { id: 'overview', title: 'Course Overview', content: 'Overview' },
-                      { id: 'modules', title: 'Modules', content: 'Module list' },
-                      { id: 'requirements', title: 'Requirements', content: 'Prerequisites' },
-                    ],
-                  }],
+                  ...courseDetailEffects,
                 ],
               },
               {
@@ -563,14 +768,7 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
                 to: 'browsing',
                 event: 'BACK',
                 effects: [
-                  ['fetch', 'Course'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Course Catalog' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Course',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...curriculumBrowsingEffects,
                 ],
               },
             ],

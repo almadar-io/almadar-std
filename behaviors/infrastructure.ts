@@ -8,7 +8,245 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { OrbitalSchema, Effect } from './types.js';
+
+// ============================================================================
+// Shared theme for all infrastructure behaviors
+// ============================================================================
+
+const INFRA_THEME = {
+  name: 'infra-stone',
+  tokens: {
+    colors: {
+      primary: '#57534e',
+      'primary-hover': '#44403c',
+      'primary-foreground': '#ffffff',
+      accent: '#78716c',
+      'accent-foreground': '#ffffff',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ============================================================================
+// Shared render-ui compositions
+// ============================================================================
+
+const circuitBreakerMainView: Effect = ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'shield-check', size: 'lg' },
+        { type: 'typography', content: 'Circuit Breaker', variant: 'h2' },
+      ] },
+      { type: 'badge', label: '@entity.circuitState', icon: 'circle-dot', variant: 'success' },
+    ] },
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.errorCount', max: '@entity.errorThreshold', label: 'Error Rate' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Errors', value: '@entity.errorCount', icon: 'x-circle' },
+      { type: 'stat-card', label: 'Successes', value: '@entity.successCount', icon: 'check-circle' },
+      { type: 'stat-card', label: 'Total', value: '@entity.totalCount', icon: 'hash' },
+      { type: 'stat-card', label: 'Threshold', value: '@entity.errorThreshold', icon: 'alert-triangle' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Simulate Success', action: 'SUCCESS', icon: 'check', variant: 'primary' },
+      { type: 'button', label: 'Simulate Failure', action: 'FAILURE', icon: 'x', variant: 'secondary' },
+      { type: 'button', label: 'Reset', action: 'RESET', icon: 'refresh-cw', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const circuitBreakerOpenView: Effect = ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'shield-alert', size: 'lg' },
+        { type: 'typography', content: 'Circuit Breaker - OPEN', variant: 'h2' },
+      ] },
+      { type: 'badge', label: 'OPEN', icon: 'alert-circle', variant: 'danger' },
+    ] },
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.errorCount', max: '@entity.errorThreshold', label: 'Errors' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Errors', value: '@entity.errorCount', icon: 'x-circle' },
+      { type: 'stat-card', label: 'Successes', value: '@entity.successCount', icon: 'check-circle' },
+      { type: 'stat-card', label: 'Total', value: '@entity.totalCount', icon: 'hash' },
+      { type: 'stat-card', label: 'Error Rate', value: '@entity.errorRate', icon: 'percent' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Try Half-Open', action: 'HALF_OPEN', icon: 'shield-question', variant: 'primary' },
+      { type: 'button', label: 'Reset', action: 'RESET', icon: 'refresh-cw', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const circuitBreakerHalfOpenView: Effect = ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'shield-question', size: 'lg' },
+        { type: 'typography', content: 'Circuit Breaker - Half Open', variant: 'h2' },
+      ] },
+      { type: 'badge', label: 'HALF-OPEN', icon: 'alert-triangle', variant: 'warning' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Errors', value: '@entity.errorCount', icon: 'x-circle' },
+      { type: 'stat-card', label: 'Successes', value: '@entity.successCount', icon: 'check-circle' },
+      { type: 'stat-card', label: 'Attempts', value: '@entity.halfOpenAttempts', icon: 'rotate-cw' },
+      { type: 'stat-card', label: 'Error Rate', value: '@entity.errorRate', icon: 'percent' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Test Success', action: 'SUCCESS', icon: 'check', variant: 'primary' },
+      { type: 'button', label: 'Test Failure', action: 'FAILURE', icon: 'x', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const healthCheckView = (title: string, statusVariant: string): Effect => ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'activity', size: 'lg' },
+        { type: 'typography', content: title, variant: 'h2' },
+      ] },
+      { type: 'badge', label: '@entity.healthStatus', icon: 'heart-pulse', variant: statusVariant },
+    ] },
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.consecutiveFailures', max: '@entity.unhealthyThreshold', label: 'Failure Threshold' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Failures', value: '@entity.consecutiveFailures', icon: 'x-circle' },
+      { type: 'stat-card', label: 'Successes', value: '@entity.consecutiveSuccesses', icon: 'check-circle' },
+      { type: 'stat-card', label: 'Total Checks', value: '@entity.totalChecks', icon: 'clipboard-check' },
+      { type: 'stat-card', label: 'Total Failures', value: '@entity.totalFailures', icon: 'alert-triangle' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Check Success', action: 'CHECK_SUCCESS', icon: 'check', variant: 'primary' },
+      { type: 'button', label: 'Check Failure', action: 'CHECK_FAILURE', icon: 'x', variant: 'secondary' },
+      { type: 'button', label: 'Reset', action: 'RESET', icon: 'refresh-cw', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const rateLimiterView = (title: string): Effect => ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'gauge', size: 'lg' },
+        { type: 'typography', content: title, variant: 'h2' },
+      ] },
+    ] },
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.requestCount', max: '@entity.rateLimit', label: 'Rate Usage' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Requests', value: '@entity.requestCount', icon: 'arrow-up-right' },
+      { type: 'stat-card', label: 'Limit', value: '@entity.rateLimit', icon: 'shield' },
+      { type: 'stat-card', label: 'Total', value: '@entity.totalRequests', icon: 'hash' },
+      { type: 'stat-card', label: 'Rejected', value: '@entity.rejectedRequests', icon: 'ban' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Send Request', action: 'REQUEST', icon: 'send', variant: 'primary' },
+      { type: 'button', label: 'Reset Window', action: 'RESET_WINDOW', icon: 'refresh-cw', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const cacheStatsView = (title: string): Effect => ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'database', size: 'lg' },
+        { type: 'typography', content: title, variant: 'h2' },
+      ] },
+      { type: 'badge', label: '@entity.isFresh', icon: 'check-circle', variant: 'outline' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Key', value: '@entity.cacheKey', icon: 'key' },
+      { type: 'stat-card', label: 'Hits', value: '@entity.cacheHits', icon: 'check' },
+      { type: 'stat-card', label: 'Misses', value: '@entity.cacheMisses', icon: 'x' },
+      { type: 'stat-card', label: 'TTL (ms)', value: '@entity.ttlMs', icon: 'clock' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Get', action: 'GET', icon: 'download', variant: 'primary' },
+      { type: 'button', label: 'Invalidate', action: 'INVALIDATE', icon: 'trash-2', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const cacheEmptyView = (title: string): Effect => ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'database', size: 'lg' },
+      { type: 'typography', content: title, variant: 'h2' },
+    ] },
+    { type: 'divider' },
+    { type: 'empty-state', icon: 'inbox', title: 'Cache is empty', description: 'No cached data available' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Hits', value: '@entity.cacheHits', icon: 'check' },
+      { type: 'stat-card', label: 'Misses', value: '@entity.cacheMisses', icon: 'x' },
+    ] },
+    { type: 'divider' },
+    { type: 'button', label: 'Fetch Data', action: 'SET', icon: 'download', variant: 'primary' },
+  ],
+}];
+
+const sagaView = (title: string): Effect => ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'workflow', size: 'lg' },
+        { type: 'typography', content: title, variant: 'h2' },
+      ] },
+      { type: 'badge', label: '@entity.sagaStatus', icon: 'flag', variant: 'outline' },
+    ] },
+    { type: 'divider' },
+    { type: 'progress-bar', value: '@entity.currentStep', max: '@entity.totalSteps', label: 'Progress' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Current Step', value: '@entity.currentStep', icon: 'footprints' },
+      { type: 'stat-card', label: 'Total Steps', value: '@entity.totalSteps', icon: 'list-ordered' },
+      { type: 'stat-card', label: 'Failed Step', value: '@entity.failedStep', icon: 'alert-circle' },
+      { type: 'stat-card', label: 'Status', value: '@entity.sagaStatus', icon: 'flag' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Execute', action: 'EXECUTE', icon: 'play', variant: 'primary' },
+      { type: 'button', label: 'Compensate', action: 'COMPENSATE', icon: 'undo-2', variant: 'secondary' },
+      { type: 'button', label: 'Reset', action: 'RESET', icon: 'refresh-cw', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const metricsView = (title: string): Effect => ['render-ui', 'main', {
+  type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'bar-chart-3', size: 'lg' },
+        { type: 'typography', content: title, variant: 'h2' },
+      ] },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stat-card', label: 'Recorded', value: '@entity.totalRecorded', icon: 'database' },
+      { type: 'stat-card', label: 'Flushes', value: '@entity.totalFlushes', icon: 'upload' },
+      { type: 'stat-card', label: 'Last Flush', value: '@entity.lastFlush', icon: 'clock' },
+    ] },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Record', action: 'RECORD', icon: 'plus', variant: 'primary' },
+      { type: 'button', label: 'Flush', action: 'FLUSH', icon: 'upload', variant: 'secondary' },
+    ] },
+  ],
+}];
 
 // ============================================================================
 // std-circuit-breaker - Circuit Breaker Pattern
@@ -21,6 +259,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'CircuitBreakerOrbital',
+      theme: INFRA_THEME,
       entity: {
         name: 'CircuitBreakerState',
         persistence: 'runtime',
@@ -66,8 +305,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'CircuitBreakerState'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
               // Closed: record success
@@ -81,8 +319,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.totalCount', ['+', '@entity.totalCount', 1]],
                   ['set', '@entity.lastSuccess', ['time/now']],
                   ['set', '@entity.errorRate', ['/', '@entity.errorCount', ['math/max', '@entity.totalCount', 1]]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
               // Closed: record failure, stay closed if under threshold
@@ -97,8 +334,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.totalCount', ['+', '@entity.totalCount', 1]],
                   ['set', '@entity.lastFailure', ['time/now']],
                   ['set', '@entity.errorRate', ['/', ['+', '@entity.errorCount', 1], ['math/max', '@entity.totalCount', 1]]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
               // Closed -> Open: threshold exceeded
@@ -114,8 +350,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastFailure', ['time/now']],
                   ['set', '@entity.errorRate', ['/', ['+', '@entity.errorCount', 1], ['math/max', '@entity.totalCount', 1]]],
                   ['set', '@entity.circuitState', 'open'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker - OPEN' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerOpenView,
                 ],
               },
               // Open -> HalfOpen: probe after reset timeout
@@ -128,8 +363,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'CircuitBreakerState'],
                   ['set', '@entity.halfOpenAttempts', 0],
                   ['set', '@entity.circuitState', 'halfOpen'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker - Half Open' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerHalfOpenView,
                 ],
               },
               // HalfOpen: success -> close
@@ -145,8 +379,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.successCount', ['+', '@entity.successCount', 1]],
                   ['set', '@entity.lastSuccess', ['time/now']],
                   ['set', '@entity.circuitState', 'closed'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
               // HalfOpen: failure -> back to open
@@ -159,8 +392,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.errorCount', ['+', '@entity.errorCount', 1]],
                   ['set', '@entity.lastFailure', ['time/now']],
                   ['set', '@entity.circuitState', 'open'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker - OPEN' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerOpenView,
                 ],
               },
               // Reset from Closed
@@ -176,8 +408,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.errorRate', 0],
                   ['set', '@entity.halfOpenAttempts', 0],
                   ['set', '@entity.circuitState', 'closed'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
               // Reset from Open
@@ -193,8 +424,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.errorRate', 0],
                   ['set', '@entity.halfOpenAttempts', 0],
                   ['set', '@entity.circuitState', 'closed'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
               // Reset from HalfOpen
@@ -210,8 +440,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.errorRate', 0],
                   ['set', '@entity.halfOpenAttempts', 0],
                   ['set', '@entity.circuitState', 'closed'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Circuit Breaker' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CircuitBreakerState' }],
+                  circuitBreakerMainView,
                 ],
               },
             ],
@@ -242,6 +471,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'HealthCheckOrbital',
+      theme: INFRA_THEME,
       entity: {
         name: 'HealthCheckState',
         persistence: 'runtime',
@@ -278,15 +508,14 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
               { key: 'RESET', name: 'Reset' },
             ],
             transitions: [
-              // INIT: render dashboard
+              // INIT
               {
                 from: 'Unknown',
                 to: 'Unknown',
                 event: 'INIT',
                 effects: [
                   ['fetch', 'HealthCheckState'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check', 'outline'),
                 ],
               },
               // Unknown -> Healthy on first success
@@ -302,8 +531,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.lastHealthy', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Healthy' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Healthy', 'success'),
                 ],
               },
               // Unknown -> Degraded on first failure
@@ -319,8 +547,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Degraded', 'warning'),
                 ],
               },
               // Healthy: stay healthy on success
@@ -335,8 +562,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.lastHealthy', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Healthy' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Healthy', 'success'),
                 ],
               },
               // Healthy -> Degraded on failure
@@ -352,8 +578,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Degraded', 'warning'),
                 ],
               },
               // Degraded: stay degraded on failure (below unhealthy threshold)
@@ -369,8 +594,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Degraded', 'warning'),
                 ],
               },
               // Degraded -> Unhealthy when threshold exceeded
@@ -386,8 +610,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Unhealthy' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Unhealthy', 'danger'),
                 ],
               },
               // Degraded -> Healthy on enough successes
@@ -404,8 +627,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.lastHealthy', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Healthy' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Healthy', 'success'),
                 ],
               },
               // Degraded: stay degraded on success (not enough to recover)
@@ -420,8 +642,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Degraded', 'warning'),
                 ],
               },
               // Unhealthy: stay unhealthy on failure
@@ -435,8 +656,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
                   ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Unhealthy' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Unhealthy', 'danger'),
                 ],
               },
               // Unhealthy -> Degraded on first success (recovery begins)
@@ -451,8 +671,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.consecutiveFailures', 0],
                   ['set', '@entity.lastCheck', ['time/now']],
                   ['set', '@entity.totalChecks', ['+', '@entity.totalChecks', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check - Degraded' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check - Degraded', 'warning'),
                 ],
               },
               // Reset from Unknown
@@ -467,8 +686,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.totalChecks', 0],
                   ['set', '@entity.totalFailures', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check', 'outline'),
                 ],
               },
               // Reset from Healthy
@@ -483,8 +701,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.totalChecks', 0],
                   ['set', '@entity.totalFailures', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check', 'outline'),
                 ],
               },
               // Reset from Degraded
@@ -499,8 +716,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.totalChecks', 0],
                   ['set', '@entity.totalFailures', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check', 'outline'),
                 ],
               },
               // Reset from Unhealthy
@@ -515,8 +731,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.consecutiveSuccesses', 0],
                   ['set', '@entity.totalChecks', 0],
                   ['set', '@entity.totalFailures', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Health Check' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'HealthCheckState' }],
+                  healthCheckView('Health Check', 'outline'),
                 ],
               },
             ],
@@ -546,6 +761,7 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'RateLimiterOrbital',
+      theme: INFRA_THEME,
       entity: {
         name: 'RateLimiterState',
         persistence: 'runtime',
@@ -575,15 +791,14 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
               { key: 'RESET', name: 'Full Reset' },
             ],
             transitions: [
-              // INIT: render dashboard
+              // INIT
               {
                 from: 'Active',
                 to: 'Active',
                 event: 'INIT',
                 effects: [
                   ['fetch', 'RateLimiterState'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
+                  rateLimiterView('Rate Limiter'),
                 ],
               },
               // Request allowed
@@ -596,11 +811,10 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'RateLimiterState'],
                   ['set', '@entity.requestCount', ['+', '@entity.requestCount', 1]],
                   ['set', '@entity.totalRequests', ['+', '@entity.totalRequests', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
+                  rateLimiterView('Rate Limiter'),
                 ],
               },
-              // Request rejected - over limit
+              // Request rejected
               {
                 from: 'Active',
                 to: 'Active',
@@ -609,8 +823,7 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'RateLimiterState'],
                   ['set', '@entity.rejectedRequests', ['+', '@entity.rejectedRequests', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter - Limit Exceeded' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
+                  rateLimiterView('Rate Limiter - Limit Exceeded'),
                 ],
               },
               // Sliding window reset
@@ -622,8 +835,7 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'RateLimiterState'],
                   ['set', '@entity.requestCount', 0],
                   ['set', '@entity.windowStart', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
+                  rateLimiterView('Rate Limiter'),
                 ],
               },
               // Full counter reset
@@ -637,8 +849,7 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.totalRequests', 0],
                   ['set', '@entity.rejectedRequests', 0],
                   ['set', '@entity.windowStart', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Rate Limiter' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'RateLimiterState' }],
+                  rateLimiterView('Rate Limiter'),
                 ],
               },
             ],
@@ -668,6 +879,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'CacheAsideOrbital',
+      theme: INFRA_THEME,
       entity: {
         name: 'CacheEntry',
         persistence: 'runtime',
@@ -705,15 +917,14 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
               { key: 'EVICT', name: 'Evict' },
             ],
             transitions: [
-              // INIT: render dashboard
+              // INIT
               {
                 from: 'Empty',
                 to: 'Empty',
                 event: 'INIT',
                 effects: [
                   ['fetch', 'CacheEntry'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                  cacheEmptyView('Cache'),
                 ],
               },
               // Empty: lookup is a miss
@@ -725,8 +936,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'CacheEntry'],
                   ['set', '@entity.cacheMisses', ['+', '@entity.cacheMisses', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Miss' }],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                  cacheEmptyView('Cache - Miss'),
                 ],
               },
               // Empty -> Fresh: populate after fetch
@@ -740,8 +950,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.cacheKey', '@payload.key'],
                   ['set', '@entity.cachedAt', ['time/now']],
                   ['set', '@entity.isFresh', true],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Fresh' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                  cacheStatsView('Cache - Fresh'),
                 ],
               },
               // Fresh: lookup is a hit
@@ -754,8 +963,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'CacheEntry'],
                   ['set', '@entity.cacheHits', ['+', '@entity.cacheHits', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Hit' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                  cacheStatsView('Cache - Hit'),
                 ],
               },
               // Fresh -> Stale: TTL expired on lookup
@@ -769,8 +977,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cacheMisses', ['+', '@entity.cacheMisses', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Stale' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                  cacheStatsView('Cache - Stale'),
                 ],
               },
               // Fresh -> Fresh: update cache
@@ -782,8 +989,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'CacheEntry'],
                   ['set', '@entity.cachedValue', '@payload.value'],
                   ['set', '@entity.cachedAt', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Fresh' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                  cacheStatsView('Cache - Fresh'),
                 ],
               },
               // Stale: lookup is a miss
@@ -795,8 +1001,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'CacheEntry'],
                   ['set', '@entity.cacheMisses', ['+', '@entity.cacheMisses', 1]],
                   ['set', '@entity.lastAccessed', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Stale' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                  cacheStatsView('Cache - Stale'),
                 ],
               },
               // Stale -> Fresh: re-populate
@@ -809,8 +1014,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.cachedValue', '@payload.value'],
                   ['set', '@entity.cachedAt', ['time/now']],
                   ['set', '@entity.isFresh', true],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache - Fresh' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'CacheEntry' }],
+                  cacheStatsView('Cache - Fresh'),
                 ],
               },
               // Invalidate from Fresh
@@ -823,8 +1027,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.cachedValue', ''],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cachedAt', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                  cacheEmptyView('Cache'),
                 ],
               },
               // Invalidate from Stale
@@ -837,8 +1040,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.cachedValue', ''],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cachedAt', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                  cacheEmptyView('Cache'),
                 ],
               },
               // Evict from Fresh
@@ -851,8 +1053,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.cachedValue', ''],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cachedAt', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                  cacheEmptyView('Cache'),
                 ],
               },
               // Evict from Stale
@@ -865,8 +1066,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.cachedValue', ''],
                   ['set', '@entity.isFresh', false],
                   ['set', '@entity.cachedAt', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Cache' }],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CacheEntry' }],
+                  cacheEmptyView('Cache'),
                 ],
               },
             ],
@@ -897,6 +1097,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'SagaOrbital',
+      theme: INFRA_THEME,
       entity: {
         name: 'SagaState',
         persistence: 'runtime',
@@ -935,15 +1136,14 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
               { key: 'RESET', name: 'Reset' },
             ],
             transitions: [
-              // INIT: render dashboard
+              // INIT
               {
                 from: 'Idle',
                 to: 'Idle',
                 event: 'INIT',
                 effects: [
                   ['fetch', 'SagaState'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga'),
                 ],
               },
               // Idle -> Running: start the saga
@@ -958,8 +1158,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.failedStep', -1],
                   ['set', '@entity.failureReason', ''],
                   ['set', '@entity.startedAt', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Running' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Running'),
                 ],
               },
               // Running: step success, more steps remaining
@@ -971,8 +1170,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'SagaState'],
                   ['set', '@entity.currentStep', ['+', '@entity.currentStep', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Running' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Running'),
                 ],
               },
               // Running -> Completed: last step succeeded
@@ -985,8 +1183,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'completed'],
                   ['set', '@entity.completedAt', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Completed' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Completed'),
                 ],
               },
               // Running -> Compensating: a step failed
@@ -998,8 +1195,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'compensating'],
                   ['set', '@entity.failedStep', '@entity.currentStep'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Compensating' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Compensating'),
                 ],
               },
               // Compensating: compensation step succeeded, more to undo
@@ -1011,8 +1207,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'SagaState'],
                   ['set', '@entity.currentStep', ['-', '@entity.currentStep', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Compensating' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Compensating'),
                 ],
               },
               // Compensating -> Failed: all compensations done (reached step 0)
@@ -1025,8 +1220,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'failed'],
                   ['set', '@entity.completedAt', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Failed' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Failed'),
                 ],
               },
               // Compensating -> Failed: compensation itself failed
@@ -1038,8 +1232,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'SagaState'],
                   ['set', '@entity.sagaStatus', 'failed'],
                   ['set', '@entity.completedAt', ['time/now']],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga - Failed' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga - Failed'),
                 ],
               },
               // Reset from Completed
@@ -1053,8 +1246,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.currentStep', 0],
                   ['set', '@entity.failedStep', -1],
                   ['set', '@entity.failureReason', ''],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga'),
                 ],
               },
               // Reset from Failed
@@ -1068,8 +1260,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.currentStep', 0],
                   ['set', '@entity.failedStep', -1],
                   ['set', '@entity.failureReason', ''],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Saga' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'SagaState' }],
+                  sagaView('Saga'),
                 ],
               },
             ],
@@ -1093,6 +1284,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'MetricsCollectorOrbital',
+      theme: INFRA_THEME,
       entity: {
         name: 'MetricsState',
         persistence: 'runtime',
@@ -1120,15 +1312,14 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
               { key: 'RESET', name: 'Reset All' },
             ],
             transitions: [
-              // INIT: render dashboard
+              // INIT
               {
                 from: 'Collecting',
                 to: 'Collecting',
                 event: 'INIT',
                 effects: [
                   ['fetch', 'MetricsState'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
+                  metricsView('Metrics Collector'),
                 ],
               },
               // Record a counter increment
@@ -1139,8 +1330,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'MetricsState'],
                   ['set', '@entity.totalRecorded', ['+', '@entity.totalRecorded', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
+                  metricsView('Metrics Collector'),
                 ],
               },
               // Record a gauge value
@@ -1151,8 +1341,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'MetricsState'],
                   ['set', '@entity.totalRecorded', ['+', '@entity.totalRecorded', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
+                  metricsView('Metrics Collector'),
                 ],
               },
               // Flush: reset counters
@@ -1164,8 +1353,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'MetricsState'],
                   ['set', '@entity.lastFlush', ['time/now']],
                   ['set', '@entity.totalFlushes', ['+', '@entity.totalFlushes', 1]],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
+                  metricsView('Metrics Collector'),
                 ],
               },
               // Full reset
@@ -1178,8 +1366,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.totalRecorded', 0],
                   ['set', '@entity.totalFlushes', 0],
                   ['set', '@entity.lastFlush', 0],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Metrics Collector' }],
-                  ['render-ui', 'main', { type: 'stats',  entity: 'MetricsState' }],
+                  metricsView('Metrics Collector'),
                 ],
               },
             ],

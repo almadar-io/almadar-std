@@ -6,14 +6,96 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: game-first patterns (isometric-canvas, game-hud)
+ * replacing stat-card dashboard layouts with proper game components.
+ *
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { OrbitalSchema, Effect } from '../types.js';
+
+// ── Shared Strategy Game Theme ──────────────────────────────────────
+
+const STRATEGY_THEME = {
+  name: 'game-strategy-emerald',
+  tokens: {
+    colors: {
+      primary: '#059669',
+      'primary-hover': '#047857',
+      'primary-foreground': '#ffffff',
+      accent: '#34d399',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ── Asset constants ─────────────────────────────────────────────────
+
+const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
+const GAME_MANIFEST = {
+  terrain: {
+    stone: '/terrain/Isometric/stoneSide_N.png',
+    dirt: '/terrain/Isometric/dirt_N.png',
+    bridge: '/terrain/Isometric/stoneStep_N.png',
+    wall: '/terrain/Isometric/stoneWallArchway_N.png',
+  },
+  units: {
+    guardian: '/sprite-sheets/guardian-sprite-sheet-se.png',
+    breaker: '/sprite-sheets/breaker-sprite-sheet-se.png',
+    archivist: '/sprite-sheets/archivist-sprite-sheet-se.png',
+  },
+  features: {
+    gold_mine: '/world-map/gold_mine.png',
+    portal: '/world-map/portal_open.png',
+    treasure: '/world-map/treasure_chest_closed.png',
+    battle_marker: '/world-map/battle_marker.png',
+    power_node: '/world-map/power_node.png',
+  },
+};
+
+const TILES_8X6: Array<{ x: number; y: number; terrain: string }> = [];
+for (let y = 0; y < 6; y++) {
+  for (let x = 0; x < 8; x++) {
+    TILES_8X6.push({ x, y, terrain: (x + y) % 3 === 0 ? 'stone' : (x + y) % 3 === 1 ? 'dirt' : 'bridge' });
+  }
+}
 
 // ============================================================================
 // std-turn-system - Turn Management
 // ============================================================================
+
+const turnCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_8X6,
+  units: [
+    { id: 'player1', x: 1, y: 2, unitType: 'guardian' },
+    { id: 'player2', x: 5, y: 3, unitType: 'breaker' },
+  ],
+  scale: 0.4,
+  boardWidth: 8,
+  boardHeight: 6,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const turnHudOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Turn', value: '@entity.turnNumber', icon: 'layers' },
+      { label: 'Player', value: '@entity.currentPlayer', icon: 'users' },
+      { label: 'Phase', value: '@entity.phase', icon: 'flag' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Begin Turn', action: 'BEGIN_TURN', icon: 'sword', variant: 'primary' },
+      { type: 'button', label: 'End Actions', action: 'END_ACTIONS', icon: 'shield', variant: 'secondary' },
+      { type: 'button', label: 'Next Turn', action: 'NEXT_TURN', icon: 'castle', variant: 'secondary' },
+    ] },
+  ],
+}];
 
 /**
  * std-turn-system - Turn-based game cycle management.
@@ -25,11 +107,12 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
   name: 'std-turn-system',
   version: '1.0.0',
   description: 'Turn-based game cycle with phases',
+  theme: STRATEGY_THEME,
   orbitals: [
     {
       name: 'TurnSystemOrbital',
       entity: {
-        name: 'TurnState',
+        name: 'TurnData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -41,7 +124,7 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'TurnSystem',
-          linkedEntity: 'TurnState',
+          linkedEntity: 'TurnData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -62,14 +145,12 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
                 to: 'Waiting',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'TurnState'],
+                  ['fetch', 'TurnData'],
                   ['set', '@entity.currentPlayer', 1],
                   ['set', '@entity.turnNumber', 1],
                   ['set', '@entity.phase', 'waiting'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Turn System' }],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  turnCanvasView,
+                  turnHudOverlay,
                 ],
               },
               {
@@ -77,11 +158,10 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
                 to: 'Acting',
                 event: 'BEGIN_TURN',
                 effects: [
-                  ['fetch', 'TurnState'],
+                  ['fetch', 'TurnData'],
                   ['set', '@entity.phase', 'acting'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  turnCanvasView,
+                  turnHudOverlay,
                 ],
               },
               {
@@ -89,11 +169,10 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
                 to: 'Resolving',
                 event: 'END_ACTIONS',
                 effects: [
-                  ['fetch', 'TurnState'],
+                  ['fetch', 'TurnData'],
                   ['set', '@entity.phase', 'resolving'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  turnCanvasView,
+                  turnHudOverlay,
                 ],
               },
               {
@@ -101,11 +180,10 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
                 to: 'Waiting',
                 event: 'RESOLVE',
                 effects: [
-                  ['fetch', 'TurnState'],
+                  ['fetch', 'TurnData'],
                   ['set', '@entity.phase', 'waiting'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  turnCanvasView,
+                  turnHudOverlay,
                 ],
               },
               {
@@ -113,13 +191,12 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
                 to: 'Waiting',
                 event: 'NEXT_TURN',
                 effects: [
-                  ['fetch', 'TurnState'],
+                  ['fetch', 'TurnData'],
                   ['set', '@entity.turnNumber', ['+', '@entity.turnNumber', 1]],
                   ['set', '@entity.currentPlayer', ['if', ['=', '@entity.currentPlayer', 1], 2, 1]],
                   ['set', '@entity.phase', 'waiting'],
-                  ['render-ui', 'main', { type: 'game-hud',
-                    stats: '@entity.id',
-                  }],
+                  turnCanvasView,
+                  turnHudOverlay,
                 ],
               },
             ],
@@ -142,6 +219,41 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
 // std-unit-command - Unit Orders
 // ============================================================================
 
+const unitCommandCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_8X6,
+  units: [
+    { id: 'unit1', x: 2, y: 1, unitType: 'guardian' },
+    { id: 'unit2', x: 4, y: 3, unitType: 'breaker' },
+    { id: 'unit3', x: 6, y: 2, unitType: 'archivist' },
+  ],
+  scale: 0.4,
+  boardWidth: 8,
+  boardHeight: 6,
+  enableCamera: true,
+  unitClickEvent: 'SELECT_UNIT',
+  tileClickEvent: 'ISSUE_COMMAND',
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const unitCommandHudOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Unit', value: '@entity.unitId', icon: 'users' },
+      { label: 'Command', value: '@entity.commandType', icon: 'map' },
+      { label: 'Target X', value: '@entity.targetX', icon: 'target' },
+      { label: 'Target Y', value: '@entity.targetY', icon: 'target' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Select Unit', action: 'SELECT_UNIT', icon: 'users', variant: 'primary' },
+      { type: 'button', label: 'Issue Command', action: 'ISSUE_COMMAND', icon: 'sword', variant: 'primary' },
+      { type: 'button', label: 'Execute', action: 'EXECUTE', icon: 'shield', variant: 'secondary' },
+      { type: 'button', label: 'Deselect', action: 'DESELECT', icon: 'target', variant: 'secondary' },
+    ] },
+  ],
+}];
+
 /**
  * std-unit-command - Unit selection and command issuing.
  *
@@ -152,6 +264,7 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
   name: 'std-unit-command',
   version: '1.0.0',
   description: 'Unit selection and command issuing for strategy games',
+  theme: STRATEGY_THEME,
   orbitals: [
     {
       name: 'UnitCommandOrbital',
@@ -199,10 +312,8 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'UnitCommand'],
                   ['set', '@entity.unitId', ''],
                   ['set', '@entity.commandType', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Unit Commands' }],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'UnitCommand',
-                  }],
+                  unitCommandCanvasView,
+                  unitCommandHudOverlay,
                 ],
               },
               {
@@ -212,12 +323,8 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'UnitCommand'],
                   ['set', '@entity.unitId', '@payload.unitId'],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'UnitCommand',
-                  }],
-                  ['render-ui', 'hud-bottom', { type: 'stats',
-                    label: 'Unit', value: '@entity.id',
-                  }],
+                  unitCommandCanvasView,
+                  unitCommandHudOverlay,
                 ],
               },
               {
@@ -229,9 +336,8 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.commandType', '@payload.commandType'],
                   ['set', '@entity.targetX', '@payload.targetX'],
                   ['set', '@entity.targetY', '@payload.targetY'],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'UnitCommand',
-                  }],
+                  unitCommandCanvasView,
+                  unitCommandHudOverlay,
                 ],
               },
               {
@@ -242,9 +348,8 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'UnitCommand'],
                   ['set', '@entity.unitId', ''],
                   ['set', '@entity.commandType', ''],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'UnitCommand',
-                  }],
+                  unitCommandCanvasView,
+                  unitCommandHudOverlay,
                 ],
               },
               {
@@ -254,9 +359,8 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'UnitCommand'],
                   ['set', '@entity.unitId', ''],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'UnitCommand',
-                  }],
+                  unitCommandCanvasView,
+                  unitCommandHudOverlay,
                 ],
               },
             ],
@@ -279,6 +383,39 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
 // std-fog-of-war - Visibility Management
 // ============================================================================
 
+const fogCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_8X6,
+  units: [{ id: 'scout', x: 3, y: 2, unitType: 'guardian' }],
+  features: [
+    { id: 'mine', x: 1, y: 1, featureType: 'gold_mine' },
+    { id: 'node', x: 6, y: 4, featureType: 'power_node' },
+  ],
+  scale: 0.4,
+  boardWidth: 8,
+  boardHeight: 6,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const fogHudOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Visible', value: '@entity.visibleTiles', icon: 'target' },
+      { label: 'Explored', value: '@entity.exploredTiles', icon: 'map' },
+      { label: 'Radius', value: '@entity.revealRadius', icon: 'layers' },
+    ] },
+    { type: 'progress-bar', value: '@entity.visibleTiles', max: '@entity.exploredTiles', label: 'Visibility Coverage' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Reveal Area', action: 'REVEAL', icon: 'target', variant: 'primary' },
+      { type: 'button', label: 'Explore', action: 'EXPLORE', icon: 'map', variant: 'primary' },
+      { type: 'button', label: 'Reveal All', action: 'REVEAL_ALL', icon: 'layers', variant: 'secondary' },
+      { type: 'button', label: 'Reset Fog', action: 'RESET_FOG', icon: 'shield', variant: 'secondary' },
+    ] },
+  ],
+}];
+
 /**
  * std-fog-of-war - Map visibility and exploration tracking.
  *
@@ -289,11 +426,12 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
   name: 'std-fog-of-war',
   version: '1.0.0',
   description: 'Map visibility and fog of war management',
+  theme: STRATEGY_THEME,
   orbitals: [
     {
       name: 'FogOfWarOrbital',
       entity: {
-        name: 'FogState',
+        name: 'FogData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -305,7 +443,7 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'FogOfWar',
-          linkedEntity: 'FogState',
+          linkedEntity: 'FogData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -328,13 +466,11 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
                 to: 'Hidden',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'FogState'],
+                  ['fetch', 'FogData'],
                   ['set', '@entity.visibleTiles', 0],
                   ['set', '@entity.exploredTiles', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Fog of War' }],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'FogState',
-                  }],
+                  fogCanvasView,
+                  fogHudOverlay,
                 ],
               },
               {
@@ -342,12 +478,11 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
                 to: 'Partial',
                 event: 'REVEAL',
                 effects: [
-                  ['fetch', 'FogState'],
+                  ['fetch', 'FogData'],
                   ['set', '@entity.visibleTiles', '@payload.tiles'],
                   ['set', '@entity.exploredTiles', '@payload.tiles'],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'FogState',
-                  }],
+                  fogCanvasView,
+                  fogHudOverlay,
                 ],
               },
               {
@@ -355,12 +490,11 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
                 to: 'Partial',
                 event: 'REVEAL',
                 effects: [
-                  ['fetch', 'FogState'],
+                  ['fetch', 'FogData'],
                   ['set', '@entity.visibleTiles', '@payload.tiles'],
                   ['set', '@entity.exploredTiles', ['+', '@entity.exploredTiles', '@payload.tiles']],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'FogState',
-                  }],
+                  fogCanvasView,
+                  fogHudOverlay,
                 ],
               },
               {
@@ -368,11 +502,10 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
                 to: 'Partial',
                 event: 'EXPLORE',
                 effects: [
-                  ['fetch', 'FogState'],
+                  ['fetch', 'FogData'],
                   ['set', '@entity.exploredTiles', ['+', '@entity.exploredTiles', '@entity.revealRadius']],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'FogState',
-                  }],
+                  fogCanvasView,
+                  fogHudOverlay,
                 ],
               },
               {
@@ -380,11 +513,10 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
                 to: 'Revealed',
                 event: 'REVEAL_ALL',
                 effects: [
-                  ['fetch', 'FogState'],
+                  ['fetch', 'FogData'],
                   ['set', '@entity.visibleTiles', '@entity.exploredTiles'],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'FogState',
-                  }],
+                  fogCanvasView,
+                  fogHudOverlay,
                 ],
               },
               {
@@ -392,12 +524,11 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
                 to: 'Hidden',
                 event: 'RESET_FOG',
                 effects: [
-                  ['fetch', 'FogState'],
+                  ['fetch', 'FogData'],
                   ['set', '@entity.visibleTiles', 0],
                   ['set', '@entity.exploredTiles', 0],
-                  ['render-ui', 'main', { type: 'isometric-canvas',
-                    entity: 'FogState',
-                  }],
+                  fogCanvasView,
+                  fogHudOverlay,
                 ],
               },
             ],
@@ -420,6 +551,40 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
 // std-resource - Resource Management
 // ============================================================================
 
+const resourceCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_8X6,
+  units: [{ id: 'gatherer', x: 3, y: 2, unitType: 'guardian' }],
+  features: [
+    { id: 'mine', x: 1, y: 1, featureType: 'gold_mine' },
+    { id: 'node', x: 6, y: 4, featureType: 'power_node' },
+    { id: 'chest', x: 4, y: 0, featureType: 'treasure' },
+  ],
+  scale: 0.4,
+  boardWidth: 8,
+  boardHeight: 6,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const resourceHudOverlay: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'md', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Gold', value: '@entity.gold', icon: 'coins' },
+      { label: 'Wood', value: '@entity.wood', icon: 'layers' },
+      { label: 'Stone', value: '@entity.stone', icon: 'castle' },
+      { label: 'Food', value: '@entity.food', icon: 'shield' },
+    ] },
+    { type: 'progress-bar', value: '@entity.gold', max: '@entity.capacity', label: 'Gold Capacity' },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Gather', action: 'GATHER', icon: 'coins', variant: 'primary' },
+      { type: 'button', label: 'Spend', action: 'SPEND', icon: 'sword', variant: 'secondary' },
+      { type: 'button', label: 'Check Status', action: 'CHECK_STATUS', icon: 'flag', variant: 'secondary' },
+    ] },
+  ],
+}];
+
 /**
  * std-resource - Strategy game resource tracking.
  *
@@ -430,11 +595,12 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
   name: 'std-resource',
   version: '1.0.0',
   description: 'Strategy game resource management',
+  theme: STRATEGY_THEME,
   orbitals: [
     {
       name: 'ResourceOrbital',
       entity: {
-        name: 'ResourceState',
+        name: 'ResourceData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -448,7 +614,7 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'ResourceManager',
-          linkedEntity: 'ResourceState',
+          linkedEntity: 'ResourceData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -477,10 +643,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.wood', 50],
                   ['set', '@entity.stone', 30],
                   ['set', '@entity.food', 80],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Resources' }],
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -489,9 +653,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 event: 'GATHER',
                 effects: [
                   ['set', '@entity.gold', ['+', '@entity.gold', '@payload.amount']],
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -501,9 +664,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 guard: ['>=', '@entity.gold', '@payload.amount'],
                 effects: [
                   ['set', '@entity.gold', ['-', '@entity.gold', '@payload.amount']],
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -512,9 +674,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 event: 'CHECK_STATUS',
                 guard: ['>', '@entity.gold', '@entity.capacity'],
                 effects: [
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -523,9 +684,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 event: 'CHECK_STATUS',
                 guard: ['<', '@entity.food', 10],
                 effects: [
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -533,9 +693,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 to: 'Stable',
                 event: 'STABILIZE',
                 effects: [
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -543,9 +702,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 to: 'Stable',
                 event: 'STABILIZE',
                 effects: [
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -554,9 +712,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 event: 'GATHER',
                 effects: [
                   ['set', '@entity.gold', ['+', '@entity.gold', '@payload.amount']],
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
               {
@@ -565,9 +722,8 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
                 event: 'GATHER',
                 effects: [
                   ['set', '@entity.gold', ['+', '@entity.gold', '@payload.amount']],
-                  ['render-ui', 'main', { type: 'stats',
-                    label: 'Resources', value: '@entity.id',
-                  }],
+                  resourceCanvasView,
+                  resourceHudOverlay,
                 ],
               },
             ],

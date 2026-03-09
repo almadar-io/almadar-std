@@ -6,14 +6,71 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * stack wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
 
+// ── Shared Media Theme ──────────────────────────────────────────────
+
+const MEDIA_THEME = {
+  name: 'media-fuchsia',
+  tokens: {
+    colors: {
+      primary: '#c026d3',
+      'primary-hover': '#a21caf',
+      'primary-foreground': '#ffffff',
+      accent: '#e879f9',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-gallery - Media Gallery
 // ============================================================================
+
+// ── Reusable main-view effects (gallery browsing) ───────────────────
+
+const galleryBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: image icon + title + upload button
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'image', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Media Gallery' },
+    ]},
+    { type: 'button', label: 'Upload', icon: 'upload', variant: 'primary', action: 'UPLOAD' },
+  ]},
+  { type: 'divider' },
+  // Stats row
+  { type: 'stats', label: 'Total Media', icon: 'image', entity: 'MediaItem' },
+  { type: 'divider' },
+  // Empty state guidance
+  { type: 'stack', direction: 'vertical', gap: 'sm', align: 'center', children: [
+    { type: 'icon', name: 'image', size: 'xl' },
+    { type: 'typography', variant: 'body', content: 'Upload your first image to get started' },
+  ]},
+  // Search
+  { type: 'search-input', placeholder: 'Search media...', icon: 'search' },
+  // Gallery grid
+  { type: 'data-grid', entity: 'MediaItem', variant: 'card', columns: 3,
+    fields: [
+      { name: 'title', label: 'Title', icon: 'film', variant: 'h4' },
+      { name: 'type', label: 'Type', icon: 'folder', variant: 'badge' },
+      { name: 'createdAt', label: 'Added', variant: 'caption' },
+    ],
+    itemActions: [
+      { label: 'View', event: 'VIEW', icon: 'eye', variant: 'primary' },
+    ],
+  },
+]}];
 
 /**
  * std-gallery - Media gallery with lightbox viewing and upload.
@@ -23,6 +80,7 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
   name: 'std-gallery',
   version: '1.0.0',
   description: 'Media gallery with lightbox viewing and upload',
+  theme: MEDIA_THEME,
   orbitals: [
     {
       name: 'GalleryOrbital',
@@ -65,9 +123,7 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'MediaItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Media Gallery' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'MediaItem' }],
-                  ['render-ui', 'main', { type: 'media-gallery', title: 'Gallery' }],
+                  galleryBrowsingMainEffect,
                 ],
               },
               {
@@ -75,10 +131,26 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
                 to: 'viewing',
                 event: 'VIEW',
                 effects: [
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    title: '@entity.title',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    // Header with close
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'camera', size: 'md' },
+                        { type: 'typography', variant: 'h3', content: '@entity.title' },
+                      ]},
+                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
+                    ]},
+                    { type: 'divider' },
+                    // Detail fields
+                    { type: 'data-list', entity: 'MediaItem', variant: 'detail',
+                      fields: [
+                        { name: 'title', label: 'Title', icon: 'film', variant: 'h4' },
+                        { name: 'type', label: 'Type', icon: 'folder', variant: 'badge' },
+                        { name: 'url', label: 'URL', variant: 'body' },
+                        { name: 'createdAt', label: 'Created', variant: 'caption' },
+                      ],
+                    },
+                  ]}],
                 ],
               },
               {
@@ -103,11 +175,14 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
                 event: 'UPLOAD',
                 effects: [
                   ['fetch', 'MediaItem'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'MediaItem',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'upload', size: 'md' },
+                      { type: 'typography', variant: 'h3', content: 'Upload Media' },
+                    ]},
+                    { type: 'divider' },
+                    { type: 'form-section', entity: 'MediaItem', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
+                  ]}],
                 ],
               },
               {
@@ -119,8 +194,7 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.url', '@payload.url'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'MediaItem'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'MediaItem' }],
-                  ['render-ui', 'main', { type: 'media-gallery', title: 'Gallery' }],
+                  galleryBrowsingMainEffect,
                 ],
               },
               {
@@ -159,6 +233,86 @@ export const GALLERY_BEHAVIOR: OrbitalSchema = {
 // std-player - Media Player
 // ============================================================================
 
+// ── Reusable main-view effects (player idle) ────────────────────────
+
+const playerIdleMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: play icon + title
+  { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'icon', name: 'play', size: 'lg' },
+    { type: 'typography', variant: 'h2', content: 'Media Player' },
+  ]},
+  { type: 'divider' },
+  // Track info card
+  { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'music', size: 'md' },
+      { type: 'typography', variant: 'h3', content: '@entity.title' },
+    ]},
+    { type: 'badge', label: 'Stopped', variant: 'default' },
+  ]},
+  { type: 'divider' },
+  // Volume meter
+  { type: 'meter', value: 0, label: 'Volume', icon: 'volume-2' },
+  // Controls
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'button', label: 'Play', icon: 'play', variant: 'primary', action: 'PLAY' },
+  ]},
+]}];
+
+// ── Reusable main-view effects (player playing) ─────────────────────
+
+const playerPlayingMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header
+  { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'icon', name: 'play', size: 'lg' },
+    { type: 'typography', variant: 'h2', content: 'Now Playing' },
+  ]},
+  { type: 'divider' },
+  // Track info
+  { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'music', size: 'md' },
+      { type: 'typography', variant: 'h3', content: '@entity.title' },
+    ]},
+    { type: 'badge', label: 'Playing', variant: 'success' },
+  ]},
+  { type: 'divider' },
+  // Playback progress
+  { type: 'meter', value: '@entity.currentTime', label: 'Playback', icon: 'clock' },
+  // Controls
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'button', label: 'Pause', icon: 'pause', variant: 'secondary', action: 'PAUSE' },
+    { type: 'button', label: 'Stop', icon: 'square', variant: 'ghost', action: 'STOP' },
+  ]},
+]}];
+
+// ── Reusable main-view effects (player paused) ─────────────────────
+
+const playerPausedMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header
+  { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'icon', name: 'pause', size: 'lg' },
+    { type: 'typography', variant: 'h2', content: 'Paused' },
+  ]},
+  { type: 'divider' },
+  // Track info
+  { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'music', size: 'md' },
+      { type: 'typography', variant: 'h3', content: '@entity.title' },
+    ]},
+    { type: 'badge', label: 'Paused', variant: 'warning' },
+  ]},
+  { type: 'divider' },
+  // Playback progress (frozen)
+  { type: 'meter', value: '@entity.currentTime', label: 'Paused', icon: 'clock' },
+  // Controls
+  { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center', children: [
+    { type: 'button', label: 'Resume', icon: 'play', variant: 'primary', action: 'PLAY' },
+    { type: 'button', label: 'Stop', icon: 'square', variant: 'ghost', action: 'STOP' },
+  ]},
+]}];
+
 /**
  * std-player - Media playback with play/pause controls.
  * States: idle -> playing -> paused
@@ -167,6 +321,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
   name: 'std-player',
   version: '1.0.0',
   description: 'Media player with playback controls',
+  theme: MEDIA_THEME,
   orbitals: [
     {
       name: 'PlayerOrbital',
@@ -207,9 +362,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.currentTime', 0],
                   ['set', '@entity.isPlaying', false],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Media Player' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Volume' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
+                  playerIdleMainEffect,
                 ],
               },
               {
@@ -218,8 +371,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 event: 'PLAY',
                 effects: [
                   ['set', '@entity.isPlaying', true],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.currentTime', label: 'Playback' }],
+                  playerPlayingMainEffect,
                 ],
               },
               {
@@ -228,8 +380,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 event: 'PAUSE',
                 effects: [
                   ['set', '@entity.isPlaying', false],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.currentTime', label: 'Paused' }],
+                  playerPausedMainEffect,
                 ],
               },
               {
@@ -238,8 +389,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 event: 'PLAY',
                 effects: [
                   ['set', '@entity.isPlaying', true],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.currentTime', label: 'Playback' }],
+                  playerPlayingMainEffect,
                 ],
               },
               {
@@ -249,7 +399,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isPlaying', false],
                   ['set', '@entity.currentTime', 0],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
+                  playerIdleMainEffect,
                 ],
               },
               {
@@ -259,7 +409,7 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.isPlaying', false],
                   ['set', '@entity.currentTime', 0],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.title' }],
+                  playerIdleMainEffect,
                 ],
               },
             ],
@@ -282,6 +432,36 @@ export const PLAYER_BEHAVIOR: OrbitalSchema = {
 // std-playlist - Playlist Management
 // ============================================================================
 
+// ── Reusable main-view effects (playlist browsing) ──────────────────
+
+const playlistBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: music icon + title
+  { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'music', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Playlist' },
+    ]},
+  ]},
+  { type: 'divider' },
+  // Playlist stats
+  { type: 'stats', label: 'Tracks', icon: 'music', entity: 'PlaylistItem' },
+  { type: 'divider' },
+  // Search
+  { type: 'search-input', placeholder: 'Search tracks...', icon: 'search' },
+  // Track list
+  { type: 'data-list', entity: 'PlaylistItem', variant: 'row',
+    fields: [
+      { name: 'title', label: 'Title', icon: 'music', variant: 'h4' },
+      { name: 'artist', label: 'Artist', icon: 'user', variant: 'body' },
+      { name: 'duration', label: 'Duration', icon: 'clock', variant: 'badge', format: 'duration' },
+      { name: 'order', label: '#', variant: 'caption' },
+    ],
+    itemActions: [
+      { label: 'View', event: 'VIEW', icon: 'eye', variant: 'primary' },
+    ],
+  },
+]}];
+
 /**
  * std-playlist - Playlist management with ordering.
  * States: browsing -> viewing -> editing
@@ -290,6 +470,7 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
   name: 'std-playlist',
   version: '1.0.0',
   description: 'Playlist management with track ordering',
+  theme: MEDIA_THEME,
   orbitals: [
     {
       name: 'PlaylistOrbital',
@@ -330,14 +511,7 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'PlaylistItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'PlaylistItem',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  playlistBrowsingMainEffect,
                 ],
               },
               {
@@ -345,10 +519,29 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 to: 'viewing',
                 event: 'VIEW',
                 effects: [
-                  ['render-ui', 'main', { type: 'page-header', title: 'Track Details', 
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'detail-panel', title: '@entity.title' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Header with back
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'music', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Track Details' },
+                      ]},
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'button', label: 'Edit', icon: 'edit', variant: 'primary', action: 'EDIT' },
+                        { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'ghost', action: 'BACK' },
+                      ]},
+                    ]},
+                    { type: 'divider' },
+                    // Track detail
+                    { type: 'data-list', entity: 'PlaylistItem', variant: 'detail',
+                      fields: [
+                        { name: 'title', label: 'Title', icon: 'music', variant: 'h4' },
+                        { name: 'artist', label: 'Artist', icon: 'user', variant: 'body' },
+                        { name: 'duration', label: 'Duration', icon: 'clock', variant: 'badge', format: 'duration' },
+                        { name: 'order', label: 'Track #', variant: 'caption' },
+                      ],
+                    },
+                  ]}],
                 ],
               },
               {
@@ -357,10 +550,18 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT',
                 effects: [
                   ['fetch', 'PlaylistItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Edit Track', 
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'PlaylistItem' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Header with back
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'edit', size: 'lg' },
+                        { type: 'typography', variant: 'h2', content: 'Edit Track' },
+                      ]},
+                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'ghost', action: 'BACK' },
+                    ]},
+                    { type: 'divider' },
+                    { type: 'form-section', entity: 'PlaylistItem' },
+                  ]}],
                 ],
               },
               {
@@ -371,14 +572,7 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.title', '@payload.title'],
                   ['set', '@entity.artist', '@payload.artist'],
                   ['fetch', 'PlaylistItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'PlaylistItem',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  playlistBrowsingMainEffect,
                 ],
               },
               {
@@ -387,14 +581,7 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'PlaylistItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'PlaylistItem',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  playlistBrowsingMainEffect,
                 ],
               },
               {
@@ -403,14 +590,7 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'PlaylistItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Playlist' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'PlaylistItem', title: 'Playlist Info' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'PlaylistItem',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  playlistBrowsingMainEffect,
                 ],
               },
             ],
@@ -433,6 +613,45 @@ export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
 // std-upload - File Upload
 // ============================================================================
 
+// ── Reusable main-view effects (upload idle) ────────────────────────
+
+const uploadIdleMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header: upload icon + title
+  { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'icon', name: 'upload', size: 'lg' },
+    { type: 'typography', variant: 'h2', content: 'File Upload' },
+  ]},
+  { type: 'divider' },
+  // Guidance text
+  { type: 'stack', direction: 'vertical', gap: 'sm', align: 'center', children: [
+    { type: 'icon', name: 'file-plus', size: 'xl' },
+    { type: 'typography', variant: 'body', content: 'Select a file to upload' },
+  ]},
+  // Upload form
+  { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' },
+  // Explicit start button
+  { type: 'button', label: 'Start Upload', action: 'START_UPLOAD', icon: 'upload', variant: 'primary' },
+]}];
+
+// ── Reusable main-view effects (uploading in progress) ──────────────
+
+const uploadProgressMainEffect = ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+  // Header
+  { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'icon', name: 'upload', size: 'lg' },
+    { type: 'typography', variant: 'h2', content: 'Uploading...' },
+  ]},
+  { type: 'divider' },
+  // File info
+  { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+    { type: 'icon', name: 'file', size: 'md' },
+    { type: 'typography', variant: 'h4', content: '@entity.fileName' },
+  ]},
+  // Progress
+  { type: 'meter', value: 0, label: 'Upload Progress', icon: 'upload' },
+  { type: 'badge', label: 'Uploading', variant: 'warning' },
+]}];
+
 /**
  * std-upload - File upload tracking with progress.
  * States: idle -> uploading -> completed -> failed
@@ -441,6 +660,7 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
   name: 'std-upload',
   version: '1.0.0',
   description: 'File upload tracking with progress indicator',
+  theme: MEDIA_THEME,
   orbitals: [
     {
       name: 'UploadOrbital',
@@ -483,9 +703,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'File Upload' }],
-['fetch', 'UploadState'],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' }],
+                  ['fetch', 'UploadState'],
+                  uploadIdleMainEffect,
                 ],
               },
               {
@@ -496,9 +715,7 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.fileName', '@payload.fileName'],
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'uploading'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Uploading...' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Upload Progress' }],
+                  uploadProgressMainEffect,
                 ],
               },
               {
@@ -508,9 +725,25 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 100],
                   ['set', '@entity.status', 'completed'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Upload Complete' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: 100, label: 'Complete' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'check-circle', size: 'lg' },
+                      { type: 'typography', variant: 'h2', content: 'Upload Complete' },
+                    ]},
+                    { type: 'divider' },
+                    // File info
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'file', size: 'md' },
+                      { type: 'typography', variant: 'h4', content: '@entity.fileName' },
+                    ]},
+                    // Progress full
+                    { type: 'meter', value: 100, label: 'Complete', icon: 'check' },
+                    { type: 'badge', label: 'Completed', variant: 'success' },
+                    { type: 'divider' },
+                    // Reset
+                    { type: 'button', label: 'Upload Another', icon: 'upload', variant: 'primary', action: 'RESET' },
+                  ]}],
                 ],
               },
               {
@@ -519,8 +752,26 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 event: 'FAIL',
                 effects: [
                   ['set', '@entity.status', 'failed'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Upload Failed' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
+                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+                    // Header
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'alert-triangle', size: 'lg' },
+                      { type: 'typography', variant: 'h2', content: 'Upload Failed' },
+                    ]},
+                    { type: 'divider' },
+                    // File info
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                      { type: 'icon', name: 'file', size: 'md' },
+                      { type: 'typography', variant: 'h4', content: '@entity.fileName' },
+                    ]},
+                    { type: 'badge', label: 'Failed', variant: 'error' },
+                    { type: 'divider' },
+                    // Retry / Reset
+                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+                      { type: 'button', label: 'Retry', icon: 'refresh-cw', variant: 'primary', action: 'RETRY' },
+                      { type: 'button', label: 'Reset', icon: 'x', variant: 'ghost', action: 'RESET' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -530,9 +781,7 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'uploading'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Uploading...' }],
-                  ['render-ui', 'main', { type: 'card', title: '@entity.fileName' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: 0, label: 'Upload Progress' }],
+                  uploadProgressMainEffect,
                 ],
               },
               {
@@ -542,9 +791,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'File Upload' }],
-['fetch', 'UploadState'],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' }],
+                  ['fetch', 'UploadState'],
+                  uploadIdleMainEffect,
                 ],
               },
               {
@@ -554,9 +802,8 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.progress', 0],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'File Upload' }],
-['fetch', 'UploadState'],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'UploadState', submitEvent: 'START_UPLOAD' }],
+                  ['fetch', 'UploadState'],
+                  uploadIdleMainEffect,
                 ],
               },
             ],

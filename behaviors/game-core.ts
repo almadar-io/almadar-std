@@ -8,7 +8,225 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { OrbitalSchema, Effect } from './types.js';
+
+// ============================================================================
+// Shared theme for all game-core behaviors
+// ============================================================================
+
+const GAME_CORE_THEME = {
+  name: 'game-core-cyan',
+  tokens: {
+    colors: {
+      primary: '#0891b2',
+      'primary-hover': '#0e7490',
+      'primary-foreground': '#ffffff',
+      accent: '#06b6d4',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ============================================================================
+// Shared asset constants
+// ============================================================================
+
+const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
+
+const GAME_MANIFEST = {
+  terrain: {
+    stone: '/terrain/Isometric/stoneSide_N.png',
+    dirt: '/terrain/Isometric/dirt_N.png',
+    bridge: '/terrain/Isometric/stoneStep_N.png',
+    wall: '/terrain/Isometric/stoneWallArchway_N.png',
+  },
+  units: {
+    guardian: '/sprite-sheets/guardian-sprite-sheet-se.png',
+    breaker: '/sprite-sheets/breaker-sprite-sheet-se.png',
+  },
+  features: {
+    gold_mine: '/world-map/gold_mine.png',
+    portal: '/world-map/portal_open.png',
+  },
+};
+
+const TILES_5X5 = [
+  { x: 0, y: 0, terrain: 'stone' }, { x: 1, y: 0, terrain: 'dirt' }, { x: 2, y: 0, terrain: 'stone' }, { x: 3, y: 0, terrain: 'dirt' }, { x: 4, y: 0, terrain: 'stone' },
+  { x: 0, y: 1, terrain: 'dirt' }, { x: 1, y: 1, terrain: 'stone' }, { x: 2, y: 1, terrain: 'dirt' }, { x: 3, y: 1, terrain: 'stone' }, { x: 4, y: 1, terrain: 'dirt' },
+  { x: 0, y: 2, terrain: 'stone' }, { x: 1, y: 2, terrain: 'dirt' }, { x: 2, y: 2, terrain: 'bridge' }, { x: 3, y: 2, terrain: 'dirt' }, { x: 4, y: 2, terrain: 'stone' },
+  { x: 0, y: 3, terrain: 'dirt' }, { x: 1, y: 3, terrain: 'stone' }, { x: 2, y: 3, terrain: 'dirt' }, { x: 3, y: 3, terrain: 'stone' }, { x: 4, y: 3, terrain: 'dirt' },
+  { x: 0, y: 4, terrain: 'stone' }, { x: 1, y: 4, terrain: 'dirt' }, { x: 2, y: 4, terrain: 'stone' }, { x: 3, y: 4, terrain: 'wall' }, { x: 4, y: 4, terrain: 'stone' },
+];
+
+// ============================================================================
+// Shared render-ui compositions
+// ============================================================================
+
+// --- std-gameloop views ---
+
+const gameLoopCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'player', x: 2, y: 2, unitType: 'guardian' }],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+  tileClickEvent: 'START',
+}];
+
+const gameLoopHudView: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'game-hud', position: 'top', elements: [
+      { label: 'Frame', value: '@entity.frameCount', icon: 'hash' },
+      { label: 'Delta', value: '@entity.deltaTime', icon: 'clock' },
+      { label: 'Elapsed', value: '@entity.elapsedTime', icon: 'timer' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Start', action: 'START', icon: 'play', variant: 'primary' },
+      { type: 'button', label: 'Pause', action: 'PAUSE', icon: 'pause', variant: 'secondary' },
+      { type: 'button', label: 'Stop', action: 'STOP', icon: 'square', variant: 'destructive' },
+    ] },
+  ],
+}];
+
+// --- std-physics2d views ---
+
+const physicsCanvasView: Effect = ['render-ui', 'main', {
+  type: 'simulation-canvas',
+  preset: 'projectile',
+  running: true,
+  width: 600,
+  height: 400,
+}];
+
+const physicsHudView: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'badge', label: 'X', value: '@entity.x', icon: 'move-horizontal' },
+      { type: 'badge', label: 'Y', value: '@entity.y', icon: 'move-vertical' },
+      { type: 'badge', label: 'VX', value: '@entity.vx', icon: 'arrow-right' },
+      { type: 'badge', label: 'VY', value: '@entity.vy', icon: 'arrow-down' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Apply Force', action: 'APPLY_FORCE', icon: 'zap', variant: 'primary' },
+      { type: 'button', label: 'Freeze', action: 'FREEZE', icon: 'snowflake', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+const physicsFrozenCanvasView: Effect = ['render-ui', 'main', {
+  type: 'simulation-canvas',
+  preset: 'projectile',
+  running: false,
+  width: 600,
+  height: 400,
+}];
+
+const physicsFrozenHudView: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'badge', label: 'X', value: '@entity.x', icon: 'move-horizontal' },
+      { type: 'badge', label: 'Y', value: '@entity.y', icon: 'move-vertical' },
+      { type: 'badge', label: 'VX', value: '@entity.vx', icon: 'arrow-right' },
+      { type: 'badge', label: 'VY', value: '@entity.vy', icon: 'arrow-down' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Unfreeze', action: 'UNFREEZE', icon: 'flame', variant: 'primary' },
+    ] },
+  ],
+}];
+
+// --- std-input views ---
+
+const inputCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [{ id: 'cursor', x: 2, y: 2, unitType: 'breaker' }],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const inputHudView: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'badge', label: 'Key Down', value: '@entity.lastKeyDown', icon: 'arrow-down-circle' },
+      { type: 'badge', label: 'Key Up', value: '@entity.lastKeyUp', icon: 'arrow-up-circle' },
+      { type: 'badge', label: 'Active', value: '@entity.isActive', icon: 'activity' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Reset', action: 'RESET', icon: 'rotate-ccw', variant: 'secondary' },
+    ] },
+  ],
+}];
+
+// --- std-collision views ---
+
+const collisionCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const collisionHudView: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'badge', label: 'Colliding', value: '@entity.isColliding', icon: 'alert-triangle' },
+      { type: 'badge', label: 'Last Hit', value: '@entity.lastCollisionId', icon: 'target' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Clear', action: 'CLEAR', icon: 'x-circle', variant: 'secondary' },
+      { type: 'button', label: 'Disable', action: 'DISABLE', icon: 'circle-off', variant: 'destructive' },
+    ] },
+  ],
+}];
+
+const collisionHitEffectView: Effect = ['render-ui', 'overlay', {
+  type: 'canvas-effect',
+  actionType: 'hit',
+  x: 200,
+  y: 200,
+  duration: 600,
+}];
+
+const collisionDisabledCanvasView: Effect = ['render-ui', 'main', {
+  type: 'isometric-canvas',
+  tiles: TILES_5X5,
+  units: [],
+  scale: 0.5,
+  boardWidth: 5,
+  boardHeight: 5,
+  enableCamera: true,
+  assetBaseUrl: KFLOW_ASSETS,
+  assetManifest: GAME_MANIFEST,
+}];
+
+const collisionDisabledHudView: Effect = ['render-ui', 'overlay', {
+  type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'badge', label: 'Colliding', value: '@entity.isColliding', icon: 'alert-triangle' },
+      { type: 'badge', label: 'Last Hit', value: '@entity.lastCollisionId', icon: 'target' },
+    ] },
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'button', label: 'Enable', action: 'ENABLE', icon: 'circle-dot', variant: 'primary' },
+    ] },
+  ],
+}];
 
 // ============================================================================
 // std-gameloop - Master Game Tick Coordination
@@ -19,7 +237,7 @@ import type { OrbitalSchema } from './types.js';
  *
  * States: Stopped -> Running -> Paused
  * Provides the master clock for all game systems.
- * Uses a concrete GameLoopState entity to track frame count and elapsed time.
+ * Uses a concrete GameLoopData entity to track frame count and elapsed time.
  */
 export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
   name: 'std-gameloop',
@@ -28,8 +246,9 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'GameLoopOrbital',
+      theme: GAME_CORE_THEME,
       entity: {
-        name: 'GameLoopState',
+        name: 'GameLoopData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -42,7 +261,7 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'GameLoop',
-          linkedEntity: 'GameLoopState',
+          linkedEntity: 'GameLoopData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -63,12 +282,12 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
                 to: 'Stopped',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'GameLoopState'],
+                  ['fetch', 'GameLoopData'],
                   ['set', '@entity.frameCount', 0],
                   ['set', '@entity.elapsedTime', 0],
                   ['set', '@entity.status', 'stopped'],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Game Loop' }],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'GameLoopState' }],
+                  gameLoopCanvasView,
+                  gameLoopHudView,
                 ],
               },
               {
@@ -76,11 +295,12 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
                 to: 'Running',
                 event: 'START',
                 effects: [
-                  ['fetch', 'GameLoopState'],
+                  ['fetch', 'GameLoopData'],
                   ['set', '@entity.frameCount', 0],
                   ['set', '@entity.elapsedTime', 0],
                   ['set', '@entity.status', 'running'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'GameLoopState' }],
+                  gameLoopCanvasView,
+                  gameLoopHudView,
                 ],
               },
               {
@@ -88,9 +308,10 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
                 to: 'Paused',
                 event: 'PAUSE',
                 effects: [
-                  ['fetch', 'GameLoopState'],
+                  ['fetch', 'GameLoopData'],
                   ['set', '@entity.status', 'paused'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'GameLoopState' }],
+                  gameLoopCanvasView,
+                  gameLoopHudView,
                 ],
               },
               {
@@ -98,9 +319,10 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
                 to: 'Running',
                 event: 'RESUME',
                 effects: [
-                  ['fetch', 'GameLoopState'],
+                  ['fetch', 'GameLoopData'],
                   ['set', '@entity.status', 'running'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'GameLoopState' }],
+                  gameLoopCanvasView,
+                  gameLoopHudView,
                 ],
               },
               {
@@ -108,9 +330,10 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
                 to: 'Stopped',
                 event: 'STOP',
                 effects: [
-                  ['fetch', 'GameLoopState'],
+                  ['fetch', 'GameLoopData'],
                   ['set', '@entity.status', 'stopped'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'GameLoopState' }],
+                  gameLoopCanvasView,
+                  gameLoopHudView,
                 ],
               },
               {
@@ -118,9 +341,10 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
                 to: 'Stopped',
                 event: 'STOP',
                 effects: [
-                  ['fetch', 'GameLoopState'],
+                  ['fetch', 'GameLoopData'],
                   ['set', '@entity.status', 'stopped'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'GameLoopState' }],
+                  gameLoopCanvasView,
+                  gameLoopHudView,
                 ],
               },
             ],
@@ -158,7 +382,7 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
  * std-physics2d - 2D physics with gravity, velocity, and friction.
  *
  * Applied to entities that need physics simulation.
- * Uses a concrete Physics2DState entity to track position and velocity.
+ * Uses a concrete Physics2DData entity to track position and velocity.
  */
 export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
   name: 'std-physics2d',
@@ -167,8 +391,9 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'Physics2DOrbital',
+      theme: GAME_CORE_THEME,
       entity: {
-        name: 'Physics2DState',
+        name: 'Physics2DData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -188,7 +413,7 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Physics2D',
-          linkedEntity: 'Physics2DState',
+          linkedEntity: 'Physics2DData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -211,12 +436,12 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'Physics2DState'],
+                  ['fetch', 'Physics2DData'],
                   ['set', '@entity.vx', 0],
                   ['set', '@entity.vy', 0],
                   ['set', '@entity.isGrounded', false],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Physics 2D' }],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Physics2DState' }],
+                  physicsCanvasView,
+                  physicsHudView,
                 ],
               },
               {
@@ -224,12 +449,12 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'Physics2DState'],
+                  ['fetch', 'Physics2DData'],
                   ['set', '@entity.vx', 0],
                   ['set', '@entity.vy', 0],
                   ['set', '@entity.isGrounded', false],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Physics 2D' }],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Physics2DState' }],
+                  physicsCanvasView,
+                  physicsHudView,
                 ],
               },
               {
@@ -237,10 +462,11 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'APPLY_FORCE',
                 effects: [
-                  ['fetch', 'Physics2DState'],
+                  ['fetch', 'Physics2DData'],
                   ['set', '@entity.vx', ['+', '@entity.vx', '@payload.fx']],
                   ['set', '@entity.vy', ['+', '@entity.vy', '@payload.fy']],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Physics2DState' }],
+                  physicsCanvasView,
+                  physicsHudView,
                 ],
               },
               {
@@ -248,11 +474,12 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'GROUND_HIT',
                 effects: [
-                  ['fetch', 'Physics2DState'],
+                  ['fetch', 'Physics2DData'],
                   ['set', '@entity.isGrounded', true],
                   ['set', '@entity.vy', 0],
                   ['set', '@entity.vx', ['*', '@entity.vx', '@entity.friction']],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Physics2DState' }],
+                  physicsCanvasView,
+                  physicsHudView,
                 ],
               },
               {
@@ -260,8 +487,9 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
                 to: 'Frozen',
                 event: 'FREEZE',
                 effects: [
-                  ['fetch', 'Physics2DState'],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'Physics2DState' }],
+                  ['fetch', 'Physics2DData'],
+                  physicsFrozenCanvasView,
+                  physicsFrozenHudView,
                 ],
               },
               {
@@ -269,8 +497,9 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'UNFREEZE',
                 effects: [
-                  ['fetch', 'Physics2DState'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'Physics2DState' }],
+                  ['fetch', 'Physics2DData'],
+                  physicsCanvasView,
+                  physicsHudView,
                 ],
               },
             ],
@@ -327,8 +556,9 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'InputOrbital',
+      theme: GAME_CORE_THEME,
       entity: {
-        name: 'InputState',
+        name: 'InputData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -340,7 +570,7 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Input',
-          linkedEntity: 'InputState',
+          linkedEntity: 'InputData',
           category: 'interaction',
           stateMachine: {
             states: [{ name: 'Ready', isInitial: true }],
@@ -360,12 +590,12 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'InputState'],
+                  ['fetch', 'InputData'],
                   ['set', '@entity.lastKeyDown', ''],
                   ['set', '@entity.lastKeyUp', ''],
                   ['set', '@entity.isActive', true],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Input State' }],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'InputState' }],
+                  inputCanvasView,
+                  inputHudView,
                 ],
               },
               {
@@ -373,9 +603,10 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'KEY_DOWN',
                 effects: [
-                  ['fetch', 'InputState'],
+                  ['fetch', 'InputData'],
                   ['set', '@entity.lastKeyDown', '@payload.key'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'InputState' }],
+                  inputCanvasView,
+                  inputHudView,
                 ],
               },
               {
@@ -383,9 +614,10 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'KEY_UP',
                 effects: [
-                  ['fetch', 'InputState'],
+                  ['fetch', 'InputData'],
                   ['set', '@entity.lastKeyUp', '@payload.key'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'InputState' }],
+                  inputCanvasView,
+                  inputHudView,
                 ],
               },
               {
@@ -393,10 +625,11 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
                 to: 'Ready',
                 event: 'RESET',
                 effects: [
-                  ['fetch', 'InputState'],
+                  ['fetch', 'InputData'],
                   ['set', '@entity.lastKeyDown', ''],
                   ['set', '@entity.lastKeyUp', ''],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'InputState' }],
+                  inputCanvasView,
+                  inputHudView,
                 ],
               },
             ],
@@ -423,7 +656,7 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
  * std-collision - Handles collision detection and response.
  *
  * Configures how an entity responds to collisions.
- * Uses a concrete CollisionState entity to track collision status.
+ * Uses a concrete CollisionData entity to track collision status.
  */
 export const COLLISION_BEHAVIOR: OrbitalSchema = {
   name: 'std-collision',
@@ -432,8 +665,9 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'CollisionOrbital',
+      theme: GAME_CORE_THEME,
       entity: {
-        name: 'CollisionState',
+        name: 'CollisionData',
         persistence: 'runtime',
         fields: [
           { name: 'id', type: 'string', required: true },
@@ -444,7 +678,7 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
       traits: [
         {
           name: 'Collision',
-          linkedEntity: 'CollisionState',
+          linkedEntity: 'CollisionData',
           category: 'interaction',
           stateMachine: {
             states: [
@@ -466,11 +700,11 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'INIT',
                 effects: [
-                  ['fetch', 'CollisionState'],
+                  ['fetch', 'CollisionData'],
                   ['set', '@entity.isColliding', false],
                   ['set', '@entity.lastCollisionId', ''],
-                  ['render-ui', 'main', { type: 'page-header',  title: 'Collision Detection' }],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'CollisionState' }],
+                  collisionCanvasView,
+                  collisionHudView,
                 ],
               },
               {
@@ -478,10 +712,12 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'COLLISION',
                 effects: [
-                  ['fetch', 'CollisionState'],
+                  ['fetch', 'CollisionData'],
                   ['set', '@entity.isColliding', true],
                   ['set', '@entity.lastCollisionId', '@payload.entityId'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'CollisionState' }],
+                  collisionCanvasView,
+                  collisionHudView,
+                  collisionHitEffectView,
                 ],
               },
               {
@@ -489,10 +725,11 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'CLEAR',
                 effects: [
-                  ['fetch', 'CollisionState'],
+                  ['fetch', 'CollisionData'],
                   ['set', '@entity.isColliding', false],
                   ['set', '@entity.lastCollisionId', ''],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'CollisionState' }],
+                  collisionCanvasView,
+                  collisionHudView,
                 ],
               },
               {
@@ -500,10 +737,11 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
                 to: 'Disabled',
                 event: 'DISABLE',
                 effects: [
-                  ['fetch', 'CollisionState'],
+                  ['fetch', 'CollisionData'],
                   ['set', '@entity.isColliding', false],
                   ['set', '@entity.lastCollisionId', ''],
-                  ['render-ui', 'main', { type: 'empty-state' }, { entity: 'CollisionState' }],
+                  collisionDisabledCanvasView,
+                  collisionDisabledHudView,
                 ],
               },
               {
@@ -511,8 +749,9 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
                 to: 'Active',
                 event: 'ENABLE',
                 effects: [
-                  ['fetch', 'CollisionState'],
-                  ['render-ui', 'main', { type: 'card' }, { entity: 'CollisionState' }],
+                  ['fetch', 'CollisionData'],
+                  collisionCanvasView,
+                  collisionHudView,
                 ],
               },
             ],

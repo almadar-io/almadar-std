@@ -6,10 +6,115 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * Molecule-first UI: all render-ui effects use atom/molecule compositions
+ * (stack, typography, icon, button, badge, etc.) instead of organism-level
+ * patterns (entity-cards, entity-table, entity-list, detail-panel, page-header).
+ *
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { OrbitalSchema, Effect } from '../types.js';
+
+// ============================================================================
+// Theme
+// ============================================================================
+
+const contentAmberTheme = {
+  name: 'content-amber',
+  tokens: {
+    colors: {
+      primary: '#d97706',
+      'primary-hover': '#b45309',
+      'primary-foreground': '#ffffff',
+      accent: '#f59e0b',
+      'accent-foreground': '#000000',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ============================================================================
+// std-article - Shared main-view effects
+// ============================================================================
+
+const articleBrowsingMainEffects: Effect[] = [
+  ['render-ui', 'main', {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'lg',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        justify: 'space-between',
+        align: 'center',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'file-text', size: 'lg' },
+              { type: 'typography', variant: 'h2', text: 'Articles' },
+            ],
+          },
+          { type: 'badge', label: 'Content Hub', color: 'primary' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'stats',
+        entity: 'Article',
+      },
+      {
+        type: 'search-input',
+        placeholder: 'Search articles by title or author...',
+        event: 'EDIT_ARTICLE',
+      },
+      {
+        type: 'data-grid',
+        entity: 'Article',
+        columns: [
+          { field: 'title', label: 'Title' },
+          { field: 'author', label: 'Author' },
+          { field: 'status', label: 'Status' },
+          { field: 'publishedAt', label: 'Published' },
+        ],
+        itemActions: [
+          { label: 'Edit', event: 'EDIT_ARTICLE', icon: 'pencil' },
+        ],
+      },
+    ],
+  }],
+];
+
+const articleEditMainEffects: Effect[] = [
+  ['render-ui', 'main', {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'md',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'sm',
+        align: 'center',
+        children: [
+          { type: 'icon', name: 'pen-tool', size: 'lg' },
+          { type: 'typography', variant: 'h2', text: 'Edit Article' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'form-section',
+        entity: 'Article',
+      },
+    ],
+  }],
+];
 
 // ============================================================================
 // std-article - Article Management
@@ -24,6 +129,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
   name: 'std-article',
   version: '1.0.0',
   description: 'Article management with editing, preview, and publish workflow',
+  theme: contentAmberTheme,
   orbitals: [
     {
       name: 'ArticleOrbital',
@@ -73,15 +179,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Articles' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Article' }],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search articles', event: 'EDIT_ARTICLE' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Article',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT_ARTICLE' },
-                    ],
-                  }],
+                  ...articleBrowsingMainEffects,
                 ],
               },
               {
@@ -90,8 +188,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 event: 'EDIT_ARTICLE',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Edit Article' }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'Article' }],
+                  ...articleEditMainEffects,
                 ],
               },
               {
@@ -103,7 +200,26 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.title', '@payload.title'],
                   ['set', '@entity.body', '@payload.body'],
                   ['set', '@entity.status', 'draft'],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'Article' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'pen-tool', size: 'lg' },
+                          { type: 'typography', variant: 'h2', text: 'Edit Article' },
+                          { type: 'badge', label: 'Draft Saved', color: 'success' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'form-section', entity: 'Article' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -112,8 +228,61 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 event: 'PREVIEW',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Preview Article' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'Article' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        justify: 'space-between',
+                        align: 'center',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'eye', size: 'lg' },
+                              { type: 'typography', variant: 'h2', text: 'Preview Article' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            children: [
+                              { type: 'button', label: 'Back to Edit', event: 'BACK_TO_EDIT', variant: 'secondary' },
+                              { type: 'button', label: 'Publish', event: 'PUBLISH', variant: 'primary' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'typography', variant: 'h3', text: '@entity.title' },
+                      { type: 'typography', variant: 'body', text: '@entity.body' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'md',
+                        children: [
+                          { type: 'badge', label: '@entity.status', color: 'warning' },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'type', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: '@entity.author' },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  }],
                 ],
               },
               {
@@ -122,8 +291,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK_TO_EDIT',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Edit Article' }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'Article' }],
+                  ...articleEditMainEffects,
                 ],
               },
               {
@@ -133,8 +301,55 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Article'],
                   ['set', '@entity.status', 'published'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Published' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'Article' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'book-open', size: 'lg' },
+                          { type: 'typography', variant: 'h2', text: 'Published' },
+                          { type: 'badge', label: 'Live', color: 'success' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'typography', variant: 'h3', text: '@entity.title' },
+                      { type: 'typography', variant: 'body', text: '@entity.body' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'md',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'type', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: '@entity.author' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'calendar', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: '@entity.publishedAt' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'button', label: 'Back to Articles', event: 'BACK_TO_LIST', variant: 'secondary' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -143,14 +358,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK_TO_LIST',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Articles' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Article' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Article',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT_ARTICLE' },
-                    ],
-                  }],
+                  ...articleBrowsingMainEffects,
                 ],
               },
               {
@@ -159,14 +367,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK_TO_LIST',
                 effects: [
                   ['fetch', 'Article'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Articles' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Article' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Article',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT_ARTICLE' },
-                    ],
-                  }],
+                  ...articleBrowsingMainEffects,
                 ],
               },
             ],
@@ -186,6 +387,48 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
 };
 
 // ============================================================================
+// std-reader - Shared main-view effects
+// ============================================================================
+
+const readerBrowsingMainEffects: Effect[] = [
+  ['render-ui', 'main', {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'lg',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        justify: 'space-between',
+        align: 'center',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'book-open', size: 'lg' },
+              { type: 'typography', variant: 'h2', text: 'Library' },
+            ],
+          },
+          { type: 'badge', label: 'Reading Hub', color: 'accent' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'data-list',
+        entity: 'ReadingState',
+        fields: ['articleId', 'fontSize', 'theme'],
+        itemActions: [
+          { label: 'Read', event: 'OPEN_ARTICLE', icon: 'book-open' },
+        ],
+      },
+    ],
+  }],
+];
+
+// ============================================================================
 // std-reader - Reading Experience
 // ============================================================================
 
@@ -198,6 +441,7 @@ export const READER_BEHAVIOR: OrbitalSchema = {
   name: 'std-reader',
   version: '1.0.0',
   description: 'Reading experience with customizable display settings',
+  theme: contentAmberTheme,
   orbitals: [
     {
       name: 'ReaderOrbital',
@@ -240,13 +484,7 @@ export const READER_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'ReadingState'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Library' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'ReadingState',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  ...readerBrowsingMainEffects,
                 ],
               },
               {
@@ -256,9 +494,64 @@ export const READER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'ReadingState'],
                   ['set', '@entity.articleId', '@payload.articleId'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Reading' }],
-                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.scrollPosition', label: 'Reading Progress' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'ReadingState' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        justify: 'space-between',
+                        align: 'center',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'eye', size: 'lg' },
+                              { type: 'typography', variant: 'h2', text: 'Reading' },
+                            ],
+                          },
+                          { type: 'button', label: 'Back to Library', event: 'BACK_TO_LIST', variant: 'secondary' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'meter', value: '@entity.scrollPosition', max: 100, label: 'Reading Progress' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'lg',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'type', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: 'Font Size' },
+                              { type: 'badge', label: '@entity.fontSize', color: 'primary' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'image', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: 'Theme' },
+                              { type: 'badge', label: '@entity.theme', color: 'accent' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'typography', variant: 'body', text: '@entity.articleId' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -268,8 +561,65 @@ export const READER_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'ReadingState'],
                   ['set', '@entity.fontSize', '@payload.fontSize'],
-                  ['render-ui', 'main', { type: 'progress-bar', value: '@entity.scrollPosition', label: 'Reading Progress' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'ReadingState' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        justify: 'space-between',
+                        align: 'center',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'eye', size: 'lg' },
+                              { type: 'typography', variant: 'h2', text: 'Reading' },
+                              { type: 'badge', label: 'Settings Updated', color: 'success' },
+                            ],
+                          },
+                          { type: 'button', label: 'Back to Library', event: 'BACK_TO_LIST', variant: 'secondary' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'meter', value: '@entity.scrollPosition', max: 100, label: 'Reading Progress' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'lg',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'type', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: 'Font Size' },
+                              { type: 'badge', label: '@entity.fontSize', color: 'primary' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'image', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: 'Theme' },
+                              { type: 'badge', label: '@entity.theme', color: 'accent' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'typography', variant: 'body', text: '@entity.articleId' },
+                    ],
+                  }],
                 ],
               },
               {
@@ -278,13 +628,7 @@ export const READER_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK_TO_LIST',
                 effects: [
                   ['fetch', 'ReadingState'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Library' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'ReadingState',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  ...readerBrowsingMainEffects,
                 ],
               },
             ],
@@ -304,6 +648,50 @@ export const READER_BEHAVIOR: OrbitalSchema = {
 };
 
 // ============================================================================
+// std-bookmark - Shared main-view effects
+// ============================================================================
+
+const bookmarkBrowsingMainEffects: Effect[] = [
+  ['render-ui', 'main', {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'lg',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        justify: 'space-between',
+        align: 'center',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'tag', size: 'lg' },
+              { type: 'typography', variant: 'h2', text: 'Bookmarks' },
+            ],
+          },
+          { type: 'button', label: 'Create Bookmark', event: 'CREATE', variant: 'primary', icon: 'tag' },
+        ],
+      },
+      { type: 'divider' },
+      { type: 'stats', entity: 'Bookmark' },
+      { type: 'search-input', placeholder: 'Filter by title, URL, or category...', event: 'VIEW' },
+      {
+        type: 'data-list',
+        entity: 'Bookmark',
+        fields: ['title', 'url', 'category', 'createdAt'],
+        itemActions: [
+          { label: 'View', event: 'VIEW', icon: 'eye' },
+        ],
+      },
+    ],
+  }],
+];
+
+// ============================================================================
 // std-bookmark - Bookmark Management
 // ============================================================================
 
@@ -316,6 +704,7 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
   name: 'std-bookmark',
   version: '1.0.0',
   description: 'Bookmark management with create, browse, and view',
+  theme: contentAmberTheme,
   orbitals: [
     {
       name: 'BookmarkOrbital',
@@ -363,17 +752,7 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Bookmark'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Bookmarks',
-                    actions: [{ label: 'Create', event: 'CREATE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Bookmark' }],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search bookmarks', event: 'VIEW' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Bookmark',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...bookmarkBrowsingMainEffects,
                 ],
               },
               {
@@ -382,10 +761,29 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
                 event: 'CREATE',
                 effects: [
                   ['fetch', 'Bookmark'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'Bookmark',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'tag', size: 'md' },
+                          { type: 'typography', variant: 'h3', text: 'New Bookmark' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'form-section',
+                        entity: 'Bookmark',
+                        submitEvent: 'SAVE',
+                        cancelEvent: 'CANCEL',
+                      },
+                    ],
                   }],
                 ],
               },
@@ -399,13 +797,7 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.url', '@payload.url'],
                   ['set', '@entity.category', '@payload.category'],
                   ['render-ui', 'modal', null],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Bookmark' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Bookmark',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...bookmarkBrowsingMainEffects,
                 ],
               },
               { from: 'creating', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
@@ -416,9 +808,59 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'Bookmark'],
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    entity: 'Bookmark',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        justify: 'space-between',
+                        align: 'center',
+                        children: [
+                          { type: 'typography', variant: 'h3', text: '@entity.title' },
+                          { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'stack',
+                        direction: 'vertical',
+                        gap: 'sm',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'tag', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: 'URL' },
+                            ],
+                          },
+                          { type: 'typography', variant: 'body', text: '@entity.url' },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'md',
+                            children: [
+                              { type: 'badge', label: '@entity.category', color: 'primary' },
+                              {
+                                type: 'stack',
+                                direction: 'horizontal',
+                                gap: 'xs',
+                                align: 'center',
+                                children: [
+                                  { type: 'icon', name: 'calendar', size: 'sm' },
+                                  { type: 'typography', variant: 'caption', text: '@entity.createdAt' },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
                   }],
                 ],
               },
@@ -441,6 +883,55 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
 };
 
 // ============================================================================
+// std-annotation - Shared main-view effects
+// ============================================================================
+
+const annotationBrowsingMainEffects: Effect[] = [
+  ['render-ui', 'main', {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'lg',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        justify: 'space-between',
+        align: 'center',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'pencil', size: 'lg' },
+              { type: 'typography', variant: 'h2', text: 'Annotations' },
+            ],
+          },
+          { type: 'button', label: 'Add Annotation', event: 'ADD_ANNOTATION', variant: 'primary', icon: 'pencil' },
+        ],
+      },
+      { type: 'divider' },
+      { type: 'stats', entity: 'Annotation' },
+      { type: 'search-input', placeholder: 'Search highlights and notes...', event: 'VIEW_ANNOTATION' },
+      {
+        type: 'data-grid',
+        entity: 'Annotation',
+        columns: [
+          { field: 'text', label: 'Highlighted Text' },
+          { field: 'note', label: 'Note' },
+          { field: 'color', label: 'Color' },
+          { field: 'pageNumber', label: 'Page' },
+        ],
+        itemActions: [
+          { label: 'View', event: 'VIEW_ANNOTATION', icon: 'eye' },
+        ],
+      },
+    ],
+  }],
+];
+
+// ============================================================================
 // std-annotation - Text Annotations
 // ============================================================================
 
@@ -453,6 +944,7 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
   name: 'std-annotation',
   version: '1.0.0',
   description: 'Text annotation with highlight, note, and color coding',
+  theme: contentAmberTheme,
   orbitals: [
     {
       name: 'AnnotationOrbital',
@@ -500,15 +992,7 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Annotation'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Annotations' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Annotation' }],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search annotations', event: 'VIEW_ANNOTATION' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Annotation',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW_ANNOTATION' },
-                    ],
-                  }],
+                  ...annotationBrowsingMainEffects,
                 ],
               },
               {
@@ -517,10 +1001,29 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
                 event: 'ADD_ANNOTATION',
                 effects: [
                   ['fetch', 'Annotation'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'Annotation',
-                    submitEvent: 'SAVE_ANNOTATION',
-                    cancelEvent: 'CANCEL',
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'pencil', size: 'md' },
+                          { type: 'typography', variant: 'h3', text: 'New Annotation' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'form-section',
+                        entity: 'Annotation',
+                        submitEvent: 'SAVE_ANNOTATION',
+                        cancelEvent: 'CANCEL',
+                      },
+                    ],
                   }],
                 ],
               },
@@ -534,13 +1037,7 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.note', '@payload.note'],
                   ['set', '@entity.color', '@payload.color'],
                   ['render-ui', 'modal', null],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Annotation' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Annotation',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW_ANNOTATION' },
-                    ],
-                  }],
+                  ...annotationBrowsingMainEffects,
                 ],
               },
               { from: 'annotating', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
@@ -551,9 +1048,63 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW_ANNOTATION',
                 effects: [
                   ['fetch', 'Annotation'],
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    entity: 'Annotation',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        justify: 'space-between',
+                        align: 'center',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'pencil', size: 'md' },
+                              { type: 'typography', variant: 'h3', text: 'Annotation Detail' },
+                            ],
+                          },
+                          { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'stack',
+                        direction: 'vertical',
+                        gap: 'sm',
+                        children: [
+                          { type: 'typography', variant: 'label', text: 'Highlighted Text' },
+                          { type: 'typography', variant: 'body', text: '@entity.text' },
+                          { type: 'divider' },
+                          { type: 'typography', variant: 'label', text: 'Note' },
+                          { type: 'typography', variant: 'body', text: '@entity.note' },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'md',
+                            children: [
+                              { type: 'badge', label: '@entity.color', color: 'accent' },
+                              {
+                                type: 'stack',
+                                direction: 'horizontal',
+                                gap: 'xs',
+                                align: 'center',
+                                children: [
+                                  { type: 'icon', name: 'file-text', size: 'sm' },
+                                  { type: 'typography', variant: 'caption', text: 'Page' },
+                                  { type: 'badge', label: '@entity.pageNumber', color: 'primary' },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
                   }],
                 ],
               },
@@ -576,6 +1127,50 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
 };
 
 // ============================================================================
+// std-content-feed - Shared main-view effects
+// ============================================================================
+
+const feedBrowsingMainEffects: Effect[] = [
+  ['render-ui', 'main', {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'lg',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        justify: 'space-between',
+        align: 'center',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'file-text', size: 'lg' },
+              { type: 'typography', variant: 'h2', text: 'Content Feed' },
+            ],
+          },
+          { type: 'badge', label: 'Live', color: 'success' },
+        ],
+      },
+      { type: 'divider' },
+      { type: 'stats', entity: 'FeedItem' },
+      { type: 'search-input', placeholder: 'Search feed by title or source...', event: 'READ_ITEM' },
+      {
+        type: 'data-list',
+        entity: 'FeedItem',
+        fields: ['title', 'summary', 'source', 'publishedAt', 'isRead'],
+        itemActions: [
+          { label: 'Read', event: 'READ_ITEM', icon: 'book-open' },
+        ],
+      },
+    ],
+  }],
+];
+
+// ============================================================================
 // std-content-feed - Content Feed
 // ============================================================================
 
@@ -588,6 +1183,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
   name: 'std-content-feed',
   version: '1.0.0',
   description: 'Content feed with read tracking and archiving',
+  theme: contentAmberTheme,
   orbitals: [
     {
       name: 'ContentFeedOrbital',
@@ -633,15 +1229,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'FeedItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Content Feed' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'FeedItem' }],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search feed', event: 'READ_ITEM' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'FeedItem',
-                    itemActions: [
-                      { label: 'Read', event: 'READ_ITEM' },
-                    ],
-                  }],
+                  ...feedBrowsingMainEffects,
                 ],
               },
               {
@@ -651,8 +1239,70 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FeedItem'],
                   ['set', '@entity.isRead', true],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Reading' }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'FeedItem' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        justify: 'space-between',
+                        align: 'center',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'book-open', size: 'lg' },
+                              { type: 'typography', variant: 'h2', text: '@entity.title' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            children: [
+                              { type: 'button', label: 'Archive', event: 'ARCHIVE_ITEM', variant: 'secondary' },
+                              { type: 'button', label: 'Back to Feed', event: 'BACK_TO_FEED', variant: 'ghost' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'typography', variant: 'body', text: '@entity.summary' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'md',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'file-text', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: '@entity.source' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'xs',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'calendar', size: 'sm' },
+                              { type: 'typography', variant: 'caption', text: '@entity.publishedAt' },
+                            ],
+                          },
+                          { type: 'badge', label: 'Read', color: 'success' },
+                        ],
+                      },
+                    ],
+                  }],
                 ],
               },
               {
@@ -660,11 +1310,34 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 to: 'archiving',
                 event: 'ARCHIVE_ITEM',
                 effects: [
-                  ['render-ui', 'modal', { type: 'confirm-dialog',
-                    title: 'Archive Item',
-                    message: 'Are you sure you want to archive this item?',
-                    confirmText: 'Confirm',
-                    cancelText: 'Cancel',
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'md',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'tag', size: 'md' },
+                          { type: 'typography', variant: 'h3', text: 'Archive Item' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      { type: 'typography', variant: 'body', text: 'Are you sure you want to archive this item?' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        justify: 'flex-end',
+                        children: [
+                          { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'secondary' },
+                          { type: 'button', label: 'Confirm', event: 'CONFIRM_ARCHIVE', variant: 'primary' },
+                        ],
+                      },
+                    ],
                   }],
                 ],
               },
@@ -675,14 +1348,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FeedItem'],
                   ['render-ui', 'modal', null],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Content Feed' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'FeedItem' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'FeedItem',
-                    itemActions: [
-                      { label: 'Read', event: 'READ_ITEM' },
-                    ],
-                  }],
+                  ...feedBrowsingMainEffects,
                 ],
               },
               { from: 'archiving', to: 'reading', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
@@ -693,14 +1359,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK_TO_FEED',
                 effects: [
                   ['fetch', 'FeedItem'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Content Feed' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'FeedItem' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'FeedItem',
-                    itemActions: [
-                      { label: 'Read', event: 'READ_ITEM' },
-                    ],
-                  }],
+                  ...feedBrowsingMainEffects,
                 ],
               },
             ],

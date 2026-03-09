@@ -5,19 +5,186 @@
  * fetching, submission, retry, and polling.
  * Each behavior is a self-contained OrbitalSchema that can function as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * stack wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from './types.js';
 
+// ── Shared Async Theme ─────────────────────────────────────────────
+
+const ASYNC_THEME = {
+  name: 'async-blue',
+  tokens: {
+    colors: {
+      primary: '#2563eb',
+      'primary-hover': '#1d4ed8',
+      'primary-foreground': '#ffffff',
+      accent: '#3b82f6',
+      'accent-foreground': '#ffffff',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
 // ============================================================================
 // std-loading - Loading Dashboard
 // ============================================================================
+
+// ── Reusable main-view effects (loading: idle dashboard) ───────────
+
+const loadingDashboardEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'loader', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Loading Dashboard' },
+      ]},
+      { type: 'button', label: 'Start', icon: 'play', variant: 'primary', action: 'START' },
+    ]},
+    { type: 'divider' },
+    // Stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Records', icon: 'database', entity: 'LoadingRecord' },
+      { type: 'stats', label: 'Status', icon: 'activity', entity: 'LoadingRecord' },
+    ]},
+    { type: 'divider' },
+    // Data grid
+    { type: 'data-grid', entity: 'LoadingRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'label', label: 'Label', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Loading in-progress view ───────────────────────────────────────
+
+const loadingInProgressEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: spinner + title
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'loader', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Loading...' },
+    ]},
+    { type: 'divider' },
+    // Loading indicator with icon and descriptive text
+    { type: 'stack', direction: 'vertical', gap: 'sm', align: 'center', children: [
+      { type: 'icon', name: 'loader', size: 'xl' },
+      { type: 'typography', variant: 'body', content: 'Please wait while your data is being loaded.' },
+    ]},
+    { type: 'progress-bar', value: 0, label: 'Processing', icon: 'clock' },
+    { type: 'divider' },
+    // Data grid
+    { type: 'data-grid', entity: 'LoadingRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'label', label: 'Label', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Loading success view ───────────────────────────────────────────
+
+const loadingSuccessEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: success icon + title + reset
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'check-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Loaded' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Complete', variant: 'success', icon: 'check' },
+    { type: 'divider' },
+    // Data grid
+    { type: 'data-grid', entity: 'LoadingRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'label', label: 'Label', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Loading error view ─────────────────────────────────────────────
+
+const loadingErrorEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: error icon + title + reset
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'alert-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Error' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Failed', variant: 'error', icon: 'x-circle' },
+    { type: 'divider' },
+    // Data grid
+    { type: 'data-grid', entity: 'LoadingRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'label', label: 'Label', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Loading view-only (no header actions, shared across VIEW self-transitions) ──
+
+const loadingViewEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'loader', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Loading Dashboard' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'LoadingRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'label', label: 'Label', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
 
 export const LOADING_BEHAVIOR: OrbitalSchema = {
   name: 'std-loading',
   version: '1.0.0',
   description: 'Loading state management with success/error handling',
+  theme: ASYNC_THEME,
   orbitals: [
     {
       name: 'LoadingOrbital',
@@ -57,13 +224,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                 from: 'idle', to: 'idle', event: 'INIT',
                 effects: [
                   ['fetch', 'LoadingRecord'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Loading Dashboard' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LoadingRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...loadingDashboardEffects,
                 ],
               },
               {
@@ -71,13 +232,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'LoadingRecord'],
                   ['set', '@entity.status', 'loading'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Loading...' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LoadingRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...loadingInProgressEffects,
                 ],
               },
               {
@@ -85,13 +240,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'LoadingRecord'],
                   ['set', '@entity.status', 'loaded'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Loaded' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LoadingRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...loadingSuccessEffects,
                 ],
               },
               {
@@ -100,13 +249,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'LoadingRecord'],
                   ['set', '@entity.status', 'error'],
                   ['set', '@entity.message', '@payload.message'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Error' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LoadingRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...loadingErrorEffects,
                 ],
               },
               {
@@ -114,13 +257,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'LoadingRecord'],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Loading Dashboard' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LoadingRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...loadingDashboardEffects,
                 ],
               },
               {
@@ -129,52 +266,14 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'LoadingRecord'],
                   ['set', '@entity.status', 'idle'],
                   ['set', '@entity.message', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Loading Dashboard' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'LoadingRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...loadingDashboardEffects,
                 ],
               },
               // VIEW self-transitions for each state
-              {
-                from: 'idle', to: 'idle', event: 'VIEW',
-                effects: [
-                  ['fetch', 'LoadingRecord'],
-                  ['render-ui', 'main', { type: 'entity-cards', entity: 'LoadingRecord',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
-                ],
-              },
-              {
-                from: 'loading', to: 'loading', event: 'VIEW',
-                effects: [
-                  ['fetch', 'LoadingRecord'],
-                  ['render-ui', 'main', { type: 'entity-cards', entity: 'LoadingRecord',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
-                ],
-              },
-              {
-                from: 'loaded', to: 'loaded', event: 'VIEW',
-                effects: [
-                  ['fetch', 'LoadingRecord'],
-                  ['render-ui', 'main', { type: 'entity-cards', entity: 'LoadingRecord',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
-                ],
-              },
-              {
-                from: 'error', to: 'error', event: 'VIEW',
-                effects: [
-                  ['fetch', 'LoadingRecord'],
-                  ['render-ui', 'main', { type: 'entity-cards', entity: 'LoadingRecord',
-                    itemActions: [{ label: 'View', event: 'VIEW' }],
-                  }],
-                ],
-              },
+              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'LoadingRecord'], ...loadingViewEffects] },
+              { from: 'loading', to: 'loading', event: 'VIEW', effects: [['fetch', 'LoadingRecord'], ...loadingViewEffects] },
+              { from: 'loaded', to: 'loaded', event: 'VIEW', effects: [['fetch', 'LoadingRecord'], ...loadingViewEffects] },
+              { from: 'error', to: 'error', event: 'VIEW', effects: [['fetch', 'LoadingRecord'], ...loadingViewEffects] },
             ],
           },
         },
@@ -188,10 +287,171 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
 // std-fetch - Data Browser
 // ============================================================================
 
+// ── Reusable main-view effects (fetch: idle) ───────────────────────
+
+const fetchIdleEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + fetch button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'download-cloud', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Data Browser' },
+      ]},
+      { type: 'button', label: 'Fetch', icon: 'download', variant: 'primary', action: 'FETCH' },
+    ]},
+    { type: 'divider' },
+    // Stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Records', icon: 'database', entity: 'FetchRecord' },
+      { type: 'stats', label: 'Status', icon: 'activity', entity: 'FetchRecord' },
+    ]},
+    { type: 'divider' },
+    // Data list
+    { type: 'data-list', entity: 'FetchRecord',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Fetching in-progress view ──────────────────────────────────────
+
+const fetchingEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'download-cloud', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Fetching...' },
+    ]},
+    { type: 'divider' },
+    { type: 'progress-bar', value: 0, label: 'Fetching data', icon: 'clock' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'FetchRecord',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Fresh data view ────────────────────────────────────────────────
+
+const fetchFreshEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'check-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Data Browser' },
+      ]},
+      { type: 'button', label: 'Refresh', icon: 'refresh-cw', variant: 'secondary', action: 'REFRESH' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Fresh', variant: 'success', icon: 'check' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'FetchRecord',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Stale data view ────────────────────────────────────────────────
+
+const fetchStaleEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'clock', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Data Stale' },
+      ]},
+      { type: 'button', label: 'Refresh', icon: 'refresh-cw', variant: 'primary', action: 'REFRESH' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Stale', variant: 'warning', icon: 'alert-triangle' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'FetchRecord',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Fetch error view ───────────────────────────────────────────────
+
+const fetchErrorEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'alert-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Fetch Error' },
+      ]},
+      { type: 'button', label: 'Refresh', icon: 'refresh-cw', variant: 'secondary', action: 'REFRESH' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Error', variant: 'error', icon: 'x-circle' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'FetchRecord',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Fetch view-only (shared across VIEW self-transitions) ──────────
+
+const fetchViewEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'download-cloud', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Data Browser' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-list', entity: 'FetchRecord',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
 export const FETCH_BEHAVIOR: OrbitalSchema = {
   name: 'std-fetch',
   version: '1.0.0',
   description: 'Data fetching with refresh capabilities',
+  theme: ASYNC_THEME,
   orbitals: [
     {
       name: 'FetchOrbital',
@@ -234,13 +494,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                 from: 'idle', to: 'idle', event: 'INIT',
                 effects: [
                   ['fetch', 'FetchRecord'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Data Browser', actions: [{ label: 'Fetch', event: 'FETCH' }] }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchIdleEffects,
                 ],
               },
               {
@@ -248,13 +502,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'fetching'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Fetching...' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchingEffects,
                 ],
               },
               {
@@ -262,13 +510,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'fresh'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Data Browser', actions: [{ label: 'Refresh', event: 'REFRESH' }] }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchFreshEffects,
                 ],
               },
               {
@@ -277,15 +519,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'error'],
                   ['set', '@entity.message', '@payload.message'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Fetch Error',
-                    actions: [{ label: 'Refresh', event: 'REFRESH' }],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchErrorEffects,
                 ],
               },
               {
@@ -293,13 +527,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'stale'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Data Stale', actions: [{ label: 'Refresh', event: 'REFRESH' }] }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchStaleEffects,
                 ],
               },
               {
@@ -307,13 +535,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'fetching'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Refreshing...' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchingEffects,
                 ],
               },
               {
@@ -321,13 +543,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'fetching'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Refreshing...' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchingEffects,
                 ],
               },
               {
@@ -336,13 +552,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'fetching'],
                   ['set', '@entity.message', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Retrying...' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchingEffects,
                 ],
               },
               {
@@ -351,21 +561,15 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'FetchRecord'],
                   ['set', '@entity.status', 'idle'],
                   ['set', '@entity.message', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Data Browser', actions: [{ label: 'Fetch', event: 'FETCH' }] }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'FetchRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...fetchIdleEffects,
                 ],
               },
               // VIEW self-transitions for each state
-              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ['render-ui', 'main', { type: 'entity-table', entity: 'FetchRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'fetching', to: 'fetching', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ['render-ui', 'main', { type: 'entity-table', entity: 'FetchRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'fresh', to: 'fresh', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ['render-ui', 'main', { type: 'entity-table', entity: 'FetchRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'stale', to: 'stale', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ['render-ui', 'main', { type: 'entity-table', entity: 'FetchRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'error', to: 'error', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ['render-ui', 'main', { type: 'entity-table', entity: 'FetchRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ...fetchViewEffects] },
+              { from: 'fetching', to: 'fetching', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ...fetchViewEffects] },
+              { from: 'fresh', to: 'fresh', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ...fetchViewEffects] },
+              { from: 'stale', to: 'stale', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ...fetchViewEffects] },
+              { from: 'error', to: 'error', event: 'VIEW', effects: [['fetch', 'FetchRecord'], ...fetchViewEffects] },
             ],
           },
         },
@@ -379,10 +583,141 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
 // std-submit - Form Submission
 // ============================================================================
 
+// ── Reusable main-view effects (submit: idle) ──────────────────────
+
+const submitIdleEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'send', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Submissions' },
+    ]},
+    { type: 'divider' },
+    // Stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Total', icon: 'hash', entity: 'Submission' },
+      { type: 'stats', label: 'Status', icon: 'activity', entity: 'Submission' },
+    ]},
+    { type: 'divider' },
+    // Submission list
+    { type: 'data-list', entity: 'Submission',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'file-text', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Submitting in-progress view ────────────────────────────────────
+
+const submittingEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'send', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Submitting...' },
+    ]},
+    { type: 'divider' },
+    { type: 'progress-bar', value: 0, label: 'Sending', icon: 'upload' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'Submission',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'file-text', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Submit success view ────────────────────────────────────────────
+
+const submitSuccessEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'check-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Success' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Submitted', variant: 'success', icon: 'check' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'Submission',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'file-text', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Submit error view ──────────────────────────────────────────────
+
+const submitErrorEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'alert-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Submission Failed' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Error', variant: 'error', icon: 'x-circle' },
+    { type: 'divider' },
+    { type: 'data-list', entity: 'Submission',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'file-text', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Submit view-only (shared across VIEW self-transitions) ─────────
+
+const submitViewEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'send', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Submissions' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-list', entity: 'Submission',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'file-text', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
 export const SUBMIT_BEHAVIOR: OrbitalSchema = {
   name: 'std-submit',
   version: '1.0.0',
   description: 'Form submission with success/error handling',
+  theme: ASYNC_THEME,
   orbitals: [
     {
       name: 'SubmitOrbital',
@@ -423,13 +758,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                 from: 'idle', to: 'idle', event: 'INIT',
                 effects: [
                   ['fetch', 'Submission'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submissions' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submitIdleEffects,
                 ],
               },
               {
@@ -438,13 +767,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Submission'],
                   ['set', '@entity.status', 'submitting'],
                   ['set', '@entity.name', '@payload.name'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submitting...' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submittingEffects,
                 ],
               },
               {
@@ -453,13 +776,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Submission'],
                   ['set', '@entity.status', 'success'],
                   ['persist', 'create', 'Submission', { name: '@entity.name', status: 'success' }],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Success' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submitSuccessEffects,
                 ],
               },
               {
@@ -468,13 +785,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Submission'],
                   ['set', '@entity.status', 'error'],
                   ['set', '@entity.message', '@payload.message'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submission Failed' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submitErrorEffects,
                 ],
               },
               {
@@ -482,13 +793,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Submission'],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submissions' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submitIdleEffects,
                 ],
               },
               {
@@ -497,13 +802,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'Submission'],
                   ['set', '@entity.status', 'idle'],
                   ['set', '@entity.message', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submissions' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submitIdleEffects,
                 ],
               },
               {
@@ -511,20 +810,14 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'Submission'],
                   ['set', '@entity.status', 'idle'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submissions' }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'Submission',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...submitIdleEffects,
                 ],
               },
               // VIEW self-transitions for each state
-              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'Submission'], ['render-ui', 'main', { type: 'entity-list', entity: 'Submission', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'submitting', to: 'submitting', event: 'VIEW', effects: [['fetch', 'Submission'], ['render-ui', 'main', { type: 'entity-list', entity: 'Submission', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'success', to: 'success', event: 'VIEW', effects: [['fetch', 'Submission'], ['render-ui', 'main', { type: 'entity-list', entity: 'Submission', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'error', to: 'error', event: 'VIEW', effects: [['fetch', 'Submission'], ['render-ui', 'main', { type: 'entity-list', entity: 'Submission', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'Submission'], ...submitViewEffects] },
+              { from: 'submitting', to: 'submitting', event: 'VIEW', effects: [['fetch', 'Submission'], ...submitViewEffects] },
+              { from: 'success', to: 'success', event: 'VIEW', effects: [['fetch', 'Submission'], ...submitViewEffects] },
+              { from: 'error', to: 'error', event: 'VIEW', effects: [['fetch', 'Submission'], ...submitViewEffects] },
             ],
           },
         },
@@ -538,10 +831,149 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
 // std-retry - Operation with Retry
 // ============================================================================
 
+// ── Reusable main-view effects (retry: idle) ───────────────────────
+
+const retryIdleEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + start button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'repeat', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Operations' },
+      ]},
+      { type: 'button', label: 'Start', icon: 'play', variant: 'primary', action: 'START' },
+    ]},
+    { type: 'divider' },
+    // Stats row
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Records', icon: 'database', entity: 'RetryRecord' },
+      { type: 'stats', label: 'Attempts', icon: 'repeat', entity: 'RetryRecord' },
+    ]},
+    { type: 'divider' },
+    // Data grid
+    { type: 'data-grid', entity: 'RetryRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'attempt', label: 'Attempt', icon: 'hash', variant: 'body', format: 'number' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Attempting view ────────────────────────────────────────────────
+
+const retryAttemptingEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'repeat', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Attempting...' },
+    ]},
+    { type: 'divider' },
+    { type: 'progress-bar', value: 0, label: 'Processing', icon: 'clock' },
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'RetryRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'attempt', label: 'Attempt', icon: 'hash', variant: 'body', format: 'number' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Retry success view ─────────────────────────────────────────────
+
+const retrySuccessEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'check-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Success' },
+      ]},
+      { type: 'button', label: 'Reset', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Complete', variant: 'success', icon: 'check' },
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'RetryRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'attempt', label: 'Attempt', icon: 'hash', variant: 'body', format: 'number' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Retry failed view ──────────────────────────────────────────────
+
+const retryFailedEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'alert-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Failed' },
+      ]},
+      { type: 'button', label: 'Retry', icon: 'repeat', variant: 'primary', action: 'RETRY' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Failed', variant: 'error', icon: 'x-circle' },
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'RetryRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'attempt', label: 'Attempt', icon: 'hash', variant: 'body', format: 'number' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Retry view-only (shared across VIEW self-transitions) ──────────
+
+const retryViewEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'repeat', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Operations' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'RetryRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'attempt', label: 'Attempt', icon: 'hash', variant: 'body', format: 'number' },
+        { name: 'message', label: 'Message', icon: 'message-square', variant: 'body' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
 export const RETRY_BEHAVIOR: OrbitalSchema = {
   name: 'std-retry',
   version: '1.0.0',
   description: 'Operation with retry capability',
+  theme: ASYNC_THEME,
   orbitals: [
     {
       name: 'RetryOrbital',
@@ -583,13 +1015,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                 from: 'idle', to: 'idle', event: 'INIT',
                 effects: [
                   ['fetch', 'RetryRecord'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Operations', actions: [{ label: 'Start', event: 'START' }] }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retryIdleEffects,
                 ],
               },
               {
@@ -598,13 +1024,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'RetryRecord'],
                   ['set', '@entity.status', 'attempting'],
                   ['set', '@entity.attempt', 1],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Attempting...' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retryAttemptingEffects,
                 ],
               },
               {
@@ -612,13 +1032,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'RetryRecord'],
                   ['set', '@entity.status', 'success'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Success' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retrySuccessEffects,
                 ],
               },
               {
@@ -627,13 +1041,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'RetryRecord'],
                   ['set', '@entity.status', 'failed'],
                   ['set', '@entity.message', '@payload.message'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Failed', actions: [{ label: 'Retry', event: 'RETRY' }] }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retryFailedEffects,
                 ],
               },
               {
@@ -642,13 +1050,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'RetryRecord'],
                   ['set', '@entity.status', 'attempting'],
                   ['set', '@entity.message', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Retrying...' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retryAttemptingEffects,
                 ],
               },
               {
@@ -657,13 +1059,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'RetryRecord'],
                   ['set', '@entity.status', 'idle'],
                   ['set', '@entity.attempt', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Operations', actions: [{ label: 'Start', event: 'START' }] }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retryIdleEffects,
                 ],
               },
               {
@@ -673,20 +1069,14 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.status', 'idle'],
                   ['set', '@entity.attempt', 0],
                   ['set', '@entity.message', ''],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Operations', actions: [{ label: 'Start', event: 'START' }] }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'RetryRecord',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...retryIdleEffects,
                 ],
               },
               // VIEW self-transitions for each state
-              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ['render-ui', 'main', { type: 'entity-cards', entity: 'RetryRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'attempting', to: 'attempting', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ['render-ui', 'main', { type: 'entity-cards', entity: 'RetryRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'success', to: 'success', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ['render-ui', 'main', { type: 'entity-cards', entity: 'RetryRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
-              { from: 'failed', to: 'failed', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ['render-ui', 'main', { type: 'entity-cards', entity: 'RetryRecord', itemActions: [{ label: 'View', event: 'VIEW' }] }]] },
+              { from: 'idle', to: 'idle', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ...retryViewEffects] },
+              { from: 'attempting', to: 'attempting', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ...retryViewEffects] },
+              { from: 'success', to: 'success', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ...retryViewEffects] },
+              { from: 'failed', to: 'failed', event: 'VIEW', effects: [['fetch', 'RetryRecord'], ...retryViewEffects] },
             ],
           },
         },
@@ -700,10 +1090,141 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
 // std-poll - Polling Monitor
 // ============================================================================
 
+// ── Reusable main-view effects (poll: stopped) ─────────────────────
+
+const pollStoppedEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + start button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'radio', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Poll Monitor' },
+      ]},
+      { type: 'button', label: 'Start', icon: 'play', variant: 'primary', action: 'START' },
+    ]},
+    { type: 'divider' },
+    // Stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Records', icon: 'database', entity: 'PollRecord' },
+      { type: 'stats', label: 'Poll Count', icon: 'hash', entity: 'PollRecord' },
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Stopped', variant: 'secondary', icon: 'square' },
+    { type: 'divider' },
+    // Data grid for poll records
+    { type: 'data-grid', entity: 'PollRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'count', label: 'Count', icon: 'hash', variant: 'body', format: 'number' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Polling active view ────────────────────────────────────────────
+
+const pollActiveEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + pause/stop buttons
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'radio', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Polling...' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Pause', icon: 'pause', variant: 'secondary', action: 'PAUSE' },
+        { type: 'button', label: 'Stop', icon: 'square', variant: 'ghost', action: 'STOP' },
+      ]},
+    ]},
+    { type: 'divider' },
+    { type: 'progress-bar', value: 0, label: 'Polling active', icon: 'activity' },
+    { type: 'divider' },
+    // Stats
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Records', icon: 'database', entity: 'PollRecord' },
+      { type: 'stats', label: 'Poll Count', icon: 'hash', entity: 'PollRecord' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'PollRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'count', label: 'Count', icon: 'hash', variant: 'body', format: 'number' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Polling paused view ────────────────────────────────────────────
+
+const pollPausedEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + resume/stop buttons
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'pause-circle', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Paused' },
+      ]},
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'button', label: 'Resume', icon: 'play', variant: 'primary', action: 'RESUME' },
+        { type: 'button', label: 'Stop', icon: 'square', variant: 'ghost', action: 'STOP' },
+      ]},
+    ]},
+    { type: 'divider' },
+    { type: 'badge', label: 'Paused', variant: 'warning', icon: 'pause' },
+    { type: 'divider' },
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Records', icon: 'database', entity: 'PollRecord' },
+      { type: 'stats', label: 'Poll Count', icon: 'hash', entity: 'PollRecord' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'PollRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'count', label: 'Count', icon: 'hash', variant: 'body', format: 'number' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
+// ── Poll view-only (shared across VIEW self-transitions) ───────────
+
+const pollViewEffects = [
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+      { type: 'icon', name: 'radio', size: 'lg' },
+      { type: 'typography', variant: 'h2', content: 'Poll Monitor' },
+    ]},
+    { type: 'divider' },
+    { type: 'data-grid', entity: 'PollRecord', cols: 2, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Name', icon: 'tag', variant: 'h4' },
+        { name: 'status', label: 'Status', icon: 'circle', variant: 'badge' },
+        { name: 'count', label: 'Count', icon: 'hash', variant: 'body', format: 'number' },
+      ],
+      actions: [
+        { label: 'View', event: 'VIEW', icon: 'eye', variant: 'ghost' },
+      ],
+    },
+  ]}],
+];
+
 export const POLL_BEHAVIOR: OrbitalSchema = {
   name: 'std-poll',
   version: '1.0.0',
   description: 'Polling monitor with start/stop/pause control',
+  theme: ASYNC_THEME,
   orbitals: [
     {
       name: 'PollOrbital',
@@ -742,11 +1263,7 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
                 from: 'stopped', to: 'stopped', event: 'INIT',
                 effects: [
                   ['fetch', 'PollRecord'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Poll Monitor', actions: [{ label: 'Start', event: 'START' }] }],
-                  ['render-ui', 'main', { type: 'chart',
-                    entity: 'PollRecord',
-                    chartType: 'bar',
-                  }],
+                  ...pollStoppedEffects,
                 ],
               },
               {
@@ -755,11 +1272,7 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'PollRecord'],
                   ['set', '@entity.status', 'polling'],
                   ['set', '@entity.count', 0],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Polling...', actions: [{ label: 'Pause', event: 'PAUSE' }, { label: 'Stop', event: 'STOP' }] }],
-                  ['render-ui', 'main', { type: 'chart',
-                    entity: 'PollRecord',
-                    chartType: 'bar',
-                  }],
+                  ...pollActiveEffects,
                 ],
               },
               {
@@ -767,11 +1280,7 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PollRecord'],
                   ['set', '@entity.status', 'paused'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Paused', actions: [{ label: 'Resume', event: 'RESUME' }, { label: 'Stop', event: 'STOP' }] }],
-                  ['render-ui', 'main', { type: 'chart',
-                    entity: 'PollRecord',
-                    chartType: 'bar',
-                  }],
+                  ...pollPausedEffects,
                 ],
               },
               {
@@ -779,11 +1288,7 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PollRecord'],
                   ['set', '@entity.status', 'polling'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Polling...', actions: [{ label: 'Pause', event: 'PAUSE' }, { label: 'Stop', event: 'STOP' }] }],
-                  ['render-ui', 'main', { type: 'chart',
-                    entity: 'PollRecord',
-                    chartType: 'bar',
-                  }],
+                  ...pollActiveEffects,
                 ],
               },
               {
@@ -791,11 +1296,7 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PollRecord'],
                   ['set', '@entity.status', 'stopped'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Poll Monitor', actions: [{ label: 'Start', event: 'START' }] }],
-                  ['render-ui', 'main', { type: 'chart',
-                    entity: 'PollRecord',
-                    chartType: 'bar',
-                  }],
+                  ...pollStoppedEffects,
                 ],
               },
               {
@@ -803,17 +1304,13 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['fetch', 'PollRecord'],
                   ['set', '@entity.status', 'stopped'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Poll Monitor', actions: [{ label: 'Start', event: 'START' }] }],
-                  ['render-ui', 'main', { type: 'chart',
-                    entity: 'PollRecord',
-                    chartType: 'bar',
-                  }],
+                  ...pollStoppedEffects,
                 ],
               },
               // VIEW self-transitions for each state
-              { from: 'stopped', to: 'stopped', event: 'VIEW', effects: [['fetch', 'PollRecord'], ['render-ui', 'main', { type: 'chart', entity: 'PollRecord', chartType: 'bar' }]] },
-              { from: 'polling', to: 'polling', event: 'VIEW', effects: [['fetch', 'PollRecord'], ['render-ui', 'main', { type: 'chart', entity: 'PollRecord', chartType: 'bar' }]] },
-              { from: 'paused', to: 'paused', event: 'VIEW', effects: [['fetch', 'PollRecord'], ['render-ui', 'main', { type: 'chart', entity: 'PollRecord', chartType: 'bar' }]] },
+              { from: 'stopped', to: 'stopped', event: 'VIEW', effects: [['fetch', 'PollRecord'], ...pollViewEffects] },
+              { from: 'polling', to: 'polling', event: 'VIEW', effects: [['fetch', 'PollRecord'], ...pollViewEffects] },
+              { from: 'paused', to: 'paused', event: 'VIEW', effects: [['fetch', 'PollRecord'], ...pollViewEffects] },
             ],
           },
         },

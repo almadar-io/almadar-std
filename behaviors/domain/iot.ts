@@ -6,10 +6,144 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * UI Composition: molecule-first (atoms + molecules only, no organisms).
+ * Each behavior has unique, domain-appropriate layouts composed with
+ * VStack/HStack/Box wrappers around atoms and molecules.
+ *
  * @packageDocumentation
  */
 
 import type { OrbitalSchema } from '../types.js';
+
+// ── Shared IoT Theme ─────────────────────────────────────────────────
+
+const IOT_THEME = {
+  name: 'iot-teal',
+  tokens: {
+    colors: {
+      primary: '#0d9488',
+      'primary-hover': '#0f766e',
+      'primary-foreground': '#ffffff',
+      accent: '#06b6d4',
+      'accent-foreground': '#ffffff',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
+
+// ── Reusable main-view effects (sensors) ─────────────────────────────
+
+const sensorMainEffects = [
+  ['fetch', 'SensorReading'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header zone: icon + title + refresh
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'thermometer', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Sensor Dashboard' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Stats zone: key metrics side by side
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Total Sensors', icon: 'cpu', entity: 'SensorReading' },
+      { type: 'meter', value: '@entity.value', label: 'Avg Reading', icon: 'activity' },
+    ]},
+    // Chart zone: trend line
+    { type: 'line-chart', entity: 'SensorReading' },
+    { type: 'divider' },
+    // Data zone: sensor cards via data-grid
+    { type: 'data-grid', entity: 'SensorReading', cols: 3, gap: 'md',
+      fields: [
+        { name: 'sensorId', label: 'Sensor ID', icon: 'cpu', variant: 'h4' },
+        { name: 'value', label: 'Reading', icon: 'thermometer', variant: 'body' },
+        { name: 'unit', label: 'Unit', variant: 'caption' },
+        { name: 'status', label: 'Status', icon: 'activity', variant: 'badge' },
+        { name: 'timestamp', label: 'Last Update', icon: 'clock', variant: 'caption', format: 'date' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'VIEW', icon: 'eye' },
+      ],
+    },
+  ]}],
+];
+
+// ── Reusable main-view effects (alerts) ──────────────────────────────
+
+const alertMainEffects = [
+  ['fetch', 'AlertRule'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header: icon + title + create button
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'bell', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Alert Rules' },
+      ]},
+      { type: 'button', label: 'New Rule', icon: 'plus', variant: 'primary', action: 'CREATE' },
+    ]},
+    { type: 'divider' },
+    // Stats + threshold meter
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Total Rules', icon: 'shield', entity: 'AlertRule' },
+      { type: 'meter', value: 0, label: 'Threshold Level', icon: 'gauge' },
+    ]},
+    { type: 'divider' },
+    // Search
+    { type: 'search-input', placeholder: 'Filter alert rules...', entity: 'AlertRule' },
+    // Data zone: alert rules as list
+    { type: 'data-list', entity: 'AlertRule', variant: 'card',
+      fields: [
+        { name: 'metric', label: 'Metric', icon: 'bar-chart-2', variant: 'h4' },
+        { name: 'sensorId', label: 'Sensor', icon: 'cpu', variant: 'body' },
+        { name: 'threshold', label: 'Threshold', icon: 'gauge', variant: 'body', format: 'number' },
+        { name: 'operator', label: 'Operator', variant: 'caption' },
+        { name: 'isActive', label: 'Active', icon: 'power', variant: 'badge' },
+      ],
+      itemActions: [
+        { label: 'Edit', event: 'EDIT', icon: 'pencil' },
+      ],
+    },
+  ]}],
+];
+
+// ── Reusable main-view effects (devices) ─────────────────────────────
+
+const deviceMainEffects = [
+  ['fetch', 'Device'],
+  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
+    // Header
+    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'router', size: 'lg' },
+        { type: 'typography', variant: 'h2', content: 'Devices' },
+      ]},
+    ]},
+    { type: 'divider' },
+    // Stats row: device count + online meter
+    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+      { type: 'stats', label: 'Total Devices', icon: 'server', entity: 'Device' },
+      { type: 'meter', value: 0, label: 'Online Devices', icon: 'wifi' },
+    ]},
+    { type: 'divider' },
+    // Search
+    { type: 'search-input', placeholder: 'Search devices...', entity: 'Device' },
+    // Data zone: device cards with status badges
+    { type: 'data-grid', entity: 'Device', cols: 3, gap: 'md',
+      fields: [
+        { name: 'name', label: 'Device Name', icon: 'router', variant: 'h4' },
+        { name: 'type', label: 'Type', icon: 'tag', variant: 'caption' },
+        { name: 'status', label: 'Status', icon: 'wifi', variant: 'badge' },
+        { name: 'firmware', label: 'Firmware', icon: 'hard-drive', variant: 'caption' },
+        { name: 'lastSeen', label: 'Last Seen', icon: 'clock', variant: 'caption', format: 'date' },
+      ],
+      itemActions: [
+        { label: 'View', event: 'VIEW', icon: 'eye' },
+      ],
+    },
+  ]}],
+];
 
 // ============================================================================
 // std-sensor-feed - Sensor Data Dashboard
@@ -18,6 +152,9 @@ import type { OrbitalSchema } from '../types.js';
 /**
  * std-sensor-feed - Sensor data monitoring dashboard.
  * States: browsing -> viewing -> configuring
+ *
+ * UI: Teal IoT theme. Main view uses stats + line chart + data-grid cards.
+ * Modal for sensor detail with meter gauge, configure via form.
  */
 export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
   name: 'std-sensor-feed',
@@ -26,6 +163,7 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'SensorFeedOrbital',
+      theme: IOT_THEME,
       entity: {
         name: 'SensorReading',
         persistence: 'persistent',
@@ -63,37 +201,46 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
                 from: 'browsing',
                 to: 'browsing',
                 event: 'INIT',
-                effects: [
-                  ['fetch', 'SensorReading'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Sensor Dashboard' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'SensorReading' }],
-                  ['render-ui', 'main', { type: 'line-chart',
-                    data: [],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'SensorReading',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
-                ],
+                effects: sensorMainEffects,
               },
               {
                 from: 'browsing',
                 to: 'viewing',
                 event: 'VIEW',
                 effects: [
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    title: '@entity.id',
-                    actions: [
-                      { label: 'Configure', event: 'CONFIGURE' },
-                      { label: 'Close', event: 'CLOSE' },
-                    ],
-                  }],
-                  ['render-ui', 'modal', { type: 'meter',
-                    value: '@entity.value',
-                    label: 'Current Value',
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    // Modal header: sensor ID + close
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'cpu', size: 'md' },
+                        { type: 'typography', variant: 'h3', content: '@entity.sensorId' },
+                      ]},
+                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
+                    ]},
+                    { type: 'divider' },
+                    // Meter gauge for current reading
+                    { type: 'meter', value: '@entity.value', label: 'Current Value', icon: 'thermometer' },
+                    // Detail fields
+                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'typography', variant: 'caption', content: 'Unit' },
+                        { type: 'typography', variant: 'body', content: '@entity.unit' },
+                      ]},
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'typography', variant: 'caption', content: 'Status' },
+                        { type: 'badge', content: '@entity.status' },
+                      ]},
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'typography', variant: 'caption', content: 'Last Update' },
+                        { type: 'typography', variant: 'body', content: '@entity.timestamp' },
+                      ]},
+                    ]},
+                    { type: 'divider' },
+                    // Actions
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
+                      { type: 'button', label: 'Configure', icon: 'settings', variant: 'primary', action: 'CONFIGURE' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -116,50 +263,32 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.unit', '@payload.unit'],
                   ['render-ui', 'modal', null],
-                  ['fetch', 'SensorReading'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'SensorReading' }],
-                  ['render-ui', 'main', { type: 'line-chart',
-                    data: [],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'SensorReading',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...sensorMainEffects,
                 ],
               },
               {
                 from: 'viewing',
                 to: 'browsing',
                 event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'viewing',
                 to: 'browsing',
                 event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'configuring',
                 to: 'browsing',
                 event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'configuring',
                 to: 'browsing',
                 event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
             ],
           },
@@ -184,6 +313,9 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
 /**
  * std-alert-threshold - Alert threshold management.
  * States: browsing -> creating -> editing
+ *
+ * UI: Teal IoT theme. Main view uses stats + meter + searchable data-list.
+ * Modal for create/edit via form-section.
  */
 export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
   name: 'std-alert-threshold',
@@ -192,6 +324,7 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'AlertThresholdOrbital',
+      theme: IOT_THEME,
       entity: {
         name: 'AlertRule',
         persistence: 'persistent',
@@ -229,20 +362,7 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
                 from: 'browsing',
                 to: 'browsing',
                 event: 'INIT',
-                effects: [
-                  ['fetch', 'AlertRule'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Alert Rules',
-                    actions: [{ label: 'Create', event: 'CREATE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'AlertRule' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Threshold Level' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'AlertRule',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT' },
-                    ],
-                  }],
-                ],
+                effects: alertMainEffects,
               },
               {
                 from: 'browsing',
@@ -265,32 +385,20 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.metric', '@payload.metric'],
                   ['set', '@entity.threshold', '@payload.threshold'],
                   ['render-ui', 'modal', null],
-                  ['fetch', 'AlertRule'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'AlertRule' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Threshold Level' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'AlertRule',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT' },
-                    ],
-                  }],
+                  ...alertMainEffects,
                 ],
               },
               {
                 from: 'creating',
                 to: 'browsing',
                 event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'creating',
                 to: 'browsing',
                 event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'browsing',
@@ -313,32 +421,20 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.metric', '@payload.metric'],
                   ['set', '@entity.threshold', '@payload.threshold'],
                   ['render-ui', 'modal', null],
-                  ['fetch', 'AlertRule'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'AlertRule' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Threshold Level' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'AlertRule',
-                    itemActions: [
-                      { label: 'Edit', event: 'EDIT' },
-                    ],
-                  }],
+                  ...alertMainEffects,
                 ],
               },
               {
                 from: 'editing',
                 to: 'browsing',
                 event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'editing',
                 to: 'browsing',
                 event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
             ],
           },
@@ -363,6 +459,9 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
 /**
  * std-device-mgmt - Device lifecycle management.
  * States: browsing -> viewing -> configuring
+ *
+ * UI: Teal IoT theme. Main view uses stats + meter + searchable data-grid cards.
+ * Modal for device detail with firmware info, configure via form.
  */
 export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
   name: 'std-device-mgmt',
@@ -371,6 +470,7 @@ export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
   orbitals: [
     {
       name: 'DeviceMgmtOrbital',
+      theme: IOT_THEME,
       entity: {
         name: 'Device',
         persistence: 'persistent',
@@ -408,31 +508,60 @@ export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
                 from: 'browsing',
                 to: 'browsing',
                 event: 'INIT',
-                effects: [
-                  ['fetch', 'Device'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Devices' }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Device' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Online Devices' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Device',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
-                ],
+                effects: deviceMainEffects,
               },
               {
                 from: 'browsing',
                 to: 'viewing',
                 event: 'VIEW',
                 effects: [
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    title: '@entity.name',
-                    actions: [
-                      { label: 'Configure', event: 'CONFIGURE' },
-                      { label: 'Close', event: 'CLOSE' },
-                    ],
-                  }],
+                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
+                    // Modal header
+                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
+                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+                        { type: 'icon', name: 'router', size: 'md' },
+                        { type: 'typography', variant: 'h3', content: '@entity.name' },
+                      ]},
+                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
+                    ]},
+                    { type: 'divider' },
+                    // Device info grid
+                    { type: 'stack', direction: 'horizontal', gap: 'lg', children: [
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'stack', direction: 'horizontal', gap: 'xs', children: [
+                          { type: 'icon', name: 'tag', size: 'xs' },
+                          { type: 'typography', variant: 'caption', content: 'Type' },
+                        ]},
+                        { type: 'typography', variant: 'body', content: '@entity.type' },
+                      ]},
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'stack', direction: 'horizontal', gap: 'xs', children: [
+                          { type: 'icon', name: 'wifi', size: 'xs' },
+                          { type: 'typography', variant: 'caption', content: 'Status' },
+                        ]},
+                        { type: 'badge', content: '@entity.status' },
+                      ]},
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'stack', direction: 'horizontal', gap: 'xs', children: [
+                          { type: 'icon', name: 'hard-drive', size: 'xs' },
+                          { type: 'typography', variant: 'caption', content: 'Firmware' },
+                        ]},
+                        { type: 'typography', variant: 'body', content: '@entity.firmware' },
+                      ]},
+                      { type: 'stack', direction: 'vertical', gap: 'xs', children: [
+                        { type: 'stack', direction: 'horizontal', gap: 'xs', children: [
+                          { type: 'icon', name: 'clock', size: 'xs' },
+                          { type: 'typography', variant: 'caption', content: 'Last Seen' },
+                        ]},
+                        { type: 'typography', variant: 'body', content: '@entity.lastSeen' },
+                      ]},
+                    ]},
+                    { type: 'divider' },
+                    // Actions
+                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
+                      { type: 'button', label: 'Configure', icon: 'settings', variant: 'primary', action: 'CONFIGURE' },
+                    ]},
+                  ]}],
                 ],
               },
               {
@@ -455,48 +584,32 @@ export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
                 effects: [
                   ['set', '@entity.name', '@payload.name'],
                   ['render-ui', 'modal', null],
-                  ['fetch', 'Device'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Device' }],
-                  ['render-ui', 'main', { type: 'meter', value: 0, label: 'Online Devices' }],
-                  ['render-ui', 'main', { type: 'entity-cards',
-                    entity: 'Device',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...deviceMainEffects,
                 ],
               },
               {
                 from: 'viewing',
                 to: 'browsing',
                 event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'viewing',
                 to: 'browsing',
                 event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'configuring',
                 to: 'browsing',
                 event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
               {
                 from: 'configuring',
                 to: 'browsing',
                 event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
+                effects: [['render-ui', 'modal', null]],
               },
             ],
           },

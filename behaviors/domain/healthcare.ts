@@ -6,14 +6,142 @@
  * Each behavior is a self-contained OrbitalSchema that passes orbital validate
  * with 0 errors and 0 warnings when exported as a standalone .orb file.
  *
+ * Molecule-first UI composition: all render-ui effects use atom/molecule
+ * primitives (stack, typography, icon, button, badge, etc.) instead of
+ * organism-level patterns (entity-cards, entity-table, detail-panel, page-header).
+ *
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { OrbitalSchema, Effect } from '../types.js';
+
+// ============================================================================
+// Healthcare Domain Design
+// ============================================================================
+
+const HEALTHCARE_THEME = {
+  name: 'healthcare-rose',
+  tokens: {
+    colors: {
+      primary: '#e11d48',
+      'primary-hover': '#be123c',
+      'primary-foreground': '#ffffff',
+      accent: '#f43f5e',
+      'accent-foreground': '#ffffff',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+};
 
 // ============================================================================
 // std-vitals - Vital Signs Tracking
 // ============================================================================
+
+// Shared main-view effect for vitals browsing
+const vitalsMainView: Effect[] = [['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'lg',
+  children: [
+    {
+      type: 'stack',
+      direction: 'horizontal',
+      gap: 'md',
+      align: 'center',
+      justify: 'between',
+      children: [
+        {
+          type: 'stack',
+          direction: 'horizontal',
+          gap: 'sm',
+          align: 'center',
+          children: [
+            { type: 'icon', name: 'heart-pulse', size: 'lg', color: 'primary' },
+            { type: 'typography', variant: 'h2', text: 'Vital Signs' },
+          ],
+        },
+        {
+          type: 'button',
+          label: 'Record',
+          event: 'RECORD',
+          variant: 'primary',
+          icon: 'plus',
+        },
+      ],
+    },
+    {
+      type: 'stack',
+      direction: 'horizontal',
+      gap: 'md',
+      children: [
+        { type: 'stats', entity: 'VitalReading' },
+        { type: 'line-chart', height: 200, label: 'Trend' },
+      ],
+    },
+    {
+      type: 'data-list',
+      entity: 'VitalReading',
+      itemLayout: {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'md',
+        align: 'center',
+        justify: 'between',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'stethoscope', size: 'md', color: 'primary' },
+              { type: 'typography', variant: 'h4', text: '@entity.vitalType' },
+            ],
+          },
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'xs',
+            align: 'baseline',
+            children: [
+              { type: 'typography', variant: 'body-lg', text: '@entity.value', weight: 'bold' },
+              { type: 'typography', variant: 'body-sm', text: '@entity.unit', color: 'muted' },
+            ],
+          },
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'calendar', size: 'sm', color: 'muted' },
+              { type: 'typography', variant: 'body-sm', text: '@entity.recordedAt', color: 'muted' },
+            ],
+          },
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'user', size: 'sm', color: 'muted' },
+              { type: 'typography', variant: 'body-sm', text: '@entity.patientId', color: 'muted' },
+            ],
+          },
+          {
+            type: 'button',
+            label: 'View',
+            event: 'VIEW',
+            variant: 'ghost',
+            icon: 'eye',
+          },
+        ],
+      },
+    },
+  ],
+}]];
 
 /**
  * std-vitals - Vital signs recording and monitoring.
@@ -23,6 +151,7 @@ export const VITALS_BEHAVIOR: OrbitalSchema = {
   name: 'std-vitals',
   version: '1.0.0',
   description: 'Vital signs recording and monitoring dashboard',
+  theme: HEALTHCARE_THEME,
   orbitals: [
     {
       name: 'VitalsOrbital',
@@ -65,19 +194,7 @@ export const VITALS_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'VitalReading'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Vital Signs',
-                    actions: [{ label: 'Record', event: 'RECORD' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'VitalReading' }],
-                  ['render-ui', 'main', { type: 'line-chart',
-                    data: [],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'VitalReading',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...vitalsMainView,
                 ],
               },
               {
@@ -86,10 +203,29 @@ export const VITALS_BEHAVIOR: OrbitalSchema = {
                 event: 'RECORD',
                 effects: [
                   ['fetch', 'VitalReading'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'VitalReading',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'lg',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'thermometer', size: 'md', color: 'primary' },
+                          { type: 'typography', variant: 'h3', text: 'Record Vital Signs' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'form-section',
+                        entity: 'VitalReading',
+                        submitEvent: 'SAVE',
+                        cancelEvent: 'CANCEL',
+                      },
+                    ],
                   }],
                 ],
               },
@@ -103,16 +239,7 @@ export const VITALS_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.unit', '@payload.unit'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'VitalReading'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'VitalReading' }],
-                  ['render-ui', 'main', { type: 'line-chart',
-                    data: [],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'VitalReading',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...vitalsMainView,
                 ],
               },
               {
@@ -137,13 +264,98 @@ export const VITALS_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'VitalReading'],
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    entity: 'VitalReading',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
-                  }],
-                  ['render-ui', 'modal', { type: 'meter',
-                    value: '@entity.value',
-                    label: 'Current Reading',
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'lg',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        justify: 'between',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'activity', size: 'md', color: 'primary' },
+                              { type: 'typography', variant: 'h3', text: 'Vital Reading' },
+                            ],
+                          },
+                          {
+                            type: 'button',
+                            label: 'Close',
+                            event: 'CLOSE',
+                            variant: 'ghost',
+                            icon: 'x',
+                          },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'meter',
+                        value: '@entity.value',
+                        label: 'Current Reading',
+                        min: 0,
+                        max: 200,
+                      },
+                      {
+                        type: 'stack',
+                        direction: 'vertical',
+                        gap: 'md',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'stethoscope', size: 'sm', color: 'muted' },
+                              { type: 'typography', variant: 'label', text: 'Type' },
+                              { type: 'typography', variant: 'body', text: '@entity.vitalType' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'hash', size: 'sm', color: 'muted' },
+                              { type: 'typography', variant: 'label', text: 'Value' },
+                              { type: 'typography', variant: 'body', text: '@entity.value' },
+                              { type: 'typography', variant: 'body-sm', text: '@entity.unit', color: 'muted' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'calendar', size: 'sm', color: 'muted' },
+                              { type: 'typography', variant: 'label', text: 'Recorded' },
+                              { type: 'typography', variant: 'body', text: '@entity.recordedAt' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'user', size: 'sm', color: 'muted' },
+                              { type: 'typography', variant: 'label', text: 'Patient' },
+                              { type: 'typography', variant: 'body', text: '@entity.patientId' },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
                   }],
                 ],
               },
@@ -183,6 +395,128 @@ export const VITALS_BEHAVIOR: OrbitalSchema = {
 // std-intake-form - Patient Intake
 // ============================================================================
 
+const intakeWizardSteps = [
+  { label: 'Patient Info' },
+  { label: 'Symptoms' },
+  { label: 'Medications' },
+];
+
+// Shared idle main-view for intake
+const intakeIdleView: Effect[] = [['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'lg',
+  children: [
+    {
+      type: 'stack',
+      direction: 'horizontal',
+      gap: 'md',
+      align: 'center',
+      justify: 'between',
+      children: [
+        {
+          type: 'stack',
+          direction: 'horizontal',
+          gap: 'sm',
+          align: 'center',
+          children: [
+            { type: 'icon', name: 'clipboard-list', size: 'lg', color: 'primary' },
+            { type: 'typography', variant: 'h2', text: 'Patient Intake' },
+          ],
+        },
+        {
+          type: 'button',
+          label: 'New Intake',
+          action: 'START',
+          variant: 'primary',
+          icon: 'plus',
+        },
+      ],
+    },
+    { type: 'divider' },
+    {
+      type: 'wizard-progress',
+      currentStep: 0,
+      steps: intakeWizardSteps,
+    },
+    { type: 'divider' },
+    {
+      type: 'data-list',
+      entity: 'IntakeForm',
+      itemLayout: {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'md',
+        align: 'center',
+        justify: 'between',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'user', size: 'md', color: 'primary' },
+              { type: 'typography', variant: 'h4', text: '@entity.patientName' },
+            ],
+          },
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'calendar', size: 'sm', color: 'muted' },
+              { type: 'typography', variant: 'body-sm', text: '@entity.dateOfBirth', color: 'muted' },
+            ],
+          },
+          {
+            type: 'badge',
+            text: '@entity.symptoms',
+            variant: 'outline',
+          },
+          {
+            type: 'button',
+            label: 'Refresh',
+            action: 'INIT',
+            variant: 'ghost',
+            icon: 'refresh-cw',
+          },
+        ],
+      },
+    },
+  ],
+}]];
+
+// Shared filling view builder
+const intakeFillingView = (currentStep: number): Effect[] => [['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'lg',
+  children: [
+    {
+      type: 'stack',
+      direction: 'horizontal',
+      gap: 'sm',
+      align: 'center',
+      children: [
+        { type: 'icon', name: 'clipboard-list', size: 'lg', color: 'primary' },
+        { type: 'typography', variant: 'h2', text: 'Patient Intake' },
+      ],
+    },
+    {
+      type: 'wizard-progress',
+      currentStep,
+      steps: intakeWizardSteps,
+    },
+    { type: 'divider' },
+    {
+      type: 'form-section',
+      entity: 'IntakeForm',
+    },
+  ],
+}]];
+
 /**
  * std-intake-form - Multi-step patient intake form.
  * States: idle -> filling -> reviewing -> submitted
@@ -191,6 +525,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
   name: 'std-intake-form',
   version: '1.0.0',
   description: 'Multi-step patient intake form with review',
+  theme: HEALTHCARE_THEME,
   orbitals: [
     {
       name: 'IntakeFormOrbital',
@@ -233,15 +568,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'IntakeForm'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Patient Intake',
-                    actions: [{ label: 'New Intake', event: 'START' }],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'IntakeForm',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  ...intakeIdleView,
                 ],
               },
               {
@@ -250,15 +577,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'START',
                 effects: [
                   ['fetch', 'IntakeForm'],
-                  ['render-ui', 'main', { type: 'wizard-progress',
-                    currentStep: 0,
-                    steps: [{ label: 'Patient Info' }, { label: 'Symptoms' }, { label: 'Medications' }],
-                  }],
-                  ['render-ui', 'main', { type: 'wizard-container',
-                    entity: 'IntakeForm',
-                    steps: ['Patient Info', 'Symptoms', 'Medications'],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'IntakeForm' }],
+                  ...intakeFillingView(0),
                 ],
               },
               {
@@ -269,15 +588,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                   ['fetch', 'IntakeForm'],
                   ['set', '@entity.patientName', '@payload.patientName'],
                   ['set', '@entity.symptoms', '@payload.symptoms'],
-                  ['render-ui', 'main', { type: 'wizard-progress',
-                    currentStep: 1,
-                    steps: [{ label: 'Patient Info' }, { label: 'Symptoms' }, { label: 'Medications' }],
-                  }],
-                  ['render-ui', 'main', { type: 'wizard-container',
-                    entity: 'IntakeForm',
-                    steps: ['Patient Info', 'Symptoms', 'Medications'],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'IntakeForm' }],
+                  ...intakeFillingView(1),
                 ],
               },
               {
@@ -286,14 +597,103 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'REVIEW',
                 effects: [
                   ['fetch', 'IntakeForm'],
-                  ['render-ui', 'main', { type: 'wizard-progress',
-                    currentStep: 2,
-                    steps: [{ label: 'Patient Info' }, { label: 'Symptoms' }, { label: 'Medications' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'lg',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'clipboard-list', size: 'lg', color: 'primary' },
+                          { type: 'typography', variant: 'h2', text: 'Review Intake' },
+                        ],
+                      },
+                      {
+                        type: 'wizard-progress',
+                        currentStep: 2,
+                        steps: intakeWizardSteps,
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'stack',
+                        direction: 'vertical',
+                        gap: 'md',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'user', size: 'sm', color: 'primary' },
+                              { type: 'typography', variant: 'label', text: 'Patient Name' },
+                              { type: 'typography', variant: 'body', text: '@entity.patientName' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'calendar', size: 'sm', color: 'primary' },
+                              { type: 'typography', variant: 'label', text: 'Date of Birth' },
+                              { type: 'typography', variant: 'body', text: '@entity.dateOfBirth' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'thermometer', size: 'sm', color: 'warning' },
+                              { type: 'typography', variant: 'label', text: 'Symptoms' },
+                              { type: 'typography', variant: 'body', text: '@entity.symptoms' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'pill', size: 'sm', color: 'accent' },
+                              { type: 'typography', variant: 'label', text: 'Medications' },
+                              { type: 'typography', variant: 'body', text: '@entity.medications' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'md',
+                        justify: 'end',
+                        children: [
+                          {
+                            type: 'button',
+                            label: 'Back',
+                            event: 'BACK',
+                            variant: 'secondary',
+                            icon: 'arrow-left',
+                          },
+                          {
+                            type: 'button',
+                            label: 'Submit',
+                            event: 'SUBMIT',
+                            variant: 'primary',
+                            icon: 'check',
+                          },
+                        ],
+                      },
+                    ],
                   }],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Review Intake',
-                    actions: [{ label: 'Back', event: 'BACK' }],
-                  }],
-                  ['render-ui', 'main', { type: 'detail-panel', entity: 'IntakeForm' }],
                 ],
               },
               {
@@ -301,11 +701,26 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                 to: 'submitted',
                 event: 'SUBMIT',
                 effects: [
-                  ['render-ui', 'main', { type: 'page-header', title: 'Submitted',
-                    actions: [{ label: 'Back', event: 'BACK' }],
+                  ['render-ui', 'main', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'lg',
+                    align: 'center',
+                    children: [
+                      { type: 'icon', name: 'check-circle', size: 'xl', color: 'success' },
+                      { type: 'typography', variant: 'h2', text: 'Form Submitted' },
+                      { type: 'typography', variant: 'body', text: 'The patient intake form has been submitted successfully.', color: 'muted' },
+                      { type: 'divider' },
+                      { type: 'stats', entity: 'IntakeForm' },
+                      {
+                        type: 'button',
+                        label: 'Back to Intake',
+                        event: 'BACK',
+                        variant: 'secondary',
+                        icon: 'arrow-left',
+                      },
+                    ],
                   }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'IntakeForm' }],
-                  ['render-ui', 'main', { type: 'card', title: 'Intake Form Submitted' }],
                 ],
               },
               {
@@ -314,15 +729,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'IntakeForm'],
-                  ['render-ui', 'main', { type: 'wizard-progress',
-                    currentStep: 0,
-                    steps: [{ label: 'Patient Info' }, { label: 'Symptoms' }, { label: 'Medications' }],
-                  }],
-                  ['render-ui', 'main', { type: 'wizard-container',
-                    entity: 'IntakeForm',
-                    steps: ['Patient Info', 'Symptoms', 'Medications'],
-                  }],
-                  ['render-ui', 'main', { type: 'form-section', entity: 'IntakeForm' }],
+                  ...intakeFillingView(0),
                 ],
               },
               {
@@ -331,15 +738,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
                 event: 'BACK',
                 effects: [
                   ['fetch', 'IntakeForm'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Patient Intake',
-                    actions: [{ label: 'New Intake', event: 'START' }],
-                  }],
-                  ['render-ui', 'main', { type: 'entity-list',
-                    entity: 'IntakeForm',
-                    itemActions: [
-                      { label: 'Refresh', event: 'INIT' },
-                    ],
-                  }],
+                  ...intakeIdleView,
                 ],
               },
             ],
@@ -362,6 +761,100 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
 // std-prescription - Prescription Management
 // ============================================================================
 
+// Shared main-view effect for prescription browsing
+const prescriptionMainView: Effect[] = [['render-ui', 'main', {
+  type: 'stack',
+  direction: 'vertical',
+  gap: 'lg',
+  children: [
+    {
+      type: 'stack',
+      direction: 'horizontal',
+      gap: 'md',
+      align: 'center',
+      justify: 'between',
+      children: [
+        {
+          type: 'stack',
+          direction: 'horizontal',
+          gap: 'sm',
+          align: 'center',
+          children: [
+            { type: 'icon', name: 'pill', size: 'lg', color: 'primary' },
+            { type: 'typography', variant: 'h2', text: 'Prescriptions' },
+          ],
+        },
+        {
+          type: 'button',
+          label: 'New',
+          event: 'CREATE',
+          variant: 'primary',
+          icon: 'plus',
+        },
+      ],
+    },
+    {
+      type: 'search-input',
+      placeholder: 'Search prescriptions...',
+      event: 'VIEW',
+      icon: 'search',
+    },
+    { type: 'divider' },
+    {
+      type: 'data-list',
+      entity: 'Prescription',
+      itemLayout: {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'md',
+        align: 'center',
+        justify: 'between',
+        children: [
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'pill', size: 'md', color: 'primary' },
+              { type: 'typography', variant: 'h4', text: '@entity.medication' },
+            ],
+          },
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'xs',
+            align: 'center',
+            children: [
+              { type: 'badge', label: '@entity.dosage', variant: 'outline' },
+              { type: 'badge', label: '@entity.frequency', variant: 'subtle' },
+            ],
+          },
+          {
+            type: 'stack',
+            direction: 'horizontal',
+            gap: 'sm',
+            align: 'center',
+            children: [
+              { type: 'icon', name: 'calendar', size: 'sm', color: 'muted' },
+              { type: 'typography', variant: 'body-sm', text: '@entity.startDate', color: 'muted' },
+              { type: 'typography', variant: 'body-sm', text: '-', color: 'muted' },
+              { type: 'typography', variant: 'body-sm', text: '@entity.endDate', color: 'muted' },
+            ],
+          },
+          {
+            type: 'button',
+            label: 'View',
+            event: 'VIEW',
+            variant: 'ghost',
+            icon: 'eye',
+          },
+        ],
+      },
+    },
+  ],
+}]];
+
 /**
  * std-prescription - Prescription CRUD.
  * States: browsing -> creating -> viewing
@@ -370,6 +863,7 @@ export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
   name: 'std-prescription',
   version: '1.0.0',
   description: 'Prescription management with medication details',
+  theme: HEALTHCARE_THEME,
   orbitals: [
     {
       name: 'PrescriptionOrbital',
@@ -412,18 +906,7 @@ export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
                 event: 'INIT',
                 effects: [
                   ['fetch', 'Prescription'],
-                  ['render-ui', 'main', { type: 'page-header', title: 'Prescriptions',
-                    actions: [{ label: 'Create', event: 'CREATE' }],
-                  }],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Prescription' }],
-                  ['render-ui', 'main', { type: 'timeline', entity: 'Prescription' }],
-                  ['render-ui', 'main', { type: 'search-input', placeholder: 'Search prescriptions', event: 'VIEW' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Prescription',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...prescriptionMainView,
                 ],
               },
               {
@@ -432,10 +915,29 @@ export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
                 event: 'CREATE',
                 effects: [
                   ['fetch', 'Prescription'],
-                  ['render-ui', 'modal', { type: 'form-section',
-                    entity: 'Prescription',
-                    submitEvent: 'SAVE',
-                    cancelEvent: 'CANCEL',
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'lg',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        children: [
+                          { type: 'icon', name: 'pill', size: 'md', color: 'primary' },
+                          { type: 'typography', variant: 'h3', text: 'New Prescription' },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'form-section',
+                        entity: 'Prescription',
+                        submitEvent: 'SAVE',
+                        cancelEvent: 'CANCEL',
+                      },
+                    ],
                   }],
                 ],
               },
@@ -449,14 +951,7 @@ export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
                   ['set', '@entity.frequency', '@payload.frequency'],
                   ['render-ui', 'modal', null],
                   ['fetch', 'Prescription'],
-                  ['render-ui', 'main', { type: 'stats', entity: 'Prescription' }],
-                  ['render-ui', 'main', { type: 'timeline', entity: 'Prescription' }],
-                  ['render-ui', 'main', { type: 'entity-table',
-                    entity: 'Prescription',
-                    itemActions: [
-                      { label: 'View', event: 'VIEW' },
-                    ],
-                  }],
+                  ...prescriptionMainView,
                 ],
               },
               {
@@ -481,11 +976,110 @@ export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
                 event: 'VIEW',
                 effects: [
                   ['fetch', 'Prescription'],
-                  ['render-ui', 'modal', { type: 'detail-panel',
-                    entity: 'Prescription',
-                    actions: [{ label: 'Close', event: 'CLOSE' }],
+                  ['render-ui', 'modal', {
+                    type: 'stack',
+                    direction: 'vertical',
+                    gap: 'lg',
+                    children: [
+                      {
+                        type: 'stack',
+                        direction: 'horizontal',
+                        gap: 'sm',
+                        align: 'center',
+                        justify: 'between',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'pill', size: 'md', color: 'primary' },
+                              { type: 'typography', variant: 'h3', text: 'Prescription Detail' },
+                            ],
+                          },
+                          {
+                            type: 'button',
+                            label: 'Close',
+                            event: 'CLOSE',
+                            variant: 'ghost',
+                            icon: 'x',
+                          },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'stack',
+                        direction: 'vertical',
+                        gap: 'md',
+                        children: [
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'pill', size: 'sm', color: 'primary' },
+                              { type: 'typography', variant: 'label', text: 'Medication' },
+                              { type: 'typography', variant: 'body', text: '@entity.medication' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'gauge', size: 'sm', color: 'accent' },
+                              { type: 'typography', variant: 'label', text: 'Dosage' },
+                              { type: 'badge', label: '@entity.dosage', variant: 'outline' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'clock', size: 'sm', color: 'accent' },
+                              { type: 'typography', variant: 'label', text: 'Frequency' },
+                              { type: 'typography', variant: 'body', text: '@entity.frequency' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'calendar', size: 'sm', color: 'muted' },
+                              { type: 'typography', variant: 'label', text: 'Start' },
+                              { type: 'typography', variant: 'body', text: '@entity.startDate' },
+                            ],
+                          },
+                          {
+                            type: 'stack',
+                            direction: 'horizontal',
+                            gap: 'sm',
+                            align: 'center',
+                            children: [
+                              { type: 'icon', name: 'calendar-check', size: 'sm', color: 'muted' },
+                              { type: 'typography', variant: 'label', text: 'End' },
+                              { type: 'typography', variant: 'body', text: '@entity.endDate' },
+                            ],
+                          },
+                        ],
+                      },
+                      { type: 'divider' },
+                      {
+                        type: 'meter',
+                        value: 0,
+                        label: 'Dosage Progress',
+                        min: 0,
+                        max: 100,
+                      },
+                    ],
                   }],
-                  ['render-ui', 'modal', { type: 'meter', value: 0, label: 'Dosage' }],
                 ],
               },
               {
