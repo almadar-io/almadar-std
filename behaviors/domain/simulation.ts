@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared Simulation Theme ────────────────────────────────────────
 
@@ -165,7 +165,7 @@ const agentSimCompletedMainEffect = [
  * std-agent-sim - Agent-based simulation with tick updates.
  * States: idle -> running -> paused -> completed
  */
-export const AGENT_SIM_BEHAVIOR: OrbitalSchema = {
+export const AGENT_SIM_BEHAVIOR: BehaviorSchema = {
   name: 'std-agent-sim',
   version: '1.0.0',
   description: 'Agent-based simulation with tick-driven updates',
@@ -359,7 +359,7 @@ const ruleEngineFormModalEffect = [
  * std-rule-engine - Rule CRUD for simulation engines.
  * States: browsing -> creating -> editing
  */
-export const RULE_ENGINE_BEHAVIOR: OrbitalSchema = {
+export const RULE_ENGINE_BEHAVIOR: BehaviorSchema = {
   name: 'std-rule-engine',
   version: '1.0.0',
   description: 'Rule management for simulation engines',
@@ -616,7 +616,7 @@ const timeStepCompletedMainEffect = [
  * std-time-step - Time-step control for simulations.
  * States: idle -> running -> paused -> completed
  */
-export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
+export const TIME_STEP_BEHAVIOR: BehaviorSchema = {
   name: 'std-time-step',
   version: '1.0.0',
   description: 'Time-step control for simulations with tick increment',
@@ -752,7 +752,7 @@ export const TIME_STEP_BEHAVIOR: OrbitalSchema = {
 // Export All Simulation Behaviors
 // ============================================================================
 
-export const SIMULATION_BEHAVIORS: OrbitalSchema[] = [
+export const SIMULATION_BEHAVIORS: BehaviorSchema[] = [
   AGENT_SIM_BEHAVIOR,
   RULE_ENGINE_BEHAVIOR,
   TIME_STEP_BEHAVIOR,

@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Dashboard Theme ──────────────────────────────────────────
 
@@ -39,7 +39,7 @@ const DASHBOARD_THEME = {
 
 // ── Reusable main-view effects (stats panel: displaying) ────────────
 
-const statsPanelDisplayEffects = [
+const statsPanelDisplayEffects: BehaviorEffect[] = [
   ['fetch', 'StatMetric'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + refresh button
@@ -78,7 +78,7 @@ const statsPanelDisplayEffects = [
  * Entity: StatMetric with name, value, change, trend.
  * States: loading -> displaying -> refreshing.
  */
-export const STATS_PANEL_BEHAVIOR: OrbitalSchema = {
+export const STATS_PANEL_BEHAVIOR: BehaviorSchema = {
   name: 'std-stats-panel',
   version: '1.0.0',
   description: 'Statistics panel with loading, display, and refresh',
@@ -188,7 +188,7 @@ export const STATS_PANEL_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (chart view: displaying) ─────────────
 
-const chartDisplayEffects = [
+const chartDisplayEffects: BehaviorEffect[] = [
   ['fetch', 'ChartData'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
@@ -234,7 +234,7 @@ const chartDisplayEffects = [
  * Entity: ChartData with title, type, dataPoints, period.
  * States: loading -> displaying -> drilling.
  */
-export const CHART_VIEW_BEHAVIOR: OrbitalSchema = {
+export const CHART_VIEW_BEHAVIOR: BehaviorSchema = {
   name: 'std-chart-view',
   version: '1.0.0',
   description: 'Chart display with drill-down and period selection',
@@ -356,7 +356,7 @@ export const CHART_VIEW_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (KPI: browsing) ─────────────────────
 
-const kpiBrowsingEffects = [
+const kpiBrowsingEffects: BehaviorEffect[] = [
   ['fetch', 'KpiTarget'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
@@ -399,7 +399,7 @@ const kpiBrowsingEffects = [
  * Entity: KpiTarget with name, current, target, unit, status.
  * States: browsing -> viewing -> editing.
  */
-export const KPI_BEHAVIOR: OrbitalSchema = {
+export const KPI_BEHAVIOR: BehaviorSchema = {
   name: 'std-kpi',
   version: '1.0.0',
   description: 'KPI tracker with target management and progress display',
@@ -557,7 +557,7 @@ export const KPI_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (report: browsing) ───────────────────
 
-const reportBrowsingEffects = [
+const reportBrowsingEffects: BehaviorEffect[] = [
   ['fetch', 'Report'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + create button
@@ -598,7 +598,7 @@ const reportBrowsingEffects = [
  * Entity: Report with title, type, dateRange, status.
  * States: browsing -> configuring -> generating -> viewing.
  */
-export const REPORT_BEHAVIOR: OrbitalSchema = {
+export const REPORT_BEHAVIOR: BehaviorSchema = {
   name: 'std-report',
   version: '1.0.0',
   description: 'Report generator with configure, generate, and view workflow',
@@ -822,7 +822,7 @@ export const REPORT_BEHAVIOR: OrbitalSchema = {
 // Export All Dashboard Behaviors
 // ============================================================================
 
-export const DASHBOARD_BEHAVIORS: OrbitalSchema[] = [
+export const DASHBOARD_BEHAVIORS: BehaviorSchema[] = [
   STATS_PANEL_BEHAVIOR,
   CHART_VIEW_BEHAVIOR,
   KPI_BEHAVIOR,

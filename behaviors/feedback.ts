@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ── Shared Feedback Theme ──────────────────────────────────────────
 
@@ -38,7 +38,7 @@ const FEEDBACK_THEME = {
 
 // ── Reusable main-view effects (notification: hidden/empty) ────────
 
-const notificationEmptyEffects = [
+const notificationEmptyEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -58,7 +58,7 @@ const notificationEmptyEffects = [
 
 // ── Reusable main-view effects (notification: visible) ─────────────
 
-const notificationVisibleEffects = [
+const notificationVisibleEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -80,7 +80,7 @@ const notificationVisibleEffects = [
   ]}],
 ];
 
-export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
+export const NOTIFICATION_BEHAVIOR: BehaviorSchema = {
   name: 'std-notification',
   version: '1.0.0',
   description: 'Toast notification with auto-dismiss',
@@ -186,7 +186,7 @@ export const NOTIFICATION_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (confirmation: closed) ──────────────
 
-const confirmationClosedEffects = [
+const confirmationClosedEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -202,7 +202,7 @@ const confirmationClosedEffects = [
   ]}],
 ];
 
-export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
+export const CONFIRMATION_BEHAVIOR: BehaviorSchema = {
   name: 'std-confirmation',
   version: '1.0.0',
   description: 'Confirmation dialog with confirm/cancel actions',
@@ -329,7 +329,7 @@ export const CONFIRMATION_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (undo: ready) ───────────────────────
 
-const undoReadyEffects = [
+const undoReadyEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + clear button
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -360,7 +360,7 @@ const undoReadyEffects = [
   ]}],
 ];
 
-export const UNDO_BEHAVIOR: OrbitalSchema = {
+export const UNDO_BEHAVIOR: BehaviorSchema = {
   name: 'std-undo',
   version: '1.0.0',
   description: 'Undo stack for reversible actions',
@@ -458,7 +458,7 @@ export const UNDO_BEHAVIOR: OrbitalSchema = {
 // Export All Feedback Behaviors
 // ============================================================================
 
-export const FEEDBACK_BEHAVIORS: OrbitalSchema[] = [
+export const FEEDBACK_BEHAVIORS: BehaviorSchema[] = [
   NOTIFICATION_BEHAVIOR,
   CONFIRMATION_BEHAVIOR,
   UNDO_BEHAVIOR,

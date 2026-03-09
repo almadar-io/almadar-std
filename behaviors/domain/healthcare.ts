@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ============================================================================
 // Healthcare Domain Design
@@ -40,7 +40,7 @@ const HEALTHCARE_THEME = {
 // ============================================================================
 
 // Shared main-view effect for vitals browsing
-const vitalsMainView: Effect[] = [['render-ui', 'main', {
+const vitalsMainView: BehaviorEffect[] = [['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'lg',
@@ -147,7 +147,7 @@ const vitalsMainView: Effect[] = [['render-ui', 'main', {
  * std-vitals - Vital signs recording and monitoring.
  * States: browsing -> recording -> viewing
  */
-export const VITALS_BEHAVIOR: OrbitalSchema = {
+export const VITALS_BEHAVIOR: BehaviorSchema = {
   name: 'std-vitals',
   version: '1.0.0',
   description: 'Vital signs recording and monitoring dashboard',
@@ -402,7 +402,7 @@ const intakeWizardSteps = [
 ];
 
 // Shared idle main-view for intake
-const intakeIdleView: Effect[] = [['render-ui', 'main', {
+const intakeIdleView: BehaviorEffect[] = [['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'lg',
@@ -489,7 +489,7 @@ const intakeIdleView: Effect[] = [['render-ui', 'main', {
 }]];
 
 // Shared filling view builder
-const intakeFillingView = (currentStep: number): Effect[] => [['render-ui', 'main', {
+const intakeFillingView = (currentStep: number): BehaviorEffect[] => [['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'lg',
@@ -521,7 +521,7 @@ const intakeFillingView = (currentStep: number): Effect[] => [['render-ui', 'mai
  * std-intake-form - Multi-step patient intake form.
  * States: idle -> filling -> reviewing -> submitted
  */
-export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
+export const INTAKE_FORM_BEHAVIOR: BehaviorSchema = {
   name: 'std-intake-form',
   version: '1.0.0',
   description: 'Multi-step patient intake form with review',
@@ -762,7 +762,7 @@ export const INTAKE_FORM_BEHAVIOR: OrbitalSchema = {
 // ============================================================================
 
 // Shared main-view effect for prescription browsing
-const prescriptionMainView: Effect[] = [['render-ui', 'main', {
+const prescriptionMainView: BehaviorEffect[] = [['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'lg',
@@ -859,7 +859,7 @@ const prescriptionMainView: Effect[] = [['render-ui', 'main', {
  * std-prescription - Prescription CRUD.
  * States: browsing -> creating -> viewing
  */
-export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
+export const PRESCRIPTION_BEHAVIOR: BehaviorSchema = {
   name: 'std-prescription',
   version: '1.0.0',
   description: 'Prescription management with medication details',
@@ -1118,7 +1118,7 @@ export const PRESCRIPTION_BEHAVIOR: OrbitalSchema = {
 // Export All Healthcare Behaviors
 // ============================================================================
 
-export const HEALTHCARE_BEHAVIORS: OrbitalSchema[] = [
+export const HEALTHCARE_BEHAVIORS: BehaviorSchema[] = [
   VITALS_BEHAVIOR,
   INTAKE_FORM_BEHAVIOR,
   PRESCRIPTION_BEHAVIOR,

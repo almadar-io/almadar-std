@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared Puzzle Theme ─────────────────────────────────────────────
 
@@ -116,7 +116,7 @@ const gridPuzzleCompletedMainEffect = ['render-ui', 'main', { type: 'stack', dir
  * States: Playing -> Matched -> Completed
  * Tracks grid size, moves, match count, and completion.
  */
-export const GRID_PUZZLE_BEHAVIOR: OrbitalSchema = {
+export const GRID_PUZZLE_BEHAVIOR: BehaviorSchema = {
   name: 'std-grid-puzzle',
   version: '1.0.0',
   description: 'Grid-based puzzle with match detection',
@@ -344,7 +344,7 @@ const timerExpiredMainEffect = ['render-ui', 'main', { type: 'stack', direction:
  * States: Idle -> Running -> Paused -> Expired
  * Tick counts down remaining time each frame.
  */
-export const TIMER_BEHAVIOR: OrbitalSchema = {
+export const TIMER_BEHAVIOR: BehaviorSchema = {
   name: 'std-timer',
   version: '1.0.0',
   description: 'Countdown timer with pause and expiry',
@@ -556,7 +556,7 @@ const scoringBreakingMainEffect = ['render-ui', 'main', { type: 'stack', directi
  * States: Idle -> Chaining -> Breaking
  * Tracks chain length, multiplier, and total score.
  */
-export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
+export const SCORING_CHAIN_BEHAVIOR: BehaviorSchema = {
   name: 'std-scoring-chain',
   version: '1.0.0',
   description: 'Combo scoring with chain multiplier',
@@ -677,7 +677,7 @@ export const SCORING_CHAIN_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_2D_PUZZLE_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_2D_PUZZLE_BEHAVIORS: BehaviorSchema[] = [
   GRID_PUZZLE_BEHAVIOR,
   TIMER_BEHAVIOR,
   SCORING_CHAIN_BEHAVIOR,

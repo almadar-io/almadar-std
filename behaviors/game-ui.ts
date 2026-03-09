@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ============================================================================
 // Shared theme for all game-ui behaviors
@@ -67,7 +67,7 @@ const TILES_5X5 = [
 // Shared render-ui compositions
 // ============================================================================
 
-const gameMenuView: Effect = ['render-ui', 'main', {
+const gameMenuView: BehaviorEffect = ['render-ui', 'main', {
   type: 'game-menu',
   title: '@entity.title',
   subtitle: 'Press Start to begin',
@@ -76,7 +76,7 @@ const gameMenuView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const gamePlayingCanvasView: Effect = ['render-ui', 'main', {
+const gamePlayingCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'player', x: 2, y: 2, unitType: 'guardian' }],
@@ -88,7 +88,7 @@ const gamePlayingCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const gamePlayingHud: Effect = ['render-ui', 'overlay', {
+const gamePlayingHud: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'game-hud',
   position: 'top',
   elements: [
@@ -98,14 +98,14 @@ const gamePlayingHud: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const gamePlayingActions: Effect = ['render-ui', 'overlay', {
+const gamePlayingActions: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'horizontal', gap: 'sm', children: [
     { type: 'button', label: 'Pause', action: 'PAUSE', icon: 'pause', variant: 'secondary' },
     { type: 'button', label: 'End Game', action: 'GAME_OVER', icon: 'square', variant: 'destructive' },
   ],
 }];
 
-const gamePausedView: Effect = ['render-ui', 'main', {
+const gamePausedView: BehaviorEffect = ['render-ui', 'main', {
   type: 'game-menu',
   title: 'Paused',
   subtitle: 'Game is paused',
@@ -115,7 +115,7 @@ const gamePausedView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const gameOverView: Effect = ['render-ui', 'main', {
+const gameOverView: BehaviorEffect = ['render-ui', 'main', {
   type: 'game-over-screen',
   title: 'Game Over',
   message: 'Better luck next time!',
@@ -125,7 +125,7 @@ const gameOverView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const dialogueModalView: Effect = ['render-ui', 'modal', {
+const dialogueModalView: BehaviorEffect = ['render-ui', 'modal', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -148,7 +148,7 @@ const dialogueModalView: Effect = ['render-ui', 'modal', {
   ],
 }];
 
-const dialogueChoiceModalView: Effect = ['render-ui', 'modal', {
+const dialogueChoiceModalView: BehaviorEffect = ['render-ui', 'modal', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -165,7 +165,7 @@ const dialogueChoiceModalView: Effect = ['render-ui', 'modal', {
   ],
 }];
 
-const dialogueHiddenCanvasView: Effect = ['render-ui', 'main', {
+const dialogueHiddenCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'npc', x: 2, y: 2, unitType: 'archivist' }],
@@ -177,14 +177,14 @@ const dialogueHiddenCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const dialogueHiddenOverlay: Effect = ['render-ui', 'overlay', {
+const dialogueHiddenOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'typography', content: 'No active dialogue', variant: 'body' },
     { type: 'button', label: 'Start Dialogue', action: 'SHOW', icon: 'message-square', variant: 'primary' },
   ],
 }];
 
-const dialogueShowingCanvasView: Effect = ['render-ui', 'main', {
+const dialogueShowingCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'npc', x: 2, y: 2, unitType: 'archivist' }],
@@ -196,7 +196,7 @@ const dialogueShowingCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const levelBrowsingView: Effect = ['render-ui', 'main', {
+const levelBrowsingView: BehaviorEffect = ['render-ui', 'main', {
   type: 'game-menu',
   title: 'Select Level',
   subtitle: 'Choose your challenge',
@@ -207,7 +207,7 @@ const levelBrowsingView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const levelBrowsingHud: Effect = ['render-ui', 'overlay', {
+const levelBrowsingHud: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Current', value: '@entity.currentLevel', icon: 'target' },
@@ -218,7 +218,7 @@ const levelBrowsingHud: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const levelPlayingCanvasView: Effect = ['render-ui', 'main', {
+const levelPlayingCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'player', x: 2, y: 2, unitType: 'guardian' }],
@@ -230,7 +230,7 @@ const levelPlayingCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const levelPlayingHud: Effect = ['render-ui', 'overlay', {
+const levelPlayingHud: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Level', value: '@entity.currentLevel', icon: 'target' },
@@ -243,7 +243,7 @@ const levelPlayingHud: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const levelCompleteView: Effect = ['render-ui', 'main', {
+const levelCompleteView: BehaviorEffect = ['render-ui', 'main', {
   type: 'game-over-screen',
   title: 'Level Complete',
   message: 'Well done! Ready for the next challenge?',
@@ -254,7 +254,7 @@ const levelCompleteView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const levelCompleteHud: Effect = ['render-ui', 'overlay', {
+const levelCompleteHud: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Level', value: '@entity.currentLevel', icon: 'target' },
@@ -264,7 +264,7 @@ const levelCompleteHud: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const allLevelsCompleteView: Effect = ['render-ui', 'main', {
+const allLevelsCompleteView: BehaviorEffect = ['render-ui', 'main', {
   type: 'game-over-screen',
   title: 'All Levels Complete',
   message: 'Congratulations! You conquered every challenge!',
@@ -274,7 +274,7 @@ const allLevelsCompleteView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const allLevelsCompleteHud: Effect = ['render-ui', 'overlay', {
+const allLevelsCompleteHud: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Completed', value: '@entity.completedLevels', icon: 'check-circle' },
@@ -294,7 +294,7 @@ const allLevelsCompleteHud: Effect = ['render-ui', 'overlay', {
  * States: Menu -> Playing -> Paused -> GameOver
  * Simplified to use valid patterns and slots only.
  */
-export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
+export const GAME_FLOW_BEHAVIOR: BehaviorSchema = {
   name: 'std-gameflow',
   version: '1.0.0',
   description: 'Master game flow: menu, play, pause, game over',
@@ -430,7 +430,7 @@ export const GAME_FLOW_BEHAVIOR: OrbitalSchema = {
  * Simplified: States: Hidden -> Showing -> Choice
  * No typewriter effect, no complex s-expressions.
  */
-export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
+export const DIALOGUE_BEHAVIOR: BehaviorSchema = {
   name: 'std-dialogue',
   version: '1.0.0',
   description: 'NPC dialogue system with branching conversations',
@@ -607,7 +607,7 @@ export const DIALOGUE_BEHAVIOR: OrbitalSchema = {
  * Simplified: States: Browsing -> Playing
  * No complex operators, no external emits, no persist effects.
  */
-export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
+export const LEVEL_PROGRESS_BEHAVIOR: BehaviorSchema = {
   name: 'std-levelprogress',
   version: '1.0.0',
   description: 'Level progression with selection and completion tracking',
@@ -726,7 +726,7 @@ export const LEVEL_PROGRESS_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_UI_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_UI_BEHAVIORS: BehaviorSchema[] = [
   GAME_FLOW_BEHAVIOR,
   DIALOGUE_BEHAVIOR,
   LEVEL_PROGRESS_BEHAVIOR,

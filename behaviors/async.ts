@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ── Shared Async Theme ─────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ const ASYNC_THEME = {
 
 // ── Reusable main-view effects (loading: idle dashboard) ───────────
 
-const loadingDashboardEffects = [
+const loadingDashboardEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -71,7 +71,7 @@ const loadingDashboardEffects = [
 
 // ── Loading in-progress view ───────────────────────────────────────
 
-const loadingInProgressEffects = [
+const loadingInProgressEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: spinner + title
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -102,7 +102,7 @@ const loadingInProgressEffects = [
 
 // ── Loading success view ───────────────────────────────────────────
 
-const loadingSuccessEffects = [
+const loadingSuccessEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: success icon + title + reset
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -131,7 +131,7 @@ const loadingSuccessEffects = [
 
 // ── Loading error view ─────────────────────────────────────────────
 
-const loadingErrorEffects = [
+const loadingErrorEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: error icon + title + reset
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -160,7 +160,7 @@ const loadingErrorEffects = [
 
 // ── Loading view-only (no header actions, shared across VIEW self-transitions) ──
 
-const loadingViewEffects = [
+const loadingViewEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'loader', size: 'lg' },
@@ -180,7 +180,7 @@ const loadingViewEffects = [
   ]}],
 ];
 
-export const LOADING_BEHAVIOR: OrbitalSchema = {
+export const LOADING_BEHAVIOR: BehaviorSchema = {
   name: 'std-loading',
   version: '1.0.0',
   description: 'Loading state management with success/error handling',
@@ -289,7 +289,7 @@ export const LOADING_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (fetch: idle) ───────────────────────
 
-const fetchIdleEffects = [
+const fetchIdleEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + fetch button
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -322,7 +322,7 @@ const fetchIdleEffects = [
 
 // ── Fetching in-progress view ──────────────────────────────────────
 
-const fetchingEffects = [
+const fetchingEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'download-cloud', size: 'lg' },
@@ -346,7 +346,7 @@ const fetchingEffects = [
 
 // ── Fresh data view ────────────────────────────────────────────────
 
-const fetchFreshEffects = [
+const fetchFreshEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -373,7 +373,7 @@ const fetchFreshEffects = [
 
 // ── Stale data view ────────────────────────────────────────────────
 
-const fetchStaleEffects = [
+const fetchStaleEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -400,7 +400,7 @@ const fetchStaleEffects = [
 
 // ── Fetch error view ───────────────────────────────────────────────
 
-const fetchErrorEffects = [
+const fetchErrorEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -427,7 +427,7 @@ const fetchErrorEffects = [
 
 // ── Fetch view-only (shared across VIEW self-transitions) ──────────
 
-const fetchViewEffects = [
+const fetchViewEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'download-cloud', size: 'lg' },
@@ -447,7 +447,7 @@ const fetchViewEffects = [
   ]}],
 ];
 
-export const FETCH_BEHAVIOR: OrbitalSchema = {
+export const FETCH_BEHAVIOR: BehaviorSchema = {
   name: 'std-fetch',
   version: '1.0.0',
   description: 'Data fetching with refresh capabilities',
@@ -585,7 +585,7 @@ export const FETCH_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (submit: idle) ──────────────────────
 
-const submitIdleEffects = [
+const submitIdleEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -615,7 +615,7 @@ const submitIdleEffects = [
 
 // ── Submitting in-progress view ────────────────────────────────────
 
-const submittingEffects = [
+const submittingEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'send', size: 'lg' },
@@ -639,7 +639,7 @@ const submittingEffects = [
 
 // ── Submit success view ────────────────────────────────────────────
 
-const submitSuccessEffects = [
+const submitSuccessEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -666,7 +666,7 @@ const submitSuccessEffects = [
 
 // ── Submit error view ──────────────────────────────────────────────
 
-const submitErrorEffects = [
+const submitErrorEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -693,7 +693,7 @@ const submitErrorEffects = [
 
 // ── Submit view-only (shared across VIEW self-transitions) ─────────
 
-const submitViewEffects = [
+const submitViewEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'send', size: 'lg' },
@@ -713,7 +713,7 @@ const submitViewEffects = [
   ]}],
 ];
 
-export const SUBMIT_BEHAVIOR: OrbitalSchema = {
+export const SUBMIT_BEHAVIOR: BehaviorSchema = {
   name: 'std-submit',
   version: '1.0.0',
   description: 'Form submission with success/error handling',
@@ -833,7 +833,7 @@ export const SUBMIT_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (retry: idle) ───────────────────────
 
-const retryIdleEffects = [
+const retryIdleEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + start button
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -867,7 +867,7 @@ const retryIdleEffects = [
 
 // ── Attempting view ────────────────────────────────────────────────
 
-const retryAttemptingEffects = [
+const retryAttemptingEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'repeat', size: 'lg' },
@@ -892,7 +892,7 @@ const retryAttemptingEffects = [
 
 // ── Retry success view ─────────────────────────────────────────────
 
-const retrySuccessEffects = [
+const retrySuccessEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -920,7 +920,7 @@ const retrySuccessEffects = [
 
 // ── Retry failed view ──────────────────────────────────────────────
 
-const retryFailedEffects = [
+const retryFailedEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -948,7 +948,7 @@ const retryFailedEffects = [
 
 // ── Retry view-only (shared across VIEW self-transitions) ──────────
 
-const retryViewEffects = [
+const retryViewEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'repeat', size: 'lg' },
@@ -969,7 +969,7 @@ const retryViewEffects = [
   ]}],
 ];
 
-export const RETRY_BEHAVIOR: OrbitalSchema = {
+export const RETRY_BEHAVIOR: BehaviorSchema = {
   name: 'std-retry',
   version: '1.0.0',
   description: 'Operation with retry capability',
@@ -1092,7 +1092,7 @@ export const RETRY_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (poll: stopped) ─────────────────────
 
-const pollStoppedEffects = [
+const pollStoppedEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + start button
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -1127,7 +1127,7 @@ const pollStoppedEffects = [
 
 // ── Polling active view ────────────────────────────────────────────
 
-const pollActiveEffects = [
+const pollActiveEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + pause/stop buttons
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -1164,7 +1164,7 @@ const pollActiveEffects = [
 
 // ── Polling paused view ────────────────────────────────────────────
 
-const pollPausedEffects = [
+const pollPausedEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + resume/stop buttons
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -1200,7 +1200,7 @@ const pollPausedEffects = [
 
 // ── Poll view-only (shared across VIEW self-transitions) ───────────
 
-const pollViewEffects = [
+const pollViewEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'radio', size: 'lg' },
@@ -1220,7 +1220,7 @@ const pollViewEffects = [
   ]}],
 ];
 
-export const POLL_BEHAVIOR: OrbitalSchema = {
+export const POLL_BEHAVIOR: BehaviorSchema = {
   name: 'std-poll',
   version: '1.0.0',
   description: 'Polling monitor with start/stop/pause control',
@@ -1324,7 +1324,7 @@ export const POLL_BEHAVIOR: OrbitalSchema = {
 // Export All Async Behaviors
 // ============================================================================
 
-export const ASYNC_BEHAVIORS: OrbitalSchema[] = [
+export const ASYNC_BEHAVIORS: BehaviorSchema[] = [
   LOADING_BEHAVIOR,
   FETCH_BEHAVIOR,
   SUBMIT_BEHAVIOR,

@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ============================================================================
 // Shared Theme
@@ -38,7 +38,7 @@ const UI_SLATE_THEME = {
 // std-list - Reusable main-view effect
 // ============================================================================
 
-const LIST_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const LIST_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'list', size: 'lg' },
@@ -64,7 +64,7 @@ const LIST_MAIN_VIEW: Effect = ['render-ui', 'main', {
  * States: browsing -> creating/viewing/editing/deleting
  * Implements complete CRUD operations with modal UI.
  */
-export const LIST_BEHAVIOR: OrbitalSchema = {
+export const LIST_BEHAVIOR: BehaviorSchema = {
   name: 'std-list',
   version: '1.0.0',
   description: 'Entity list management with CRUD operations',
@@ -278,7 +278,7 @@ export const LIST_BEHAVIOR: OrbitalSchema = {
 // std-detail - Reusable main-view effect
 // ============================================================================
 
-const DETAIL_LIST_VIEW: Effect = ['render-ui', 'main', {
+const DETAIL_LIST_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -301,7 +301,7 @@ const DETAIL_LIST_VIEW: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const DETAIL_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const DETAIL_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -330,7 +330,7 @@ const DETAIL_MAIN_VIEW: Effect = ['render-ui', 'main', {
 // std-detail - Single Entity View
 // ============================================================================
 
-export const DETAIL_BEHAVIOR: OrbitalSchema = {
+export const DETAIL_BEHAVIOR: BehaviorSchema = {
   name: 'std-detail',
   version: '1.0.0',
   description: 'Single entity view with edit/delete capabilities',
@@ -517,7 +517,7 @@ export const DETAIL_BEHAVIOR: OrbitalSchema = {
 // std-form - Reusable main-view effects
 // ============================================================================
 
-const FORM_EDITING_VIEW: Effect = ['render-ui', 'main', {
+const FORM_EDITING_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'file-plus', size: 'lg' },
@@ -532,7 +532,7 @@ const FORM_EDITING_VIEW: Effect = ['render-ui', 'main', {
 // std-form - Form State Management
 // ============================================================================
 
-export const FORM_BEHAVIOR: OrbitalSchema = {
+export const FORM_BEHAVIOR: BehaviorSchema = {
   name: 'std-form',
   version: '1.0.0',
   description: 'Form state management with validation and submission',
@@ -673,7 +673,7 @@ export const FORM_BEHAVIOR: OrbitalSchema = {
 // std-modal - Modal Dialog
 // ============================================================================
 
-export const MODAL_BEHAVIOR: OrbitalSchema = {
+export const MODAL_BEHAVIOR: BehaviorSchema = {
   name: 'std-modal',
   version: '1.0.0',
   description: 'Modal dialog with open/close state management',
@@ -783,7 +783,7 @@ export const MODAL_BEHAVIOR: OrbitalSchema = {
 // std-drawer - Side Drawer Panel
 // ============================================================================
 
-export const DRAWER_BEHAVIOR: OrbitalSchema = {
+export const DRAWER_BEHAVIOR: BehaviorSchema = {
   name: 'std-drawer',
   version: '1.0.0',
   description: 'Side drawer panel for detail views',
@@ -882,7 +882,7 @@ export const DRAWER_BEHAVIOR: OrbitalSchema = {
 // std-tabs - Tabbed Navigation
 // ============================================================================
 
-export const TABS_BEHAVIOR: OrbitalSchema = {
+export const TABS_BEHAVIOR: BehaviorSchema = {
   name: 'std-tabs',
   version: '1.0.0',
   description: 'Tabbed navigation within a page',
@@ -966,7 +966,7 @@ export const TABS_BEHAVIOR: OrbitalSchema = {
 
 const WIZARD_STEPS = ['Basic Info', 'Details', 'Review'];
 
-const WIZARD_STEP1_VIEW: Effect = ['render-ui', 'main', {
+const WIZARD_STEP1_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'clipboard', size: 'lg' },
@@ -979,7 +979,7 @@ const WIZARD_STEP1_VIEW: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const WIZARD_STEP2_VIEW: Effect = ['render-ui', 'main', {
+const WIZARD_STEP2_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'clipboard', size: 'lg' },
@@ -992,7 +992,7 @@ const WIZARD_STEP2_VIEW: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const WIZARD_REVIEW_VIEW: Effect = ['render-ui', 'main', {
+const WIZARD_REVIEW_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'clipboard', size: 'lg' },
@@ -1013,7 +1013,7 @@ const WIZARD_REVIEW_VIEW: Effect = ['render-ui', 'main', {
 // std-wizard - Multi-Step Flow
 // ============================================================================
 
-export const WIZARD_BEHAVIOR: OrbitalSchema = {
+export const WIZARD_BEHAVIOR: BehaviorSchema = {
   name: 'std-wizard',
   version: '1.0.0',
   description: 'Multi-step wizard flow',
@@ -1143,7 +1143,7 @@ export const WIZARD_BEHAVIOR: OrbitalSchema = {
 // std-masterdetail - Reusable main-view effects
 // ============================================================================
 
-const MASTER_LIST_VIEW: Effect = ['render-ui', 'main', {
+const MASTER_LIST_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'horizontal', gap: 'lg', children: [
     { type: 'stack', direction: 'vertical', gap: 'md', children: [
       { type: 'stack', direction: 'horizontal', gap: 'md', children: [
@@ -1160,7 +1160,7 @@ const MASTER_LIST_VIEW: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const MASTER_DETAIL_SELECTED_VIEW: Effect = ['render-ui', 'main', {
+const MASTER_DETAIL_SELECTED_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'horizontal', gap: 'lg', children: [
     { type: 'stack', direction: 'vertical', gap: 'md', children: [
       { type: 'stack', direction: 'horizontal', gap: 'md', children: [
@@ -1190,7 +1190,7 @@ const MASTER_DETAIL_SELECTED_VIEW: Effect = ['render-ui', 'main', {
 // std-masterdetail - List + Detail Layout
 // ============================================================================
 
-export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
+export const MASTER_DETAIL_BEHAVIOR: BehaviorSchema = {
   name: 'std-masterdetail',
   version: '1.0.0',
   description: 'Master-detail layout with synchronized list and detail views',
@@ -1281,7 +1281,7 @@ export const MASTER_DETAIL_BEHAVIOR: OrbitalSchema = {
 // std-filter-ui - Reusable main-view effects
 // ============================================================================
 
-const FILTER_DEFAULT_VIEW: Effect = ['render-ui', 'main', {
+const FILTER_DEFAULT_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'search', size: 'lg' },
@@ -1295,7 +1295,7 @@ const FILTER_DEFAULT_VIEW: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const FILTER_ACTIVE_VIEW: Effect = ['render-ui', 'main', {
+const FILTER_ACTIVE_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'md', children: [
       { type: 'icon', name: 'filter', size: 'lg' },
@@ -1315,7 +1315,7 @@ const FILTER_ACTIVE_VIEW: Effect = ['render-ui', 'main', {
 // std-filter-ui - Filter Management
 // ============================================================================
 
-export const FILTER_BEHAVIOR: OrbitalSchema = {
+export const FILTER_BEHAVIOR: BehaviorSchema = {
   name: 'std-filter-ui',
   version: '1.0.0',
   description: 'Filter and search management for lists',
@@ -1435,7 +1435,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const UI_INTERACTION_BEHAVIORS: OrbitalSchema[] = [
+export const UI_INTERACTION_BEHAVIORS: BehaviorSchema[] = [
   LIST_BEHAVIOR,
   DETAIL_BEHAVIOR,
   FORM_BEHAVIOR,

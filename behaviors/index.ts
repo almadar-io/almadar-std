@@ -29,6 +29,8 @@ export {
   type TraitEntityField,
   type TraitCategory,
   type OrbitalSchema,
+  type BehaviorSchema,
+  type BehaviorEffect,
   type Orbital,
   type Entity,
   getBehaviorMetadata,

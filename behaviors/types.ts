@@ -48,6 +48,29 @@ export type {
 };
 
 // ============================================================================
+// Behavior-local types (permissive wrappers for schema authoring)
+// ============================================================================
+
+/**
+ * Behavior schemas use raw UI tree objects in render-ui effects (e.g. { type: 'stack', ... })
+ * rather than strict AnyPatternConfig. Schema correctness is validated by `orbital validate`.
+ */
+export type BehaviorEffect = Effect | ['render-ui', string, Record<string, unknown>] | ['render-ui', string, Record<string, unknown>, Record<string, unknown>] | ['render-ui', string, null];
+
+/**
+ * Behavior schemas may include a `theme` property and use raw UI trees in effects.
+ * This type provides basic shape checking while deferring strict validation to `orbital validate`.
+ */
+export interface BehaviorSchema {
+  name: string;
+  description?: string;
+  theme?: Record<string, unknown>;
+  entities?: Record<string, unknown>[];
+  orbitals?: Record<string, unknown>[];
+  [key: string]: unknown;
+}
+
+// ============================================================================
 // Legacy Type Aliases (for backward compatibility only)
 // ============================================================================
 

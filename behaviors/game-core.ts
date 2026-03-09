@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ============================================================================
 // Shared theme for all game-core behaviors
@@ -67,7 +67,7 @@ const TILES_5X5 = [
 
 // --- std-gameloop views ---
 
-const gameLoopCanvasView: Effect = ['render-ui', 'main', {
+const gameLoopCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'player', x: 2, y: 2, unitType: 'guardian' }],
@@ -80,7 +80,7 @@ const gameLoopCanvasView: Effect = ['render-ui', 'main', {
   tileClickEvent: 'START',
 }];
 
-const gameLoopHudView: Effect = ['render-ui', 'overlay', {
+const gameLoopHudView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'sm', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Frame', value: '@entity.frameCount', icon: 'hash' },
@@ -97,7 +97,7 @@ const gameLoopHudView: Effect = ['render-ui', 'overlay', {
 
 // --- std-physics2d views ---
 
-const physicsCanvasView: Effect = ['render-ui', 'main', {
+const physicsCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'simulation-canvas',
   preset: 'projectile',
   running: true,
@@ -105,7 +105,7 @@ const physicsCanvasView: Effect = ['render-ui', 'main', {
   height: 400,
 }];
 
-const physicsHudView: Effect = ['render-ui', 'overlay', {
+const physicsHudView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'sm', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'badge', label: 'X', value: '@entity.x', icon: 'move-horizontal' },
@@ -120,7 +120,7 @@ const physicsHudView: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const physicsFrozenCanvasView: Effect = ['render-ui', 'main', {
+const physicsFrozenCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'simulation-canvas',
   preset: 'projectile',
   running: false,
@@ -128,7 +128,7 @@ const physicsFrozenCanvasView: Effect = ['render-ui', 'main', {
   height: 400,
 }];
 
-const physicsFrozenHudView: Effect = ['render-ui', 'overlay', {
+const physicsFrozenHudView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'sm', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'badge', label: 'X', value: '@entity.x', icon: 'move-horizontal' },
@@ -144,7 +144,7 @@ const physicsFrozenHudView: Effect = ['render-ui', 'overlay', {
 
 // --- std-input views ---
 
-const inputCanvasView: Effect = ['render-ui', 'main', {
+const inputCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'cursor', x: 2, y: 2, unitType: 'breaker' }],
@@ -156,7 +156,7 @@ const inputCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const inputHudView: Effect = ['render-ui', 'overlay', {
+const inputHudView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'sm', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'badge', label: 'Key Down', value: '@entity.lastKeyDown', icon: 'arrow-down-circle' },
@@ -171,7 +171,7 @@ const inputHudView: Effect = ['render-ui', 'overlay', {
 
 // --- std-collision views ---
 
-const collisionCanvasView: Effect = ['render-ui', 'main', {
+const collisionCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [],
@@ -183,7 +183,7 @@ const collisionCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const collisionHudView: Effect = ['render-ui', 'overlay', {
+const collisionHudView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'sm', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'badge', label: 'Colliding', value: '@entity.isColliding', icon: 'alert-triangle' },
@@ -196,7 +196,7 @@ const collisionHudView: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const collisionHitEffectView: Effect = ['render-ui', 'overlay', {
+const collisionHitEffectView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'canvas-effect',
   actionType: 'hit',
   x: 200,
@@ -204,7 +204,7 @@ const collisionHitEffectView: Effect = ['render-ui', 'overlay', {
   duration: 600,
 }];
 
-const collisionDisabledCanvasView: Effect = ['render-ui', 'main', {
+const collisionDisabledCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [],
@@ -216,7 +216,7 @@ const collisionDisabledCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const collisionDisabledHudView: Effect = ['render-ui', 'overlay', {
+const collisionDisabledHudView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'sm', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'badge', label: 'Colliding', value: '@entity.isColliding', icon: 'alert-triangle' },
@@ -239,7 +239,7 @@ const collisionDisabledHudView: Effect = ['render-ui', 'overlay', {
  * Provides the master clock for all game systems.
  * Uses a concrete GameLoopData entity to track frame count and elapsed time.
  */
-export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
+export const GAME_LOOP_BEHAVIOR: BehaviorSchema = {
   name: 'std-gameloop',
   version: '1.0.0',
   description: 'Master game loop coordinator running at 60fps',
@@ -384,7 +384,7 @@ export const GAME_LOOP_BEHAVIOR: OrbitalSchema = {
  * Applied to entities that need physics simulation.
  * Uses a concrete Physics2DData entity to track position and velocity.
  */
-export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
+export const PHYSICS_2D_BEHAVIOR: BehaviorSchema = {
   name: 'std-physics2d',
   version: '1.0.0',
   description: '2D physics with gravity, velocity, and friction',
@@ -549,7 +549,7 @@ export const PHYSICS_2D_BEHAVIOR: OrbitalSchema = {
  * Simplified to track last key pressed/released as strings
  * rather than mapping individual keys via conditionals.
  */
-export const INPUT_BEHAVIOR: OrbitalSchema = {
+export const INPUT_BEHAVIOR: BehaviorSchema = {
   name: 'std-input',
   version: '1.0.0',
   description: 'Unified keyboard and touch input state management',
@@ -658,7 +658,7 @@ export const INPUT_BEHAVIOR: OrbitalSchema = {
  * Configures how an entity responds to collisions.
  * Uses a concrete CollisionData entity to track collision status.
  */
-export const COLLISION_BEHAVIOR: OrbitalSchema = {
+export const COLLISION_BEHAVIOR: BehaviorSchema = {
   name: 'std-collision',
   version: '1.0.0',
   description: 'Collision detection and response configuration',
@@ -774,7 +774,7 @@ export const COLLISION_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_CORE_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_CORE_BEHAVIORS: BehaviorSchema[] = [
   GAME_LOOP_BEHAVIOR,
   PHYSICS_2D_BEHAVIOR,
   INPUT_BEHAVIOR,

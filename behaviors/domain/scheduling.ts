@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared Scheduling Theme ────────────────────────────────────────
 
@@ -83,7 +83,7 @@ const calendarBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', direct
  * std-calendar - Calendar event management with CRUD operations.
  * Supports browsing, creating, viewing, and editing calendar events.
  */
-export const CALENDAR_BEHAVIOR: OrbitalSchema = {
+export const CALENDAR_BEHAVIOR: BehaviorSchema = {
   name: 'std-calendar',
   version: '1.0.0',
   description: 'Calendar event management with CRUD operations',
@@ -349,7 +349,7 @@ const bookingBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', directi
  * std-booking - Booking system with service selection and confirmation flow.
  * Supports browsing, selecting, confirming, and viewing confirmed bookings.
  */
-export const BOOKING_BEHAVIOR: OrbitalSchema = {
+export const BOOKING_BEHAVIOR: BehaviorSchema = {
   name: 'std-booking',
   version: '1.0.0',
   description: 'Booking system with service selection and confirmation',
@@ -608,7 +608,7 @@ const availabilityBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', di
  * std-availability - Manage available time slots.
  * Supports browsing and editing time slot availability.
  */
-export const AVAILABILITY_BEHAVIOR: OrbitalSchema = {
+export const AVAILABILITY_BEHAVIOR: BehaviorSchema = {
   name: 'std-availability',
   version: '1.0.0',
   description: 'Availability time slot management',
@@ -782,7 +782,7 @@ const reminderBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', direct
  * std-reminder - Simple reminder system with CRUD operations.
  * Supports browsing, creating, and viewing reminders.
  */
-export const REMINDER_BEHAVIOR: OrbitalSchema = {
+export const REMINDER_BEHAVIOR: BehaviorSchema = {
   name: 'std-reminder',
   version: '1.0.0',
   description: 'Reminder system with priority tracking',
@@ -961,7 +961,7 @@ export const REMINDER_BEHAVIOR: OrbitalSchema = {
 // Export All Scheduling Behaviors
 // ============================================================================
 
-export const SCHEDULING_BEHAVIORS: OrbitalSchema[] = [
+export const SCHEDULING_BEHAVIORS: BehaviorSchema[] = [
   CALENDAR_BEHAVIOR,
   BOOKING_BEHAVIOR,
   AVAILABILITY_BEHAVIOR,

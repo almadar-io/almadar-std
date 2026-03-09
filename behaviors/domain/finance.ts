@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Finance Theme ────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ const FINANCE_THEME = {
 
 // ── Reusable main-view effects (ledger) ─────────────────────────────
 
-const ledgerMainEffects = [
+const ledgerMainEffects: BehaviorEffect[] = [
   ['fetch', 'LedgerEntry'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header zone: landmark icon + title + new entry button
@@ -74,7 +74,7 @@ const ledgerMainEffects = [
 
 // ── Reusable main-view effects (transactions) ───────────────────────
 
-const transactionMainEffects = [
+const transactionMainEffects: BehaviorEffect[] = [
   ['fetch', 'Transaction'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header zone: receipt icon + title + new button + search
@@ -115,7 +115,7 @@ const transactionMainEffects = [
 
 // ── Reusable main-view effects (portfolio) ──────────────────────────
 
-const portfolioMainEffects = [
+const portfolioMainEffects: BehaviorEffect[] = [
   ['fetch', 'Holding'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header zone: trending-up icon + title
@@ -161,7 +161,7 @@ const portfolioMainEffects = [
  * line chart for balance trend + data-list cards.
  * Modal viewing: meter for balance + detail fields with icons.
  */
-export const LEDGER_BEHAVIOR: OrbitalSchema = {
+export const LEDGER_BEHAVIOR: BehaviorSchema = {
   name: 'std-ledger',
   version: '1.0.0',
   description: 'Financial ledger with debit and credit entries',
@@ -348,7 +348,7 @@ export const LEDGER_BEHAVIOR: OrbitalSchema = {
  * Stats row + line chart. Data-list with amount, type badge, category,
  * date, status badge. Modal detail with transaction info in stacks.
  */
-export const TRANSACTION_BEHAVIOR: OrbitalSchema = {
+export const TRANSACTION_BEHAVIOR: BehaviorSchema = {
   name: 'std-transaction',
   version: '1.0.0',
   description: 'Transaction tracking with categories and status',
@@ -536,7 +536,7 @@ export const TRANSACTION_BEHAVIOR: OrbitalSchema = {
  * Data-grid (3 cols) with symbol, shares, purchasePrice, currentPrice.
  * Modal: holding detail with trade button, gain/loss display.
  */
-export const PORTFOLIO_BEHAVIOR: OrbitalSchema = {
+export const PORTFOLIO_BEHAVIOR: BehaviorSchema = {
   name: 'std-portfolio',
   version: '1.0.0',
   description: 'Investment portfolio tracking with holdings',
@@ -708,7 +708,7 @@ export const PORTFOLIO_BEHAVIOR: OrbitalSchema = {
 // Export All Finance Behaviors
 // ============================================================================
 
-export const FINANCE_BEHAVIORS: OrbitalSchema[] = [
+export const FINANCE_BEHAVIORS: BehaviorSchema[] = [
   LEDGER_BEHAVIOR,
   TRANSACTION_BEHAVIOR,
   PORTFOLIO_BEHAVIOR,

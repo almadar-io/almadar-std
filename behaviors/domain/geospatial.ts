@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared Geospatial Theme ─────────────────────────────────────────
 
@@ -86,7 +86,7 @@ const mapBrowsingMainEffect = [
  * std-map-view - Map display with markers and creation.
  * States: browsing -> viewing -> creating
  */
-export const MAP_VIEW_BEHAVIOR: OrbitalSchema = {
+export const MAP_VIEW_BEHAVIOR: BehaviorSchema = {
   name: 'std-map-view',
   version: '1.0.0',
   description: 'Map display with markers and creation',
@@ -266,7 +266,7 @@ const locationIdleMainEffect = [
  * std-location-picker - Location selection input.
  * States: idle -> selecting -> confirmed
  */
-export const LOCATION_PICKER_BEHAVIOR: OrbitalSchema = {
+export const LOCATION_PICKER_BEHAVIOR: BehaviorSchema = {
   name: 'std-location-picker',
   version: '1.0.0',
   description: 'Location selection with address and coordinates',
@@ -477,7 +477,7 @@ const routePointListMainEffect = [
  * std-route-planner - Route creation with waypoints.
  * States: browsing -> planning -> viewing
  */
-export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
+export const ROUTE_PLANNER_BEHAVIOR: BehaviorSchema = {
   name: 'std-route-planner',
   version: '1.0.0',
   description: 'Route planning with ordered waypoints',
@@ -664,7 +664,7 @@ export const ROUTE_PLANNER_BEHAVIOR: OrbitalSchema = {
 // Export All Geospatial Behaviors
 // ============================================================================
 
-export const GEOSPATIAL_BEHAVIORS: OrbitalSchema[] = [
+export const GEOSPATIAL_BEHAVIORS: BehaviorSchema[] = [
   MAP_VIEW_BEHAVIOR,
   LOCATION_PICKER_BEHAVIOR,
   ROUTE_PLANNER_BEHAVIOR,

@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ============================================================================
 // Theme
@@ -39,7 +39,7 @@ const contentAmberTheme = {
 // std-article - Shared main-view effects
 // ============================================================================
 
-const articleBrowsingMainEffects: Effect[] = [
+const articleBrowsingMainEffects: BehaviorEffect[] = [
   ['render-ui', 'main', {
     type: 'stack',
     direction: 'vertical',
@@ -91,7 +91,7 @@ const articleBrowsingMainEffects: Effect[] = [
   }],
 ];
 
-const articleEditMainEffects: Effect[] = [
+const articleEditMainEffects: BehaviorEffect[] = [
   ['render-ui', 'main', {
     type: 'stack',
     direction: 'vertical',
@@ -125,7 +125,7 @@ const articleEditMainEffects: Effect[] = [
  * Entity: Article with title, body, status, author, publishedAt.
  * States: browsing -> editing -> previewing -> published.
  */
-export const ARTICLE_BEHAVIOR: OrbitalSchema = {
+export const ARTICLE_BEHAVIOR: BehaviorSchema = {
   name: 'std-article',
   version: '1.0.0',
   description: 'Article management with editing, preview, and publish workflow',
@@ -390,7 +390,7 @@ export const ARTICLE_BEHAVIOR: OrbitalSchema = {
 // std-reader - Shared main-view effects
 // ============================================================================
 
-const readerBrowsingMainEffects: Effect[] = [
+const readerBrowsingMainEffects: BehaviorEffect[] = [
   ['render-ui', 'main', {
     type: 'stack',
     direction: 'vertical',
@@ -437,7 +437,7 @@ const readerBrowsingMainEffects: Effect[] = [
  * Entity: ReadingState with articleId, scrollPosition, fontSize, theme.
  * States: browsing -> reading.
  */
-export const READER_BEHAVIOR: OrbitalSchema = {
+export const READER_BEHAVIOR: BehaviorSchema = {
   name: 'std-reader',
   version: '1.0.0',
   description: 'Reading experience with customizable display settings',
@@ -651,7 +651,7 @@ export const READER_BEHAVIOR: OrbitalSchema = {
 // std-bookmark - Shared main-view effects
 // ============================================================================
 
-const bookmarkBrowsingMainEffects: Effect[] = [
+const bookmarkBrowsingMainEffects: BehaviorEffect[] = [
   ['render-ui', 'main', {
     type: 'stack',
     direction: 'vertical',
@@ -700,7 +700,7 @@ const bookmarkBrowsingMainEffects: Effect[] = [
  * Entity: Bookmark with title, url, category, createdAt.
  * States: browsing -> creating -> viewing.
  */
-export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
+export const BOOKMARK_BEHAVIOR: BehaviorSchema = {
   name: 'std-bookmark',
   version: '1.0.0',
   description: 'Bookmark management with create, browse, and view',
@@ -886,7 +886,7 @@ export const BOOKMARK_BEHAVIOR: OrbitalSchema = {
 // std-annotation - Shared main-view effects
 // ============================================================================
 
-const annotationBrowsingMainEffects: Effect[] = [
+const annotationBrowsingMainEffects: BehaviorEffect[] = [
   ['render-ui', 'main', {
     type: 'stack',
     direction: 'vertical',
@@ -940,7 +940,7 @@ const annotationBrowsingMainEffects: Effect[] = [
  * Entity: Annotation with text, note, color, pageNumber.
  * States: browsing -> annotating -> viewing.
  */
-export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
+export const ANNOTATION_BEHAVIOR: BehaviorSchema = {
   name: 'std-annotation',
   version: '1.0.0',
   description: 'Text annotation with highlight, note, and color coding',
@@ -1130,7 +1130,7 @@ export const ANNOTATION_BEHAVIOR: OrbitalSchema = {
 // std-content-feed - Shared main-view effects
 // ============================================================================
 
-const feedBrowsingMainEffects: Effect[] = [
+const feedBrowsingMainEffects: BehaviorEffect[] = [
   ['render-ui', 'main', {
     type: 'stack',
     direction: 'vertical',
@@ -1179,7 +1179,7 @@ const feedBrowsingMainEffects: Effect[] = [
  * Entity: FeedItem with title, summary, source, publishedAt, isRead.
  * States: browsing -> reading -> archiving.
  */
-export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
+export const CONTENT_FEED_BEHAVIOR: BehaviorSchema = {
   name: 'std-content-feed',
   version: '1.0.0',
   description: 'Content feed with read tracking and archiving',
@@ -1382,7 +1382,7 @@ export const CONTENT_FEED_BEHAVIOR: OrbitalSchema = {
 // Export All Content Behaviors
 // ============================================================================
 
-export const CONTENT_BEHAVIORS: OrbitalSchema[] = [
+export const CONTENT_BEHAVIORS: BehaviorSchema[] = [
   ARTICLE_BEHAVIOR,
   READER_BEHAVIOR,
   BOOKMARK_BEHAVIOR,

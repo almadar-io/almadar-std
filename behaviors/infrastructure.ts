@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ============================================================================
 // Shared theme for all infrastructure behaviors
@@ -34,7 +34,7 @@ const INFRA_THEME = {
 // Shared render-ui compositions
 // ============================================================================
 
-const circuitBreakerMainView: Effect = ['render-ui', 'main', {
+const circuitBreakerMainView: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -60,7 +60,7 @@ const circuitBreakerMainView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const circuitBreakerOpenView: Effect = ['render-ui', 'main', {
+const circuitBreakerOpenView: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -85,7 +85,7 @@ const circuitBreakerOpenView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const circuitBreakerHalfOpenView: Effect = ['render-ui', 'main', {
+const circuitBreakerHalfOpenView: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -109,7 +109,7 @@ const circuitBreakerHalfOpenView: Effect = ['render-ui', 'main', {
   ],
 }];
 
-const healthCheckView = (title: string, statusVariant: string): Effect => ['render-ui', 'main', {
+const healthCheckView = (title: string, statusVariant: string): BehaviorEffect => ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -135,7 +135,7 @@ const healthCheckView = (title: string, statusVariant: string): Effect => ['rend
   ],
 }];
 
-const rateLimiterView = (title: string): Effect => ['render-ui', 'main', {
+const rateLimiterView = (title: string): BehaviorEffect => ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -159,7 +159,7 @@ const rateLimiterView = (title: string): Effect => ['render-ui', 'main', {
   ],
 }];
 
-const cacheStatsView = (title: string): Effect => ['render-ui', 'main', {
+const cacheStatsView = (title: string): BehaviorEffect => ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -183,7 +183,7 @@ const cacheStatsView = (title: string): Effect => ['render-ui', 'main', {
   ],
 }];
 
-const cacheEmptyView = (title: string): Effect => ['render-ui', 'main', {
+const cacheEmptyView = (title: string): BehaviorEffect => ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
       { type: 'icon', name: 'database', size: 'lg' },
@@ -200,7 +200,7 @@ const cacheEmptyView = (title: string): Effect => ['render-ui', 'main', {
   ],
 }];
 
-const sagaView = (title: string): Effect => ['render-ui', 'main', {
+const sagaView = (title: string): BehaviorEffect => ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -226,7 +226,7 @@ const sagaView = (title: string): Effect => ['render-ui', 'main', {
   ],
 }];
 
-const metricsView = (title: string): Effect => ['render-ui', 'main', {
+const metricsView = (title: string): BehaviorEffect => ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', gap: 'lg', children: [
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -252,7 +252,7 @@ const metricsView = (title: string): Effect => ['render-ui', 'main', {
 // std-circuit-breaker - Circuit Breaker Pattern
 // ============================================================================
 
-export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
+export const CIRCUIT_BREAKER_BEHAVIOR: BehaviorSchema = {
   name: 'std-circuit-breaker',
   version: '1.0.0',
   description: 'Circuit breaker pattern with automatic recovery',
@@ -464,7 +464,7 @@ export const CIRCUIT_BREAKER_BEHAVIOR: OrbitalSchema = {
 // std-health-check - Health Monitoring
 // ============================================================================
 
-export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
+export const HEALTH_CHECK_BEHAVIOR: BehaviorSchema = {
   name: 'std-health-check',
   version: '1.0.0',
   description: 'Tick-based health monitoring with degradation detection',
@@ -754,7 +754,7 @@ export const HEALTH_CHECK_BEHAVIOR: OrbitalSchema = {
 // std-rate-limiter - Token Bucket Rate Limiting
 // ============================================================================
 
-export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
+export const RATE_LIMITER_BEHAVIOR: BehaviorSchema = {
   name: 'std-rate-limiter',
   version: '1.0.0',
   description: 'Guard-based rate limiting with sliding window reset',
@@ -872,7 +872,7 @@ export const RATE_LIMITER_BEHAVIOR: OrbitalSchema = {
 // std-cache-aside - Cache-Aside Pattern
 // ============================================================================
 
-export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
+export const CACHE_ASIDE_BEHAVIOR: BehaviorSchema = {
   name: 'std-cache-aside',
   version: '1.0.0',
   description: 'Cache-aside pattern with TTL-based freshness and eviction',
@@ -1090,7 +1090,7 @@ export const CACHE_ASIDE_BEHAVIOR: OrbitalSchema = {
 // std-saga - Saga Pattern (Distributed Transaction Compensation)
 // ============================================================================
 
-export const SAGA_BEHAVIOR: OrbitalSchema = {
+export const SAGA_BEHAVIOR: BehaviorSchema = {
   name: 'std-saga',
   version: '1.0.0',
   description: 'Saga pattern with step-by-step execution and reverse compensation on failure',
@@ -1277,7 +1277,7 @@ export const SAGA_BEHAVIOR: OrbitalSchema = {
 // std-metrics-collector - Metrics Collection with Periodic Flush
 // ============================================================================
 
-export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
+export const METRICS_COLLECTOR_BEHAVIOR: BehaviorSchema = {
   name: 'std-metrics-collector',
   version: '1.0.0',
   description: 'Tick-based metrics aggregation with periodic flush and reporting',
@@ -1390,7 +1390,7 @@ export const METRICS_COLLECTOR_BEHAVIOR: OrbitalSchema = {
 // Export All Infrastructure Behaviors
 // ============================================================================
 
-export const INFRASTRUCTURE_BEHAVIORS: OrbitalSchema[] = [
+export const INFRASTRUCTURE_BEHAVIORS: BehaviorSchema[] = [
   CIRCUIT_BREAKER_BEHAVIOR,
   HEALTH_CHECK_BEHAVIOR,
   RATE_LIMITER_BEHAVIOR,

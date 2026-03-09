@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ============================================================================
 // Shared theme for all game-entity behaviors
@@ -67,7 +67,7 @@ const TILES_5X5 = [
 // Shared render-ui compositions
 // ============================================================================
 
-const healthCanvasView: Effect = ['render-ui', 'main', {
+const healthCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'guardian-1', unitType: 'guardian', x: 2, y: 2 }],
@@ -81,7 +81,7 @@ const healthCanvasView: Effect = ['render-ui', 'main', {
   unitClickEvent: 'UNIT_CLICK',
 }];
 
-const healthOverlayView: Effect = ['render-ui', 'overlay', {
+const healthOverlayView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'game-hud',
   elements: [
     { type: 'stat', label: 'HP', value: '@entity.currentHealth', icon: 'heart' },
@@ -93,7 +93,7 @@ const healthOverlayView: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const healthDamageEffectOverlay: Effect = ['render-ui', 'overlay', {
+const healthDamageEffectOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'canvas-effect',
   actionType: 'hit',
   x: 200,
@@ -101,7 +101,7 @@ const healthDamageEffectOverlay: Effect = ['render-ui', 'overlay', {
   duration: 600,
 }];
 
-const scoreCanvasView: Effect = ['render-ui', 'main', {
+const scoreCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'scorer-1', unitType: 'guardian', x: 2, y: 2 }],
@@ -115,7 +115,7 @@ const scoreCanvasView: Effect = ['render-ui', 'main', {
   unitClickEvent: 'UNIT_CLICK',
 }];
 
-const scoreOverlayView: Effect = ['render-ui', 'overlay', {
+const scoreOverlayView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'game-hud',
   elements: [
     { type: 'stat', label: 'Score', value: '@entity.currentScore', icon: 'star' },
@@ -127,7 +127,7 @@ const scoreOverlayView: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const movementCanvasView: Effect = ['render-ui', 'main', {
+const movementCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [{ id: 'mover-1', unitType: 'guardian', x: 2, y: 2 }],
@@ -141,7 +141,7 @@ const movementCanvasView: Effect = ['render-ui', 'main', {
   unitClickEvent: 'UNIT_CLICK',
 }];
 
-const movementOverlayView: Effect = ['render-ui', 'overlay', {
+const movementOverlayView: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'game-hud',
   elements: [
     { type: 'stat', label: 'X', value: '@entity.x', icon: 'arrow-right' },
@@ -155,7 +155,7 @@ const movementOverlayView: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const combatCanvasView: Effect = ['render-ui', 'main', {
+const combatCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_5X5,
   units: [
@@ -172,14 +172,14 @@ const combatCanvasView: Effect = ['render-ui', 'main', {
   unitClickEvent: 'UNIT_CLICK',
 }];
 
-const combatLogOverlay: Effect = ['render-ui', 'overlay', {
+const combatLogOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'combat-log',
   events: [],
   maxVisible: 10,
   title: 'Battle Log',
 }];
 
-const combatHudOverlay: Effect = ['render-ui', 'overlay', {
+const combatHudOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'game-hud',
   elements: [
     { type: 'stat', label: 'Damage', value: '@entity.attackDamage', icon: 'sword' },
@@ -191,7 +191,7 @@ const combatHudOverlay: Effect = ['render-ui', 'overlay', {
   ],
 }];
 
-const combatAttackEffect: Effect = ['render-ui', 'overlay', {
+const combatAttackEffect: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'canvas-effect',
   actionType: 'melee',
   x: 200,
@@ -199,7 +199,7 @@ const combatAttackEffect: Effect = ['render-ui', 'overlay', {
   duration: 600,
 }];
 
-const inventoryBrowseView: Effect = ['render-ui', 'main', {
+const inventoryBrowseView: BehaviorEffect = ['render-ui', 'main', {
   type: 'inventory-panel',
   items: '@entity',
   slots: 12,
@@ -208,7 +208,7 @@ const inventoryBrowseView: Effect = ['render-ui', 'main', {
   showTooltips: true,
 }];
 
-const inventoryDetailView: Effect = ['render-ui', 'main', {
+const inventoryDetailView: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack', direction: 'vertical', children: [
     { type: 'stack', direction: 'horizontal', children: [
       { type: 'icon', name: 'package' },
@@ -239,7 +239,7 @@ const inventoryDetailView: Effect = ['render-ui', 'main', {
  *
  * States: Alive -> Damaged -> Dead
  */
-export const HEALTH_BEHAVIOR: OrbitalSchema = {
+export const HEALTH_BEHAVIOR: BehaviorSchema = {
   name: 'std-health',
   version: '1.0.0',
   description: 'Entity health with damage, healing, invulnerability, and death',
@@ -441,7 +441,7 @@ export const HEALTH_BEHAVIOR: OrbitalSchema = {
 /**
  * std-score - Manages score with points, combos, and multipliers.
  */
-export const SCORE_BEHAVIOR: OrbitalSchema = {
+export const SCORE_BEHAVIOR: BehaviorSchema = {
   name: 'std-score',
   version: '1.0.0',
   description: 'Score tracking with points, combos, and multipliers',
@@ -598,7 +598,7 @@ export const SCORE_BEHAVIOR: OrbitalSchema = {
  * Handles position updates based on input direction.
  * States: Idle -> Moving -> Jumping -> Falling
  */
-export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
+export const MOVEMENT_BEHAVIOR: BehaviorSchema = {
   name: 'std-movement',
   version: '1.0.0',
   description: 'Entity movement with speed and direction',
@@ -804,7 +804,7 @@ export const MOVEMENT_BEHAVIOR: OrbitalSchema = {
  *
  * States: Ready -> Attacking -> Cooldown
  */
-export const COMBAT_BEHAVIOR: OrbitalSchema = {
+export const COMBAT_BEHAVIOR: BehaviorSchema = {
   name: 'std-combat',
   version: '1.0.0',
   description: 'Combat system with attacks, cooldowns, and hitboxes',
@@ -930,7 +930,7 @@ export const COMBAT_BEHAVIOR: OrbitalSchema = {
  *
  * States: browsing -> viewing
  */
-export const INVENTORY_BEHAVIOR: OrbitalSchema = {
+export const INVENTORY_BEHAVIOR: BehaviorSchema = {
   name: 'std-inventory',
   version: '1.0.0',
   description: 'Item collection, storage, and usage',
@@ -1038,7 +1038,7 @@ export const INVENTORY_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_ENTITY_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_ENTITY_BEHAVIORS: BehaviorSchema[] = [
   HEALTH_BEHAVIOR,
   SCORE_BEHAVIOR,
   MOVEMENT_BEHAVIOR,

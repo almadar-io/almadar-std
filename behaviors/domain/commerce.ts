@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared Commerce Theme ───────────────────────────────────────────
 
@@ -74,7 +74,7 @@ const cartHasItemsMainEffect = ['render-ui', 'main', { type: 'stack', direction:
  * Entity: CartItem with name, price, quantity, productId.
  * States: empty -> hasItems -> checkout. Add/remove items, proceed to checkout.
  */
-export const CART_BEHAVIOR: OrbitalSchema = {
+export const CART_BEHAVIOR: BehaviorSchema = {
   name: 'std-cart',
   version: '1.0.0',
   description: 'Shopping cart with add/remove items and checkout',
@@ -364,7 +364,7 @@ const checkoutPaymentMainEffect = ['render-ui', 'main', { type: 'stack', directi
  * Entity: Order with total, status, shippingAddress, paymentMethod.
  * States: shipping -> payment -> review -> confirmed.
  */
-export const CHECKOUT_BEHAVIOR: OrbitalSchema = {
+export const CHECKOUT_BEHAVIOR: BehaviorSchema = {
   name: 'std-checkout',
   version: '1.0.0',
   description: 'Multi-step checkout flow with shipping, payment, and review',
@@ -660,7 +660,7 @@ const catalogDetailModalEffect = ['render-ui', 'modal', { type: 'stack', directi
  * Entity: Product with name, description, price, category, inStock.
  * States: browsing -> viewing -> filtering. Standard list+detail.
  */
-export const CATALOG_BEHAVIOR: OrbitalSchema = {
+export const CATALOG_BEHAVIOR: BehaviorSchema = {
   name: 'std-catalog',
   version: '1.0.0',
   description: 'Product catalog with browsing, filtering, and detail view',
@@ -822,7 +822,7 @@ const pricingBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', directi
  * Entity: PriceRule with name, type, value, startDate, endDate.
  * States: browsing -> editing -> previewing.
  */
-export const PRICING_BEHAVIOR: OrbitalSchema = {
+export const PRICING_BEHAVIOR: BehaviorSchema = {
   name: 'std-pricing',
   version: '1.0.0',
   description: 'Price rule management with CRUD and preview',
@@ -1030,7 +1030,7 @@ const orderTrackingBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', d
  * Entity: OrderStatus with orderId, status, estimatedDelivery, trackingNumber.
  * States: browsing -> viewing.
  */
-export const ORDER_TRACKING_BEHAVIOR: OrbitalSchema = {
+export const ORDER_TRACKING_BEHAVIOR: BehaviorSchema = {
   name: 'std-order-tracking',
   version: '1.0.0',
   description: 'Order tracking with status and delivery estimates',
@@ -1145,7 +1145,7 @@ export const ORDER_TRACKING_BEHAVIOR: OrbitalSchema = {
 // Export All Commerce Behaviors
 // ============================================================================
 
-export const COMMERCE_BEHAVIORS: OrbitalSchema[] = [
+export const COMMERCE_BEHAVIORS: BehaviorSchema[] = [
   CART_BEHAVIOR,
   CHECKOUT_BEHAVIOR,
   CATALOG_BEHAVIOR,

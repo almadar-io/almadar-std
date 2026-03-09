@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Education Theme ──────────────────────────────────────────
 
@@ -35,7 +35,7 @@ const EDUCATION_THEME = {
 
 // ── Reusable main-view effects (quiz browsing) ──────────────────────
 
-const quizBrowsingEffects = [
+const quizBrowsingEffects: BehaviorEffect[] = [
   ['fetch', 'Quiz'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: graduation cap icon + title
@@ -62,7 +62,7 @@ const quizBrowsingEffects = [
 
 // ── Reusable main-view effects (quiz taking) ────────────────────────
 
-const quizTakingEffects = [
+const quizTakingEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: brain icon + "Taking Quiz"
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -87,7 +87,7 @@ const quizTakingEffects = [
 
 // ── Reusable main-view effects (progress browsing) ──────────────────
 
-const progressBrowsingEffects = [
+const progressBrowsingEffects: BehaviorEffect[] = [
   ['fetch', 'LearningProgress'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: book icon + title
@@ -122,7 +122,7 @@ const progressBrowsingEffects = [
 
 // ── Reusable main-view effects (grades browsing) ────────────────────
 
-const gradesBrowsingEffects = [
+const gradesBrowsingEffects: BehaviorEffect[] = [
   ['fetch', 'Grade'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: award icon + title
@@ -159,7 +159,7 @@ const gradesBrowsingEffects = [
 
 // ── Reusable main-view effects (curriculum browsing) ────────────────
 
-const curriculumBrowsingEffects = [
+const curriculumBrowsingEffects: BehaviorEffect[] = [
   ['fetch', 'Course'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: graduation cap + title + search
@@ -189,7 +189,7 @@ const curriculumBrowsingEffects = [
 
 // ── Course detail view effects ──────────────────────────────────────
 
-const courseDetailEffects = [
+const courseDetailEffects: BehaviorEffect[] = [
   ['fetch', 'Course'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header with back + enroll buttons
@@ -237,7 +237,7 @@ const courseDetailEffects = [
  * std-quiz - Quiz system with answer submission and scoring.
  * States: idle -> taking -> reviewing -> completed
  */
-export const QUIZ_BEHAVIOR: OrbitalSchema = {
+export const QUIZ_BEHAVIOR: BehaviorSchema = {
   name: 'std-quiz',
   version: '1.0.0',
   description: 'Quiz system with answer submission and scoring',
@@ -402,7 +402,7 @@ export const QUIZ_BEHAVIOR: OrbitalSchema = {
  * std-progress-tracker - Learning progress tracking.
  * States: browsing -> viewing
  */
-export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
+export const PROGRESS_TRACKER_BEHAVIOR: BehaviorSchema = {
   name: 'std-progress-tracker',
   version: '1.0.0',
   description: 'Learning progress tracking with completion metrics',
@@ -511,7 +511,7 @@ export const PROGRESS_TRACKER_BEHAVIOR: OrbitalSchema = {
  * std-grading - Grade entry and review system.
  * States: browsing -> grading -> reviewed
  */
-export const GRADING_BEHAVIOR: OrbitalSchema = {
+export const GRADING_BEHAVIOR: BehaviorSchema = {
   name: 'std-grading',
   version: '1.0.0',
   description: 'Grading system for student assignments',
@@ -668,7 +668,7 @@ export const GRADING_BEHAVIOR: OrbitalSchema = {
  * std-curriculum - Course catalog and enrollment.
  * States: browsing -> viewing -> enrolling
  */
-export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
+export const CURRICULUM_BEHAVIOR: BehaviorSchema = {
   name: 'std-curriculum',
   version: '1.0.0',
   description: 'Curriculum browser with course catalog and enrollment',
@@ -791,7 +791,7 @@ export const CURRICULUM_BEHAVIOR: OrbitalSchema = {
 // Export All Education Behaviors
 // ============================================================================
 
-export const EDUCATION_BEHAVIORS: OrbitalSchema[] = [
+export const EDUCATION_BEHAVIORS: BehaviorSchema[] = [
   QUIZ_BEHAVIOR,
   PROGRESS_TRACKER_BEHAVIOR,
   GRADING_BEHAVIOR,

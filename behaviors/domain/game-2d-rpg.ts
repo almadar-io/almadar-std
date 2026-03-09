@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared RPG Theme ────────────────────────────────────────────────
 
@@ -159,7 +159,7 @@ const overworldEventHud = ['render-ui', 'overlay', {
  * States: Exploring -> Traveling -> Event
  * Tracks current zone and player position on the overworld.
  */
-export const OVERWORLD_BEHAVIOR: OrbitalSchema = {
+export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
   name: 'std-overworld',
   version: '1.0.0',
   description: 'Zone-based world map navigation for RPG overworld',
@@ -343,7 +343,7 @@ const closeModalEffect = ['render-ui', 'modal', null];
  * States: Available -> Active -> Completed / Failed
  * CRUD-like quest tracking with status progression.
  */
-export const QUEST_BEHAVIOR: OrbitalSchema = {
+export const QUEST_BEHAVIOR: BehaviorSchema = {
   name: 'std-quest',
   version: '1.0.0',
   description: 'Quest tracking with status progression',
@@ -589,7 +589,7 @@ const npcTradingModal = ['render-ui', 'modal', {
  * States: Idle -> Talking -> Trading
  * Simple conversation and trade flow with NPCs.
  */
-export const NPC_BEHAVIOR: OrbitalSchema = {
+export const NPC_BEHAVIOR: BehaviorSchema = {
   name: 'std-npc',
   version: '1.0.0',
   description: 'NPC interaction with dialogue and trading',
@@ -778,7 +778,7 @@ const craftingDoneHud = ['render-ui', 'overlay', {
  * States: Browsing -> Crafting -> Done
  * Recipe selection and crafting execution flow.
  */
-export const CRAFTING_BEHAVIOR: OrbitalSchema = {
+export const CRAFTING_BEHAVIOR: BehaviorSchema = {
   name: 'std-crafting',
   version: '1.0.0',
   description: 'Recipe-based item crafting system',
@@ -892,7 +892,7 @@ export const CRAFTING_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_2D_RPG_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_2D_RPG_BEHAVIORS: BehaviorSchema[] = [
   OVERWORLD_BEHAVIOR,
   QUEST_BEHAVIOR,
   NPC_BEHAVIOR,

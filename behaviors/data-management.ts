@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from './types.js';
+import type { BehaviorSchema, BehaviorEffect } from './types.js';
 
 // ============================================================================
 // Theme: data-zinc
@@ -40,7 +40,7 @@ const DATA_ZINC_THEME = {
 // ============================================================================
 
 /** Product main view: header + data-grid with refresh action */
-const PRODUCT_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const PRODUCT_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -81,7 +81,7 @@ const PRODUCT_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** File list main view: header + data-list with select/view actions */
-const FILE_IDLE_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const FILE_IDLE_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -107,7 +107,7 @@ const FILE_IDLE_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** File list main view when items are selected */
-const FILE_SELECTED_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const FILE_SELECTED_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -134,7 +134,7 @@ const FILE_SELECTED_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** File detail modal view */
-const FILE_DETAIL_MODAL: Effect = ['render-ui', 'modal', {
+const FILE_DETAIL_MODAL: BehaviorEffect = ['render-ui', 'modal', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -164,7 +164,7 @@ const FILE_DETAIL_MODAL: Effect = ['render-ui', 'modal', {
 }];
 
 /** Contact table main view: header + data-grid with sortable columns */
-const CONTACT_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const CONTACT_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -202,7 +202,7 @@ const CONTACT_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** Task browsing main view: header + filter controls + data-grid */
-const TASK_BROWSING_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const TASK_BROWSING_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -233,7 +233,7 @@ const TASK_BROWSING_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** Task filtered main view: header + active filter badge + data-grid */
-const TASK_FILTERED_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const TASK_FILTERED_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -266,7 +266,7 @@ const TASK_FILTERED_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** Article search idle view: header + search-input + data-list */
-const ARTICLE_IDLE_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const ARTICLE_IDLE_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -290,7 +290,7 @@ const ARTICLE_IDLE_MAIN_VIEW: Effect = ['render-ui', 'main', {
 }];
 
 /** Article search active view: header + search-input + clear + data-list */
-const ARTICLE_SEARCHING_MAIN_VIEW: Effect = ['render-ui', 'main', {
+const ARTICLE_SEARCHING_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
   type: 'stack',
   direction: 'vertical',
   gap: 'md',
@@ -328,7 +328,7 @@ const ARTICLE_SEARCHING_MAIN_VIEW: Effect = ['render-ui', 'main', {
  * std-pagination - Page navigation behavior for large data sets.
  * Uses a concrete Product entity to demonstrate paginated browsing.
  */
-export const PAGINATION_BEHAVIOR: OrbitalSchema = {
+export const PAGINATION_BEHAVIOR: BehaviorSchema = {
   name: 'std-pagination',
   version: '1.0.0',
   description: 'Page-based navigation for large data sets',
@@ -445,7 +445,7 @@ export const PAGINATION_BEHAVIOR: OrbitalSchema = {
  * std-selection - Selection management for entity lists.
  * Uses a concrete File entity to demonstrate single/multi selection.
  */
-export const SELECTION_BEHAVIOR: OrbitalSchema = {
+export const SELECTION_BEHAVIOR: BehaviorSchema = {
   name: 'std-selection',
   version: '1.0.0',
   description: 'Single or multi-selection management',
@@ -567,7 +567,7 @@ export const SELECTION_BEHAVIOR: OrbitalSchema = {
  * std-sort - Sorting behavior for entity lists.
  * Uses a concrete Contact entity to demonstrate sortable columns.
  */
-export const SORT_BEHAVIOR: OrbitalSchema = {
+export const SORT_BEHAVIOR: BehaviorSchema = {
   name: 'std-sort',
   version: '1.0.0',
   description: 'Sorting by field with direction toggle',
@@ -667,7 +667,7 @@ export const SORT_BEHAVIOR: OrbitalSchema = {
  * std-filter - Filtering behavior for entity lists.
  * Uses a concrete Task entity to demonstrate filter and search operations.
  */
-export const FILTER_BEHAVIOR: OrbitalSchema = {
+export const FILTER_BEHAVIOR: BehaviorSchema = {
   name: 'std-filter',
   version: '1.0.0',
   description: 'Query Singleton pattern for explicit filtering',
@@ -785,7 +785,7 @@ export const FILTER_BEHAVIOR: OrbitalSchema = {
  * std-search - Search behavior for entity lists.
  * Uses a concrete Article entity to demonstrate search operations.
  */
-export const SEARCH_BEHAVIOR: OrbitalSchema = {
+export const SEARCH_BEHAVIOR: BehaviorSchema = {
   name: 'std-search',
   version: '1.0.0',
   description: 'Search behavior for entity lists',
@@ -899,7 +899,7 @@ export const SEARCH_BEHAVIOR: OrbitalSchema = {
 // Export All Data Management Behaviors
 // ============================================================================
 
-export const DATA_MANAGEMENT_BEHAVIORS: OrbitalSchema[] = [
+export const DATA_MANAGEMENT_BEHAVIORS: BehaviorSchema[] = [
   PAGINATION_BEHAVIOR,
   SELECTION_BEHAVIOR,
   SORT_BEHAVIOR,

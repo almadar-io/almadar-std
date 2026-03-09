@@ -12,7 +12,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, Effect } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Strategy Game Theme ──────────────────────────────────────
 
@@ -67,7 +67,7 @@ for (let y = 0; y < 6; y++) {
 // std-turn-system - Turn Management
 // ============================================================================
 
-const turnCanvasView: Effect = ['render-ui', 'main', {
+const turnCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_8X6,
   units: [
@@ -82,7 +82,7 @@ const turnCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const turnHudOverlay: Effect = ['render-ui', 'overlay', {
+const turnHudOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Turn', value: '@entity.turnNumber', icon: 'layers' },
@@ -103,7 +103,7 @@ const turnHudOverlay: Effect = ['render-ui', 'overlay', {
  * States: Waiting -> Acting -> Resolving
  * Tracks current player, turn number, and phase.
  */
-export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
+export const TURN_SYSTEM_BEHAVIOR: BehaviorSchema = {
   name: 'std-turn-system',
   version: '1.0.0',
   description: 'Turn-based game cycle with phases',
@@ -219,7 +219,7 @@ export const TURN_SYSTEM_BEHAVIOR: OrbitalSchema = {
 // std-unit-command - Unit Orders
 // ============================================================================
 
-const unitCommandCanvasView: Effect = ['render-ui', 'main', {
+const unitCommandCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_8X6,
   units: [
@@ -237,7 +237,7 @@ const unitCommandCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const unitCommandHudOverlay: Effect = ['render-ui', 'overlay', {
+const unitCommandHudOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Unit', value: '@entity.unitId', icon: 'users' },
@@ -260,7 +260,7 @@ const unitCommandHudOverlay: Effect = ['render-ui', 'overlay', {
  * States: Idle -> Selected -> Commanding
  * Select a unit and issue movement/attack orders.
  */
-export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
+export const UNIT_COMMAND_BEHAVIOR: BehaviorSchema = {
   name: 'std-unit-command',
   version: '1.0.0',
   description: 'Unit selection and command issuing for strategy games',
@@ -383,7 +383,7 @@ export const UNIT_COMMAND_BEHAVIOR: OrbitalSchema = {
 // std-fog-of-war - Visibility Management
 // ============================================================================
 
-const fogCanvasView: Effect = ['render-ui', 'main', {
+const fogCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_8X6,
   units: [{ id: 'scout', x: 3, y: 2, unitType: 'guardian' }],
@@ -399,7 +399,7 @@ const fogCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const fogHudOverlay: Effect = ['render-ui', 'overlay', {
+const fogHudOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Visible', value: '@entity.visibleTiles', icon: 'target' },
@@ -422,7 +422,7 @@ const fogHudOverlay: Effect = ['render-ui', 'overlay', {
  * States: Hidden -> Partial -> Revealed
  * Tracks visible tiles, explored tiles, and reveal radius.
  */
-export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
+export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
   name: 'std-fog-of-war',
   version: '1.0.0',
   description: 'Map visibility and fog of war management',
@@ -551,7 +551,7 @@ export const FOG_OF_WAR_BEHAVIOR: OrbitalSchema = {
 // std-resource - Resource Management
 // ============================================================================
 
-const resourceCanvasView: Effect = ['render-ui', 'main', {
+const resourceCanvasView: BehaviorEffect = ['render-ui', 'main', {
   type: 'isometric-canvas',
   tiles: TILES_8X6,
   units: [{ id: 'gatherer', x: 3, y: 2, unitType: 'guardian' }],
@@ -568,7 +568,7 @@ const resourceCanvasView: Effect = ['render-ui', 'main', {
   assetManifest: GAME_MANIFEST,
 }];
 
-const resourceHudOverlay: Effect = ['render-ui', 'overlay', {
+const resourceHudOverlay: BehaviorEffect = ['render-ui', 'overlay', {
   type: 'stack', direction: 'vertical', gap: 'md', children: [
     { type: 'game-hud', position: 'top', elements: [
       { label: 'Gold', value: '@entity.gold', icon: 'coins' },
@@ -591,7 +591,7 @@ const resourceHudOverlay: Effect = ['render-ui', 'overlay', {
  * States: Stable -> Surplus -> Deficit
  * Tracks gold, wood, stone, food, and capacity.
  */
-export const RESOURCE_BEHAVIOR: OrbitalSchema = {
+export const RESOURCE_BEHAVIOR: BehaviorSchema = {
   name: 'std-resource',
   version: '1.0.0',
   description: 'Strategy game resource management',
@@ -746,7 +746,7 @@ export const RESOURCE_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_2D_STRATEGY_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_2D_STRATEGY_BEHAVIORS: BehaviorSchema[] = [
   TURN_SYSTEM_BEHAVIOR,
   UNIT_COMMAND_BEHAVIOR,
   FOG_OF_WAR_BEHAVIOR,

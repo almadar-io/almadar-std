@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Platformer Theme ────────────────────────────────────────
 
@@ -39,7 +39,7 @@ const PLATFORMER_THEME = {
 
 // ── Reusable main-view effects (platformer: HUD) ──────────────────
 
-const platformerHudEffects = [
+const platformerHudEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: gamepad icon + title
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -73,7 +73,7 @@ const platformerHudEffects = [
   ]}],
 ];
 
-const platformerGameOverEffects = [
+const platformerGameOverEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Game over header
     { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', children: [
@@ -99,7 +99,7 @@ const platformerGameOverEffects = [
  * Tracks position, lives, and jump state.
  * Tick applies gravity when not grounded.
  */
-export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
+export const PLATFORMER_BEHAVIOR: BehaviorSchema = {
   name: 'std-platformer',
   version: '1.0.0',
   description: 'Platform game character state with movement and gravity',
@@ -299,7 +299,7 @@ export const PLATFORMER_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (tilemap: map display) ──────────────
 
-const tilemapDisplayEffects = [
+const tilemapDisplayEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: map icon + title + reset button
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -333,7 +333,7 @@ const tilemapDisplayEffects = [
   ]}],
 ];
 
-const tilemapLoadingEffects = [
+const tilemapLoadingEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Loading header
     { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
@@ -357,7 +357,7 @@ const tilemapLoadingEffects = [
  * States: Loading -> Ready
  * Tracks map dimensions, tile size, and scroll position.
  */
-export const TILEMAP_BEHAVIOR: OrbitalSchema = {
+export const TILEMAP_BEHAVIOR: BehaviorSchema = {
   name: 'std-tilemap',
   version: '1.0.0',
   description: 'Tile map management with scroll and dimensions',
@@ -459,7 +459,7 @@ export const TILEMAP_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (powerup: HUD) ─────────────────────
 
-const powerupHudEffects = [
+const powerupHudEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: zap icon + title
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -493,7 +493,7 @@ const powerupHudEffects = [
   ]}],
 ];
 
-const powerupActiveEffects = [
+const powerupActiveEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Active header
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -528,7 +528,7 @@ const powerupActiveEffects = [
  * States: Inactive -> Active -> Expired
  * Tick counts down remaining time when active.
  */
-export const POWERUP_BEHAVIOR: OrbitalSchema = {
+export const POWERUP_BEHAVIOR: BehaviorSchema = {
   name: 'std-powerup',
   version: '1.0.0',
   description: 'Power-up collection with duration countdown',
@@ -641,7 +641,7 @@ export const POWERUP_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (enemy AI: patrol HUD) ──────────────
 
-const enemyPatrolHudEffects = [
+const enemyPatrolHudEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: sword icon + title + state badge
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -676,7 +676,7 @@ const enemyPatrolHudEffects = [
   ]}],
 ];
 
-const enemyChaseHudEffects = [
+const enemyChaseHudEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Chase header
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -705,7 +705,7 @@ const enemyChaseHudEffects = [
   ]}],
 ];
 
-const enemyStunnedHudEffects = [
+const enemyStunnedHudEffects: BehaviorEffect[] = [
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Stunned header
     { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
@@ -733,7 +733,7 @@ const enemyStunnedHudEffects = [
  * States: Patrolling -> Chasing -> Stunned
  * Tick moves enemy along patrol path.
  */
-export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
+export const ENEMY_AI_BEHAVIOR: BehaviorSchema = {
   name: 'std-enemy-ai',
   version: '1.0.0',
   description: 'Enemy AI with patrol, chase, and stun behavior',
@@ -859,7 +859,7 @@ export const ENEMY_AI_BEHAVIOR: OrbitalSchema = {
 // Export All Behaviors
 // ============================================================================
 
-export const GAME_2D_PLATFORMER_BEHAVIORS: OrbitalSchema[] = [
+export const GAME_2D_PLATFORMER_BEHAVIORS: BehaviorSchema[] = [
   PLATFORMER_BEHAVIOR,
   TILEMAP_BEHAVIOR,
   POWERUP_BEHAVIOR,

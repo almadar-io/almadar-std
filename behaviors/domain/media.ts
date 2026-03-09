@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema } from '../types.js';
 
 // ── Shared Media Theme ──────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ const galleryBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', directi
  * std-gallery - Media gallery with lightbox viewing and upload.
  * States: browsing -> viewing -> uploading
  */
-export const GALLERY_BEHAVIOR: OrbitalSchema = {
+export const GALLERY_BEHAVIOR: BehaviorSchema = {
   name: 'std-gallery',
   version: '1.0.0',
   description: 'Media gallery with lightbox viewing and upload',
@@ -317,7 +317,7 @@ const playerPausedMainEffect = ['render-ui', 'main', { type: 'stack', direction:
  * std-player - Media playback with play/pause controls.
  * States: idle -> playing -> paused
  */
-export const PLAYER_BEHAVIOR: OrbitalSchema = {
+export const PLAYER_BEHAVIOR: BehaviorSchema = {
   name: 'std-player',
   version: '1.0.0',
   description: 'Media player with playback controls',
@@ -466,7 +466,7 @@ const playlistBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', direct
  * std-playlist - Playlist management with ordering.
  * States: browsing -> viewing -> editing
  */
-export const PLAYLIST_BEHAVIOR: OrbitalSchema = {
+export const PLAYLIST_BEHAVIOR: BehaviorSchema = {
   name: 'std-playlist',
   version: '1.0.0',
   description: 'Playlist management with track ordering',
@@ -656,7 +656,7 @@ const uploadProgressMainEffect = ['render-ui', 'main', { type: 'stack', directio
  * std-upload - File upload tracking with progress.
  * States: idle -> uploading -> completed -> failed
  */
-export const UPLOAD_BEHAVIOR: OrbitalSchema = {
+export const UPLOAD_BEHAVIOR: BehaviorSchema = {
   name: 'std-upload',
   version: '1.0.0',
   description: 'File upload tracking with progress indicator',
@@ -826,7 +826,7 @@ export const UPLOAD_BEHAVIOR: OrbitalSchema = {
 // Export All Media Behaviors
 // ============================================================================
 
-export const MEDIA_BEHAVIORS: OrbitalSchema[] = [
+export const MEDIA_BEHAVIORS: BehaviorSchema[] = [
   GALLERY_BEHAVIOR,
   PLAYER_BEHAVIOR,
   PLAYLIST_BEHAVIOR,

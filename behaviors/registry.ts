@@ -2,12 +2,12 @@
  * Standard Behaviors Registry
  *
  * Combined registry of all Standard Behaviors with lookup functions.
- * Note: Behaviors are now typed as OrbitalSchema (OrbitalSchema).
+ * Note: Behaviors are now typed as BehaviorSchema (BehaviorSchema).
  *
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, BehaviorMetadata } from './types.js';
+import type { BehaviorSchema, BehaviorMetadata } from './types.js';
 import { getBehaviorMetadata } from './types.js';
 import { UI_INTERACTION_BEHAVIORS } from './ui-interaction.js';
 import { DATA_MANAGEMENT_BEHAVIORS } from './data-management.js';
@@ -43,9 +43,9 @@ import { SIMULATION_BEHAVIORS } from './domain/simulation.js';
 
 /**
  * All Standard Behaviors combined into a single array.
- * Each behavior is now a OrbitalSchema (OrbitalSchema).
+ * Each behavior is now a BehaviorSchema (BehaviorSchema).
  */
-export const STANDARD_BEHAVIORS: OrbitalSchema[] = [
+export const STANDARD_BEHAVIORS: BehaviorSchema[] = [
   // Core behaviors (40)
   ...UI_INTERACTION_BEHAVIORS,
   ...DATA_MANAGEMENT_BEHAVIORS,
@@ -78,12 +78,12 @@ export const STANDARD_BEHAVIORS: OrbitalSchema[] = [
 /**
  * Behavior registry indexed by name for fast lookup.
  */
-export const BEHAVIOR_REGISTRY: Record<string, OrbitalSchema> = STANDARD_BEHAVIORS.reduce(
+export const BEHAVIOR_REGISTRY: Record<string, BehaviorSchema> = STANDARD_BEHAVIORS.reduce(
   (acc, behavior) => {
     acc[behavior.name] = behavior;
     return acc;
   },
-  {} as Record<string, OrbitalSchema>
+  {} as Record<string, BehaviorSchema>
 );
 
 // ============================================================================
@@ -96,7 +96,7 @@ export const BEHAVIOR_REGISTRY: Record<string, OrbitalSchema> = STANDARD_BEHAVIO
  * @param name - Behavior name (e.g., 'std-list')
  * @returns The behavior or undefined if not found
  */
-export function getBehavior(name: string): OrbitalSchema | undefined {
+export function getBehavior(name: string): BehaviorSchema | undefined {
   return BEHAVIOR_REGISTRY[name];
 }
 
@@ -124,7 +124,7 @@ export function getAllBehaviorNames(): string[] {
  *
  * @returns Array of all behaviors
  */
-export function getAllBehaviors(): OrbitalSchema[] {
+export function getAllBehaviors(): BehaviorSchema[] {
   return STANDARD_BEHAVIORS;
 }
 
@@ -143,7 +143,7 @@ export function getAllBehaviorMetadata(): BehaviorMetadata[] {
  * @param useCase - Use case description to match
  * @returns Array of matching behaviors
  */
-export function findBehaviorsForUseCase(useCase: string): OrbitalSchema[] {
+export function findBehaviorsForUseCase(useCase: string): BehaviorSchema[] {
   const lowerUseCase = useCase.toLowerCase();
   return STANDARD_BEHAVIORS.filter((behavior) =>
     behavior.description?.toLowerCase().includes(lowerUseCase) ?? false
@@ -156,14 +156,15 @@ export function findBehaviorsForUseCase(useCase: string): OrbitalSchema[] {
  * @param event - Event name
  * @returns Array of behaviors that handle this event
  */
-export function getBehaviorsForEvent(event: string): OrbitalSchema[] {
+export function getBehaviorsForEvent(event: string): BehaviorSchema[] {
   return STANDARD_BEHAVIORS.filter((behavior) => {
     // Access stateMachine from first orbital's traits
     for (const orbital of behavior.orbitals || []) {
-      for (const trait of orbital.traits || []) {
+      for (const trait of (orbital.traits || []) as Record<string, unknown>[]) {
         if (typeof trait === 'object' && 'stateMachine' in trait) {
-          const events = trait.stateMachine?.events || [];
-          if (events.some((e: { key: string }) => e.key === event)) {
+          const sm = trait.stateMachine as Record<string, unknown> | undefined;
+          const events = (sm?.events || []) as { key: string }[];
+          if (events.some((e) => e.key === event)) {
             return true;
           }
         }
@@ -179,14 +180,15 @@ export function getBehaviorsForEvent(event: string): OrbitalSchema[] {
  * @param state - State name
  * @returns Array of behaviors that have this state
  */
-export function getBehaviorsWithState(state: string): OrbitalSchema[] {
+export function getBehaviorsWithState(state: string): BehaviorSchema[] {
   return STANDARD_BEHAVIORS.filter((behavior) => {
     // Access stateMachine from first orbital's traits
     for (const orbital of behavior.orbitals || []) {
-      for (const trait of orbital.traits || []) {
+      for (const trait of (orbital.traits || []) as Record<string, unknown>[]) {
         if (typeof trait === 'object' && 'stateMachine' in trait) {
-          const states = trait.stateMachine?.states || [];
-          if (states.some((s: { name: string }) => s.name === state)) {
+          const sm = trait.stateMachine as Record<string, unknown> | undefined;
+          const states = (sm?.states || []) as { name: string }[];
+          if (states.some((s) => s.name === state)) {
             return true;
           }
         }
@@ -297,15 +299,15 @@ export function getBehaviorLibraryStats(): {
   for (const behavior of STANDARD_BEHAVIORS) {
     // Access stateMachine and ticks from orbital traits
     for (const orbital of behavior.orbitals || []) {
-      for (const trait of orbital.traits || []) {
+      for (const trait of (orbital.traits || []) as Record<string, unknown>[]) {
         if (typeof trait === 'object' && 'stateMachine' in trait) {
-          const sm = trait.stateMachine;
+          const sm = trait.stateMachine as Record<string, unknown> | undefined;
           if (sm) {
-            totalStates += (sm.states || []).length;
-            totalEvents += (sm.events || []).length;
-            totalTransitions += (sm.transitions || []).length;
+            totalStates += ((sm.states || []) as unknown[]).length;
+            totalEvents += ((sm.events || []) as unknown[]).length;
+            totalTransitions += ((sm.transitions || []) as unknown[]).length;
           }
-          totalTicks += (trait.ticks || []).length;
+          totalTicks += ((trait.ticks || []) as unknown[]).length;
         }
       }
     }

@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared IoT Theme ─────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ const IOT_THEME = {
 
 // ── Reusable main-view effects (sensors) ─────────────────────────────
 
-const sensorMainEffects = [
+const sensorMainEffects: BehaviorEffect[] = [
   ['fetch', 'SensorReading'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header zone: icon + title + refresh
@@ -72,7 +72,7 @@ const sensorMainEffects = [
 
 // ── Reusable main-view effects (alerts) ──────────────────────────────
 
-const alertMainEffects = [
+const alertMainEffects: BehaviorEffect[] = [
   ['fetch', 'AlertRule'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + create button
@@ -110,7 +110,7 @@ const alertMainEffects = [
 
 // ── Reusable main-view effects (devices) ─────────────────────────────
 
-const deviceMainEffects = [
+const deviceMainEffects: BehaviorEffect[] = [
   ['fetch', 'Device'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header
@@ -156,7 +156,7 @@ const deviceMainEffects = [
  * UI: Teal IoT theme. Main view uses stats + line chart + data-grid cards.
  * Modal for sensor detail with meter gauge, configure via form.
  */
-export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
+export const SENSOR_FEED_BEHAVIOR: BehaviorSchema = {
   name: 'std-sensor-feed',
   version: '1.0.0',
   description: 'Sensor data monitoring and visualization',
@@ -317,7 +317,7 @@ export const SENSOR_FEED_BEHAVIOR: OrbitalSchema = {
  * UI: Teal IoT theme. Main view uses stats + meter + searchable data-list.
  * Modal for create/edit via form-section.
  */
-export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
+export const ALERT_THRESHOLD_BEHAVIOR: BehaviorSchema = {
   name: 'std-alert-threshold',
   version: '1.0.0',
   description: 'Alert threshold configuration for sensors',
@@ -463,7 +463,7 @@ export const ALERT_THRESHOLD_BEHAVIOR: OrbitalSchema = {
  * UI: Teal IoT theme. Main view uses stats + meter + searchable data-grid cards.
  * Modal for device detail with firmware info, configure via form.
  */
-export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
+export const DEVICE_MGMT_BEHAVIOR: BehaviorSchema = {
   name: 'std-device-mgmt',
   version: '1.0.0',
   description: 'Device management with status and firmware tracking',
@@ -631,7 +631,7 @@ export const DEVICE_MGMT_BEHAVIOR: OrbitalSchema = {
 // Export All IoT Behaviors
 // ============================================================================
 
-export const IOT_BEHAVIORS: OrbitalSchema[] = [
+export const IOT_BEHAVIORS: BehaviorSchema[] = [
   SENSOR_FEED_BEHAVIOR,
   ALERT_THRESHOLD_BEHAVIOR,
   DEVICE_MGMT_BEHAVIOR,

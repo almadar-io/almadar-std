@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Workflow Theme ──────────────────────────────────────────
 
@@ -35,7 +35,7 @@ const WORKFLOW_THEME = {
 
 // ── Reusable main-view effects (approval) ──────────────────────────
 
-const approvalMainEffects = [
+const approvalMainEffects: BehaviorEffect[] = [
   ['fetch', 'ApprovalRequest'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
@@ -73,7 +73,7 @@ const approvalMainEffects = [
 
 // ── Reusable main-view effects (pipeline) ──────────────────────────
 
-const pipelineMainEffects = [
+const pipelineMainEffects: BehaviorEffect[] = [
   ['fetch', 'PipelineItem'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: git-branch icon + title
@@ -111,7 +111,7 @@ const pipelineMainEffects = [
 
 // ── Reusable main-view effects (kanban) ────────────────────────────
 
-const kanbanMainEffects = [
+const kanbanMainEffects: BehaviorEffect[] = [
   ['fetch', 'KanbanCard'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: workflow icon + title + create button
@@ -155,7 +155,7 @@ const kanbanMainEffects = [
 
 // ── Reusable main-view effects (review) ────────────────────────────
 
-const reviewMainEffects = [
+const reviewMainEffects: BehaviorEffect[] = [
   ['fetch', 'ReviewItem'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: star icon + title
@@ -200,7 +200,7 @@ const reviewMainEffects = [
  * std-approval - Approval workflow with review and decision states.
  * Supports browsing requests, reviewing details, and approving or rejecting.
  */
-export const APPROVAL_BEHAVIOR: OrbitalSchema = {
+export const APPROVAL_BEHAVIOR: BehaviorSchema = {
   name: 'std-approval',
   version: '1.0.0',
   description: 'Approval workflow with review and decision flow',
@@ -397,7 +397,7 @@ export const APPROVAL_BEHAVIOR: OrbitalSchema = {
  * std-pipeline - Pipeline stage management with item progression.
  * Supports browsing items, viewing details, and moving through stages.
  */
-export const PIPELINE_BEHAVIOR: OrbitalSchema = {
+export const PIPELINE_BEHAVIOR: BehaviorSchema = {
   name: 'std-pipeline',
   version: '1.0.0',
   description: 'Pipeline stage management with item progression',
@@ -557,7 +557,7 @@ export const PIPELINE_BEHAVIOR: OrbitalSchema = {
  * std-kanban - Kanban board card management.
  * Supports browsing, creating, viewing, and editing kanban cards.
  */
-export const KANBAN_BEHAVIOR: OrbitalSchema = {
+export const KANBAN_BEHAVIOR: BehaviorSchema = {
   name: 'std-kanban',
   version: '1.0.0',
   description: 'Kanban board card management',
@@ -775,7 +775,7 @@ export const KANBAN_BEHAVIOR: OrbitalSchema = {
  * std-review - Review process with scoring and feedback.
  * Supports browsing items, reviewing with score, and viewing scored results.
  */
-export const REVIEW_BEHAVIOR: OrbitalSchema = {
+export const REVIEW_BEHAVIOR: BehaviorSchema = {
   name: 'std-review',
   version: '1.0.0',
   description: 'Review process with scoring and feedback',
@@ -923,7 +923,7 @@ export const REVIEW_BEHAVIOR: OrbitalSchema = {
 // Export All Workflow Behaviors
 // ============================================================================
 
-export const WORKFLOW_BEHAVIORS: OrbitalSchema[] = [
+export const WORKFLOW_BEHAVIORS: BehaviorSchema[] = [
   APPROVAL_BEHAVIOR,
   PIPELINE_BEHAVIOR,
   KANBAN_BEHAVIOR,

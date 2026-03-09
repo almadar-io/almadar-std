@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '../types.js';
+import type { BehaviorSchema, BehaviorEffect } from '../types.js';
 
 // ── Shared Social Theme ─────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ const SOCIAL_THEME = {
 
 // ── Reusable main-view effects (feed: browsing) ─────────────────────
 
-const feedBrowsingMainEffects = [
+const feedBrowsingMainEffects: BehaviorEffect[] = [
   ['fetch', 'FeedPost'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header row: icon + title + create button
@@ -79,7 +79,7 @@ const feedBrowsingMainEffects = [
  * std-feed - Social feed with post browsing, viewing, and creation.
  * Supports browsing posts, viewing detail, and creating new posts.
  */
-export const FEED_BEHAVIOR: OrbitalSchema = {
+export const FEED_BEHAVIOR: BehaviorSchema = {
   name: 'std-feed',
   version: '1.0.0',
   description: 'Social feed with post browsing and creation',
@@ -271,7 +271,7 @@ export const FEED_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (messaging: browsing) ────────────────
 
-const messagingBrowsingMainEffects = [
+const messagingBrowsingMainEffects: BehaviorEffect[] = [
   ['fetch', 'Message'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title + compose button
@@ -316,7 +316,7 @@ const messagingBrowsingMainEffects = [
  * std-messaging - Messaging system with conversation browsing and composing.
  * Supports browsing messages, chatting in detail, and composing new messages.
  */
-export const MESSAGING_BEHAVIOR: OrbitalSchema = {
+export const MESSAGING_BEHAVIOR: BehaviorSchema = {
   name: 'std-messaging',
   version: '1.0.0',
   description: 'Messaging system with conversation flow',
@@ -518,7 +518,7 @@ export const MESSAGING_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (profile: viewing) ───────────────────
 
-const profileViewingMainEffects = [
+const profileViewingMainEffects: BehaviorEffect[] = [
   ['fetch', 'UserProfile'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: avatar area + title + edit button
@@ -578,7 +578,7 @@ const profileViewingMainEffects = [
  * std-profile - User profile management with viewing and editing.
  * Supports viewing profile details and editing fields.
  */
-export const PROFILE_BEHAVIOR: OrbitalSchema = {
+export const PROFILE_BEHAVIOR: BehaviorSchema = {
   name: 'std-profile',
   version: '1.0.0',
   description: 'User profile viewing and editing',
@@ -697,7 +697,7 @@ export const PROFILE_BEHAVIOR: OrbitalSchema = {
 
 // ── Reusable main-view effects (reactions: browsing) ────────────────
 
-const reactionsBrowsingMainEffects = [
+const reactionsBrowsingMainEffects: BehaviorEffect[] = [
   ['fetch', 'Reaction'],
   ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
     // Header: icon + title
@@ -740,7 +740,7 @@ const reactionsBrowsingMainEffects = [
  * std-reactions - Simple reaction system with add/remove.
  * Supports browsing reactions and toggling reaction state.
  */
-export const REACTIONS_BEHAVIOR: OrbitalSchema = {
+export const REACTIONS_BEHAVIOR: BehaviorSchema = {
   name: 'std-reactions',
   version: '1.0.0',
   description: 'Reaction system with add and remove',
@@ -888,7 +888,7 @@ export const REACTIONS_BEHAVIOR: OrbitalSchema = {
 // Export All Social Behaviors
 // ============================================================================
 
-export const SOCIAL_BEHAVIORS: OrbitalSchema[] = [
+export const SOCIAL_BEHAVIORS: BehaviorSchema[] = [
   FEED_BEHAVIOR,
   MESSAGING_BEHAVIOR,
   PROFILE_BEHAVIOR,
