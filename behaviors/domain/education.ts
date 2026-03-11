@@ -238,144 +238,793 @@ const courseDetailEffects: BehaviorEffect[] = [
  * States: idle -> taking -> reviewing -> completed
  */
 export const QUIZ_BEHAVIOR: BehaviorSchema = {
-  name: 'std-quiz',
-  version: '1.0.0',
-  description: 'Quiz system with answer submission and scoring',
+  name: "std-quiz",
+  version: "1.0.0",
+  description: "Quiz system with answer submission and scoring",
   orbitals: [
     {
-      name: 'QuizOrbital',
-      theme: EDUCATION_THEME,
+      name: "QuizOrbital",
+      theme: {
+        name: "education-blue",
+        tokens: {
+          colors: {
+            primary: "#2563eb",
+            "primary-hover": "#1d4ed8",
+            "primary-foreground": "#ffffff",
+            accent: "#3b82f6",
+            "accent-foreground": "#ffffff",
+            success: "#22c55e",
+            warning: "#f59e0b",
+            error: "#ef4444",
+          },
+        },
+      },
       entity: {
-        name: 'Quiz',
-        persistence: 'persistent',
-        collection: 'quizzes',
+        name: "Quiz",
+        persistence: "persistent",
+        collection: "quizzes",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'questions', type: 'number', default: 0 },
-          { name: 'currentQuestion', type: 'number', default: 0 },
-          { name: 'score', type: 'number', default: 0 },
-          { name: 'totalQuestions', type: 'number', default: 0 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "questions",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "currentQuestion",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "score",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "totalQuestions",
+            type: "number",
+            default: 0,
+          },
         ],
       },
       traits: [
         {
-          name: 'QuizControl',
-          linkedEntity: 'Quiz',
-          category: 'interaction',
+          name: "QuizControl",
+          linkedEntity: "Quiz",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'taking' },
-              { name: 'reviewing' },
-              { name: 'completed' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "taking",
+              },
+              {
+                name: "reviewing",
+              },
+              {
+                name: "completed",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'START', name: 'Start Quiz' },
-              { key: 'ANSWER', name: 'Submit Answer', payloadSchema: [{ name: 'correct', type: 'boolean', required: true }] },
-              { key: 'REVIEW', name: 'Review Results' },
-              { key: 'FINISH', name: 'Finish Quiz' },
-              { key: 'RESET', name: 'Reset Quiz' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "START",
+                name: "Start Quiz",
+              },
+              {
+                key: "ANSWER",
+                name: "Submit Answer",
+                payloadSchema: [
+                  {
+                    name: "correct",
+                    type: "boolean",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "REVIEW",
+                name: "Review Results",
+              },
+              {
+                key: "FINISH",
+                name: "Finish Quiz",
+              },
+              {
+                key: "RESET",
+                name: "Reset Quiz",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ...quizBrowsingEffects,
+                  ["fetch", "Quiz"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "graduation-cap",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Quizzes",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Quiz",
+                          variant: "card",
+                          itemActions: [
+                            {
+                              label: "Start Quiz",
+                              event: "START",
+                              icon: "play",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "help-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.totalQuestions",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.score",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'taking',
-                event: 'START',
+                from: "idle",
+                to: "taking",
+                event: "START",
                 effects: [
-                  ['set', '@entity.currentQuestion', 1],
-                  ['set', '@entity.score', 0],
-                  ...quizTakingEffects,
+                  ["set", "@entity.currentQuestion", 1],
+                  ["set", "@entity.score", 0],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "Question 1 of @entity.totalQuestions",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "award",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.score",
+                                  variant: "success",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.currentQuestion",
+                          max: "@entity.totalQuestions",
+                          showPercentage: true,
+                        },
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.title",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Quiz",
+                          variant: "card",
+                          itemActions: [
+                            {
+                              label: "Select",
+                              event: "ANSWER",
+                              icon: "check",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "help-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.totalQuestions",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.score",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "arrow-right",
+                              variant: "primary",
+                              action: "ANSWER",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'taking',
-                to: 'taking',
-                event: 'ANSWER',
-                guard: ['<', '@entity.currentQuestion', '@entity.totalQuestions'],
+                from: "taking",
+                to: "taking",
+                event: "ANSWER",
+                guard: ["<", "@entity.currentQuestion", "@entity.totalQuestions"],
                 effects: [
-                  ['set', '@entity.currentQuestion', ['+', '@entity.currentQuestion', 1]],
-                  ...quizTakingEffects,
+                  [
+                    "set",
+                    "@entity.currentQuestion",
+                    ["+", "@entity.currentQuestion", 1],
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "Question @entity.currentQuestion of @entity.totalQuestions",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "award",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.score",
+                                  variant: "success",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.currentQuestion",
+                          max: "@entity.totalQuestions",
+                          showPercentage: true,
+                        },
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.title",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Quiz",
+                          variant: "card",
+                          itemActions: [
+                            {
+                              label: "Select",
+                              event: "ANSWER",
+                              icon: "check",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "help-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.totalQuestions",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.score",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "arrow-right",
+                              variant: "primary",
+                              action: "ANSWER",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'taking',
-                to: 'reviewing',
-                event: 'ANSWER',
-                guard: ['>=', '@entity.currentQuestion', '@entity.totalQuestions'],
+                from: "taking",
+                to: "reviewing",
+                event: "ANSWER",
+                guard: [">=", "@entity.currentQuestion", "@entity.totalQuestions"],
                 effects: [
-                  ['fetch', 'Quiz'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Review header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'clipboard', size: 'lg' },
-                      { type: 'typography', variant: 'h2', content: 'Quiz Review' },
-                    ]},
-                    { type: 'divider' },
-                    // Score stats
-                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-                      { type: 'stats', label: 'Score', icon: 'award', entity: 'Quiz' },
-                      { type: 'stats', label: 'Questions', icon: 'clipboard', entity: 'Quiz' },
-                    ]},
-                    // Score meter
-                    { type: 'meter', value: '@entity.score', label: 'Score' },
-                    // Detail fields
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'book-open' },
-                        { type: 'typography', variant: 'body', content: '@entity.title' },
-                      ]},
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'check-circle' },
-                        { type: 'typography', variant: 'body', content: 'Correct answers:' },
-                        { type: 'badge', content: '@entity.score' },
-                      ]},
-                    ]},
-                    // Action button
-                    { type: 'button', label: 'Finish', icon: 'check-circle', variant: 'primary', action: 'FINISH' },
-                  ]}],
+                  ["fetch", "Quiz"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Quiz Review",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.score",
+                          max: "@entity.totalQuestions",
+                          label: "Score",
+                          showPercentage: true,
+                          variant: "success",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Score",
+                              value: "@entity.score",
+                              icon: "award",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Questions",
+                              value: "@entity.totalQuestions",
+                              icon: "clipboard",
+                            },
+                          ],
+                        },
+                        {
+                          type: "card",
+                          title: "@entity.title",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "check-circle",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Correct answers:",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.score",
+                                  variant: "success",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Finish",
+                              icon: "check-circle",
+                              variant: "primary",
+                              action: "FINISH",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reviewing',
-                to: 'completed',
-                event: 'FINISH',
+                from: "reviewing",
+                to: "completed",
+                event: "FINISH",
                 effects: [
-                  ['fetch', 'Quiz'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Completed header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'check-circle', size: 'lg' },
-                      { type: 'typography', variant: 'h2', content: 'Quiz Complete' },
-                    ]},
-                    { type: 'divider' },
-                    // Final stats
-                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-                      { type: 'stats', label: 'Final Score', icon: 'award', entity: 'Quiz' },
-                      { type: 'stats', label: 'Total Questions', icon: 'clipboard', entity: 'Quiz' },
-                    ]},
-                    // Reset button
-                    { type: 'button', label: 'Try Again', icon: 'refresh-cw', variant: 'secondary', action: 'RESET' },
-                  ]}],
+                  ["fetch", "Quiz"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "check-circle",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Quiz Complete",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.score",
+                          max: "@entity.totalQuestions",
+                          label: "Final Score",
+                          showPercentage: true,
+                          variant: "success",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Final Score",
+                              value: "@entity.score",
+                              icon: "award",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Questions",
+                              value: "@entity.totalQuestions",
+                              icon: "clipboard",
+                            },
+                          ],
+                        },
+                        {
+                          type: "button",
+                          label: "Try Again",
+                          icon: "refresh-cw",
+                          variant: "secondary",
+                          action: "RESET",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'completed',
-                to: 'idle',
-                event: 'RESET',
+                from: "completed",
+                to: "idle",
+                event: "RESET",
                 effects: [
-                  ['set', '@entity.currentQuestion', 0],
-                  ['set', '@entity.score', 0],
-                  ...quizBrowsingEffects,
+                  ["set", "@entity.currentQuestion", 0],
+                  ["set", "@entity.score", 0],
+                  ["fetch", "Quiz"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "graduation-cap",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Quizzes",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Quiz",
+                          variant: "card",
+                          itemActions: [
+                            {
+                              label: "Start Quiz",
+                              event: "START",
+                              icon: "play",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "help-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.totalQuestions",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.score",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -384,10 +1033,14 @@ export const QUIZ_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'QuizPage',
-          path: '/quiz',
+          name: "QuizPage",
+          path: "/quiz",
           isInitial: true,
-          traits: [{ ref: 'QuizControl' }],
+          traits: [
+            {
+              ref: "QuizControl",
+            },
+          ],
         },
       ],
     },
@@ -403,88 +1056,457 @@ export const QUIZ_BEHAVIOR: BehaviorSchema = {
  * States: browsing -> viewing
  */
 export const PROGRESS_TRACKER_BEHAVIOR: BehaviorSchema = {
-  name: 'std-progress-tracker',
-  version: '1.0.0',
-  description: 'Learning progress tracking with completion metrics',
+  name: "std-progress-tracker",
+  version: "1.0.0",
+  description: "Learning progress tracking with completion metrics",
   orbitals: [
     {
-      name: 'ProgressTrackerOrbital',
-      theme: EDUCATION_THEME,
+      name: "ProgressTrackerOrbital",
+      theme: {
+        name: "education-blue",
+        tokens: {
+          colors: {
+            primary: "#2563eb",
+            "primary-hover": "#1d4ed8",
+            "primary-foreground": "#ffffff",
+            accent: "#3b82f6",
+            "accent-foreground": "#ffffff",
+            success: "#22c55e",
+            warning: "#f59e0b",
+            error: "#ef4444",
+          },
+        },
+      },
       entity: {
-        name: 'LearningProgress',
-        persistence: 'persistent',
-        collection: 'learning_progress',
+        name: "LearningProgress",
+        persistence: "persistent",
+        collection: "learning_progress",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'courseName', type: 'string', default: '' },
-          { name: 'completed', type: 'number', default: 0 },
-          { name: 'total', type: 'number', default: 0 },
-          { name: 'percentage', type: 'number', default: 0 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "courseName",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "completed",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "total",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "percentage",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "lastActivity",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "streak",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "overallPercentage",
+            type: "number",
+            default: 0,
+          },
         ],
       },
       traits: [
         {
-          name: 'ProgressControl',
-          linkedEntity: 'LearningProgress',
-          category: 'interaction',
+          name: "ProgressControl",
+          linkedEntity: "LearningProgress",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'viewing' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "viewing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'VIEW', name: 'View Progress', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'BACK', name: 'Back to List' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "VIEW",
+                name: "View Progress",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "BACK",
+                name: "Back to List",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ...progressBrowsingEffects,
+                  ["fetch", "LearningProgress"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "My Progress",
+                        },
+                        {
+                          type: "card",
+                          title: "Overall Completion",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "progress-bar",
+                                  value: "@entity.overallPercentage",
+                                  label: "Overall Progress",
+                                  showPercentage: true,
+                                  size: "lg",
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  children: [
+                                    {
+                                      type: "stat-display",
+                                      label: "Day Streak",
+                                      value: "@entity.streak",
+                                      icon: "flame",
+                                    },
+                                    {
+                                      type: "stat-display",
+                                      label: "Courses",
+                                      icon: "graduation-cap",
+                                      entity: "LearningProgress",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "LearningProgress",
+                          variant: "card",
+                          itemActions: [
+                            {
+                              label: "Continue",
+                              event: "VIEW",
+                              icon: "play",
+                            },
+                            {
+                              label: "View Details",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "trending-up",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.courseName",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.lastActivity",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.percentage",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'LearningProgress'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Detail header with back button
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'book-open', size: 'lg' },
-                        { type: 'typography', variant: 'h2', content: 'Progress Detail' },
-                      ]},
-                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
-                    ]},
-                    { type: 'divider' },
-                    // Course name
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'graduation-cap' },
-                      { type: 'typography', variant: 'h3', content: '@entity.courseName' },
-                    ]},
-                    // Progress visuals
-                    { type: 'progress-bar', value: '@entity.percentage', label: 'Progress' },
-                    { type: 'meter', value: '@entity.percentage', label: 'Completion' },
-                    // Detail stats
-                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-                      { type: 'stats', label: 'Completed', icon: 'check-circle', entity: 'LearningProgress' },
-                      { type: 'stats', label: 'Remaining', icon: 'clock', entity: 'LearningProgress' },
-                      { type: 'stats', label: 'Percentage', icon: 'award', entity: 'LearningProgress' },
-                    ]},
-                  ]}],
+                  ["fetch", "LearningProgress"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Course Details",
+                            },
+                            {
+                              type: "button",
+                              label: "Back",
+                              icon: "arrow-left",
+                              variant: "secondary",
+                              event: "BACK",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "h3",
+                          content: "@entity.courseName",
+                        },
+                        {
+                          type: "card",
+                          title: "Course Progress",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "progress-bar",
+                                  value: "@entity.percentage",
+                                  label: "Completion",
+                                  showPercentage: true,
+                                  size: "lg",
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  children: [
+                                    {
+                                      type: "stat-display",
+                                      label: "Completed",
+                                      value: "@entity.completed",
+                                      icon: "check-circle",
+                                    },
+                                    {
+                                      type: "stat-display",
+                                      label: "Total Lessons",
+                                      value: "@entity.total",
+                                      icon: "clipboard",
+                                    },
+                                    {
+                                      type: "stat-display",
+                                      label: "Percentage",
+                                      value: "@entity.percentage",
+                                      icon: "award",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "typography",
+                          variant: "caption",
+                          content: "@entity.lastActivity",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'BACK',
+                from: "viewing",
+                to: "browsing",
+                event: "BACK",
                 effects: [
-                  ...progressBrowsingEffects,
+                  ["fetch", "LearningProgress"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "My Progress",
+                        },
+                        {
+                          type: "card",
+                          title: "Overall Completion",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "progress-bar",
+                                  value: "@entity.overallPercentage",
+                                  label: "Overall Progress",
+                                  showPercentage: true,
+                                  size: "lg",
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  children: [
+                                    {
+                                      type: "stat-display",
+                                      label: "Day Streak",
+                                      value: "@entity.streak",
+                                      icon: "flame",
+                                    },
+                                    {
+                                      type: "stat-display",
+                                      label: "Courses",
+                                      icon: "graduation-cap",
+                                      entity: "LearningProgress",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "LearningProgress",
+                          variant: "card",
+                          itemActions: [
+                            {
+                              label: "Continue",
+                              event: "VIEW",
+                              icon: "play",
+                            },
+                            {
+                              label: "View Details",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "trending-up",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.courseName",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.lastActivity",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.percentage",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -493,10 +1515,14 @@ export const PROGRESS_TRACKER_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ProgressPage',
-          path: '/progress',
+          name: "ProgressPage",
+          path: "/progress",
           isInitial: true,
-          traits: [{ ref: 'ProgressControl' }],
+          traits: [
+            {
+              ref: "ProgressControl",
+            },
+          ],
         },
       ],
     },
@@ -512,136 +1538,714 @@ export const PROGRESS_TRACKER_BEHAVIOR: BehaviorSchema = {
  * States: browsing -> grading -> reviewed
  */
 export const GRADING_BEHAVIOR: BehaviorSchema = {
-  name: 'std-grading',
-  version: '1.0.0',
-  description: 'Grading system for student assignments',
+  name: "std-grading",
+  version: "1.0.0",
+  description: "Grading system for student assignments",
   orbitals: [
     {
-      name: 'GradingOrbital',
-      theme: EDUCATION_THEME,
+      name: "GradingOrbital",
+      theme: {
+        name: "education-blue",
+        tokens: {
+          colors: {
+            primary: "#2563eb",
+            "primary-hover": "#1d4ed8",
+            "primary-foreground": "#ffffff",
+            accent: "#3b82f6",
+            "accent-foreground": "#ffffff",
+            success: "#22c55e",
+            warning: "#f59e0b",
+            error: "#ef4444",
+          },
+        },
+      },
       entity: {
-        name: 'Grade',
-        persistence: 'persistent',
-        collection: 'grades',
+        name: "Grade",
+        persistence: "persistent",
+        collection: "grades",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'studentName', type: 'string', default: '' },
-          { name: 'assignment', type: 'string', default: '' },
-          { name: 'score', type: 'number', default: 0 },
-          { name: 'maxScore', type: 'number', default: 100 },
-          { name: 'feedback', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "studentName",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "assignment",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "score",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "maxScore",
+            type: "number",
+            default: 100,
+          },
+          {
+            name: "feedback",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'GradingControl',
-          linkedEntity: 'Grade',
-          category: 'interaction',
+          name: "GradingControl",
+          linkedEntity: "Grade",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'grading' },
-              { name: 'reviewed' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "grading",
+              },
+              {
+                name: "reviewed",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'START_GRADING', name: 'Start Grading', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'SUBMIT_GRADE', name: 'Submit Grade', payloadSchema: [{ name: 'score', type: 'number', required: true }, { name: 'feedback', type: 'string', required: true }] },
-              { key: 'BACK', name: 'Back to List' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "START_GRADING",
+                name: "Start Grading",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "SUBMIT_GRADE",
+                name: "Submit Grade",
+                payloadSchema: [
+                  {
+                    name: "score",
+                    type: "number",
+                    required: true,
+                  },
+                  {
+                    name: "feedback",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "BACK",
+                name: "Back to List",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ...gradesBrowsingEffects,
+                  ["fetch", "Grade"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "award",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Grades",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Students",
+                              icon: "users",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Avg Score",
+                              icon: "bar-chart-2",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Submissions",
+                              icon: "clipboard",
+                              entity: "Grade",
+                            },
+                          ],
+                        },
+                        {
+                          type: "line-chart",
+                          entity: "Grade",
+                        },
+                        {
+                          type: "meter",
+                          value: 0,
+                          label: "Average Score",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Grade",
+                          columns: [
+                            {
+                              name: "studentName",
+                              label: "Student",
+                              icon: "users",
+                            },
+                            {
+                              name: "assignment",
+                              label: "Assignment",
+                              icon: "pen-tool",
+                            },
+                            {
+                              name: "score",
+                              label: "Score",
+                              icon: "award",
+                              format: "number",
+                            },
+                            {
+                              name: "maxScore",
+                              label: "Max",
+                              icon: "target",
+                              format: "number",
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Grade",
+                              event: "START_GRADING",
+                              icon: "pen-tool",
+                            },
+                          ],
+                          emptyIcon: "award",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'grading',
-                event: 'START_GRADING',
+                from: "browsing",
+                to: "grading",
+                event: "START_GRADING",
                 effects: [
-                  ['fetch', 'Grade'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Grading header with back
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'pen-tool', size: 'lg' },
-                        { type: 'typography', variant: 'h2', content: 'Enter Grade' },
-                      ]},
-                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
-                    ]},
-                    { type: 'divider' },
-                    // Student info
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'users' },
-                      { type: 'typography', variant: 'h3', content: '@entity.studentName' },
-                      { type: 'badge', content: '@entity.assignment' },
-                    ]},
-                    // Grade form
-                    { type: 'form-section', entity: 'Grade' },
-                  ]}],
+                  ["fetch", "Grade"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pen-tool",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Enter Grade",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Back",
+                              icon: "arrow-left",
+                              variant: "secondary",
+                              event: "BACK",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "users",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.studentName",
+                            },
+                            {
+                              type: "badge",
+                              content: "@entity.assignment",
+                            },
+                          ],
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Grade",
+                          fields: [
+                            {
+                              name: "studentName",
+                              type: "string",
+                            },
+                            {
+                              name: "assignment",
+                              type: "string",
+                            },
+                            {
+                              name: "score",
+                              type: "number",
+                            },
+                            {
+                              name: "maxScore",
+                              type: "number",
+                            },
+                            {
+                              name: "feedback",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'grading',
-                to: 'reviewed',
-                event: 'SUBMIT_GRADE',
+                from: "grading",
+                to: "reviewed",
+                event: "SUBMIT_GRADE",
                 effects: [
-                  ['fetch', 'Grade'],
-                  ['set', '@entity.score', '@payload.score'],
-                  ['set', '@entity.feedback', '@payload.feedback'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Submitted header with back
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'check-circle', size: 'lg' },
-                        { type: 'typography', variant: 'h2', content: 'Grade Submitted' },
-                      ]},
-                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'secondary', action: 'BACK' },
-                    ]},
-                    { type: 'divider' },
-                    // Result stats
-                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-                      { type: 'stats', label: 'Score', icon: 'award', entity: 'Grade' },
-                      { type: 'stats', label: 'Max Score', icon: 'target', entity: 'Grade' },
-                    ]},
-                    // Score meter
-                    { type: 'meter', value: '@entity.score', label: 'Score' },
-                    // Detail fields
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'users' },
-                        { type: 'typography', variant: 'body', content: '@entity.studentName' },
-                      ]},
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'pen-tool' },
-                        { type: 'typography', variant: 'body', content: '@entity.assignment' },
-                      ]},
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'message-square' },
-                        { type: 'typography', variant: 'body', content: '@entity.feedback' },
-                      ]},
-                    ]},
-                  ]}],
+                  ["fetch", "Grade"],
+                  ["set", "@entity.score", "@payload.score"],
+                  ["set", "@entity.feedback", "@payload.feedback"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "check-circle",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Grade Submitted",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Back",
+                              icon: "arrow-left",
+                              variant: "secondary",
+                              event: "BACK",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Score",
+                              icon: "award",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max Score",
+                              icon: "target",
+                              entity: "Grade",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.score",
+                          label: "Score",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "users",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "@entity.studentName",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pen-tool",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "@entity.assignment",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "message-square",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "@entity.feedback",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'grading',
-                to: 'browsing',
-                event: 'BACK',
+                from: "grading",
+                to: "browsing",
+                event: "BACK",
                 effects: [
-                  ...gradesBrowsingEffects,
+                  ["fetch", "Grade"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "award",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Grades",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Students",
+                              icon: "users",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Avg Score",
+                              icon: "bar-chart-2",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Submissions",
+                              icon: "clipboard",
+                              entity: "Grade",
+                            },
+                          ],
+                        },
+                        {
+                          type: "line-chart",
+                          entity: "Grade",
+                        },
+                        {
+                          type: "meter",
+                          value: 0,
+                          label: "Average Score",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Grade",
+                          columns: [
+                            {
+                              name: "studentName",
+                              label: "Student",
+                              icon: "users",
+                            },
+                            {
+                              name: "assignment",
+                              label: "Assignment",
+                              icon: "pen-tool",
+                            },
+                            {
+                              name: "score",
+                              label: "Score",
+                              icon: "award",
+                              format: "number",
+                            },
+                            {
+                              name: "maxScore",
+                              label: "Max",
+                              icon: "target",
+                              format: "number",
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Grade",
+                              event: "START_GRADING",
+                              icon: "pen-tool",
+                            },
+                          ],
+                          emptyIcon: "award",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reviewed',
-                to: 'browsing',
-                event: 'BACK',
+                from: "reviewed",
+                to: "browsing",
+                event: "BACK",
                 effects: [
-                  ...gradesBrowsingEffects,
+                  ["fetch", "Grade"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "award",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Grades",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Students",
+                              icon: "users",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Avg Score",
+                              icon: "bar-chart-2",
+                              entity: "Grade",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Submissions",
+                              icon: "clipboard",
+                              entity: "Grade",
+                            },
+                          ],
+                        },
+                        {
+                          type: "line-chart",
+                          entity: "Grade",
+                        },
+                        {
+                          type: "meter",
+                          value: 0,
+                          label: "Average Score",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Grade",
+                          columns: [
+                            {
+                              name: "studentName",
+                              label: "Student",
+                              icon: "users",
+                            },
+                            {
+                              name: "assignment",
+                              label: "Assignment",
+                              icon: "pen-tool",
+                            },
+                            {
+                              name: "score",
+                              label: "Score",
+                              icon: "award",
+                              format: "number",
+                            },
+                            {
+                              name: "maxScore",
+                              label: "Max",
+                              icon: "target",
+                              format: "number",
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Grade",
+                              event: "START_GRADING",
+                              icon: "pen-tool",
+                            },
+                          ],
+                          emptyIcon: "award",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -650,10 +2254,14 @@ export const GRADING_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'GradesPage',
-          path: '/grades',
+          name: "GradesPage",
+          path: "/grades",
           isInitial: true,
-          traits: [{ ref: 'GradingControl' }],
+          traits: [
+            {
+              ref: "GradingControl",
+            },
+          ],
         },
       ],
     },
@@ -669,106 +2277,826 @@ export const GRADING_BEHAVIOR: BehaviorSchema = {
  * States: browsing -> viewing -> enrolling
  */
 export const CURRICULUM_BEHAVIOR: BehaviorSchema = {
-  name: 'std-curriculum',
-  version: '1.0.0',
-  description: 'Curriculum browser with course catalog and enrollment',
+  name: "std-curriculum",
+  version: "1.0.0",
+  description: "Curriculum browser with course catalog and enrollment",
   orbitals: [
     {
-      name: 'CurriculumOrbital',
-      theme: EDUCATION_THEME,
+      name: "CurriculumOrbital",
+      theme: {
+        name: "education-blue",
+        tokens: {
+          colors: {
+            primary: "#2563eb",
+            "primary-hover": "#1d4ed8",
+            "primary-foreground": "#ffffff",
+            accent: "#3b82f6",
+            "accent-foreground": "#ffffff",
+            success: "#22c55e",
+            warning: "#f59e0b",
+            error: "#ef4444",
+          },
+        },
+      },
       entity: {
-        name: 'Course',
-        persistence: 'persistent',
-        collection: 'courses',
+        name: "Course",
+        persistence: "persistent",
+        collection: "courses",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'description', type: 'string', default: '' },
-          { name: 'modules', type: 'number', default: 0 },
-          { name: 'duration', type: 'string', default: '' },
-          { name: 'level', type: 'string', default: 'beginner' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "description",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "modules",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "duration",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "level",
+            type: "string",
+            default: "beginner",
+          },
         ],
       },
       traits: [
         {
-          name: 'CurriculumControl',
-          linkedEntity: 'Course',
-          category: 'interaction',
+          name: "CurriculumControl",
+          linkedEntity: "Course",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'viewing' },
-              { name: 'enrolling' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "viewing",
+              },
+              {
+                name: "enrolling",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'VIEW', name: 'View Course', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'ENROLL', name: 'Enroll' },
-              { key: 'CONFIRM', name: 'Confirm Enrollment' },
-              { key: 'CANCEL', name: 'Cancel Enrollment' },
-              { key: 'BACK', name: 'Back to Catalog' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "VIEW",
+                name: "View Course",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "ENROLL",
+                name: "Enroll",
+              },
+              {
+                key: "CONFIRM",
+                name: "Confirm Enrollment",
+              },
+              {
+                key: "REORDER_LESSON",
+                name: "Reorder Lesson",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel Enrollment",
+              },
+              {
+                key: "BACK",
+                name: "Back to Catalog",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ...curriculumBrowsingEffects,
+                  ["fetch", "Course"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "graduation-cap",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Course Catalog",
+                                },
+                              ],
+                            },
+                            {
+                              type: "search-input",
+                              placeholder: "Search courses...",
+                              entity: "Course",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Course",
+                          variant: "card",
+                          reorderable: true,
+                          reorderEvent: "REORDER_LESSON",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "graduation-cap",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "book-open",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.duration",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.level",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ...courseDetailEffects,
+                  ["fetch", "Course"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "book-open",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Course Details",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Back",
+                                  icon: "arrow-left",
+                                  variant: "secondary",
+                                  event: "BACK",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Enroll",
+                                  icon: "check-circle",
+                                  variant: "primary",
+                                  event: "ENROLL",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: 0,
+                          label: "Course Progress",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layers",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Modules",
+                                },
+                                {
+                                  type: "badge",
+                                  content: "@entity.modules",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "clock",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Duration",
+                                },
+                                {
+                                  type: "badge",
+                                  content: "@entity.duration",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bar-chart-2",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Level",
+                                },
+                                {
+                                  type: "badge",
+                                  content: "@entity.level",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          content: "@entity.description",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'enrolling',
-                event: 'ENROLL',
+                from: "viewing",
+                to: "enrolling",
+                event: "ENROLL",
                 effects: [
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    // Enrollment confirmation modal
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'graduation-cap', size: 'lg' },
-                      { type: 'typography', variant: 'h3', content: 'Enroll in Course' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'typography', variant: 'body', content: 'Are you sure you want to enroll in this course?' },
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-                      { type: 'button', label: 'Cancel', icon: 'x', variant: 'secondary', action: 'CANCEL' },
-                      { type: 'button', label: 'Confirm', icon: 'check-circle', variant: 'primary', action: 'CONFIRM' },
-                    ]},
-                  ]}],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "graduation-cap",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "Enroll in Course",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          content: "Are you sure you want to enroll in this course?",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              icon: "x",
+                              variant: "secondary",
+                              event: "CANCEL",
+                            },
+                            {
+                              type: "button",
+                              label: "Confirm",
+                              icon: "check-circle",
+                              variant: "primary",
+                              event: "CONFIRM",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'enrolling',
-                to: 'browsing',
-                event: 'CONFIRM',
+                from: "enrolling",
+                to: "browsing",
+                event: "CONFIRM",
                 effects: [
-                  ['render-ui', 'modal', null],
-                  ...curriculumBrowsingEffects,
+                  ["render-ui", "modal", null],
+                  ["fetch", "Course"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "graduation-cap",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Course Catalog",
+                                },
+                              ],
+                            },
+                            {
+                              type: "search-input",
+                              placeholder: "Search courses...",
+                              entity: "Course",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Course",
+                          variant: "card",
+                          reorderable: true,
+                          reorderEvent: "REORDER_LESSON",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "graduation-cap",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "book-open",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.duration",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.level",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'enrolling',
-                to: 'viewing',
-                event: 'CANCEL',
+                from: "enrolling",
+                to: "viewing",
+                event: "CANCEL",
                 effects: [
-                  ['render-ui', 'modal', null],
-                  ...courseDetailEffects,
+                  ["render-ui", "modal", null],
+                  ["fetch", "Course"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "book-open",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Course Details",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Back",
+                                  icon: "arrow-left",
+                                  variant: "secondary",
+                                  event: "BACK",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Enroll",
+                                  icon: "check-circle",
+                                  variant: "primary",
+                                  event: "ENROLL",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: 0,
+                          label: "Course Progress",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layers",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Modules",
+                                },
+                                {
+                                  type: "badge",
+                                  content: "@entity.modules",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "clock",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Duration",
+                                },
+                                {
+                                  type: "badge",
+                                  content: "@entity.duration",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bar-chart-2",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "Level",
+                                },
+                                {
+                                  type: "badge",
+                                  content: "@entity.level",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          content: "@entity.description",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'BACK',
+                from: "browsing",
+                to: "browsing",
+                event: "REORDER_LESSON",
                 effects: [
-                  ...curriculumBrowsingEffects,
+                  ["fetch", "Course"],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "BACK",
+                effects: [
+                  ["fetch", "Course"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "graduation-cap",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Course Catalog",
+                                },
+                              ],
+                            },
+                            {
+                              type: "search-input",
+                              placeholder: "Search courses...",
+                              entity: "Course",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Course",
+                          variant: "card",
+                          reorderable: true,
+                          reorderEvent: "REORDER_LESSON",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "graduation-cap",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "book-open",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.duration",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.level",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -777,10 +3105,14 @@ export const CURRICULUM_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'CurriculumPage',
-          path: '/curriculum',
+          name: "CurriculumPage",
+          path: "/curriculum",
           isInitial: true,
-          traits: [{ ref: 'CurriculumControl' }],
+          traits: [
+            {
+              ref: "CurriculumControl",
+            },
+          ],
         },
       ],
     },

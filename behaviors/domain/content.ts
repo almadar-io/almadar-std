@@ -126,248 +126,833 @@ const articleEditMainEffects: BehaviorEffect[] = [
  * States: browsing -> editing -> previewing -> published.
  */
 export const ARTICLE_BEHAVIOR: BehaviorSchema = {
-  name: 'std-article',
-  version: '1.0.0',
-  description: 'Article management with editing, preview, and publish workflow',
-  theme: contentAmberTheme,
+  name: "std-article",
+  version: "1.0.0",
+  description: "Article management with editing, preview, and publish workflow",
+  theme: {
+    name: "content-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ArticleOrbital',
+      name: "ArticleOrbital",
       entity: {
-        name: 'Article',
-        persistence: 'persistent',
-        collection: 'articles',
+        name: "Article",
+        persistence: "persistent",
+        collection: "articles",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'body', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'draft' },
-          { name: 'author', type: 'string', default: '' },
-          { name: 'publishedAt', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "body",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "draft",
+          },
+          {
+            name: "author",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "publishedAt",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'ArticleWorkflow',
-          linkedEntity: 'Article',
-          category: 'interaction',
+          name: "ArticleWorkflow",
+          linkedEntity: "Article",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'editing' },
-              { name: 'previewing' },
-              { name: 'published' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "editing",
+              },
+              {
+                name: "previewing",
+              },
+              {
+                name: "published",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'EDIT_ARTICLE', name: 'Edit Article', payloadSchema: [
-                { name: 'id', type: 'string', required: true },
-              ] },
-              { key: 'SAVE_DRAFT', name: 'Save Draft', payloadSchema: [
-                { name: 'title', type: 'string', required: true },
-                { name: 'body', type: 'string', required: true },
-              ] },
-              { key: 'PREVIEW', name: 'Preview' },
-              { key: 'PUBLISH', name: 'Publish' },
-              { key: 'BACK_TO_EDIT', name: 'Back to Edit' },
-              { key: 'BACK_TO_LIST', name: 'Back to List' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "EDIT_ARTICLE",
+                name: "Edit Article",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "SAVE_DRAFT",
+                name: "Save Draft",
+                payloadSchema: [
+                  {
+                    name: "title",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "body",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "PREVIEW",
+                name: "Preview",
+              },
+              {
+                key: "PUBLISH",
+                name: "Publish",
+              },
+              {
+                key: "BACK_TO_EDIT",
+                name: "Back to Edit",
+              },
+              {
+                key: "BACK_TO_LIST",
+                name: "Back to List",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Article'],
-                  ...articleBrowsingMainEffects,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Articles",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "Content Hub",
+                              color: "primary",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Article",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search articles by title or author...",
+                          event: "EDIT_ARTICLE",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Article",
+                          columns: [
+                            {
+                              field: "title",
+                              label: "Title",
+                            },
+                            {
+                              field: "author",
+                              label: "Author",
+                            },
+                            {
+                              field: "status",
+                              label: "Status",
+                            },
+                            {
+                              field: "publishedAt",
+                              label: "Published",
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Edit",
+                              event: "EDIT_ARTICLE",
+                              icon: "pencil",
+                            },
+                          ],
+                          emptyIcon: "file-text",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'editing',
-                event: 'EDIT_ARTICLE',
+                from: "browsing",
+                to: "editing",
+                event: "EDIT_ARTICLE",
                 effects: [
-                  ['fetch', 'Article'],
-                  ...articleEditMainEffects,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pen-tool",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Edit Article",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Article",
+                          fields: [
+                            {
+                              name: "title",
+                              type: "string",
+                            },
+                            {
+                              name: "body",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                            {
+                              name: "author",
+                              type: "string",
+                            },
+                            {
+                              name: "publishedAt",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'editing',
-                event: 'SAVE_DRAFT',
+                from: "editing",
+                to: "editing",
+                event: "SAVE_DRAFT",
                 effects: [
-                  ['fetch', 'Article'],
-                  ['set', '@entity.title', '@payload.title'],
-                  ['set', '@entity.body', '@payload.body'],
-                  ['set', '@entity.status', 'draft'],
-                  ['render-ui', 'main', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'sm',
-                        align: 'center',
-                        children: [
-                          { type: 'icon', name: 'pen-tool', size: 'lg' },
-                          { type: 'typography', variant: 'h2', text: 'Edit Article' },
-                          { type: 'badge', label: 'Draft Saved', color: 'success' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'form-section', entity: 'Article' },
-                    ],
-                  }],
+                  ["fetch", "Article"],
+                  ["set", "@entity.title", "@payload.title"],
+                  ["set", "@entity.body", "@payload.body"],
+                  ["set", "@entity.status", "draft"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pen-tool",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Edit Article",
+                            },
+                            {
+                              type: "badge",
+                              label: "Draft Saved",
+                              color: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Article",
+                          fields: [
+                            {
+                              name: "title",
+                              type: "string",
+                            },
+                            {
+                              name: "body",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                            {
+                              name: "author",
+                              type: "string",
+                            },
+                            {
+                              name: "publishedAt",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'previewing',
-                event: 'PREVIEW',
+                from: "editing",
+                to: "previewing",
+                event: "PREVIEW",
                 effects: [
-                  ['fetch', 'Article'],
-                  ['render-ui', 'main', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        justify: 'space-between',
-                        align: 'center',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'eye', size: 'lg' },
-                              { type: 'typography', variant: 'h2', text: 'Preview Article' },
-                            ],
-                          },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            children: [
-                              { type: 'button', label: 'Back to Edit', event: 'BACK_TO_EDIT', variant: 'secondary' },
-                              { type: 'button', label: 'Publish', event: 'PUBLISH', variant: 'primary' },
-                            ],
-                          },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'typography', variant: 'h3', text: '@entity.title' },
-                      { type: 'typography', variant: 'body', text: '@entity.body' },
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'md',
-                        children: [
-                          { type: 'badge', label: '@entity.status', color: 'warning' },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'type', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: '@entity.author' },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  }],
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "eye",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Preview Article",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Back to Edit",
+                                  event: "BACK_TO_EDIT",
+                                  variant: "secondary",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Publish",
+                                  event: "PUBLISH",
+                                  variant: "primary",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "h3",
+                          text: "@entity.title",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          text: "@entity.body",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "@entity.status",
+                              color: "warning",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "type",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  text: "@entity.author",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'previewing',
-                to: 'editing',
-                event: 'BACK_TO_EDIT',
+                from: "previewing",
+                to: "editing",
+                event: "BACK_TO_EDIT",
                 effects: [
-                  ['fetch', 'Article'],
-                  ...articleEditMainEffects,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pen-tool",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Edit Article",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Article",
+                          fields: [
+                            {
+                              name: "title",
+                              type: "string",
+                            },
+                            {
+                              name: "body",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                            {
+                              name: "author",
+                              type: "string",
+                            },
+                            {
+                              name: "publishedAt",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'previewing',
-                to: 'published',
-                event: 'PUBLISH',
+                from: "previewing",
+                to: "published",
+                event: "PUBLISH",
                 effects: [
-                  ['fetch', 'Article'],
-                  ['set', '@entity.status', 'published'],
-                  ['render-ui', 'main', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'sm',
-                        align: 'center',
-                        children: [
-                          { type: 'icon', name: 'book-open', size: 'lg' },
-                          { type: 'typography', variant: 'h2', text: 'Published' },
-                          { type: 'badge', label: 'Live', color: 'success' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'typography', variant: 'h3', text: '@entity.title' },
-                      { type: 'typography', variant: 'body', text: '@entity.body' },
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'md',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'type', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: '@entity.author' },
-                            ],
-                          },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'calendar', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: '@entity.publishedAt' },
-                            ],
-                          },
-                        ],
-                      },
-                      { type: 'button', label: 'Back to Articles', event: 'BACK_TO_LIST', variant: 'secondary' },
-                    ],
-                  }],
+                  ["fetch", "Article"],
+                  ["set", "@entity.status", "published"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "book-open",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Published",
+                            },
+                            {
+                              type: "badge",
+                              label: "Live",
+                              color: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "h3",
+                          text: "@entity.title",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          text: "@entity.body",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "type",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  text: "@entity.author",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "calendar",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  text: "@entity.publishedAt",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "button",
+                          label: "Back to Articles",
+                          event: "BACK_TO_LIST",
+                          variant: "secondary",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'BACK_TO_LIST',
+                from: "editing",
+                to: "browsing",
+                event: "BACK_TO_LIST",
                 effects: [
-                  ['fetch', 'Article'],
-                  ...articleBrowsingMainEffects,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Articles",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "Content Hub",
+                              color: "primary",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Article",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search articles by title or author...",
+                          event: "EDIT_ARTICLE",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Article",
+                          columns: [
+                            {
+                              field: "title",
+                              label: "Title",
+                            },
+                            {
+                              field: "author",
+                              label: "Author",
+                            },
+                            {
+                              field: "status",
+                              label: "Status",
+                            },
+                            {
+                              field: "publishedAt",
+                              label: "Published",
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Edit",
+                              event: "EDIT_ARTICLE",
+                              icon: "pencil",
+                            },
+                          ],
+                          emptyIcon: "file-text",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'published',
-                to: 'browsing',
-                event: 'BACK_TO_LIST',
+                from: "published",
+                to: "browsing",
+                event: "BACK_TO_LIST",
                 effects: [
-                  ['fetch', 'Article'],
-                  ...articleBrowsingMainEffects,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Articles",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "Content Hub",
+                              color: "primary",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Article",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search articles by title or author...",
+                          event: "EDIT_ARTICLE",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Article",
+                          columns: [
+                            {
+                              field: "title",
+                              label: "Title",
+                            },
+                            {
+                              field: "author",
+                              label: "Author",
+                            },
+                            {
+                              field: "status",
+                              label: "Status",
+                            },
+                            {
+                              field: "publishedAt",
+                              label: "Published",
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Edit",
+                              event: "EDIT_ARTICLE",
+                              icon: "pencil",
+                            },
+                          ],
+                          emptyIcon: "file-text",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -376,10 +961,14 @@ export const ARTICLE_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ArticlesPage',
-          path: '/articles',
+          name: "ArticlesPage",
+          path: "/articles",
           isInitial: true,
-          traits: [{ ref: 'ArticleWorkflow' }],
+          traits: [
+            {
+              ref: "ArticleWorkflow",
+            },
+          ],
         },
       ],
     },
@@ -438,197 +1027,566 @@ const readerBrowsingMainEffects: BehaviorEffect[] = [
  * States: browsing -> reading.
  */
 export const READER_BEHAVIOR: BehaviorSchema = {
-  name: 'std-reader',
-  version: '1.0.0',
-  description: 'Reading experience with customizable display settings',
-  theme: contentAmberTheme,
+  name: "std-reader",
+  version: "1.0.0",
+  description: "Reading experience with customizable display settings",
+  theme: {
+    name: "content-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ReaderOrbital',
+      name: "ReaderOrbital",
       entity: {
-        name: 'ReadingState',
-        persistence: 'persistent',
-        collection: 'reading_states',
+        name: "ReadingState",
+        persistence: "persistent",
+        collection: "reading_states",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'articleId', type: 'string', default: '' },
-          { name: 'scrollPosition', type: 'number', default: 0 },
-          { name: 'fontSize', type: 'number', default: 16 },
-          { name: 'theme', type: 'string', default: 'light' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "articleId",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "scrollPosition",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "fontSize",
+            type: "number",
+            default: 16,
+          },
+          {
+            name: "theme",
+            type: "string",
+            default: "light",
+          },
         ],
       },
       traits: [
         {
-          name: 'ReaderControl',
-          linkedEntity: 'ReadingState',
-          category: 'interaction',
+          name: "ReaderControl",
+          linkedEntity: "ReadingState",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'reading' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "reading",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'OPEN_ARTICLE', name: 'Open Article', payloadSchema: [
-                { name: 'articleId', type: 'string', required: true },
-              ] },
-              { key: 'UPDATE_SETTINGS', name: 'Update Settings', payloadSchema: [
-                { name: 'fontSize', type: 'number', required: true },
-              ] },
-              { key: 'BACK_TO_LIST', name: 'Back to List' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "OPEN_ARTICLE",
+                name: "Open Article",
+                payloadSchema: [
+                  {
+                    name: "articleId",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "UPDATE_SETTINGS",
+                name: "Update Settings",
+                payloadSchema: [
+                  {
+                    name: "fontSize",
+                    type: "number",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "BACK_TO_LIST",
+                name: "Back to List",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'ReadingState'],
-                  ...readerBrowsingMainEffects,
+                  ["fetch", "ReadingState"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "book-open",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Library",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "Reading Hub",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "ReadingState",
+                          itemActions: [
+                            {
+                              label: "Read",
+                              event: "OPEN_ARTICLE",
+                              icon: "book-open",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "book-open",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.articleId",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.fontSize",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.theme",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'reading',
-                event: 'OPEN_ARTICLE',
+                from: "browsing",
+                to: "reading",
+                event: "OPEN_ARTICLE",
                 effects: [
-                  ['fetch', 'ReadingState'],
-                  ['set', '@entity.articleId', '@payload.articleId'],
-                  ['render-ui', 'main', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        justify: 'space-between',
-                        align: 'center',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'eye', size: 'lg' },
-                              { type: 'typography', variant: 'h2', text: 'Reading' },
-                            ],
-                          },
-                          { type: 'button', label: 'Back to Library', event: 'BACK_TO_LIST', variant: 'secondary' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'meter', value: '@entity.scrollPosition', max: 100, label: 'Reading Progress' },
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'lg',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'type', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: 'Font Size' },
-                              { type: 'badge', label: '@entity.fontSize', color: 'primary' },
-                            ],
-                          },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'image', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: 'Theme' },
-                              { type: 'badge', label: '@entity.theme', color: 'accent' },
-                            ],
-                          },
-                        ],
-                      },
-                      { type: 'typography', variant: 'body', text: '@entity.articleId' },
-                    ],
-                  }],
+                  ["fetch", "ReadingState"],
+                  ["set", "@entity.articleId", "@payload.articleId"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "eye",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Reading",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Back to Library",
+                              event: "BACK_TO_LIST",
+                              variant: "secondary",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.scrollPosition",
+                          max: 100,
+                          label: "Reading Progress",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "lg",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "type",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "Font Size",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.fontSize",
+                                  variant: "default",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "image",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "Theme",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.theme",
+                                  variant: "info",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          content: "@entity.articleId",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reading',
-                to: 'reading',
-                event: 'UPDATE_SETTINGS',
+                from: "reading",
+                to: "reading",
+                event: "UPDATE_SETTINGS",
                 effects: [
-                  ['fetch', 'ReadingState'],
-                  ['set', '@entity.fontSize', '@payload.fontSize'],
-                  ['render-ui', 'main', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        justify: 'space-between',
-                        align: 'center',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'eye', size: 'lg' },
-                              { type: 'typography', variant: 'h2', text: 'Reading' },
-                              { type: 'badge', label: 'Settings Updated', color: 'success' },
-                            ],
-                          },
-                          { type: 'button', label: 'Back to Library', event: 'BACK_TO_LIST', variant: 'secondary' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'meter', value: '@entity.scrollPosition', max: 100, label: 'Reading Progress' },
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'lg',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'type', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: 'Font Size' },
-                              { type: 'badge', label: '@entity.fontSize', color: 'primary' },
-                            ],
-                          },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'image', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: 'Theme' },
-                              { type: 'badge', label: '@entity.theme', color: 'accent' },
-                            ],
-                          },
-                        ],
-                      },
-                      { type: 'typography', variant: 'body', text: '@entity.articleId' },
-                    ],
-                  }],
+                  ["fetch", "ReadingState"],
+                  ["set", "@entity.fontSize", "@payload.fontSize"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "eye",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Reading",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "Settings Updated",
+                                  variant: "success",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Back to Library",
+                              event: "BACK_TO_LIST",
+                              variant: "secondary",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.scrollPosition",
+                          max: 100,
+                          label: "Reading Progress",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "lg",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "type",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "Font Size",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.fontSize",
+                                  variant: "default",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "image",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "Theme",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.theme",
+                                  variant: "info",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          content: "@entity.articleId",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reading',
-                to: 'browsing',
-                event: 'BACK_TO_LIST',
+                from: "reading",
+                to: "browsing",
+                event: "BACK_TO_LIST",
                 effects: [
-                  ['fetch', 'ReadingState'],
-                  ...readerBrowsingMainEffects,
+                  ["fetch", "ReadingState"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "book-open",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Library",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "Reading Hub",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "ReadingState",
+                          itemActions: [
+                            {
+                              label: "Read",
+                              event: "OPEN_ARTICLE",
+                              icon: "book-open",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "book-open",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.articleId",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.fontSize",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.theme",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -637,10 +1595,14 @@ export const READER_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ReaderPage',
-          path: '/reader',
+          name: "ReaderPage",
+          path: "/reader",
           isInitial: true,
-          traits: [{ ref: 'ReaderControl' }],
+          traits: [
+            {
+              ref: "ReaderControl",
+            },
+          ],
         },
       ],
     },
@@ -701,181 +1663,615 @@ const bookmarkBrowsingMainEffects: BehaviorEffect[] = [
  * States: browsing -> creating -> viewing.
  */
 export const BOOKMARK_BEHAVIOR: BehaviorSchema = {
-  name: 'std-bookmark',
-  version: '1.0.0',
-  description: 'Bookmark management with create, browse, and view',
-  theme: contentAmberTheme,
+  name: "std-bookmark",
+  version: "1.0.0",
+  description: "Bookmark management with create, browse, and view",
+  theme: {
+    name: "content-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'BookmarkOrbital',
+      name: "BookmarkOrbital",
       entity: {
-        name: 'Bookmark',
-        persistence: 'persistent',
-        collection: 'bookmarks',
+        name: "Bookmark",
+        persistence: "persistent",
+        collection: "bookmarks",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'url', type: 'string', default: '' },
-          { name: 'category', type: 'string', default: '' },
-          { name: 'createdAt', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "url",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "category",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "createdAt",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'BookmarkControl',
-          linkedEntity: 'Bookmark',
-          category: 'interaction',
+          name: "BookmarkControl",
+          linkedEntity: "Bookmark",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'creating' },
-              { name: 'viewing' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "creating",
+              },
+              {
+                name: "viewing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'CREATE', name: 'Create Bookmark' },
-              { key: 'SAVE', name: 'Save Bookmark', payloadSchema: [
-                { name: 'title', type: 'string', required: true },
-                { name: 'url', type: 'string', required: true },
-                { name: 'category', type: 'string', required: true },
-              ] },
-              { key: 'VIEW', name: 'View Bookmark', payloadSchema: [
-                { name: 'id', type: 'string', required: true },
-              ] },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "CREATE",
+                name: "Create Bookmark",
+              },
+              {
+                key: "SAVE",
+                name: "Save Bookmark",
+                payloadSchema: [
+                  {
+                    name: "title",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "url",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "category",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "VIEW",
+                name: "View Bookmark",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "DELETE",
+                name: "Delete Bookmark",
+              },
+              {
+                key: "REORDER",
+                name: "Reorder Bookmarks",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Bookmark'],
-                  ...bookmarkBrowsingMainEffects,
+                  ["fetch", "Bookmark"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "tag",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Bookmarks",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create Bookmark",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "tag",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Bookmark",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Filter by title, URL, or category...",
+                          event: "VIEW",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Bookmark",
+                          swipeLeftEvent: "DELETE",
+                          reorderable: true,
+                          reorderEvent: "REORDER",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "tag",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "bookmark",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.url",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.category",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'creating',
-                event: 'CREATE',
+                from: "browsing",
+                to: "creating",
+                event: "CREATE",
                 effects: [
-                  ['fetch', 'Bookmark'],
-                  ['render-ui', 'modal', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'sm',
-                        align: 'center',
-                        children: [
-                          { type: 'icon', name: 'tag', size: 'md' },
-                          { type: 'typography', variant: 'h3', text: 'New Bookmark' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      {
-                        type: 'form-section',
-                        entity: 'Bookmark',
-                        submitEvent: 'SAVE',
-                        cancelEvent: 'CANCEL',
-                      },
-                    ],
-                  }],
+                  ["fetch", "Bookmark"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "tag",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              text: "New Bookmark",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Bookmark",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "title",
+                              type: "string",
+                            },
+                            {
+                              name: "url",
+                              type: "string",
+                            },
+                            {
+                              name: "category",
+                              type: "string",
+                            },
+                            {
+                              name: "createdAt",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "creating",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['fetch', 'Bookmark'],
-                  ['set', '@entity.title', '@payload.title'],
-                  ['set', '@entity.url', '@payload.url'],
-                  ['set', '@entity.category', '@payload.category'],
-                  ['render-ui', 'modal', null],
-                  ...bookmarkBrowsingMainEffects,
+                  ["fetch", "Bookmark"],
+                  ["set", "@entity.title", "@payload.title"],
+                  ["set", "@entity.url", "@payload.url"],
+                  ["set", "@entity.category", "@payload.category"],
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "tag",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Bookmarks",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create Bookmark",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "tag",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Bookmark",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Filter by title, URL, or category...",
+                          event: "VIEW",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Bookmark",
+                          swipeLeftEvent: "DELETE",
+                          reorderable: true,
+                          reorderEvent: "REORDER",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "tag",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "bookmark",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.url",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.category",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
-              { from: 'creating', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'creating', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
               {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "creating",
+                to: "browsing",
+                event: "CLOSE",
                 effects: [
-                  ['fetch', 'Bookmark'],
-                  ['render-ui', 'modal', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        justify: 'space-between',
-                        align: 'center',
-                        children: [
-                          { type: 'typography', variant: 'h3', text: '@entity.title' },
-                          { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      {
-                        type: 'stack',
-                        direction: 'vertical',
-                        gap: 'sm',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'tag', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: 'URL' },
-                            ],
-                          },
-                          { type: 'typography', variant: 'body', text: '@entity.url' },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'md',
-                            children: [
-                              { type: 'badge', label: '@entity.category', color: 'primary' },
-                              {
-                                type: 'stack',
-                                direction: 'horizontal',
-                                gap: 'xs',
-                                align: 'center',
-                                children: [
-                                  { type: 'icon', name: 'calendar', size: 'sm' },
-                                  { type: 'typography', variant: 'caption', text: '@entity.createdAt' },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  }],
+                  ["render-ui", "modal", null],
                 ],
               },
-              { from: 'viewing', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'viewing', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
+                effects: [
+                  ["fetch", "Bookmark"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              text: "@entity.title",
+                            },
+                            {
+                              type: "button",
+                              label: "Close",
+                              event: "CLOSE",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "tag",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  text: "URL",
+                                },
+                              ],
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              text: "@entity.url",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "badge",
+                                  label: "@entity.category",
+                                  color: "primary",
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "xs",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "calendar",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      text: "@entity.createdAt",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "DELETE",
+                effects: [],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "REORDER",
+                effects: [],
+              },
             ],
           },
         },
       ],
       pages: [
         {
-          name: 'BookmarksPage',
-          path: '/bookmarks',
+          name: "BookmarksPage",
+          path: "/bookmarks",
           isInitial: true,
-          traits: [{ ref: 'BookmarkControl' }],
+          traits: [
+            {
+              ref: "BookmarkControl",
+            },
+          ],
         },
       ],
     },
@@ -941,185 +2337,619 @@ const annotationBrowsingMainEffects: BehaviorEffect[] = [
  * States: browsing -> annotating -> viewing.
  */
 export const ANNOTATION_BEHAVIOR: BehaviorSchema = {
-  name: 'std-annotation',
-  version: '1.0.0',
-  description: 'Text annotation with highlight, note, and color coding',
-  theme: contentAmberTheme,
+  name: "std-annotation",
+  version: "1.0.0",
+  description: "Text annotation with highlight, note, and color coding",
+  theme: {
+    name: "content-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'AnnotationOrbital',
+      name: "AnnotationOrbital",
       entity: {
-        name: 'Annotation',
-        persistence: 'persistent',
-        collection: 'annotations',
+        name: "Annotation",
+        persistence: "persistent",
+        collection: "annotations",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'text', type: 'string', default: '' },
-          { name: 'note', type: 'string', default: '' },
-          { name: 'color', type: 'string', default: 'yellow' },
-          { name: 'pageNumber', type: 'number', default: 1 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "text",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "note",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "color",
+            type: "string",
+            default: "yellow",
+          },
+          {
+            name: "pageNumber",
+            type: "number",
+            default: 1,
+          },
         ],
       },
       traits: [
         {
-          name: 'AnnotationControl',
-          linkedEntity: 'Annotation',
-          category: 'interaction',
+          name: "AnnotationControl",
+          linkedEntity: "Annotation",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'annotating' },
-              { name: 'viewing' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "annotating",
+              },
+              {
+                name: "viewing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'ADD_ANNOTATION', name: 'Add Annotation' },
-              { key: 'SAVE_ANNOTATION', name: 'Save Annotation', payloadSchema: [
-                { name: 'text', type: 'string', required: true },
-                { name: 'note', type: 'string', required: true },
-                { name: 'color', type: 'string', required: true },
-              ] },
-              { key: 'VIEW_ANNOTATION', name: 'View Annotation', payloadSchema: [
-                { name: 'id', type: 'string', required: true },
-              ] },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "ADD_ANNOTATION",
+                name: "Add Annotation",
+              },
+              {
+                key: "SAVE_ANNOTATION",
+                name: "Save Annotation",
+                payloadSchema: [
+                  {
+                    name: "text",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "note",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "color",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "VIEW_ANNOTATION",
+                name: "View Annotation",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "DELETE",
+                name: "Delete Annotation",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Annotation'],
-                  ...annotationBrowsingMainEffects,
+                  ["fetch", "Annotation"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pencil",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Annotations",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Add Annotation",
+                              event: "ADD_ANNOTATION",
+                              variant: "primary",
+                              icon: "pencil",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Annotation",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search highlights and notes...",
+                          event: "VIEW_ANNOTATION",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Annotation",
+                          swipeLeftEvent: "DELETE",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW_ANNOTATION",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "pencil",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "message-square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.text",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.pageNumber",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.color",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'annotating',
-                event: 'ADD_ANNOTATION',
+                from: "browsing",
+                to: "annotating",
+                event: "ADD_ANNOTATION",
                 effects: [
-                  ['fetch', 'Annotation'],
-                  ['render-ui', 'modal', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'sm',
-                        align: 'center',
-                        children: [
-                          { type: 'icon', name: 'pencil', size: 'md' },
-                          { type: 'typography', variant: 'h3', text: 'New Annotation' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      {
-                        type: 'form-section',
-                        entity: 'Annotation',
-                        submitEvent: 'SAVE_ANNOTATION',
-                        cancelEvent: 'CANCEL',
-                      },
-                    ],
-                  }],
+                  ["fetch", "Annotation"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pencil",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              text: "New Annotation",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Annotation",
+                          submitEvent: "SAVE_ANNOTATION",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "text",
+                              type: "string",
+                            },
+                            {
+                              name: "note",
+                              type: "string",
+                            },
+                            {
+                              name: "color",
+                              type: "string",
+                            },
+                            {
+                              name: "pageNumber",
+                              type: "number",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'annotating',
-                to: 'browsing',
-                event: 'SAVE_ANNOTATION',
+                from: "annotating",
+                to: "browsing",
+                event: "SAVE_ANNOTATION",
                 effects: [
-                  ['fetch', 'Annotation'],
-                  ['set', '@entity.text', '@payload.text'],
-                  ['set', '@entity.note', '@payload.note'],
-                  ['set', '@entity.color', '@payload.color'],
-                  ['render-ui', 'modal', null],
-                  ...annotationBrowsingMainEffects,
+                  ["fetch", "Annotation"],
+                  ["set", "@entity.text", "@payload.text"],
+                  ["set", "@entity.note", "@payload.note"],
+                  ["set", "@entity.color", "@payload.color"],
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pencil",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  text: "Annotations",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Add Annotation",
+                              event: "ADD_ANNOTATION",
+                              variant: "primary",
+                              icon: "pencil",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          entity: "Annotation",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search highlights and notes...",
+                          event: "VIEW_ANNOTATION",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Annotation",
+                          swipeLeftEvent: "DELETE",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW_ANNOTATION",
+                              icon: "eye",
+                            },
+                          ],
+                          emptyIcon: "pencil",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "message-square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.text",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.pageNumber",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.color",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
-              { from: 'annotating', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'annotating', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
               {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW_ANNOTATION',
+                from: "annotating",
+                to: "browsing",
+                event: "CLOSE",
                 effects: [
-                  ['fetch', 'Annotation'],
-                  ['render-ui', 'modal', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        justify: 'space-between',
-                        align: 'center',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'pencil', size: 'md' },
-                              { type: 'typography', variant: 'h3', text: 'Annotation Detail' },
-                            ],
-                          },
-                          { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      {
-                        type: 'stack',
-                        direction: 'vertical',
-                        gap: 'sm',
-                        children: [
-                          { type: 'typography', variant: 'label', text: 'Highlighted Text' },
-                          { type: 'typography', variant: 'body', text: '@entity.text' },
-                          { type: 'divider' },
-                          { type: 'typography', variant: 'label', text: 'Note' },
-                          { type: 'typography', variant: 'body', text: '@entity.note' },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'md',
-                            children: [
-                              { type: 'badge', label: '@entity.color', color: 'accent' },
-                              {
-                                type: 'stack',
-                                direction: 'horizontal',
-                                gap: 'xs',
-                                align: 'center',
-                                children: [
-                                  { type: 'icon', name: 'file-text', size: 'sm' },
-                                  { type: 'typography', variant: 'caption', text: 'Page' },
-                                  { type: 'badge', label: '@entity.pageNumber', color: 'primary' },
-                                ],
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  }],
+                  ["render-ui", "modal", null],
                 ],
               },
-              { from: 'viewing', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'viewing', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
+              {
+                from: "annotating",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW_ANNOTATION",
+                effects: [
+                  ["fetch", "Annotation"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pencil",
+                                  size: "md",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  text: "Annotation Detail",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Close",
+                              event: "CLOSE",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "label",
+                              text: "Highlighted Text",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              text: "@entity.text",
+                            },
+                            {
+                              type: "divider",
+                            },
+                            {
+                              type: "typography",
+                              variant: "label",
+                              text: "Note",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              text: "@entity.note",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "badge",
+                                  label: "@entity.color",
+                                  color: "accent",
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "xs",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      text: "Page",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.pageNumber",
+                                      color: "primary",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "DELETE",
+                effects: [],
+              },
             ],
           },
         },
       ],
       pages: [
         {
-          name: 'AnnotationsPage',
-          path: '/annotations',
+          name: "AnnotationsPage",
+          path: "/annotations",
           isInitial: true,
-          traits: [{ ref: 'AnnotationControl' }],
+          traits: [
+            {
+              ref: "AnnotationControl",
+            },
+          ],
         },
       ],
     },
@@ -1180,186 +3010,736 @@ const feedBrowsingMainEffects: BehaviorEffect[] = [
  * States: browsing -> reading -> archiving.
  */
 export const CONTENT_FEED_BEHAVIOR: BehaviorSchema = {
-  name: 'std-content-feed',
-  version: '1.0.0',
-  description: 'Content feed with read tracking and archiving',
-  theme: contentAmberTheme,
+  name: "std-content-feed",
+  version: "1.0.0",
+  description: "Content feed with read tracking and archiving",
+  theme: {
+    name: "content-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ContentFeedOrbital',
+      name: "ContentFeedOrbital",
       entity: {
-        name: 'FeedItem',
-        persistence: 'persistent',
-        collection: 'feed_items',
+        name: "FeedItem",
+        persistence: "persistent",
+        collection: "feed_items",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'summary', type: 'string', default: '' },
-          { name: 'source', type: 'string', default: '' },
-          { name: 'publishedAt', type: 'string', default: '' },
-          { name: 'isRead', type: 'boolean', default: false },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "summary",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "source",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "publishedAt",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "isRead",
+            type: "boolean",
+            default: false,
+          },
         ],
       },
       traits: [
         {
-          name: 'FeedControl',
-          linkedEntity: 'FeedItem',
-          category: 'interaction',
+          name: "FeedControl",
+          linkedEntity: "FeedItem",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'reading' },
-              { name: 'archiving' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "reading",
+              },
+              {
+                name: "archiving",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'READ_ITEM', name: 'Read Item', payloadSchema: [
-                { name: 'id', type: 'string', required: true },
-              ] },
-              { key: 'ARCHIVE_ITEM', name: 'Archive Item' },
-              { key: 'CONFIRM_ARCHIVE', name: 'Confirm Archive' },
-              { key: 'BACK_TO_FEED', name: 'Back to Feed' },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "READ_ITEM",
+                name: "Read Item",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "ARCHIVE_ITEM",
+                name: "Archive Item",
+              },
+              {
+                key: "CONFIRM_ARCHIVE",
+                name: "Confirm Archive",
+              },
+              {
+                key: "BACK_TO_FEED",
+                name: "Back to Feed",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "LOAD_MORE",
+                name: "Load More",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'FeedItem'],
-                  ...feedBrowsingMainEffects,
+                  ["fetch", "FeedItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Content Feed",
+                            },
+                            {
+                              type: "search-input",
+                              placeholder: "Search posts...",
+                              event: "READ_ITEM",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Feed",
+                              icon: "rss",
+                              variant: "primary",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Following",
+                              icon: "users",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Trending",
+                              icon: "trending-up",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "FeedItem",
+                          variant: "card",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          itemActions: [
+                            {
+                              label: "Save",
+                              event: "READ_ITEM",
+                              icon: "bookmark",
+                            },
+                            {
+                              label: "Share",
+                              event: "READ_ITEM",
+                              icon: "share-2",
+                            },
+                            {
+                              label: "Like",
+                              event: "READ_ITEM",
+                              icon: "heart",
+                            },
+                          ],
+                          emptyIcon: "rss",
+                          emptyTitle: "No posts in your feed",
+                          emptyDescription: "Follow topics and sources to see posts here.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "rss",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.source",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'reading',
-                event: 'READ_ITEM',
+                from: "browsing",
+                to: "reading",
+                event: "READ_ITEM",
                 effects: [
-                  ['fetch', 'FeedItem'],
-                  ['set', '@entity.isRead', true],
-                  ['render-ui', 'main', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        justify: 'space-between',
-                        align: 'center',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'book-open', size: 'lg' },
-                              { type: 'typography', variant: 'h2', text: '@entity.title' },
-                            ],
-                          },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'sm',
-                            children: [
-                              { type: 'button', label: 'Archive', event: 'ARCHIVE_ITEM', variant: 'secondary' },
-                              { type: 'button', label: 'Back to Feed', event: 'BACK_TO_FEED', variant: 'ghost' },
-                            ],
-                          },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'typography', variant: 'body', text: '@entity.summary' },
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'md',
-                        children: [
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'file-text', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: '@entity.source' },
-                            ],
-                          },
-                          {
-                            type: 'stack',
-                            direction: 'horizontal',
-                            gap: 'xs',
-                            align: 'center',
-                            children: [
-                              { type: 'icon', name: 'calendar', size: 'sm' },
-                              { type: 'typography', variant: 'caption', text: '@entity.publishedAt' },
-                            ],
-                          },
-                          { type: 'badge', label: 'Read', color: 'success' },
-                        ],
-                      },
-                    ],
-                  }],
+                  ["fetch", "FeedItem"],
+                  ["set", "@entity.isRead", true],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Back to Feed",
+                              icon: "arrow-left",
+                              event: "BACK_TO_FEED",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Archive",
+                                  icon: "archive",
+                                  event: "ARCHIVE_ITEM",
+                                  variant: "secondary",
+                                  size: "sm",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "xs",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "user",
+                              size: "sm",
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              text: "@entity.source",
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              color: "muted",
+                              text: "@entity.publishedAt",
+                            },
+                          ],
+                        },
+                        {
+                          type: "typography",
+                          variant: "h4",
+                          text: "@entity.title",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          text: "@entity.summary",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Save",
+                              icon: "bookmark",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Share",
+                              icon: "share-2",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Like",
+                              icon: "heart",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reading',
-                to: 'archiving',
-                event: 'ARCHIVE_ITEM',
+                from: "reading",
+                to: "archiving",
+                event: "ARCHIVE_ITEM",
                 effects: [
-                  ['render-ui', 'modal', {
-                    type: 'stack',
-                    direction: 'vertical',
-                    gap: 'md',
-                    children: [
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'sm',
-                        align: 'center',
-                        children: [
-                          { type: 'icon', name: 'tag', size: 'md' },
-                          { type: 'typography', variant: 'h3', text: 'Archive Item' },
-                        ],
-                      },
-                      { type: 'divider' },
-                      { type: 'typography', variant: 'body', text: 'Are you sure you want to archive this item?' },
-                      {
-                        type: 'stack',
-                        direction: 'horizontal',
-                        gap: 'sm',
-                        justify: 'flex-end',
-                        children: [
-                          { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'secondary' },
-                          { type: 'button', label: 'Confirm', event: 'CONFIRM_ARCHIVE', variant: 'primary' },
-                        ],
-                      },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "tag",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              text: "Archive Item",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          text: "Are you sure you want to archive this item?",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "flex-end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              event: "CANCEL",
+                              variant: "secondary",
+                            },
+                            {
+                              type: "button",
+                              label: "Confirm",
+                              event: "CONFIRM_ARCHIVE",
+                              variant: "primary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'archiving',
-                to: 'browsing',
-                event: 'CONFIRM_ARCHIVE',
+                from: "archiving",
+                to: "browsing",
+                event: "CONFIRM_ARCHIVE",
                 effects: [
-                  ['fetch', 'FeedItem'],
-                  ['render-ui', 'modal', null],
-                  ...feedBrowsingMainEffects,
+                  ["fetch", "FeedItem"],
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Content Feed",
+                            },
+                            {
+                              type: "search-input",
+                              placeholder: "Search posts...",
+                              event: "READ_ITEM",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Feed",
+                              icon: "rss",
+                              variant: "primary",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Following",
+                              icon: "users",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Trending",
+                              icon: "trending-up",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "FeedItem",
+                          variant: "card",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          itemActions: [
+                            {
+                              label: "Save",
+                              event: "READ_ITEM",
+                              icon: "bookmark",
+                            },
+                            {
+                              label: "Share",
+                              event: "READ_ITEM",
+                              icon: "share-2",
+                            },
+                            {
+                              label: "Like",
+                              event: "READ_ITEM",
+                              icon: "heart",
+                            },
+                          ],
+                          emptyIcon: "rss",
+                          emptyTitle: "No posts in your feed",
+                          emptyDescription: "Follow topics and sources to see posts here.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "rss",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.source",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
-              { from: 'archiving', to: 'reading', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'archiving', to: 'reading', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
               {
-                from: 'reading',
-                to: 'browsing',
-                event: 'BACK_TO_FEED',
+                from: "archiving",
+                to: "reading",
+                event: "CLOSE",
                 effects: [
-                  ['fetch', 'FeedItem'],
-                  ...feedBrowsingMainEffects,
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "archiving",
+                to: "reading",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "LOAD_MORE",
+                effects: [],
+              },
+              {
+                from: "reading",
+                to: "browsing",
+                event: "BACK_TO_FEED",
+                effects: [
+                  ["fetch", "FeedItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              text: "Content Feed",
+                            },
+                            {
+                              type: "search-input",
+                              placeholder: "Search posts...",
+                              event: "READ_ITEM",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Feed",
+                              icon: "rss",
+                              variant: "primary",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Following",
+                              icon: "users",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                            {
+                              type: "button",
+                              label: "Trending",
+                              icon: "trending-up",
+                              variant: "ghost",
+                              size: "sm",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "FeedItem",
+                          variant: "card",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          itemActions: [
+                            {
+                              label: "Save",
+                              event: "READ_ITEM",
+                              icon: "bookmark",
+                            },
+                            {
+                              label: "Share",
+                              event: "READ_ITEM",
+                              icon: "share-2",
+                            },
+                            {
+                              label: "Like",
+                              event: "READ_ITEM",
+                              icon: "heart",
+                            },
+                          ],
+                          emptyIcon: "rss",
+                          emptyTitle: "No posts in your feed",
+                          emptyDescription: "Follow topics and sources to see posts here.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "rss",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.source",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -1368,10 +3748,14 @@ export const CONTENT_FEED_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'FeedPage',
-          path: '/feed',
+          name: "FeedPage",
+          path: "/feed",
           isInitial: true,
-          traits: [{ ref: 'FeedControl' }],
+          traits: [
+            {
+              ref: "FeedControl",
+            },
+          ],
         },
       ],
     },

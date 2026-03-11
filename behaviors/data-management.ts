@@ -329,96 +329,726 @@ const ARTICLE_SEARCHING_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
  * Uses a concrete Product entity to demonstrate paginated browsing.
  */
 export const PAGINATION_BEHAVIOR: BehaviorSchema = {
-  name: 'std-pagination',
-  version: '1.0.0',
-  description: 'Page-based navigation for large data sets',
-  theme: DATA_ZINC_THEME,
+  name: "std-pagination",
+  version: "1.0.0",
+  description: "Page-based navigation for large data sets",
+  theme: {
+    name: "data-zinc",
+    tokens: {
+      colors: {
+        primary: "#3f3f46",
+        "primary-hover": "#27272a",
+        "primary-foreground": "#ffffff",
+        accent: "#71717a",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'PaginationOrbital',
+      name: "PaginationOrbital",
       entity: {
-        name: 'Product',
-        persistence: 'persistent',
-        collection: 'products',
+        name: "Product",
+        persistence: "persistent",
+        collection: "products",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'price', type: 'number', default: 0 },
-          { name: 'page', type: 'number', default: 1 },
-          { name: 'pageSize', type: 'number', default: 20 },
-          { name: 'totalItems', type: 'number', default: 0 },
-          { name: 'totalPages', type: 'number', default: 1 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "price",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "page",
+            type: "number",
+            default: 1,
+          },
+          {
+            name: "pageSize",
+            type: "number",
+            default: 20,
+          },
+          {
+            name: "totalItems",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "totalPages",
+            type: "number",
+            default: 1,
+          },
         ],
       },
       traits: [
         {
-          name: 'PaginationControl',
-          linkedEntity: 'Product',
-          category: 'interaction',
+          name: "PaginationControl",
+          linkedEntity: "Product",
+          category: "interaction",
           stateMachine: {
-            states: [{ name: 'browsing', isInitial: true }],
+            states: [
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+            ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'NEXT_PAGE', name: 'Next Page' },
-              { key: 'PREV_PAGE', name: 'Previous Page' },
-              { key: 'GO_TO_PAGE', name: 'Go to Page', payloadSchema: [{ name: 'page', type: 'number', required: true }] },
-              { key: 'SET_PAGE_SIZE', name: 'Set Page Size', payloadSchema: [{ name: 'size', type: 'number', required: true }] },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "NEXT_PAGE",
+                name: "Next Page",
+              },
+              {
+                key: "PREV_PAGE",
+                name: "Previous Page",
+              },
+              {
+                key: "GO_TO_PAGE",
+                name: "Go to Page",
+                payloadSchema: [
+                  {
+                    name: "page",
+                    type: "number",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "SET_PAGE_SIZE",
+                name: "Set Page Size",
+                payloadSchema: [
+                  {
+                    name: "size",
+                    type: "number",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Product'],
-                  ['set', '@entity.page', 1],
-                  PRODUCT_MAIN_VIEW,
+                  ["fetch", "Product"],
+                  ["set", "@entity.page", 1],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "database",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Products",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paginated",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Page",
+                              value: "@entity.page",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Page Size",
+                              value: "@entity.pageSize",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              value: "@entity.totalItems",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Pages",
+                              value: "@entity.totalPages",
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.page",
+                          max: "@entity.totalPages",
+                          label: "Page Progress",
+                          icon: "book-open",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Product",
+                          columns: ["name", "price"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "database",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                              event: "PREV_PAGE",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              variant: "secondary",
+                              icon: "arrow-right",
+                              event: "NEXT_PAGE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'NEXT_PAGE',
-                guard: ['<', '@entity.page', ['math/ceil', ['/', '@entity.totalItems', '@entity.pageSize']]],
+                from: "browsing",
+                to: "browsing",
+                event: "NEXT_PAGE",
+                guard: [
+                  "<",
+                  "@entity.page",
+                  [
+                    "math/ceil",
+                    ["/", "@entity.totalItems", "@entity.pageSize"],
+                  ],
+                ],
                 effects: [
-                  ['fetch', 'Product'],
-                  ['set', '@entity.page', ['+', '@entity.page', 1]],
-                  PRODUCT_MAIN_VIEW,
+                  ["fetch", "Product"],
+                  [
+                    "set",
+                    "@entity.page",
+                    ["+", "@entity.page", 1],
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "database",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Products",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paginated",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Page",
+                              value: "@entity.page",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Page Size",
+                              value: "@entity.pageSize",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              value: "@entity.totalItems",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Pages",
+                              value: "@entity.totalPages",
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.page",
+                          max: "@entity.totalPages",
+                          label: "Page Progress",
+                          icon: "book-open",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Product",
+                          columns: ["name", "price"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "database",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                              event: "PREV_PAGE",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              variant: "secondary",
+                              icon: "arrow-right",
+                              event: "NEXT_PAGE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'PREV_PAGE',
-                guard: ['>', '@entity.page', 1],
+                from: "browsing",
+                to: "browsing",
+                event: "PREV_PAGE",
+                guard: [">", "@entity.page", 1],
                 effects: [
-                  ['fetch', 'Product'],
-                  ['set', '@entity.page', ['-', '@entity.page', 1]],
-                  PRODUCT_MAIN_VIEW,
+                  ["fetch", "Product"],
+                  [
+                    "set",
+                    "@entity.page",
+                    ["-", "@entity.page", 1],
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "database",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Products",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paginated",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Page",
+                              value: "@entity.page",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Page Size",
+                              value: "@entity.pageSize",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              value: "@entity.totalItems",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Pages",
+                              value: "@entity.totalPages",
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.page",
+                          max: "@entity.totalPages",
+                          label: "Page Progress",
+                          icon: "book-open",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Product",
+                          columns: ["name", "price"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "database",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                              event: "PREV_PAGE",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              variant: "secondary",
+                              icon: "arrow-right",
+                              event: "NEXT_PAGE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'GO_TO_PAGE',
-                guard: ['and',
-                  ['>=', '@payload.page', 1],
-                  ['<=', '@payload.page', ['math/ceil', ['/', '@entity.totalItems', '@entity.pageSize']]]],
+                from: "browsing",
+                to: "browsing",
+                event: "GO_TO_PAGE",
+                guard: [
+                  "and",
+                  [">=", "@payload.page", 1],
+                  [
+                    "<=",
+                    "@payload.page",
+                    [
+                      "math/ceil",
+                      ["/", "@entity.totalItems", "@entity.pageSize"],
+                    ],
+                  ],
+                ],
                 effects: [
-                  ['fetch', 'Product'],
-                  ['set', '@entity.page', '@payload.page'],
-                  PRODUCT_MAIN_VIEW,
+                  ["fetch", "Product"],
+                  ["set", "@entity.page", "@payload.page"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "database",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Products",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paginated",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Page",
+                              value: "@entity.page",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Page Size",
+                              value: "@entity.pageSize",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              value: "@entity.totalItems",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Pages",
+                              value: "@entity.totalPages",
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.page",
+                          max: "@entity.totalPages",
+                          label: "Page Progress",
+                          icon: "book-open",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Product",
+                          columns: ["name", "price"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "database",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                              event: "PREV_PAGE",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              variant: "secondary",
+                              icon: "arrow-right",
+                              event: "NEXT_PAGE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'SET_PAGE_SIZE',
+                from: "browsing",
+                to: "browsing",
+                event: "SET_PAGE_SIZE",
                 effects: [
-                  ['fetch', 'Product'],
-                  ['set', '@entity.pageSize', '@payload.size'],
-                  ['set', '@entity.page', 1],
-                  PRODUCT_MAIN_VIEW,
+                  ["fetch", "Product"],
+                  ["set", "@entity.pageSize", "@payload.size"],
+                  ["set", "@entity.page", 1],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "database",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Products",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paginated",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Page",
+                              value: "@entity.page",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Page Size",
+                              value: "@entity.pageSize",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              value: "@entity.totalItems",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total Pages",
+                              value: "@entity.totalPages",
+                            },
+                          ],
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.page",
+                          max: "@entity.totalPages",
+                          label: "Page Progress",
+                          icon: "book-open",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Product",
+                          columns: ["name", "price"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "database",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                              event: "PREV_PAGE",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              variant: "secondary",
+                              icon: "arrow-right",
+                              event: "NEXT_PAGE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -427,10 +1057,14 @@ export const PAGINATION_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ProductsPage',
-          path: '/products',
+          name: "ProductsPage",
+          path: "/products",
           isInitial: true,
-          traits: [{ ref: 'PaginationControl' }],
+          traits: [
+            {
+              ref: "PaginationControl",
+            },
+          ],
         },
       ],
     },
@@ -446,113 +1080,690 @@ export const PAGINATION_BEHAVIOR: BehaviorSchema = {
  * Uses a concrete File entity to demonstrate single/multi selection.
  */
 export const SELECTION_BEHAVIOR: BehaviorSchema = {
-  name: 'std-selection',
-  version: '1.0.0',
-  description: 'Single or multi-selection management',
-  theme: DATA_ZINC_THEME,
+  name: "std-selection",
+  version: "1.0.0",
+  description: "Single or multi-selection management",
+  theme: {
+    name: "data-zinc",
+    tokens: {
+      colors: {
+        primary: "#3f3f46",
+        "primary-hover": "#27272a",
+        "primary-foreground": "#ffffff",
+        accent: "#71717a",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'SelectionOrbital',
+      name: "SelectionOrbital",
       entity: {
-        name: 'File',
-        persistence: 'persistent',
-        collection: 'files',
+        name: "File",
+        persistence: "persistent",
+        collection: "files",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'size', type: 'number', default: 0 },
-          { name: 'isSelected', type: 'boolean', default: false },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "size",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "isSelected",
+            type: "boolean",
+            default: false,
+          },
         ],
       },
       traits: [
         {
-          name: 'SelectionControl',
-          linkedEntity: 'File',
-          category: 'interaction',
+          name: "SelectionControl",
+          linkedEntity: "File",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'selected' },
-              { name: 'viewing' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "selected",
+              },
+              {
+                name: "viewing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SELECT', name: 'Select', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'DESELECT', name: 'Deselect' },
-              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SELECT",
+                name: "Select",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "DESELECT",
+                name: "Deselect",
+              },
+              {
+                key: "VIEW",
+                name: "View",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'File'],
-                  FILE_IDLE_MAIN_VIEW,
+                  ["fetch", "File"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "folder",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Files",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "File",
+                          itemActions: [
+                            {
+                              label: "Select",
+                              event: "SELECT",
+                            },
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "folder",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.size",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'selected',
-                event: 'SELECT',
+                from: "idle",
+                to: "selected",
+                event: "SELECT",
                 effects: [
-                  ['fetch', 'File'],
-                  ['set', '@entity.isSelected', true],
-                  FILE_SELECTED_MAIN_VIEW,
+                  ["fetch", "File"],
+                  ["set", "@entity.isSelected", true],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "folder",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Files",
+                            },
+                            {
+                              type: "badge",
+                              label: "Selected",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "File",
+                          itemActions: [
+                            {
+                              label: "Deselect",
+                              event: "DESELECT",
+                            },
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "folder",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "check-square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.size",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'selected',
-                to: 'selected',
-                event: 'SELECT',
+                from: "selected",
+                to: "selected",
+                event: "SELECT",
                 effects: [
-                  ['fetch', 'File'],
-                  ['set', '@entity.isSelected', true],
-                  FILE_SELECTED_MAIN_VIEW,
+                  ["fetch", "File"],
+                  ["set", "@entity.isSelected", true],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "folder",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Files",
+                            },
+                            {
+                              type: "badge",
+                              label: "Selected",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "File",
+                          itemActions: [
+                            {
+                              label: "Deselect",
+                              event: "DESELECT",
+                            },
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "folder",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "check-square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.size",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'selected',
-                to: 'idle',
-                event: 'DESELECT',
+                from: "selected",
+                to: "idle",
+                event: "DESELECT",
                 effects: [
-                  ['fetch', 'File'],
-                  ['set', '@entity.isSelected', false],
-                  FILE_IDLE_MAIN_VIEW,
+                  ["fetch", "File"],
+                  ["set", "@entity.isSelected", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "folder",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Files",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "File",
+                          itemActions: [
+                            {
+                              label: "Select",
+                              event: "SELECT",
+                            },
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "folder",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.size",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "idle",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'File'],
-                  FILE_DETAIL_MODAL,
+                  ["fetch", "File"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "file",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "File Details",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.name",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Size",
+                              value: "@entity.size",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Close",
+                              event: "CLOSE",
+                              variant: "secondary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'selected',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "selected",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'File'],
-                  FILE_DETAIL_MODAL,
+                  ["fetch", "File"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "file",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "File Details",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.name",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Size",
+                              value: "@entity.size",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Close",
+                              event: "CLOSE",
+                              variant: "secondary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
-              { from: 'viewing', to: 'idle', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'viewing', to: 'idle', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
+              {
+                from: "viewing",
+                to: "idle",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "idle",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
             ],
           },
         },
       ],
       pages: [
         {
-          name: 'FilesPage',
-          path: '/files',
+          name: "FilesPage",
+          path: "/files",
           isInitial: true,
-          traits: [{ ref: 'SelectionControl' }],
+          traits: [
+            {
+              ref: "SelectionControl",
+            },
+          ],
         },
       ],
     },
@@ -568,79 +1779,703 @@ export const SELECTION_BEHAVIOR: BehaviorSchema = {
  * Uses a concrete Contact entity to demonstrate sortable columns.
  */
 export const SORT_BEHAVIOR: BehaviorSchema = {
-  name: 'std-sort',
-  version: '1.0.0',
-  description: 'Sorting by field with direction toggle',
-  theme: DATA_ZINC_THEME,
+  name: "std-sort",
+  version: "1.0.0",
+  description: "Sorting by field with direction toggle",
+  theme: {
+    name: "data-zinc",
+    tokens: {
+      colors: {
+        primary: "#3f3f46",
+        "primary-hover": "#27272a",
+        "primary-foreground": "#ffffff",
+        accent: "#71717a",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'SortOrbital',
+      name: "SortOrbital",
       entity: {
-        name: 'Contact',
-        persistence: 'persistent',
-        collection: 'contacts',
+        name: "Contact",
+        persistence: "persistent",
+        collection: "contacts",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'email', type: 'string', default: '' },
-          { name: 'sortField', type: 'string', default: 'name' },
-          { name: 'sortDirection', type: 'string', default: 'asc' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "email",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "sortField",
+            type: "string",
+            default: "name",
+          },
+          {
+            name: "sortDirection",
+            type: "string",
+            default: "asc",
+          },
         ],
       },
       traits: [
         {
-          name: 'SortControl',
-          linkedEntity: 'Contact',
-          category: 'interaction',
+          name: "SortControl",
+          linkedEntity: "Contact",
+          category: "interaction",
           stateMachine: {
-            states: [{ name: 'browsing', isInitial: true }],
+            states: [
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+            ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SORT', name: 'Sort', payloadSchema: [{ name: 'field', type: 'string', required: true }] },
-              { key: 'TOGGLE_DIRECTION', name: 'Toggle Direction' },
-              { key: 'CLEAR_SORT', name: 'Clear Sort' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SORT_BY_NAME",
+                name: "Sort by Name",
+              },
+              {
+                key: "SORT_BY_EMAIL",
+                name: "Sort by Email",
+              },
+              {
+                key: "TOGGLE_DIRECTION",
+                name: "Toggle Direction",
+              },
+              {
+                key: "CLEAR_SORT",
+                name: "Clear Sort",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Contact'],
-                  ['set', '@entity.sortField', 'name'],
-                  ['set', '@entity.sortDirection', 'asc'],
-                  CONTACT_MAIN_VIEW,
+                  ["fetch", "Contact"],
+                  ["set", "@entity.sortField", "name"],
+                  ["set", "@entity.sortDirection", "asc"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "arrow-up-down",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Contacts",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "@entity.sortField",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.sortDirection",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Name",
+                              event: "SORT_BY_NAME",
+                              variant: "secondary",
+                              icon: "arrow-down-a-z",
+                            },
+                            {
+                              type: "button",
+                              label: "Email",
+                              event: "SORT_BY_EMAIL",
+                              variant: "secondary",
+                              icon: "at-sign",
+                            },
+                            {
+                              type: "button",
+                              label: "Toggle",
+                              event: "TOGGLE_DIRECTION",
+                              variant: "secondary",
+                              icon: "arrow-up-down",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SORT",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Contact",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h4",
+                                  content: "@entity.name",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.email",
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "INIT",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'SORT',
+                from: "browsing",
+                to: "browsing",
+                event: "SORT_BY_NAME",
                 effects: [
-                  ['fetch', 'Contact'],
-                  ['set', '@entity.sortField', '@payload.field'],
-                  CONTACT_MAIN_VIEW,
+                  ["fetch", "Contact"],
+                  ["set", "@entity.sortField", "name"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "arrow-up-down",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Contacts",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "@entity.sortField",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.sortDirection",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Name",
+                              event: "SORT_BY_NAME",
+                              variant: "secondary",
+                              icon: "arrow-down-a-z",
+                            },
+                            {
+                              type: "button",
+                              label: "Email",
+                              event: "SORT_BY_EMAIL",
+                              variant: "secondary",
+                              icon: "at-sign",
+                            },
+                            {
+                              type: "button",
+                              label: "Toggle",
+                              event: "TOGGLE_DIRECTION",
+                              variant: "secondary",
+                              icon: "arrow-up-down",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SORT",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Contact",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h4",
+                                  content: "@entity.name",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.email",
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "INIT",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'TOGGLE_DIRECTION',
+                from: "browsing",
+                to: "browsing",
+                event: "SORT_BY_EMAIL",
                 effects: [
-                  ['fetch', 'Contact'],
-                  ['set', '@entity.sortDirection', ['if', ['=', '@entity.sortDirection', 'asc'], 'desc', 'asc']],
-                  CONTACT_MAIN_VIEW,
+                  ["fetch", "Contact"],
+                  ["set", "@entity.sortField", "email"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "arrow-up-down",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Contacts",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "@entity.sortField",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.sortDirection",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Name",
+                              event: "SORT_BY_NAME",
+                              variant: "secondary",
+                              icon: "arrow-down-a-z",
+                            },
+                            {
+                              type: "button",
+                              label: "Email",
+                              event: "SORT_BY_EMAIL",
+                              variant: "secondary",
+                              icon: "at-sign",
+                            },
+                            {
+                              type: "button",
+                              label: "Toggle",
+                              event: "TOGGLE_DIRECTION",
+                              variant: "secondary",
+                              icon: "arrow-up-down",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SORT",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Contact",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h4",
+                                  content: "@entity.name",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.email",
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "INIT",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'CLEAR_SORT',
+                from: "browsing",
+                to: "browsing",
+                event: "TOGGLE_DIRECTION",
                 effects: [
-                  ['fetch', 'Contact'],
-                  ['set', '@entity.sortField', 'name'],
-                  ['set', '@entity.sortDirection', 'asc'],
-                  CONTACT_MAIN_VIEW,
+                  ["fetch", "Contact"],
+                  [
+                    "set",
+                    "@entity.sortDirection",
+                    [
+                      "if",
+                      ["=", "@entity.sortDirection", "asc"],
+                      "desc",
+                      "asc",
+                    ],
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "arrow-up-down",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Contacts",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "@entity.sortField",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.sortDirection",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Name",
+                              event: "SORT_BY_NAME",
+                              variant: "secondary",
+                              icon: "arrow-down-a-z",
+                            },
+                            {
+                              type: "button",
+                              label: "Email",
+                              event: "SORT_BY_EMAIL",
+                              variant: "secondary",
+                              icon: "at-sign",
+                            },
+                            {
+                              type: "button",
+                              label: "Toggle",
+                              event: "TOGGLE_DIRECTION",
+                              variant: "secondary",
+                              icon: "arrow-up-down",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SORT",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Contact",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h4",
+                                  content: "@entity.name",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.email",
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "INIT",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "CLEAR_SORT",
+                effects: [
+                  ["fetch", "Contact"],
+                  ["set", "@entity.sortField", "name"],
+                  ["set", "@entity.sortDirection", "asc"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "arrow-up-down",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Contacts",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "@entity.sortField",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.sortDirection",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Name",
+                              event: "SORT_BY_NAME",
+                              variant: "secondary",
+                              icon: "arrow-down-a-z",
+                            },
+                            {
+                              type: "button",
+                              label: "Email",
+                              event: "SORT_BY_EMAIL",
+                              variant: "secondary",
+                              icon: "at-sign",
+                            },
+                            {
+                              type: "button",
+                              label: "Toggle",
+                              event: "TOGGLE_DIRECTION",
+                              variant: "secondary",
+                              icon: "arrow-up-down",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SORT",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Contact",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h4",
+                                  content: "@entity.name",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.email",
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "INIT",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -649,10 +2484,14 @@ export const SORT_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ContactsPage',
-          path: '/contacts',
+          name: "ContactsPage",
+          path: "/contacts",
           isInitial: true,
-          traits: [{ ref: 'SortControl' }],
+          traits: [
+            {
+              ref: "SortControl",
+            },
+          ],
         },
       ],
     },
@@ -668,97 +2507,619 @@ export const SORT_BEHAVIOR: BehaviorSchema = {
  * Uses a concrete Task entity to demonstrate filter and search operations.
  */
 export const FILTER_BEHAVIOR: BehaviorSchema = {
-  name: 'std-filter',
-  version: '1.0.0',
-  description: 'Query Singleton pattern for explicit filtering',
-  theme: DATA_ZINC_THEME,
+  name: "std-filter",
+  version: "1.0.0",
+  description: "Query Singleton pattern for explicit filtering",
+  theme: {
+    name: "data-zinc",
+    tokens: {
+      colors: {
+        primary: "#3f3f46",
+        "primary-hover": "#27272a",
+        "primary-foreground": "#ffffff",
+        accent: "#71717a",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'FilterOrbital',
+      name: "FilterOrbital",
       entity: {
-        name: 'Task',
-        persistence: 'persistent',
-        collection: 'tasks',
+        name: "Task",
+        persistence: "persistent",
+        collection: "tasks",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'open' },
-          { name: 'priority', type: 'string', default: 'medium' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "open",
+          },
+          {
+            name: "priority",
+            type: "string",
+            default: "medium",
+          },
         ],
       },
       traits: [
         {
-          name: 'FilterControl',
-          linkedEntity: 'Task',
-          category: 'interaction',
+          name: "FilterControl",
+          linkedEntity: "Task",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'filtered' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "filtered",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'FILTER', name: 'Filter', payloadSchema: [{ name: 'status', type: 'string', required: true }] },
-              { key: 'CLEAR_FILTERS', name: 'Clear Filters' },
-              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "FILTER",
+                name: "Filter",
+                payloadSchema: [
+                  {
+                    name: "status",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLEAR_FILTERS",
+                name: "Clear Filters",
+              },
+              {
+                key: "VIEW",
+                name: "View",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Task'],
-                  TASK_BROWSING_MAIN_VIEW,
+                  ["fetch", "Task"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "table",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Tasks",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "All",
+                              variant: "primary",
+                              icon: "filter",
+                            },
+                            {
+                              type: "button",
+                              label: "Filter",
+                              variant: "secondary",
+                              icon: "filter",
+                              event: "FILTER",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear Filters",
+                              variant: "ghost",
+                              icon: "x",
+                              event: "CLEAR_FILTERS",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Task",
+                          columns: ["title", "status", "priority"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "table",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'filtered',
-                event: 'FILTER',
+                from: "browsing",
+                to: "filtered",
+                event: "FILTER",
                 effects: [
-                  ['fetch', 'Task'],
-                  ['set', '@entity.status', '@payload.status'],
-                  TASK_FILTERED_MAIN_VIEW,
+                  ["fetch", "Task"],
+                  ["set", "@entity.status", "@payload.status"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Tasks",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "warning",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "warning",
+                              icon: "filter",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.status",
+                              variant: "info",
+                            },
+                            {
+                              type: "button",
+                              label: "Change Filter",
+                              variant: "secondary",
+                              icon: "filter",
+                              event: "FILTER",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear Filters",
+                              variant: "ghost",
+                              icon: "x",
+                              event: "CLEAR_FILTERS",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Task",
+                          columns: ["title", "status", "priority"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'filtered',
-                to: 'filtered',
-                event: 'FILTER',
+                from: "filtered",
+                to: "filtered",
+                event: "FILTER",
                 effects: [
-                  ['fetch', 'Task'],
-                  ['set', '@entity.status', '@payload.status'],
-                  TASK_FILTERED_MAIN_VIEW,
+                  ["fetch", "Task"],
+                  ["set", "@entity.status", "@payload.status"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Tasks",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "warning",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "warning",
+                              icon: "filter",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.status",
+                              variant: "info",
+                            },
+                            {
+                              type: "button",
+                              label: "Change Filter",
+                              variant: "secondary",
+                              icon: "filter",
+                              event: "FILTER",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear Filters",
+                              variant: "ghost",
+                              icon: "x",
+                              event: "CLEAR_FILTERS",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Task",
+                          columns: ["title", "status", "priority"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'filtered',
-                to: 'browsing',
-                event: 'CLEAR_FILTERS',
+                from: "filtered",
+                to: "browsing",
+                event: "CLEAR_FILTERS",
                 effects: [
-                  ['set', '@entity.status', 'open'],
-                  ['fetch', 'Task'],
-                  TASK_BROWSING_MAIN_VIEW,
+                  ["set", "@entity.status", "open"],
+                  ["fetch", "Task"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "table",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Tasks",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "All",
+                              variant: "primary",
+                              icon: "filter",
+                            },
+                            {
+                              type: "button",
+                              label: "Filter",
+                              variant: "secondary",
+                              icon: "filter",
+                              event: "FILTER",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear Filters",
+                              variant: "ghost",
+                              icon: "x",
+                              event: "CLEAR_FILTERS",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Task",
+                          columns: ["title", "status", "priority"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "table",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
-              // VIEW self-transitions
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'VIEW',
+                from: "browsing",
+                to: "browsing",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'Task'],
-                  TASK_BROWSING_MAIN_VIEW,
+                  ["fetch", "Task"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "table",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Tasks",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "All",
+                              variant: "primary",
+                              icon: "filter",
+                            },
+                            {
+                              type: "button",
+                              label: "Filter",
+                              variant: "secondary",
+                              icon: "filter",
+                              event: "FILTER",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear Filters",
+                              variant: "ghost",
+                              icon: "x",
+                              event: "CLEAR_FILTERS",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Task",
+                          columns: ["title", "status", "priority"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "table",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'filtered',
-                to: 'filtered',
-                event: 'VIEW',
+                from: "filtered",
+                to: "filtered",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'Task'],
-                  TASK_FILTERED_MAIN_VIEW,
+                  ["fetch", "Task"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Tasks",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "warning",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "warning",
+                              icon: "filter",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.status",
+                              variant: "info",
+                            },
+                            {
+                              type: "button",
+                              label: "Change Filter",
+                              variant: "secondary",
+                              icon: "filter",
+                              event: "FILTER",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear Filters",
+                              variant: "ghost",
+                              icon: "x",
+                              event: "CLEAR_FILTERS",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Task",
+                          columns: ["title", "status", "priority"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -767,10 +3128,14 @@ export const FILTER_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'TasksPage',
-          path: '/tasks',
+          name: "TasksPage",
+          path: "/tasks",
           isInitial: true,
-          traits: [{ ref: 'FilterControl' }],
+          traits: [
+            {
+              ref: "FilterControl",
+            },
+          ],
         },
       ],
     },
@@ -786,97 +3151,799 @@ export const FILTER_BEHAVIOR: BehaviorSchema = {
  * Uses a concrete Article entity to demonstrate search operations.
  */
 export const SEARCH_BEHAVIOR: BehaviorSchema = {
-  name: 'std-search',
-  version: '1.0.0',
-  description: 'Search behavior for entity lists',
-  theme: DATA_ZINC_THEME,
+  name: "std-search",
+  version: "1.0.0",
+  description: "Search behavior for entity lists",
+  theme: {
+    name: "data-zinc",
+    tokens: {
+      colors: {
+        primary: "#3f3f46",
+        "primary-hover": "#27272a",
+        "primary-foreground": "#ffffff",
+        accent: "#71717a",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'SearchOrbital',
+      name: "SearchOrbital",
       entity: {
-        name: 'Article',
-        persistence: 'persistent',
-        collection: 'articles',
+        name: "Article",
+        persistence: "persistent",
+        collection: "articles",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'content', type: 'string', default: '' },
-          { name: 'searchTerm', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "content",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "searchTerm",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'SearchControl',
-          linkedEntity: 'Article',
-          category: 'interaction',
+          name: "SearchControl",
+          linkedEntity: "Article",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'searching' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "searching",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SEARCH', name: 'Search', payloadSchema: [{ name: 'term', type: 'string', required: true }] },
-              { key: 'CLEAR_SEARCH', name: 'Clear Search' },
-              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SEARCH",
+                name: "Search",
+                payloadSchema: [
+                  {
+                    name: "term",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLEAR_SEARCH",
+                name: "Clear Search",
+              },
+              {
+                key: "VIEW",
+                name: "View",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Article'],
-                  ARTICLE_IDLE_MAIN_VIEW,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Search Articles",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search articles...",
+                          event: "SEARCH",
+                          icon: "search",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Article",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "search",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.content",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'searching',
-                event: 'SEARCH',
+                from: "idle",
+                to: "searching",
+                event: "SEARCH",
                 effects: [
-                  ['fetch', 'Article'],
-                  ['set', '@entity.searchTerm', '@payload.term'],
-                  ARTICLE_SEARCHING_MAIN_VIEW,
+                  [
+                    "fetch",
+                    "Article",
+                    {
+                      filter: [
+                        "or",
+                        [
+                          "str/includes",
+                          ["str/lower", "@entity.title"],
+                          ["str/lower", "@payload.term"],
+                        ],
+                        [
+                          "str/includes",
+                          ["str/lower", "@entity.content"],
+                          ["str/lower", "@payload.term"],
+                        ],
+                      ],
+                    },
+                  ],
+                  ["set", "@entity.searchTerm", "@payload.term"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Search Articles",
+                            },
+                            {
+                              type: "badge",
+                              label: "Active Search",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "search-input",
+                              placeholder: "Search articles...",
+                              event: "SEARCH",
+                              icon: "search",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SEARCH",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Article",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "search",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.content",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'searching',
-                to: 'searching',
-                event: 'SEARCH',
+                from: "searching",
+                to: "searching",
+                event: "SEARCH",
                 effects: [
-                  ['fetch', 'Article'],
-                  ['set', '@entity.searchTerm', '@payload.term'],
-                  ARTICLE_SEARCHING_MAIN_VIEW,
+                  [
+                    "fetch",
+                    "Article",
+                    {
+                      filter: [
+                        "or",
+                        [
+                          "str/includes",
+                          ["str/lower", "@entity.title"],
+                          ["str/lower", "@payload.term"],
+                        ],
+                        [
+                          "str/includes",
+                          ["str/lower", "@entity.content"],
+                          ["str/lower", "@payload.term"],
+                        ],
+                      ],
+                    },
+                  ],
+                  ["set", "@entity.searchTerm", "@payload.term"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Search Articles",
+                            },
+                            {
+                              type: "badge",
+                              label: "Active Search",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "search-input",
+                              placeholder: "Search articles...",
+                              event: "SEARCH",
+                              icon: "search",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SEARCH",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Article",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "search",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.content",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'searching',
-                to: 'idle',
-                event: 'CLEAR_SEARCH',
+                from: "searching",
+                to: "idle",
+                event: "CLEAR_SEARCH",
                 effects: [
-                  ['set', '@entity.searchTerm', ''],
-                  ['fetch', 'Article'],
-                  ARTICLE_IDLE_MAIN_VIEW,
+                  ["set", "@entity.searchTerm", ""],
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Search Articles",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search articles...",
+                          event: "SEARCH",
+                          icon: "search",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Article",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "search",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.content",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
-              // VIEW self-transitions
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'VIEW',
+                from: "idle",
+                to: "idle",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'Article'],
-                  ARTICLE_IDLE_MAIN_VIEW,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Search Articles",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search articles...",
+                          event: "SEARCH",
+                          icon: "search",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Article",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "search",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.content",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'searching',
-                to: 'searching',
-                event: 'VIEW',
+                from: "searching",
+                to: "searching",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'Article'],
-                  ARTICLE_SEARCHING_MAIN_VIEW,
+                  ["fetch", "Article"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Search Articles",
+                            },
+                            {
+                              type: "badge",
+                              label: "Active Search",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "search-input",
+                              placeholder: "Search articles...",
+                              event: "SEARCH",
+                              icon: "search",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_SEARCH",
+                              variant: "ghost",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Article",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "search",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.content",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -885,10 +3952,14 @@ export const SEARCH_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ArticlesPage',
-          path: '/articles',
+          name: "ArticlesPage",
+          path: "/articles",
           isInitial: true,
-          traits: [{ ref: 'SearchControl' }],
+          traits: [
+            {
+              ref: "SearchControl",
+            },
+          ],
         },
       ],
     },

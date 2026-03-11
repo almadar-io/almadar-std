@@ -166,124 +166,916 @@ const agentSimCompletedMainEffect = [
  * States: idle -> running -> paused -> completed
  */
 export const AGENT_SIM_BEHAVIOR: BehaviorSchema = {
-  name: 'std-agent-sim',
-  version: '1.0.0',
-  description: 'Agent-based simulation with tick-driven updates',
-  theme: SIMULATION_THEME,
+  name: "std-agent-sim",
+  version: "1.0.0",
+  description: "Agent-based simulation with tick-driven updates",
+  theme: {
+    name: "simulation-lime",
+    tokens: {
+      colors: {
+        primary: "#65a30d",
+        "primary-hover": "#4d7c0f",
+        "primary-foreground": "#ffffff",
+        accent: "#84cc16",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'AgentSimOrbital',
+      name: "AgentSimOrbital",
       entity: {
-        name: 'SimAgent',
-        persistence: 'runtime',
+        name: "SimAgent",
+        persistence: "runtime",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'x', type: 'number', default: 0 },
-          { name: 'y', type: 'number', default: 0 },
-          { name: 'state', type: 'string', default: 'idle' },
-          { name: 'energy', type: 'number', default: 100 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "x",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "y",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "state",
+            type: "string",
+            default: "idle",
+          },
+          {
+            name: "energy",
+            type: "number",
+            default: 100,
+          },
         ],
       },
       traits: [
         {
-          name: 'AgentSimControl',
-          linkedEntity: 'SimAgent',
-          category: 'interaction',
+          name: "AgentSimControl",
+          linkedEntity: "SimAgent",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'running' },
-              { name: 'paused' },
-              { name: 'completed' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "running",
+              },
+              {
+                name: "paused",
+              },
+              {
+                name: "completed",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'START', name: 'Start Simulation' },
-              { key: 'PAUSE', name: 'Pause Simulation' },
-              { key: 'RESUME', name: 'Resume Simulation' },
-              { key: 'STOP', name: 'Stop Simulation' },
-              { key: 'RESET', name: 'Reset Simulation' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "START",
+                name: "Start Simulation",
+              },
+              {
+                key: "PAUSE",
+                name: "Pause Simulation",
+              },
+              {
+                key: "RESUME",
+                name: "Resume Simulation",
+              },
+              {
+                key: "STOP",
+                name: "Stop Simulation",
+              },
+              {
+                key: "RESET",
+                name: "Reset Simulation",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['set', '@entity.x', 0],
-                  ['set', '@entity.y', 0],
-                  ['set', '@entity.energy', 100],
-                  ['set', '@entity.state', 'idle'],
-                  agentSimIdleMainEffect,
+                  ["set", "@entity.x", 0],
+                  ["set", "@entity.y", 0],
+                  ["set", "@entity.energy", 100],
+                  ["set", "@entity.state", "idle"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "cpu",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Agent Simulation",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Start",
+                              icon: "play",
+                              variant: "primary",
+                              event: "START",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Status",
+                              value: "@entity.state",
+                              icon: "activity",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Energy",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'running',
-                event: 'START',
+                from: "idle",
+                to: "running",
+                event: "START",
                 effects: [
-                  ['set', '@entity.state', 'running'],
-                  agentSimRunningMainEffect,
+                  ["set", "@entity.state", "running"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "activity",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Running",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Pause",
+                                  icon: "pause",
+                                  variant: "secondary",
+                                  event: "PAUSE",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Stop",
+                                  icon: "square",
+                                  variant: "danger",
+                                  event: "STOP",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "badge",
+                              label: "Running",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Energy Remaining",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'running',
-                to: 'paused',
-                event: 'PAUSE',
+                from: "running",
+                to: "paused",
+                event: "PAUSE",
                 effects: [
-                  ['set', '@entity.state', 'paused'],
-                  agentSimPausedMainEffect,
+                  ["set", "@entity.state", "paused"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pause",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Paused",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Resume",
+                                  icon: "play",
+                                  variant: "primary",
+                                  event: "RESUME",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Stop",
+                                  icon: "square",
+                                  variant: "danger",
+                                  event: "STOP",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paused",
+                              variant: "warning",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Energy Remaining",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'paused',
-                to: 'running',
-                event: 'RESUME',
+                from: "paused",
+                to: "running",
+                event: "RESUME",
                 effects: [
-                  ['set', '@entity.state', 'running'],
-                  agentSimRunningMainEffect,
+                  ["set", "@entity.state", "running"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "activity",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Running",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Pause",
+                                  icon: "pause",
+                                  variant: "secondary",
+                                  event: "PAUSE",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Stop",
+                                  icon: "square",
+                                  variant: "danger",
+                                  event: "STOP",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "badge",
+                              label: "Running",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Energy Remaining",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'running',
-                to: 'completed',
-                event: 'STOP',
+                from: "running",
+                to: "completed",
+                event: "STOP",
                 effects: [
-                  ['set', '@entity.state', 'completed'],
-                  agentSimCompletedMainEffect,
+                  ["set", "@entity.state", "completed"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bar-chart-2",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Complete",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Reset",
+                              icon: "refresh-cw",
+                              variant: "primary",
+                              event: "RESET",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "badge",
+                              label: "Completed",
+                              variant: "default",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Final X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Final Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Final Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Final Energy",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'paused',
-                to: 'completed',
-                event: 'STOP',
+                from: "paused",
+                to: "completed",
+                event: "STOP",
                 effects: [
-                  ['set', '@entity.state', 'completed'],
-                  agentSimCompletedMainEffect,
+                  ["set", "@entity.state", "completed"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bar-chart-2",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Complete",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Reset",
+                              icon: "refresh-cw",
+                              variant: "primary",
+                              event: "RESET",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "badge",
+                              label: "Completed",
+                              variant: "default",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Final X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Final Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Final Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Final Energy",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'completed',
-                to: 'idle',
-                event: 'RESET',
+                from: "completed",
+                to: "idle",
+                event: "RESET",
                 effects: [
-                  ['set', '@entity.x', 0],
-                  ['set', '@entity.y', 0],
-                  ['set', '@entity.energy', 100],
-                  ['set', '@entity.state', 'idle'],
-                  agentSimIdleMainEffect,
+                  ["set", "@entity.x", 0],
+                  ["set", "@entity.y", 0],
+                  ["set", "@entity.energy", 100],
+                  ["set", "@entity.state", "idle"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "cpu",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Agent Simulation",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Start",
+                              icon: "play",
+                              variant: "primary",
+                              event: "START",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Agent",
+                              value: "@entity.name",
+                              icon: "cpu",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Status",
+                              value: "@entity.state",
+                              icon: "activity",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "X",
+                              value: "@entity.x",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Y",
+                              value: "@entity.y",
+                              icon: "move",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Energy",
+                              value: "@entity.energy",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "meter",
+                          value: "@entity.energy",
+                          max: 100,
+                          label: "Energy",
+                          icon: "zap",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
           },
           ticks: [
             {
-              name: 'AgentTick',
-              interval: 'frame',
-              guard: ['=', '@state', 'running'],
+              name: "AgentTick",
+              interval: "frame",
+              guard: ["=", "@state", "running"],
               effects: [
-                ['set', '@entity.energy', ['-', '@entity.energy', 1]],
+                [
+                  "set",
+                  "@entity.energy",
+                  ["-", "@entity.energy", 1],
+                ],
               ],
             },
           ],
@@ -291,10 +1083,14 @@ export const AGENT_SIM_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'SimulationPage',
-          path: '/simulation',
+          name: "SimulationPage",
+          path: "/simulation",
           isInitial: true,
-          traits: [{ ref: 'AgentSimControl' }],
+          traits: [
+            {
+              ref: "AgentSimControl",
+            },
+          ],
         },
       ],
     },
@@ -360,129 +1156,656 @@ const ruleEngineFormModalEffect = [
  * States: browsing -> creating -> editing
  */
 export const RULE_ENGINE_BEHAVIOR: BehaviorSchema = {
-  name: 'std-rule-engine',
-  version: '1.0.0',
-  description: 'Rule management for simulation engines',
-  theme: SIMULATION_THEME,
+  name: "std-rule-engine",
+  version: "1.0.0",
+  description: "Rule management for simulation engines",
+  theme: {
+    name: "simulation-lime",
+    tokens: {
+      colors: {
+        primary: "#65a30d",
+        "primary-hover": "#4d7c0f",
+        "primary-foreground": "#ffffff",
+        accent: "#84cc16",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'RuleEngineOrbital',
+      name: "RuleEngineOrbital",
       entity: {
-        name: 'SimRule',
-        persistence: 'persistent',
-        collection: 'sim_rules',
+        name: "SimRule",
+        persistence: "persistent",
+        collection: "sim_rules",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'condition', type: 'string', default: '' },
-          { name: 'action', type: 'string', default: '' },
-          { name: 'priority', type: 'number', default: 0 },
-          { name: 'isActive', type: 'boolean', default: true },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "condition",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "action",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "priority",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "isActive",
+            type: "boolean",
+            default: true,
+          },
         ],
       },
       traits: [
         {
-          name: 'RuleEngineControl',
-          linkedEntity: 'SimRule',
-          category: 'interaction',
+          name: "RuleEngineControl",
+          linkedEntity: "SimRule",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'creating' },
-              { name: 'editing' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "creating",
+              },
+              {
+                name: "editing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'CREATE', name: 'New Rule' },
-              { key: 'EDIT', name: 'Edit Rule', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'SAVE', name: 'Save Rule', payloadSchema: [{ name: 'name', type: 'string', required: true }, { name: 'condition', type: 'string', required: true }, { name: 'action', type: 'string', required: true }] },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "CREATE",
+                name: "New Rule",
+              },
+              {
+                key: "EDIT",
+                name: "Edit Rule",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "SAVE",
+                name: "Save Rule",
+                payloadSchema: [
+                  {
+                    name: "name",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "condition",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "action",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'SimRule'],
-                  ruleEngineBrowsingMainEffect,
+                  ["fetch", "SimRule"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "settings",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Rules",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              icon: "plus",
+                              variant: "primary",
+                              event: "CREATE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search rules...",
+                          icon: "search",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "SimRule",
+                          itemActions: [
+                            {
+                              label: "Edit",
+                              event: "EDIT",
+                              icon: "edit",
+                            },
+                          ],
+                          emptyIcon: "settings",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "settings",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.condition",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.priority",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'creating',
-                event: 'CREATE',
+                from: "browsing",
+                to: "creating",
+                event: "CREATE",
                 effects: [
-                  ['fetch', 'SimRule'],
-                  ruleEngineFormModalEffect,
+                  ["fetch", "SimRule"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "edit",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "Rule Editor",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "SimRule",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "condition",
+                              type: "string",
+                            },
+                            {
+                              name: "action",
+                              type: "string",
+                            },
+                            {
+                              name: "priority",
+                              type: "number",
+                            },
+                            {
+                              name: "isActive",
+                              type: "boolean",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "creating",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['set', '@entity.name', '@payload.name'],
-                  ['set', '@entity.condition', '@payload.condition'],
-                  ['set', '@entity.action', '@payload.action'],
-                  ['render-ui', 'modal', null],
-                  ['fetch', 'SimRule'],
-                  ruleEngineBrowsingMainEffect,
+                  ["set", "@entity.name", "@payload.name"],
+                  ["set", "@entity.condition", "@payload.condition"],
+                  ["set", "@entity.action", "@payload.action"],
+                  ["render-ui", "modal", null],
+                  ["fetch", "SimRule"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "settings",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Rules",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              icon: "plus",
+                              variant: "primary",
+                              event: "CREATE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search rules...",
+                          icon: "search",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "SimRule",
+                          itemActions: [
+                            {
+                              label: "Edit",
+                              event: "EDIT",
+                              icon: "edit",
+                            },
+                          ],
+                          emptyIcon: "settings",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "settings",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.condition",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.priority",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'CLOSE',
+                from: "creating",
+                to: "browsing",
+                event: "CLOSE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "creating",
+                to: "browsing",
+                event: "CANCEL",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'editing',
-                event: 'EDIT',
+                from: "browsing",
+                to: "editing",
+                event: "EDIT",
                 effects: [
-                  ['fetch', 'SimRule'],
-                  ruleEngineFormModalEffect,
+                  ["fetch", "SimRule"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "edit",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "Rule Editor",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "SimRule",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "condition",
+                              type: "string",
+                            },
+                            {
+                              name: "action",
+                              type: "string",
+                            },
+                            {
+                              name: "priority",
+                              type: "number",
+                            },
+                            {
+                              name: "isActive",
+                              type: "boolean",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "editing",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['set', '@entity.name', '@payload.name'],
-                  ['set', '@entity.condition', '@payload.condition'],
-                  ['set', '@entity.action', '@payload.action'],
-                  ['render-ui', 'modal', null],
-                  ['fetch', 'SimRule'],
-                  ruleEngineBrowsingMainEffect,
+                  ["set", "@entity.name", "@payload.name"],
+                  ["set", "@entity.condition", "@payload.condition"],
+                  ["set", "@entity.action", "@payload.action"],
+                  ["render-ui", "modal", null],
+                  ["fetch", "SimRule"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "settings",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Rules",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              icon: "plus",
+                              variant: "primary",
+                              event: "CREATE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search rules...",
+                          icon: "search",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "SimRule",
+                          itemActions: [
+                            {
+                              label: "Edit",
+                              event: "EDIT",
+                              icon: "edit",
+                            },
+                          ],
+                          emptyIcon: "settings",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "settings",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.condition",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.priority",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'CLOSE',
+                from: "editing",
+                to: "browsing",
+                event: "CLOSE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "editing",
+                to: "browsing",
+                event: "CANCEL",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
               },
             ],
@@ -491,10 +1814,14 @@ export const RULE_ENGINE_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'RulesPage',
-          path: '/rules',
+          name: "RulesPage",
+          path: "/rules",
           isInitial: true,
-          traits: [{ ref: 'RuleEngineControl' }],
+          traits: [
+            {
+              ref: "RuleEngineControl",
+            },
+          ],
         },
       ],
     },
@@ -617,120 +1944,790 @@ const timeStepCompletedMainEffect = [
  * States: idle -> running -> paused -> completed
  */
 export const TIME_STEP_BEHAVIOR: BehaviorSchema = {
-  name: 'std-time-step',
-  version: '1.0.0',
-  description: 'Time-step control for simulations with tick increment',
-  theme: SIMULATION_THEME,
+  name: "std-time-step",
+  version: "1.0.0",
+  description: "Time-step control for simulations with tick increment",
+  theme: {
+    name: "simulation-lime",
+    tokens: {
+      colors: {
+        primary: "#65a30d",
+        "primary-hover": "#4d7c0f",
+        "primary-foreground": "#ffffff",
+        accent: "#84cc16",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'TimeStepOrbital',
+      name: "TimeStepOrbital",
       entity: {
-        name: 'TimeStepState',
-        persistence: 'runtime',
+        name: "TimeStepState",
+        persistence: "runtime",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'step', type: 'number', default: 0 },
-          { name: 'maxSteps', type: 'number', default: 1000 },
-          { name: 'speed', type: 'number', default: 1 },
-          { name: 'isRunning', type: 'boolean', default: false },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "step",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "maxSteps",
+            type: "number",
+            default: 1000,
+          },
+          {
+            name: "speed",
+            type: "number",
+            default: 1,
+          },
+          {
+            name: "isRunning",
+            type: "boolean",
+            default: false,
+          },
         ],
       },
       traits: [
         {
-          name: 'TimeStepControl',
-          linkedEntity: 'TimeStepState',
-          category: 'interaction',
+          name: "TimeStepControl",
+          linkedEntity: "TimeStepState",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'running' },
-              { name: 'paused' },
-              { name: 'completed' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "running",
+              },
+              {
+                name: "paused",
+              },
+              {
+                name: "completed",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'START', name: 'Start' },
-              { key: 'PAUSE', name: 'Pause' },
-              { key: 'RESUME', name: 'Resume' },
-              { key: 'STOP', name: 'Stop' },
-              { key: 'RESET', name: 'Reset' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "START",
+                name: "Start",
+              },
+              {
+                key: "PAUSE",
+                name: "Pause",
+              },
+              {
+                key: "RESUME",
+                name: "Resume",
+              },
+              {
+                key: "STOP",
+                name: "Stop",
+              },
+              {
+                key: "RESET",
+                name: "Reset",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['set', '@entity.step', 0],
-                  ['set', '@entity.isRunning', false],
-                  timeStepIdleMainEffect,
+                  ["set", "@entity.step", 0],
+                  ["set", "@entity.isRunning", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "cpu",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Time Control",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Start",
+                              icon: "play",
+                              variant: "primary",
+                              event: "START",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Current Step",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max Steps",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Speed",
+                              value: "@entity.speed",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: 0,
+                          label: "Progress",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'running',
-                event: 'START',
+                from: "idle",
+                to: "running",
+                event: "START",
                 effects: [
-                  ['set', '@entity.isRunning', true],
-                  ['set', '@entity.step', 0],
-                  timeStepRunningMainEffect,
+                  ["set", "@entity.isRunning", true],
+                  ["set", "@entity.step", 0],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "activity",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Running",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Pause",
+                                  icon: "pause",
+                                  variant: "secondary",
+                                  event: "PAUSE",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Stop",
+                                  icon: "square",
+                                  variant: "danger",
+                                  event: "STOP",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Step",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Speed",
+                              value: "@entity.speed",
+                              icon: "zap",
+                            },
+                            {
+                              type: "badge",
+                              label: "Running",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.step",
+                          max: "@entity.maxSteps",
+                          label: "Simulation Progress",
+                        },
+                        {
+                          type: "line-chart",
+                          label: "Step Over Time",
+                          entity: "TimeStepState",
+                          field: "step",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'running',
-                to: 'paused',
-                event: 'PAUSE',
+                from: "running",
+                to: "paused",
+                event: "PAUSE",
                 effects: [
-                  ['set', '@entity.isRunning', false],
-                  timeStepPausedMainEffect,
+                  ["set", "@entity.isRunning", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "pause",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Paused",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Resume",
+                                  icon: "play",
+                                  variant: "primary",
+                                  event: "RESUME",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Stop",
+                                  icon: "square",
+                                  variant: "danger",
+                                  event: "STOP",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Step",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Paused",
+                              variant: "warning",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.step",
+                          max: "@entity.maxSteps",
+                          label: "Simulation Progress",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'paused',
-                to: 'running',
-                event: 'RESUME',
+                from: "paused",
+                to: "running",
+                event: "RESUME",
                 effects: [
-                  ['set', '@entity.isRunning', true],
-                  timeStepRunningMainEffect,
+                  ["set", "@entity.isRunning", true],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "activity",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Running",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Pause",
+                                  icon: "pause",
+                                  variant: "secondary",
+                                  event: "PAUSE",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Stop",
+                                  icon: "square",
+                                  variant: "danger",
+                                  event: "STOP",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Step",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Speed",
+                              value: "@entity.speed",
+                              icon: "zap",
+                            },
+                            {
+                              type: "badge",
+                              label: "Running",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.step",
+                          max: "@entity.maxSteps",
+                          label: "Simulation Progress",
+                        },
+                        {
+                          type: "line-chart",
+                          label: "Step Over Time",
+                          entity: "TimeStepState",
+                          field: "step",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'running',
-                to: 'completed',
-                event: 'STOP',
+                from: "running",
+                to: "completed",
+                event: "STOP",
                 effects: [
-                  ['set', '@entity.isRunning', false],
-                  timeStepCompletedMainEffect,
+                  ["set", "@entity.isRunning", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bar-chart-2",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Done",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Reset",
+                              icon: "refresh-cw",
+                              variant: "primary",
+                              event: "RESET",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Total Steps",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max Steps",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Completed",
+                              variant: "default",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.step",
+                          max: "@entity.maxSteps",
+                          label: "Final Progress",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'paused',
-                to: 'completed',
-                event: 'STOP',
+                from: "paused",
+                to: "completed",
+                event: "STOP",
                 effects: [
-                  ['set', '@entity.isRunning', false],
-                  timeStepCompletedMainEffect,
+                  ["set", "@entity.isRunning", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bar-chart-2",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Simulation Done",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Reset",
+                              icon: "refresh-cw",
+                              variant: "primary",
+                              event: "RESET",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Total Steps",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max Steps",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Completed",
+                              variant: "default",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: "@entity.step",
+                          max: "@entity.maxSteps",
+                          label: "Final Progress",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'completed',
-                to: 'idle',
-                event: 'RESET',
+                from: "completed",
+                to: "idle",
+                event: "RESET",
                 effects: [
-                  ['set', '@entity.step', 0],
-                  ['set', '@entity.isRunning', false],
-                  timeStepIdleMainEffect,
+                  ["set", "@entity.step", 0],
+                  ["set", "@entity.isRunning", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "cpu",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Time Control",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Start",
+                              icon: "play",
+                              variant: "primary",
+                              event: "START",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Current Step",
+                              value: "@entity.step",
+                              icon: "hash",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Max Steps",
+                              value: "@entity.maxSteps",
+                              icon: "bar-chart-2",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Speed",
+                              value: "@entity.speed",
+                              icon: "zap",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: 0,
+                          label: "Progress",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
           },
           ticks: [
             {
-              name: 'StepTick',
-              interval: 'frame',
-              guard: ['=', '@state', 'running'],
+              name: "StepTick",
+              interval: "frame",
+              guard: ["=", "@state", "running"],
               effects: [
-                ['set', '@entity.step', ['+', '@entity.step', 1]],
+                [
+                  "set",
+                  "@entity.step",
+                  ["+", "@entity.step", 1],
+                ],
               ],
             },
           ],
@@ -738,10 +2735,14 @@ export const TIME_STEP_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'TimeStepPage',
-          path: '/time-step',
+          name: "TimeStepPage",
+          path: "/time-step",
           isInitial: true,
-          traits: [{ ref: 'TimeStepControl' }],
+          traits: [
+            {
+              ref: "TimeStepControl",
+            },
+          ],
         },
       ],
     },

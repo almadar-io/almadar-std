@@ -81,87 +81,460 @@ const notificationVisibleEffects: BehaviorEffect[] = [
 ];
 
 export const NOTIFICATION_BEHAVIOR: BehaviorSchema = {
-  name: 'std-notification',
-  version: '1.0.0',
-  description: 'Toast notification with auto-dismiss',
-  theme: FEEDBACK_THEME,
+  name: "std-notification",
+  version: "1.0.0",
+  description: "Toast notification with auto-dismiss",
+  theme: {
+    name: "feedback-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'NotificationOrbital',
+      name: "NotificationOrbital",
       entity: {
-        name: 'Notification',
-        persistence: 'runtime',
+        name: "Notification",
+        persistence: "runtime",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'message', type: 'string', default: '' },
-          { name: 'type', type: 'string', default: 'info' },
-          { name: 'title', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "message",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "type",
+            type: "string",
+            default: "info",
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'NotificationDisplay',
-          linkedEntity: 'Notification',
-          category: 'interaction',
+          name: "NotificationDisplay",
+          linkedEntity: "Notification",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'hidden', isInitial: true },
-              { name: 'visible' },
+              {
+                name: "hidden",
+                isInitial: true,
+              },
+              {
+                name: "visible",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
               {
-                key: 'SHOW',
-                name: 'Show',
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SHOW",
+                name: "Show",
                 payloadSchema: [
-                  { name: 'message', type: 'string', required: true },
-                  { name: 'type', type: 'string', required: false },
-                  { name: 'title', type: 'string', required: false },
+                  {
+                    name: "message",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "type",
+                    type: "string",
+                    required: false,
+                  },
+                  {
+                    name: "title",
+                    type: "string",
+                    required: false,
+                  },
                 ],
               },
-              { key: 'HIDE', name: 'Hide' },
+              {
+                key: "HIDE",
+                name: "Hide",
+              },
             ],
             transitions: [
               {
-                from: 'hidden',
-                to: 'hidden',
-                event: 'INIT',
+                from: "hidden",
+                to: "hidden",
+                event: "INIT",
                 effects: [
-                  ...notificationEmptyEffects,
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "bell-off",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Notifications",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "inbox",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "No Notifications",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "Nothing to display",
+                            },
+                            {
+                              type: "button",
+                              label: "Send Test Notification",
+                              icon: "bell",
+                              variant: "primary",
+                              event: "SHOW",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'hidden',
-                to: 'visible',
-                event: 'SHOW',
+                from: "hidden",
+                to: "visible",
+                event: "SHOW",
                 effects: [
-                  ['fetch', 'Notification'],
-                  ['set', '@entity.message', '@payload.message'],
-                  ['set', '@entity.type', '@payload.type'],
-                  ['set', '@entity.title', '@payload.title'],
-                  ...notificationVisibleEffects,
+                  ["fetch", "Notification"],
+                  ["set", "@entity.message", "@payload.message"],
+                  ["set", "@entity.type", "@payload.type"],
+                  ["set", "@entity.title", "@payload.title"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bell",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Notifications",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Dismiss All",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "HIDE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Notification",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "bell",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "badge",
+                                      label: "@entity.type",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          actions: [
+                            {
+                              label: "Dismiss",
+                              event: "HIDE",
+                              icon: "x",
+                              variant: "ghost",
+                            },
+                          ],
+                          emptyIcon: "bell",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'visible',
-                to: 'visible',
-                event: 'SHOW',
+                from: "visible",
+                to: "visible",
+                event: "SHOW",
                 effects: [
-                  ['fetch', 'Notification'],
-                  ['set', '@entity.message', '@payload.message'],
-                  ['set', '@entity.type', '@payload.type'],
-                  ['set', '@entity.title', '@payload.title'],
-                  ...notificationVisibleEffects,
+                  ["fetch", "Notification"],
+                  ["set", "@entity.message", "@payload.message"],
+                  ["set", "@entity.type", "@payload.type"],
+                  ["set", "@entity.title", "@payload.title"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "bell",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Notifications",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Dismiss All",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "HIDE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Notification",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "bell",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "badge",
+                                      label: "@entity.type",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          actions: [
+                            {
+                              label: "Dismiss",
+                              event: "HIDE",
+                              icon: "x",
+                              variant: "ghost",
+                            },
+                          ],
+                          emptyIcon: "bell",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'visible',
-                to: 'hidden',
-                event: 'HIDE',
+                from: "visible",
+                to: "hidden",
+                event: "HIDE",
                 effects: [
-                  ['set', '@entity.message', ''],
-                  ['set', '@entity.title', ''],
-                  ...notificationEmptyEffects,
+                  ["set", "@entity.message", ""],
+                  ["set", "@entity.title", ""],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "bell-off",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Notifications",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "inbox",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "No Notifications",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "Nothing to display",
+                            },
+                            {
+                              type: "button",
+                              label: "Send Test Notification",
+                              icon: "bell",
+                              variant: "primary",
+                              event: "SHOW",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -170,10 +543,14 @@ export const NOTIFICATION_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'NotificationsPage',
-          path: '/notifications',
+          name: "NotificationsPage",
+          path: "/notifications",
           isInitial: true,
-          traits: [{ ref: 'NotificationDisplay' }],
+          traits: [
+            {
+              ref: "NotificationDisplay",
+            },
+          ],
         },
       ],
     },
@@ -203,108 +580,252 @@ const confirmationClosedEffects: BehaviorEffect[] = [
 ];
 
 export const CONFIRMATION_BEHAVIOR: BehaviorSchema = {
-  name: 'std-confirmation',
-  version: '1.0.0',
-  description: 'Confirmation dialog with confirm/cancel actions',
-  theme: FEEDBACK_THEME,
+  name: "std-confirmation",
+  version: "1.0.0",
+  description: "Confirmation dialog with confirm/cancel actions",
+  theme: {
+    name: "feedback-amber",
+    tokens: {
+      colors: {
+        primary: "#d97706",
+        "primary-hover": "#b45309",
+        "primary-foreground": "#ffffff",
+        accent: "#f59e0b",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ConfirmationOrbital',
+      name: "ConfirmationOrbital",
       entity: {
-        name: 'Confirmation',
-        persistence: 'runtime',
+        name: "Confirmation",
+        persistence: "runtime",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'message', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "message",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'ConfirmationDialog',
-          linkedEntity: 'Confirmation',
-          category: 'interaction',
+          name: "ConfirmationDialog",
+          linkedEntity: "Confirmation",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'closed', isInitial: true },
-              { name: 'open' },
+              {
+                name: "closed",
+                isInitial: true,
+              },
+              {
+                name: "open",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
               {
-                key: 'REQUEST',
-                name: 'Request',
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "REQUEST",
+                name: "Request",
                 payloadSchema: [
-                  { name: 'title', type: 'string', required: true },
-                  { name: 'message', type: 'string', required: true },
+                  {
+                    name: "title",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "message",
+                    type: "string",
+                    required: true,
+                  },
                 ],
               },
-              { key: 'CONFIRM', name: 'Confirm' },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
+              {
+                key: "CONFIRM",
+                name: "Confirm",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
             ],
             transitions: [
               {
-                from: 'closed',
-                to: 'closed',
-                event: 'INIT',
+                from: "closed",
+                to: "closed",
+                event: "INIT",
                 effects: [
-                  ...confirmationClosedEffects,
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "shield-check",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Confirmation",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "check-circle",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "No pending confirmations",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'closed',
-                to: 'open',
-                event: 'REQUEST',
+                from: "closed",
+                to: "open",
+                event: "REQUEST",
                 effects: [
-                  ['set', '@entity.title', '@payload.title'],
-                  ['set', '@entity.message', '@payload.message'],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Modal header: warning icon + title
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'alert-triangle', size: 'lg' },
-                      { type: 'typography', variant: 'h3', content: '@entity.title' },
-                    ]},
-                    { type: 'divider' },
-                    // Message body
-                    { type: 'typography', variant: 'body', content: '@entity.message' },
-                    { type: 'divider' },
-                    // Action buttons
-                    { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'end', children: [
-                      { type: 'button', label: 'Cancel', icon: 'x', variant: 'secondary', action: 'CANCEL' },
-                      { type: 'button', label: 'Confirm', icon: 'check', variant: 'primary', action: 'CONFIRM' },
-                    ]},
-                  ]}],
+                  ["set", "@entity.title", "@payload.title"],
+                  ["set", "@entity.message", "@payload.message"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "alert-triangle",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.title",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          variant: "body",
+                          content: "@entity.message",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              icon: "x",
+                              variant: "secondary",
+                              event: "CANCEL",
+                            },
+                            {
+                              type: "button",
+                              label: "Confirm",
+                              icon: "check",
+                              variant: "primary",
+                              event: "CONFIRM",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CONFIRM',
+                from: "open",
+                to: "closed",
+                event: "CONFIRM",
                 effects: [
-                  ['set', '@entity.title', ''],
-                  ['set', '@entity.message', ''],
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.title", ""],
+                  ["set", "@entity.message", ""],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CANCEL',
+                from: "open",
+                to: "closed",
+                event: "CANCEL",
                 effects: [
-                  ['set', '@entity.title', ''],
-                  ['set', '@entity.message', ''],
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.title", ""],
+                  ["set", "@entity.message", ""],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CLOSE',
+                from: "open",
+                to: "closed",
+                event: "CLOSE",
                 effects: [
-                  ['set', '@entity.title', ''],
-                  ['set', '@entity.message', ''],
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.title", ""],
+                  ["set", "@entity.message", ""],
+                  ["render-ui", "modal", null],
                 ],
               },
             ],
@@ -313,10 +834,14 @@ export const CONFIRMATION_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ConfirmationPage',
-          path: '/confirmation',
+          name: "ConfirmationPage",
+          path: "/confirmation",
           isInitial: true,
-          traits: [{ ref: 'ConfirmationDialog' }],
+          traits: [
+            {
+              ref: "ConfirmationDialog",
+            },
+          ],
         },
       ],
     },

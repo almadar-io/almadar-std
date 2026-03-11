@@ -77,141 +77,562 @@ const galleryBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', directi
  * States: browsing -> viewing -> uploading
  */
 export const GALLERY_BEHAVIOR: BehaviorSchema = {
-  name: 'std-gallery',
-  version: '1.0.0',
-  description: 'Media gallery with lightbox viewing and upload',
-  theme: MEDIA_THEME,
+  name: "std-gallery",
+  version: "1.0.0",
+  description: "Media gallery with lightbox viewing and upload",
+  theme: {
+    name: "media-fuchsia",
+    tokens: {
+      colors: {
+        primary: "#c026d3",
+        "primary-hover": "#a21caf",
+        "primary-foreground": "#ffffff",
+        accent: "#e879f9",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'GalleryOrbital',
+      name: "GalleryOrbital",
       entity: {
-        name: 'MediaItem',
-        persistence: 'persistent',
-        collection: 'media_items',
+        name: "MediaItem",
+        persistence: "persistent",
+        collection: "media_items",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'url', type: 'string', default: '' },
-          { name: 'type', type: 'string', default: 'image' },
-          { name: 'thumbnailUrl', type: 'string', default: '' },
-          { name: 'createdAt', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "url",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "type",
+            type: "string",
+            default: "image",
+          },
+          {
+            name: "thumbnailUrl",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "createdAt",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'GalleryControl',
-          linkedEntity: 'MediaItem',
-          category: 'interaction',
+          name: "GalleryControl",
+          linkedEntity: "MediaItem",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'viewing' },
-              { name: 'uploading' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "viewing",
+              },
+              {
+                name: "uploading",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'VIEW', name: 'View Item', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'UPLOAD', name: 'Start Upload' },
-              { key: 'SAVE', name: 'Save Upload', payloadSchema: [{ name: 'title', type: 'string', required: true }, { name: 'url', type: 'string', required: true }] },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "VIEW",
+                name: "View Item",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "UPLOAD",
+                name: "Start Upload",
+              },
+              {
+                key: "SAVE",
+                name: "Save Upload",
+                payloadSchema: [
+                  {
+                    name: "title",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "url",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "REORDER_IMAGE",
+                name: "Reorder Image",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "fromIndex",
+                    type: "number",
+                    required: true,
+                  },
+                  {
+                    name: "toIndex",
+                    type: "number",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "SELECT_IMAGE",
+                name: "Select Image",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'MediaItem'],
-                  galleryBrowsingMainEffect,
-                ],
-              },
-              {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
-                effects: [
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    // Header with close
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'camera', size: 'md' },
-                        { type: 'typography', variant: 'h3', content: '@entity.title' },
-                      ]},
-                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
-                    ]},
-                    { type: 'divider' },
-                    // Detail fields
-                    { type: 'data-list', entity: 'MediaItem', variant: 'detail',
-                      fields: [
-                        { name: 'title', label: 'Title', icon: 'film', variant: 'h4' },
-                        { name: 'type', label: 'Type', icon: 'folder', variant: 'badge' },
-                        { name: 'url', label: 'URL', variant: 'body' },
-                        { name: 'createdAt', label: 'Created', variant: 'caption' },
+                  ["fetch", "MediaItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Gallery",
+                            },
+                            {
+                              type: "button",
+                              label: "Upload",
+                              icon: "upload",
+                              variant: "primary",
+                              event: "UPLOAD",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search images...",
+                          entity: "MediaItem",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "MediaItem",
+                          cols: 3,
+                          imageField: "thumbnailUrl",
+                          longPressEvent: "SELECT_IMAGE",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "primary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "image",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.type",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "camera",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "No images yet",
+                            },
+                          ],
+                        },
                       ],
                     },
-                  ]}],
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'CLOSE',
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.title",
+                            },
+                            {
+                              type: "button",
+                              label: "Close",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "CLOSE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "lightbox",
+                          images: "@entity.url",
+                          isOpen: true,
+                          showCounter: false,
+                          closeAction: "CLOSE",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.title",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.type",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "viewing",
+                to: "browsing",
+                event: "CLOSE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'uploading',
-                event: 'UPLOAD',
+                from: "viewing",
+                to: "browsing",
+                event: "CANCEL",
                 effects: [
-                  ['fetch', 'MediaItem'],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'upload', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: 'Upload Media' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'form-section', entity: 'MediaItem', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
-                  ]}],
+                  ["render-ui", "modal", null],
                 ],
               },
               {
-                from: 'uploading',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "browsing",
+                to: "uploading",
+                event: "UPLOAD",
                 effects: [
-                  ['set', '@entity.title', '@payload.title'],
-                  ['set', '@entity.url', '@payload.url'],
-                  ['render-ui', 'modal', null],
-                  ['fetch', 'MediaItem'],
-                  galleryBrowsingMainEffect,
+                  ["fetch", "MediaItem"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "Upload Image",
+                            },
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "CANCEL",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*",
+                          label: "Drop images here",
+                          description: "or click to browse files",
+                          icon: "image",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "MediaItem",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "title",
+                              type: "string",
+                            },
+                            {
+                              name: "url",
+                              type: "string",
+                            },
+                            {
+                              name: "type",
+                              type: "string",
+                            },
+                            {
+                              name: "thumbnailUrl",
+                              type: "string",
+                            },
+                            {
+                              name: "createdAt",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'uploading',
-                to: 'browsing',
-                event: 'CLOSE',
+                from: "uploading",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.title", "@payload.title"],
+                  ["set", "@entity.url", "@payload.url"],
+                  ["render-ui", "modal", null],
+                  ["fetch", "MediaItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Gallery",
+                            },
+                            {
+                              type: "button",
+                              label: "Upload",
+                              icon: "upload",
+                              variant: "primary",
+                              event: "UPLOAD",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search images...",
+                          entity: "MediaItem",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "MediaItem",
+                          cols: 3,
+                          imageField: "thumbnailUrl",
+                          longPressEvent: "SELECT_IMAGE",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "primary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "image",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.type",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "camera",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "No images yet",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'uploading',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "uploading",
+                to: "browsing",
+                event: "CLOSE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
+              },
+              {
+                from: "uploading",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "REORDER_IMAGE",
+                effects: [],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "SELECT_IMAGE",
+                effects: [],
               },
             ],
           },
@@ -219,10 +640,14 @@ export const GALLERY_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'GalleryPage',
-          path: '/gallery',
+          name: "GalleryPage",
+          path: "/gallery",
           isInitial: true,
-          traits: [{ ref: 'GalleryControl' }],
+          traits: [
+            {
+              ref: "GalleryControl",
+            },
+          ],
         },
       ],
     },
@@ -318,98 +743,1164 @@ const playerPausedMainEffect = ['render-ui', 'main', { type: 'stack', direction:
  * States: idle -> playing -> paused
  */
 export const PLAYER_BEHAVIOR: BehaviorSchema = {
-  name: 'std-player',
-  version: '1.0.0',
-  description: 'Media player with playback controls',
-  theme: MEDIA_THEME,
+  name: "std-player",
+  version: "1.0.0",
+  description: "Media player with playback controls",
+  theme: {
+    name: "media-fuchsia",
+    tokens: {
+      colors: {
+        primary: "#c026d3",
+        "primary-hover": "#a21caf",
+        "primary-foreground": "#ffffff",
+        accent: "#e879f9",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'PlayerOrbital',
+      name: "PlayerOrbital",
       entity: {
-        name: 'PlayerState',
-        persistence: 'runtime',
+        name: "PlayerState",
+        persistence: "runtime",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'url', type: 'string', default: '' },
-          { name: 'duration', type: 'number', default: 0 },
-          { name: 'currentTime', type: 'number', default: 0 },
-          { name: 'isPlaying', type: 'boolean', default: false },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "url",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "duration",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "currentTime",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "isPlaying",
+            type: "boolean",
+            default: false,
+          },
+          {
+            name: "artist",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "volume",
+            type: "number",
+            default: 75,
+          },
         ],
       },
       traits: [
         {
-          name: 'PlayerControl',
-          linkedEntity: 'PlayerState',
-          category: 'interaction',
+          name: "PlayerControl",
+          linkedEntity: "PlayerState",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'playing' },
-              { name: 'paused' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "playing",
+              },
+              {
+                name: "paused",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'PLAY', name: 'Play' },
-              { key: 'PAUSE', name: 'Pause' },
-              { key: 'STOP', name: 'Stop' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "PLAY",
+                name: "Play",
+              },
+              {
+                key: "PAUSE",
+                name: "Pause",
+              },
+              {
+                key: "STOP",
+                name: "Stop",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['set', '@entity.currentTime', 0],
-                  ['set', '@entity.isPlaying', false],
-                  playerIdleMainEffect,
+                  ["set", "@entity.currentTime", 0],
+                  ["set", "@entity.isPlaying", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.title",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.artist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "0:00",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: "@entity.duration",
+                              value: 0,
+                              step: 1,
+                              disabled: true,
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.duration",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              icon: "skip-back",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Rewind",
+                              icon: "rewind",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Play",
+                              icon: "play",
+                              variant: "primary",
+                              size: "lg",
+                              event: "PLAY",
+                            },
+                            {
+                              type: "button",
+                              label: "Forward",
+                              icon: "fast-forward",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "skip-forward",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "volume-2",
+                              size: "sm",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: 100,
+                              value: "@entity.volume",
+                              step: 1,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlayerState",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "play-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'playing',
-                event: 'PLAY',
+                from: "idle",
+                to: "playing",
+                event: "PLAY",
                 effects: [
-                  ['set', '@entity.isPlaying', true],
-                  playerPlayingMainEffect,
+                  ["set", "@entity.isPlaying", true],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.title",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.artist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.currentTime",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: "@entity.duration",
+                              value: "@entity.currentTime",
+                              step: 1,
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.duration",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              icon: "skip-back",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Rewind",
+                              icon: "rewind",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Pause",
+                              icon: "pause",
+                              variant: "primary",
+                              size: "lg",
+                              event: "PAUSE",
+                            },
+                            {
+                              type: "button",
+                              label: "Forward",
+                              icon: "fast-forward",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "skip-forward",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "volume-2",
+                              size: "sm",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: 100,
+                              value: "@entity.volume",
+                              step: 1,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlayerState",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "play-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'playing',
-                to: 'paused',
-                event: 'PAUSE',
+                from: "playing",
+                to: "paused",
+                event: "PAUSE",
                 effects: [
-                  ['set', '@entity.isPlaying', false],
-                  playerPausedMainEffect,
+                  ["set", "@entity.isPlaying", false],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.title",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.artist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.currentTime",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: "@entity.duration",
+                              value: "@entity.currentTime",
+                              step: 1,
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.duration",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              icon: "skip-back",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Rewind",
+                              icon: "rewind",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Play",
+                              icon: "play",
+                              variant: "primary",
+                              size: "lg",
+                              event: "PLAY",
+                            },
+                            {
+                              type: "button",
+                              label: "Forward",
+                              icon: "fast-forward",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "skip-forward",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "volume-2",
+                              size: "sm",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: 100,
+                              value: "@entity.volume",
+                              step: 1,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlayerState",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "play-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'paused',
-                to: 'playing',
-                event: 'PLAY',
+                from: "paused",
+                to: "playing",
+                event: "PLAY",
                 effects: [
-                  ['set', '@entity.isPlaying', true],
-                  playerPlayingMainEffect,
+                  ["set", "@entity.isPlaying", true],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.title",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.artist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.currentTime",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: "@entity.duration",
+                              value: "@entity.currentTime",
+                              step: 1,
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.duration",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              icon: "skip-back",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Rewind",
+                              icon: "rewind",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Pause",
+                              icon: "pause",
+                              variant: "primary",
+                              size: "lg",
+                              event: "PAUSE",
+                            },
+                            {
+                              type: "button",
+                              label: "Forward",
+                              icon: "fast-forward",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "skip-forward",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "volume-2",
+                              size: "sm",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: 100,
+                              value: "@entity.volume",
+                              step: 1,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlayerState",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "play-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'playing',
-                to: 'idle',
-                event: 'STOP',
+                from: "playing",
+                to: "idle",
+                event: "STOP",
                 effects: [
-                  ['set', '@entity.isPlaying', false],
-                  ['set', '@entity.currentTime', 0],
-                  playerIdleMainEffect,
+                  ["set", "@entity.isPlaying", false],
+                  ["set", "@entity.currentTime", 0],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.title",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.artist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "0:00",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: "@entity.duration",
+                              value: 0,
+                              step: 1,
+                              disabled: true,
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.duration",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              icon: "skip-back",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Rewind",
+                              icon: "rewind",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Play",
+                              icon: "play",
+                              variant: "primary",
+                              size: "lg",
+                              event: "PLAY",
+                            },
+                            {
+                              type: "button",
+                              label: "Forward",
+                              icon: "fast-forward",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "skip-forward",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "volume-2",
+                              size: "sm",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: 100,
+                              value: "@entity.volume",
+                              step: 1,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlayerState",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "play-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'paused',
-                to: 'idle',
-                event: 'STOP',
+                from: "paused",
+                to: "idle",
+                event: "STOP",
                 effects: [
-                  ['set', '@entity.isPlaying', false],
-                  ['set', '@entity.currentTime', 0],
-                  playerIdleMainEffect,
+                  ["set", "@entity.isPlaying", false],
+                  ["set", "@entity.currentTime", 0],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "xs",
+                              children: [
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.title",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.artist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "0:00",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: "@entity.duration",
+                              value: 0,
+                              step: 1,
+                              disabled: true,
+                            },
+                            {
+                              type: "typography",
+                              variant: "caption",
+                              content: "@entity.duration",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "center",
+                          align: "center",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Previous",
+                              icon: "skip-back",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Rewind",
+                              icon: "rewind",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Play",
+                              icon: "play",
+                              variant: "primary",
+                              size: "lg",
+                              event: "PLAY",
+                            },
+                            {
+                              type: "button",
+                              label: "Forward",
+                              icon: "fast-forward",
+                              variant: "ghost",
+                            },
+                            {
+                              type: "button",
+                              label: "Next",
+                              icon: "skip-forward",
+                              variant: "ghost",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "volume-2",
+                              size: "sm",
+                            },
+                            {
+                              type: "range-slider",
+                              min: 0,
+                              max: 100,
+                              value: "@entity.volume",
+                              step: 1,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlayerState",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "play-circle",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -418,10 +1909,14 @@ export const PLAYER_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'PlayerPage',
-          path: '/player',
+          name: "PlayerPage",
+          path: "/player",
           isInitial: true,
-          traits: [{ ref: 'PlayerControl' }],
+          traits: [
+            {
+              ref: "PlayerControl",
+            },
+          ],
         },
       ],
     },
@@ -467,130 +1962,814 @@ const playlistBrowsingMainEffect = ['render-ui', 'main', { type: 'stack', direct
  * States: browsing -> viewing -> editing
  */
 export const PLAYLIST_BEHAVIOR: BehaviorSchema = {
-  name: 'std-playlist',
-  version: '1.0.0',
-  description: 'Playlist management with track ordering',
-  theme: MEDIA_THEME,
+  name: "std-playlist",
+  version: "1.0.0",
+  description: "Playlist management with track ordering",
+  theme: {
+    name: "media-fuchsia",
+    tokens: {
+      colors: {
+        primary: "#c026d3",
+        "primary-hover": "#a21caf",
+        "primary-foreground": "#ffffff",
+        accent: "#e879f9",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'PlaylistOrbital',
+      name: "PlaylistOrbital",
       entity: {
-        name: 'PlaylistItem',
-        persistence: 'persistent',
-        collection: 'playlist_items',
+        name: "PlaylistItem",
+        persistence: "persistent",
+        collection: "playlist_items",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'artist', type: 'string', default: '' },
-          { name: 'duration', type: 'number', default: 0 },
-          { name: 'order', type: 'number', default: 0 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "artist",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "duration",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "order",
+            type: "number",
+            default: 0,
+          },
         ],
       },
       traits: [
         {
-          name: 'PlaylistControl',
-          linkedEntity: 'PlaylistItem',
-          category: 'interaction',
+          name: "PlaylistControl",
+          linkedEntity: "PlaylistItem",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'viewing' },
-              { name: 'editing' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "viewing",
+              },
+              {
+                name: "editing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'VIEW', name: 'View Track', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'EDIT', name: 'Edit Track' },
-              { key: 'SAVE', name: 'Save Track', payloadSchema: [{ name: 'title', type: 'string', required: true }, { name: 'artist', type: 'string', required: true }] },
-              { key: 'BACK', name: 'Back to Playlist' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "VIEW",
+                name: "View Track",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "EDIT",
+                name: "Edit Track",
+              },
+              {
+                key: "SAVE",
+                name: "Save Track",
+                payloadSchema: [
+                  {
+                    name: "title",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "artist",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "BACK",
+                name: "Back to Playlist",
+              },
+              {
+                key: "REORDER_TRACK",
+                name: "Reorder Track",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "fromIndex",
+                    type: "number",
+                    required: true,
+                  },
+                  {
+                    name: "toIndex",
+                    type: "number",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "REMOVE_TRACK",
+                name: "Remove Track",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'PlaylistItem'],
-                  playlistBrowsingMainEffect,
-                ],
-              },
-              {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
-                effects: [
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Header with back
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'music', size: 'lg' },
-                        { type: 'typography', variant: 'h2', content: 'Track Details' },
-                      ]},
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'button', label: 'Edit', icon: 'edit', variant: 'primary', action: 'EDIT' },
-                        { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'ghost', action: 'BACK' },
-                      ]},
-                    ]},
-                    { type: 'divider' },
-                    // Track detail
-                    { type: 'data-list', entity: 'PlaylistItem', variant: 'detail',
-                      fields: [
-                        { name: 'title', label: 'Title', icon: 'music', variant: 'h4' },
-                        { name: 'artist', label: 'Artist', icon: 'user', variant: 'body' },
-                        { name: 'duration', label: 'Duration', icon: 'clock', variant: 'badge', format: 'duration' },
-                        { name: 'order', label: 'Track #', variant: 'caption' },
+                  ["fetch", "PlaylistItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "music",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Playlist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Tracks",
+                          icon: "music",
+                          entity: "PlaylistItem",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search tracks...",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlaylistItem",
+                          variant: "row",
+                          reorderable: true,
+                          reorderEvent: "REORDER_TRACK",
+                          swipeLeftEvent: "REMOVE_TRACK",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "list-music",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "primary",
+                            },
+                          ],
+                        },
                       ],
                     },
-                  ]}],
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'editing',
-                event: 'EDIT',
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'PlaylistItem'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Header with back
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'edit', size: 'lg' },
-                        { type: 'typography', variant: 'h2', content: 'Edit Track' },
-                      ]},
-                      { type: 'button', label: 'Back', icon: 'arrow-left', variant: 'ghost', action: 'BACK' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'form-section', entity: 'PlaylistItem' },
-                  ]}],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "music",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Track Details",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Edit",
+                                  icon: "edit",
+                                  variant: "primary",
+                                  event: "EDIT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Back",
+                                  icon: "arrow-left",
+                                  variant: "ghost",
+                                  event: "BACK",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlaylistItem",
+                          variant: "detail",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "list-music",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "viewing",
+                to: "editing",
+                event: "EDIT",
                 effects: [
-                  ['set', '@entity.title', '@payload.title'],
-                  ['set', '@entity.artist', '@payload.artist'],
-                  ['fetch', 'PlaylistItem'],
-                  playlistBrowsingMainEffect,
+                  ["fetch", "PlaylistItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "edit",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Edit Track",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Back",
+                              icon: "arrow-left",
+                              variant: "ghost",
+                              event: "BACK",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "PlaylistItem",
+                          fields: [
+                            {
+                              name: "title",
+                              type: "string",
+                            },
+                            {
+                              name: "artist",
+                              type: "string",
+                            },
+                            {
+                              name: "duration",
+                              type: "number",
+                            },
+                            {
+                              name: "order",
+                              type: "number",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'BACK',
+                from: "editing",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['fetch', 'PlaylistItem'],
-                  playlistBrowsingMainEffect,
+                  ["set", "@entity.title", "@payload.title"],
+                  ["set", "@entity.artist", "@payload.artist"],
+                  ["fetch", "PlaylistItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "music",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Playlist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Tracks",
+                          icon: "music",
+                          entity: "PlaylistItem",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search tracks...",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlaylistItem",
+                          variant: "row",
+                          reorderable: true,
+                          reorderEvent: "REORDER_TRACK",
+                          swipeLeftEvent: "REMOVE_TRACK",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "list-music",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "primary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'BACK',
+                from: "viewing",
+                to: "browsing",
+                event: "BACK",
                 effects: [
-                  ['fetch', 'PlaylistItem'],
-                  playlistBrowsingMainEffect,
+                  ["fetch", "PlaylistItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "music",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Playlist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Tracks",
+                          icon: "music",
+                          entity: "PlaylistItem",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search tracks...",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlaylistItem",
+                          variant: "row",
+                          reorderable: true,
+                          reorderEvent: "REORDER_TRACK",
+                          swipeLeftEvent: "REMOVE_TRACK",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "list-music",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "primary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "REORDER_TRACK",
+                effects: [],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "REMOVE_TRACK",
+                effects: [],
+              },
+              {
+                from: "editing",
+                to: "browsing",
+                event: "BACK",
+                effects: [
+                  ["fetch", "PlaylistItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "music",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Playlist",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Tracks",
+                          icon: "music",
+                          entity: "PlaylistItem",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search tracks...",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "PlaylistItem",
+                          variant: "row",
+                          reorderable: true,
+                          reorderEvent: "REORDER_TRACK",
+                          swipeLeftEvent: "REMOVE_TRACK",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "list-music",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.artist",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                              icon: "eye",
+                              variant: "primary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -599,10 +2778,14 @@ export const PLAYLIST_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'PlaylistPage',
-          path: '/playlist',
+          name: "PlaylistPage",
+          path: "/playlist",
           isInitial: true,
-          traits: [{ ref: 'PlaylistControl' }],
+          traits: [
+            {
+              ref: "PlaylistControl",
+            },
+          ],
         },
       ],
     },
@@ -657,153 +2840,704 @@ const uploadProgressMainEffect = ['render-ui', 'main', { type: 'stack', directio
  * States: idle -> uploading -> completed -> failed
  */
 export const UPLOAD_BEHAVIOR: BehaviorSchema = {
-  name: 'std-upload',
-  version: '1.0.0',
-  description: 'File upload tracking with progress indicator',
-  theme: MEDIA_THEME,
+  name: "std-upload",
+  version: "1.0.0",
+  description: "File upload tracking with progress indicator",
+  theme: {
+    name: "media-fuchsia",
+    tokens: {
+      colors: {
+        primary: "#c026d3",
+        "primary-hover": "#a21caf",
+        "primary-foreground": "#ffffff",
+        accent: "#e879f9",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'UploadOrbital',
+      name: "UploadOrbital",
       entity: {
-        name: 'UploadState',
-        persistence: 'runtime',
+        name: "UploadState",
+        persistence: "runtime",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'fileName', type: 'string', default: '' },
-          { name: 'fileSize', type: 'number', default: 0 },
-          { name: 'progress', type: 'number', default: 0 },
-          { name: 'status', type: 'string', default: 'idle' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "fileName",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "fileSize",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "progress",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "idle",
+          },
         ],
       },
       traits: [
         {
-          name: 'UploadControl',
-          linkedEntity: 'UploadState',
-          category: 'interaction',
+          name: "UploadControl",
+          linkedEntity: "UploadState",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'uploading' },
-              { name: 'completed' },
-              { name: 'failed' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "uploading",
+              },
+              {
+                name: "completed",
+              },
+              {
+                name: "failed",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'START_UPLOAD', name: 'Start Upload', payloadSchema: [{ name: 'fileName', type: 'string', required: true }] },
-              { key: 'COMPLETE', name: 'Upload Complete' },
-              { key: 'FAIL', name: 'Upload Failed' },
-              { key: 'RETRY', name: 'Retry Upload' },
-              { key: 'RESET', name: 'Reset' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "START_UPLOAD",
+                name: "Start Upload",
+                payloadSchema: [
+                  {
+                    name: "fileName",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "COMPLETE",
+                name: "Upload Complete",
+              },
+              {
+                key: "FAIL",
+                name: "Upload Failed",
+              },
+              {
+                key: "RETRY",
+                name: "Retry Upload",
+              },
+              {
+                key: "RESET",
+                name: "Reset",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['set', '@entity.progress', 0],
-                  ['set', '@entity.status', 'idle'],
-                  ['fetch', 'UploadState'],
-                  uploadIdleMainEffect,
+                  ["set", "@entity.progress", 0],
+                  ["set", "@entity.status", "idle"],
+                  ["fetch", "UploadState"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          action: "START_UPLOAD",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "inbox",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "No files uploaded",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'uploading',
-                event: 'START_UPLOAD',
+                from: "idle",
+                to: "uploading",
+                event: "START_UPLOAD",
                 effects: [
-                  ['set', '@entity.fileName', '@payload.fileName'],
-                  ['set', '@entity.progress', 0],
-                  ['set', '@entity.status', 'uploading'],
-                  uploadProgressMainEffect,
+                  ["set", "@entity.fileName", "@payload.fileName"],
+                  ["set", "@entity.progress", 0],
+                  ["set", "@entity.status", "uploading"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          disabled: true,
+                        },
+                        {
+                          type: "card",
+                          title: "@entity.fileName",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file",
+                                      size: "md",
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "vertical",
+                                      gap: "xs",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.fileName",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.fileSize",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "Uploading",
+                                      variant: "warning",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "progress-bar",
+                                  value: "@entity.progress",
+                                  label: "Upload Progress",
+                                  variant: "primary",
+                                  showPercentage: true,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Upload Progress",
+                          value: "0 of 1 files uploaded",
+                          icon: "upload",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'uploading',
-                to: 'completed',
-                event: 'COMPLETE',
+                from: "uploading",
+                to: "completed",
+                event: "COMPLETE",
                 effects: [
-                  ['set', '@entity.progress', 100],
-                  ['set', '@entity.status', 'completed'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'check-circle', size: 'lg' },
-                      { type: 'typography', variant: 'h2', content: 'Upload Complete' },
-                    ]},
-                    { type: 'divider' },
-                    // File info
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'file', size: 'md' },
-                      { type: 'typography', variant: 'h4', content: '@entity.fileName' },
-                    ]},
-                    // Progress full
-                    { type: 'meter', value: 100, label: 'Complete', icon: 'check' },
-                    { type: 'badge', label: 'Completed', variant: 'success' },
-                    { type: 'divider' },
-                    // Reset
-                    { type: 'button', label: 'Upload Another', icon: 'upload', variant: 'primary', action: 'RESET' },
-                  ]}],
+                  ["set", "@entity.progress", 100],
+                  ["set", "@entity.status", "completed"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          action: "START_UPLOAD",
+                        },
+                        {
+                          type: "card",
+                          title: "@entity.fileName",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file",
+                                      size: "md",
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "vertical",
+                                      gap: "xs",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.fileName",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.fileSize",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "Complete",
+                                      variant: "success",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "progress-bar",
+                                  value: 100,
+                                  variant: "primary",
+                                  showPercentage: true,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Upload Progress",
+                          value: "1 of 1 files uploaded",
+                          icon: "check-circle",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: 100,
+                          variant: "primary",
+                          showPercentage: true,
+                          label: "Overall Progress",
+                        },
+                        {
+                          type: "button",
+                          label: "Upload Another",
+                          icon: "upload",
+                          variant: "primary",
+                          event: "RESET",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'uploading',
-                to: 'failed',
-                event: 'FAIL',
+                from: "uploading",
+                to: "failed",
+                event: "FAIL",
                 effects: [
-                  ['set', '@entity.status', 'failed'],
-                  ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                    // Header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'alert-triangle', size: 'lg' },
-                      { type: 'typography', variant: 'h2', content: 'Upload Failed' },
-                    ]},
-                    { type: 'divider' },
-                    // File info
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'file', size: 'md' },
-                      { type: 'typography', variant: 'h4', content: '@entity.fileName' },
-                    ]},
-                    { type: 'badge', label: 'Failed', variant: 'error' },
-                    { type: 'divider' },
-                    // Retry / Reset
-                    { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-                      { type: 'button', label: 'Retry', icon: 'refresh-cw', variant: 'primary', action: 'RETRY' },
-                      { type: 'button', label: 'Reset', icon: 'x', variant: 'ghost', action: 'RESET' },
-                    ]},
-                  ]}],
+                  ["set", "@entity.status", "failed"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          disabled: true,
+                        },
+                        {
+                          type: "card",
+                          title: "@entity.fileName",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file",
+                                      size: "md",
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "vertical",
+                                      gap: "xs",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.fileName",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.fileSize",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "Failed",
+                                      variant: "error",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "progress-bar",
+                                  value: "@entity.progress",
+                                  variant: "primary",
+                                  showPercentage: true,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Upload Progress",
+                          value: "0 of 1 files uploaded",
+                          icon: "alert-triangle",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Retry",
+                              icon: "refresh-cw",
+                              variant: "primary",
+                              event: "RETRY",
+                            },
+                            {
+                              type: "button",
+                              label: "Reset",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "RESET",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'failed',
-                to: 'uploading',
-                event: 'RETRY',
+                from: "failed",
+                to: "uploading",
+                event: "RETRY",
                 effects: [
-                  ['set', '@entity.progress', 0],
-                  ['set', '@entity.status', 'uploading'],
-                  uploadProgressMainEffect,
+                  ["set", "@entity.progress", 0],
+                  ["set", "@entity.status", "uploading"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          disabled: true,
+                        },
+                        {
+                          type: "card",
+                          title: "@entity.fileName",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file",
+                                      size: "md",
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "vertical",
+                                      gap: "xs",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.fileName",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.fileSize",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "Uploading",
+                                      variant: "warning",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "progress-bar",
+                                  value: "@entity.progress",
+                                  label: "Upload Progress",
+                                  variant: "primary",
+                                  showPercentage: true,
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stat-display",
+                          label: "Upload Progress",
+                          value: "0 of 1 files uploaded",
+                          icon: "upload",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'completed',
-                to: 'idle',
-                event: 'RESET',
+                from: "completed",
+                to: "idle",
+                event: "RESET",
                 effects: [
-                  ['set', '@entity.progress', 0],
-                  ['set', '@entity.status', 'idle'],
-                  ['fetch', 'UploadState'],
-                  uploadIdleMainEffect,
+                  ["set", "@entity.progress", 0],
+                  ["set", "@entity.status", "idle"],
+                  ["fetch", "UploadState"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          action: "START_UPLOAD",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "inbox",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "No files uploaded",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'failed',
-                to: 'idle',
-                event: 'RESET',
+                from: "failed",
+                to: "idle",
+                event: "RESET",
                 effects: [
-                  ['set', '@entity.progress', 0],
-                  ['set', '@entity.status', 'idle'],
-                  ['fetch', 'UploadState'],
-                  uploadIdleMainEffect,
+                  ["set", "@entity.progress", 0],
+                  ["set", "@entity.status", "idle"],
+                  ["fetch", "UploadState"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "typography",
+                          variant: "h2",
+                          content: "Upload Files",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "upload-drop-zone",
+                          accept: "image/*,application/pdf,.doc,.docx",
+                          maxSize: 10485760,
+                          label: "Drop files here or click to browse",
+                          description: "Supports images, PDFs, and documents up to 10 MB",
+                          icon: "upload",
+                          action: "START_UPLOAD",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "inbox",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "No files uploaded",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -812,10 +3546,14 @@ export const UPLOAD_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'UploadPage',
-          path: '/upload',
+          name: "UploadPage",
+          path: "/upload",
           isInitial: true,
-          traits: [{ ref: 'UploadControl' }],
+          traits: [
+            {
+              ref: "UploadControl",
+            },
+          ],
         },
       ],
     },

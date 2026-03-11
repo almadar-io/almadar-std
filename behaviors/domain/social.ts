@@ -80,174 +80,665 @@ const feedBrowsingMainEffects: BehaviorEffect[] = [
  * Supports browsing posts, viewing detail, and creating new posts.
  */
 export const FEED_BEHAVIOR: BehaviorSchema = {
-  name: 'std-feed',
-  version: '1.0.0',
-  description: 'Social feed with post browsing and creation',
-  theme: SOCIAL_THEME,
+  name: "std-feed",
+  version: "1.0.0",
+  description: "Social feed with post browsing and creation",
+  theme: {
+    name: "social-sky",
+    tokens: {
+      colors: {
+        primary: "#0284c7",
+        "primary-hover": "#0369a1",
+        "primary-foreground": "#ffffff",
+        accent: "#38bdf8",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'FeedOrbital',
+      name: "FeedOrbital",
       entity: {
-        name: 'FeedPost',
-        persistence: 'persistent',
-        collection: 'feed_posts',
+        name: "FeedPost",
+        persistence: "persistent",
+        collection: "feed_posts",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'author', type: 'string', default: '' },
-          { name: 'content', type: 'string', default: '' },
-          { name: 'timestamp', type: 'string', default: '' },
-          { name: 'likeCount', type: 'number', default: 0 },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "author",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "content",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "timestamp",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "likeCount",
+            type: "number",
+            default: 0,
+          },
         ],
       },
       traits: [
         {
-          name: 'FeedManager',
-          linkedEntity: 'FeedPost',
-          category: 'interaction',
+          name: "FeedManager",
+          linkedEntity: "FeedPost",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'viewing' },
-              { name: 'creating' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "viewing",
+              },
+              {
+                name: "creating",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'VIEW', name: 'View Post', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'CREATE', name: 'Create Post' },
-              { key: 'SUBMIT', name: 'Submit Post', payloadSchema: [
-                { name: 'content', type: 'string', required: true },
-                { name: 'author', type: 'string', required: true },
-              ] },
-              { key: 'LIKE', name: 'Like Post' },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "VIEW",
+                name: "View Post",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CREATE",
+                name: "Create Post",
+              },
+              {
+                key: "SUBMIT",
+                name: "Submit Post",
+                payloadSchema: [
+                  {
+                    name: "content",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "author",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "LIKE",
+                name: "Like Post",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "LOAD_MORE",
+                name: "Load More",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
-                effects: [...feedBrowsingMainEffects],
-              },
-              {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    // Post detail header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'message-circle', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: '@entity.id' },
-                    ]},
-                    { type: 'divider' },
-                    // Post content
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'typography', variant: 'label', content: 'Author' },
-                      { type: 'typography', variant: 'body', content: '@entity.author' },
-                      { type: 'typography', variant: 'label', content: 'Content' },
-                      { type: 'typography', variant: 'body', content: '@entity.content' },
-                    ]},
-                    // Like count badge
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'heart', size: 'sm' },
-                      { type: 'badge', label: '@entity.likeCount', variant: 'info' },
-                    ]},
-                    { type: 'divider' },
-                    // Actions
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-                      { type: 'button', label: 'Like', icon: 'heart', variant: 'secondary', action: 'LIKE' },
-                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
-                    ]},
-                  ]}],
-                ],
-              },
-              {
-                from: 'viewing',
-                to: 'viewing',
-                event: 'LIKE',
-                effects: [
-                  ['set', '@entity.likeCount', ['+', '@entity.likeCount', 1]],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'message-circle', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: '@entity.id' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'typography', variant: 'label', content: 'Author' },
-                      { type: 'typography', variant: 'body', content: '@entity.author' },
-                      { type: 'typography', variant: 'label', content: 'Content' },
-                      { type: 'typography', variant: 'body', content: '@entity.content' },
-                    ]},
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'heart', size: 'sm' },
-                      { type: 'badge', label: '@entity.likeCount', variant: 'info' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-                      { type: 'button', label: 'Like', icon: 'heart', variant: 'secondary', action: 'LIKE' },
-                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
-                    ]},
-                  ]}],
-                ],
-              },
-              {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
-              },
-              {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
-              },
-              {
-                from: 'browsing',
-                to: 'creating',
-                event: 'CREATE',
-                effects: [
-                  ['fetch', 'FeedPost'],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'send', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: 'New Post' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'form-section',
-                      entity: 'FeedPost',
-                      title: 'New Post',
-                      submitEvent: 'SUBMIT',
-                      cancelEvent: 'CANCEL',
+                  ["fetch", "FeedPost"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Feed",
+                            },
+                            {
+                              type: "button",
+                              label: "Compose",
+                              icon: "send",
+                              variant: "primary",
+                              event: "CREATE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "FeedPost",
+                          variant: "card",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "rss",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.author",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.timestamp",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Like",
+                              icon: "heart",
+                              event: "VIEW",
+                            },
+                            {
+                              label: "Comment",
+                              icon: "message-circle",
+                              event: "VIEW",
+                            },
+                            {
+                              label: "Share",
+                              icon: "share-2",
+                              event: "VIEW",
+                            },
+                          ],
+                        },
+                        {
+                          type: "empty-state",
+                          icon: "message-circle",
+                          title: "No posts yet",
+                          description: "Be the first to share something with the community.",
+                        },
+                      ],
                     },
-                  ]}],
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'SUBMIT',
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['set', '@entity.content', '@payload.content'],
-                  ['set', '@entity.author', '@payload.author'],
-                  ['set', '@entity.likeCount', 0],
-                  ['render-ui', 'modal', null],
-                  ...feedBrowsingMainEffects,
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "message-circle",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.id",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "label",
+                              content: "Author",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.author",
+                            },
+                            {
+                              type: "typography",
+                              variant: "label",
+                              content: "Content",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.content",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "heart",
+                              size: "sm",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.likeCount",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Like",
+                              icon: "heart",
+                              variant: "secondary",
+                              event: "LIKE",
+                            },
+                            {
+                              type: "button",
+                              label: "Close",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "CLOSE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "viewing",
+                to: "viewing",
+                event: "LIKE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  [
+                    "set",
+                    "@entity.likeCount",
+                    ["+", "@entity.likeCount", 1],
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "message-circle",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "@entity.id",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "label",
+                              content: "Author",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.author",
+                            },
+                            {
+                              type: "typography",
+                              variant: "label",
+                              content: "Content",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.content",
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "heart",
+                              size: "sm",
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.likeCount",
+                              variant: "info",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Like",
+                              icon: "heart",
+                              variant: "secondary",
+                              event: "LIKE",
+                            },
+                            {
+                              type: "button",
+                              label: "Close",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "CLOSE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "creating",
+                event: "CREATE",
+                effects: [
+                  ["fetch", "FeedPost"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "send",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "New Post",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "FeedPost",
+                          title: "New Post",
+                          submitEvent: "SUBMIT",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "author",
+                              type: "string",
+                            },
+                            {
+                              name: "content",
+                              type: "string",
+                            },
+                            {
+                              name: "timestamp",
+                              type: "string",
+                            },
+                            {
+                              name: "likeCount",
+                              type: "number",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "SUBMIT",
+                effects: [
+                  ["set", "@entity.content", "@payload.content"],
+                  ["set", "@entity.author", "@payload.author"],
+                  ["set", "@entity.likeCount", 0],
+                  ["render-ui", "modal", null],
+                  ["fetch", "FeedPost"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Feed",
+                            },
+                            {
+                              type: "button",
+                              label: "Compose",
+                              icon: "send",
+                              variant: "primary",
+                              event: "CREATE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "data-list",
+                          entity: "FeedPost",
+                          variant: "card",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "rss",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.author",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.timestamp",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          itemActions: [
+                            {
+                              label: "Like",
+                              icon: "heart",
+                              event: "VIEW",
+                            },
+                            {
+                              label: "Comment",
+                              icon: "message-circle",
+                              event: "VIEW",
+                            },
+                            {
+                              label: "Share",
+                              icon: "share-2",
+                              event: "VIEW",
+                            },
+                          ],
+                        },
+                        {
+                          type: "empty-state",
+                          icon: "message-circle",
+                          title: "No posts yet",
+                          description: "Be the first to share something with the community.",
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "LOAD_MORE",
+                effects: [],
               },
             ],
           },
@@ -255,10 +746,14 @@ export const FEED_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'FeedPage',
-          path: '/feed',
+          name: "FeedPage",
+          path: "/feed",
           isInitial: true,
-          traits: [{ ref: 'FeedManager' }],
+          traits: [
+            {
+              ref: "FeedManager",
+            },
+          ],
         },
       ],
     },
@@ -317,184 +812,812 @@ const messagingBrowsingMainEffects: BehaviorEffect[] = [
  * Supports browsing messages, chatting in detail, and composing new messages.
  */
 export const MESSAGING_BEHAVIOR: BehaviorSchema = {
-  name: 'std-messaging',
-  version: '1.0.0',
-  description: 'Messaging system with conversation flow',
-  theme: SOCIAL_THEME,
+  name: "std-messaging",
+  version: "1.0.0",
+  description: "Messaging system with conversation flow",
+  theme: {
+    name: "social-sky",
+    tokens: {
+      colors: {
+        primary: "#0284c7",
+        "primary-hover": "#0369a1",
+        "primary-foreground": "#ffffff",
+        accent: "#38bdf8",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'MessagingOrbital',
+      name: "MessagingOrbital",
       entity: {
-        name: 'Message',
-        persistence: 'persistent',
-        collection: 'messages',
+        name: "Message",
+        persistence: "persistent",
+        collection: "messages",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'sender', type: 'string', default: '' },
-          { name: 'content', type: 'string', default: '' },
-          { name: 'timestamp', type: 'string', default: '' },
-          { name: 'isRead', type: 'boolean', default: false },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "sender",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "content",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "timestamp",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "isRead",
+            type: "boolean",
+            default: false,
+          },
         ],
       },
       traits: [
         {
-          name: 'MessagingFlow',
-          linkedEntity: 'Message',
-          category: 'interaction',
+          name: "MessagingFlow",
+          linkedEntity: "Message",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'chatting' },
-              { name: 'composing' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "chatting",
+              },
+              {
+                name: "composing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'OPEN_CHAT', name: 'Open Chat', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'COMPOSE', name: 'Compose Message' },
-              { key: 'SEND', name: 'Send Message', payloadSchema: [
-                { name: 'content', type: 'string', required: true },
-                { name: 'sender', type: 'string', required: true },
-              ] },
-              { key: 'MARK_READ', name: 'Mark as Read' },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "OPEN_CHAT",
+                name: "Open Chat",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "COMPOSE",
+                name: "Compose Message",
+              },
+              {
+                key: "SEND",
+                name: "Send Message",
+                payloadSchema: [
+                  {
+                    name: "content",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "sender",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "MARK_READ",
+                name: "Mark as Read",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "LOAD_MORE",
+                name: "Load More",
+              },
+              {
+                key: "ARCHIVE_CONVERSATION",
+                name: "Archive Conversation",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
-                effects: [...messagingBrowsingMainEffects],
-              },
-              {
-                from: 'browsing',
-                to: 'chatting',
-                event: 'OPEN_CHAT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['set', '@entity.isRead', true],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    // Conversation header
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'message-circle', size: 'md' },
-                        { type: 'typography', variant: 'h3', content: 'Conversation' },
-                      ]},
-                      { type: 'badge', label: 'Read', variant: 'success' },
-                    ]},
-                    { type: 'divider' },
-                    // Message detail
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'user-plus', size: 'sm' },
-                        { type: 'typography', variant: 'label', content: 'From' },
-                        { type: 'typography', variant: 'body', content: '@entity.sender' },
-                      ]},
-                      { type: 'typography', variant: 'body', content: '@entity.content' },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'clock', size: 'sm' },
-                        { type: 'typography', variant: 'caption', content: '@entity.timestamp' },
-                      ]},
-                    ]},
-                    { type: 'divider' },
-                    // Actions
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-                      { type: 'button', label: 'Mark Read', icon: 'check', variant: 'secondary', action: 'MARK_READ' },
-                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
-                    ]},
-                  ]}],
-                ],
-              },
-              {
-                from: 'chatting',
-                to: 'chatting',
-                event: 'MARK_READ',
-                effects: [
-                  ['set', '@entity.isRead', true],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    { type: 'stack', direction: 'horizontal', justify: 'space-between', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'message-circle', size: 'md' },
-                        { type: 'typography', variant: 'h3', content: 'Conversation' },
-                      ]},
-                      { type: 'badge', label: 'Read', variant: 'success' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'user-plus', size: 'sm' },
-                        { type: 'typography', variant: 'label', content: 'From' },
-                        { type: 'typography', variant: 'body', content: '@entity.sender' },
-                      ]},
-                      { type: 'typography', variant: 'body', content: '@entity.content' },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'clock', size: 'sm' },
-                        { type: 'typography', variant: 'caption', content: '@entity.timestamp' },
-                      ]},
-                    ]},
-                    { type: 'divider' },
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-                      { type: 'button', label: 'Mark Read', icon: 'check', variant: 'secondary', action: 'MARK_READ' },
-                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
-                    ]},
-                  ]}],
-                ],
-              },
-              {
-                from: 'chatting',
-                to: 'browsing',
-                event: 'CLOSE',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
-              },
-              {
-                from: 'chatting',
-                to: 'browsing',
-                event: 'CANCEL',
-                effects: [
-                  ['render-ui', 'modal', null],
-                ],
-              },
-              {
-                from: 'browsing',
-                to: 'composing',
-                event: 'COMPOSE',
-                effects: [
-                  ['fetch', 'Message'],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'send', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: 'New Message' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'form-section',
-                      entity: 'Message',
-                      title: 'New Message',
-                      submitEvent: 'SEND',
-                      cancelEvent: 'CANCEL',
+                  ["fetch", "Message"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "message-circle",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Messages",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Compose",
+                              icon: "send",
+                              variant: "primary",
+                              event: "COMPOSE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          responsive: true,
+                          children: [
+                            {
+                              type: "card",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "vertical",
+                                  gap: "md",
+                                  children: [
+                                    {
+                                      type: "search-input",
+                                      placeholder: "Search conversations...",
+                                      icon: "search",
+                                      entity: "Message",
+                                    },
+                                    {
+                                      type: "data-list",
+                                      entity: "Message",
+                                      variant: "card",
+                                      groupBy: "sender",
+                                      swipeLeftEvent: "ARCHIVE_CONVERSATION",
+                                      children: [
+                                        {
+                                          type: "stack",
+                                          direction: "horizontal",
+                                          justify: "space-between",
+                                          align: "center",
+                                          children: [
+                                            {
+                                              type: "stack",
+                                              direction: "horizontal",
+                                              gap: "sm",
+                                              align: "center",
+                                              children: [
+                                                {
+                                                  type: "icon",
+                                                  name: "message-square",
+                                                  size: "sm",
+                                                },
+                                                {
+                                                  type: "typography",
+                                                  variant: "h4",
+                                                  content: "@entity.sender",
+                                                },
+                                              ],
+                                            },
+                                            {
+                                              type: "stack",
+                                              direction: "horizontal",
+                                              gap: "md",
+                                              align: "center",
+                                              children: [
+                                                {
+                                                  type: "typography",
+                                                  variant: "caption",
+                                                  content: "@entity.timestamp",
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                      itemActions: [
+                                        {
+                                          label: "Open",
+                                          event: "OPEN_CHAT",
+                                          icon: "chevron-right",
+                                        },
+                                      ],
+                                      emptyIcon: "message-circle",
+                                      emptyTitle: "No conversations",
+                                      emptyDescription: "Start a conversation by composing a new message.",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              type: "card",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "vertical",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "message-circle",
+                                      size: "xl",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h3",
+                                      content: "Select a conversation",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "Choose a conversation from the list to start chatting.",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
                     },
-                  ]}],
+                  ],
                 ],
               },
               {
-                from: 'composing',
-                to: 'browsing',
-                event: 'SEND',
+                from: "browsing",
+                to: "chatting",
+                event: "OPEN_CHAT",
                 effects: [
-                  ['set', '@entity.content', '@payload.content'],
-                  ['set', '@entity.sender', '@payload.sender'],
-                  ['set', '@entity.isRead', false],
-                  ['render-ui', 'modal', null],
-                  ...messagingBrowsingMainEffects,
+                  ["set", "@entity.isRead", true],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "avatar",
+                                  name: "@entity.sender",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "@entity.sender",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "status-dot",
+                                  status: "online",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Close",
+                                  icon: "x",
+                                  variant: "ghost",
+                                  event: "CLOSE",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Message",
+                          variant: "message",
+                          groupBy: "timestamp",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          fields: [
+                            {
+                              name: "sender",
+                              label: "Sender",
+                              variant: "caption",
+                            },
+                            {
+                              name: "content",
+                              label: "Message",
+                              variant: "body",
+                            },
+                            {
+                              name: "timestamp",
+                              label: "Time",
+                              variant: "caption",
+                            },
+                          ],
+                          emptyIcon: "message-circle",
+                          emptyTitle: "No messages yet",
+                          emptyDescription: "Send a message to start the conversation.",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "search-input",
+                              placeholder: "Type a message...",
+                              icon: "message-circle",
+                              entity: "Message",
+                            },
+                            {
+                              type: "button",
+                              label: "Send",
+                              icon: "send",
+                              variant: "primary",
+                              event: "SEND",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'composing',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "chatting",
+                to: "chatting",
+                event: "MARK_READ",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.isRead", true],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "message-circle",
+                                  size: "md",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h3",
+                                  content: "Conversation",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "Read",
+                              variant: "success",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "user-plus",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "label",
+                                  content: "From",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "body",
+                                  content: "@entity.sender",
+                                },
+                              ],
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.content",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "clock",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.timestamp",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Mark Read",
+                              icon: "check",
+                              variant: "secondary",
+                              event: "MARK_READ",
+                            },
+                            {
+                              type: "button",
+                              label: "Close",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "CLOSE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
+              },
+              {
+                from: "chatting",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "chatting",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "composing",
+                event: "COMPOSE",
+                effects: [
+                  ["fetch", "Message"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "send",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "New Message",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Message",
+                          title: "New Message",
+                          submitEvent: "SEND",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "sender",
+                              type: "string",
+                            },
+                            {
+                              name: "content",
+                              type: "string",
+                            },
+                            {
+                              name: "timestamp",
+                              type: "string",
+                            },
+                            {
+                              name: "isRead",
+                              type: "boolean",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "composing",
+                to: "browsing",
+                event: "SEND",
+                effects: [
+                  ["set", "@entity.content", "@payload.content"],
+                  ["set", "@entity.sender", "@payload.sender"],
+                  ["set", "@entity.isRead", false],
+                  ["render-ui", "modal", null],
+                  ["fetch", "Message"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "message-circle",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "h2",
+                                  content: "Messages",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Compose",
+                              icon: "send",
+                              variant: "primary",
+                              event: "COMPOSE",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Total Messages",
+                              icon: "message-circle",
+                              entity: "Message",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Unread",
+                              icon: "bell",
+                              entity: "Message",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search conversations...",
+                          icon: "at-sign",
+                          event: "OPEN_CHAT",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Message",
+                          infiniteScroll: true,
+                          loadMoreEvent: "LOAD_MORE",
+                          swipeLeftEvent: "ARCHIVE_CONVERSATION",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "message-square",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.sender",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.timestamp",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                          actions: [
+                            {
+                              label: "Open",
+                              event: "OPEN_CHAT",
+                            },
+                          ],
+                          emptyIcon: "message-circle",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "search-input",
+                              placeholder: "Type a message...",
+                              icon: "message-circle",
+                              entity: "Message",
+                            },
+                            {
+                              type: "button",
+                              label: "Send",
+                              icon: "send",
+                              variant: "primary",
+                              event: "COMPOSE",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "composing",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "LOAD_MORE",
+                effects: [],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "ARCHIVE_CONVERSATION",
+                effects: [],
+              },
+              {
+                from: "chatting",
+                to: "chatting",
+                event: "LOAD_MORE",
+                effects: [],
               },
             ],
           },
@@ -502,10 +1625,14 @@ export const MESSAGING_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'MessagesPage',
-          path: '/messages',
+          name: "MessagesPage",
+          path: "/messages",
           isInitial: true,
-          traits: [{ ref: 'MessagingFlow' }],
+          traits: [
+            {
+              ref: "MessagingFlow",
+            },
+          ],
         },
       ],
     },
@@ -579,100 +1706,472 @@ const profileViewingMainEffects: BehaviorEffect[] = [
  * Supports viewing profile details and editing fields.
  */
 export const PROFILE_BEHAVIOR: BehaviorSchema = {
-  name: 'std-profile',
-  version: '1.0.0',
-  description: 'User profile viewing and editing',
-  theme: SOCIAL_THEME,
+  name: "std-profile",
+  version: "1.0.0",
+  description: "User profile viewing and editing",
+  theme: {
+    name: "social-sky",
+    tokens: {
+      colors: {
+        primary: "#0284c7",
+        "primary-hover": "#0369a1",
+        "primary-foreground": "#ffffff",
+        accent: "#38bdf8",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ProfileOrbital',
+      name: "ProfileOrbital",
       entity: {
-        name: 'UserProfile',
-        persistence: 'persistent',
-        collection: 'user_profiles',
+        name: "UserProfile",
+        persistence: "persistent",
+        collection: "user_profiles",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'displayName', type: 'string', default: '' },
-          { name: 'bio', type: 'string', default: '' },
-          { name: 'avatarUrl', type: 'string', default: '' },
-          { name: 'joinDate', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "displayName",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "bio",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "avatarUrl",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "location",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "joinDate",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "postsCount",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "followersCount",
+            type: "number",
+            default: 0,
+          },
+          {
+            name: "followingCount",
+            type: "number",
+            default: 0,
+          },
         ],
       },
       traits: [
         {
-          name: 'ProfileManager',
-          linkedEntity: 'UserProfile',
-          category: 'interaction',
+          name: "ProfileManager",
+          linkedEntity: "UserProfile",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'viewing', isInitial: true },
-              { name: 'editing' },
+              {
+                name: "viewing",
+                isInitial: true,
+              },
+              {
+                name: "editing",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'EDIT', name: 'Edit Profile' },
-              { key: 'UPDATE', name: 'Update Profile', payloadSchema: [
-                { name: 'displayName', type: 'string', required: true },
-                { name: 'bio', type: 'string', required: true },
-                { name: 'avatarUrl', type: 'string', required: true },
-              ] },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "EDIT",
+                name: "Edit Profile",
+              },
+              {
+                key: "UPDATE",
+                name: "Update Profile",
+                payloadSchema: [
+                  {
+                    name: "displayName",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "bio",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "avatarUrl",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "location",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
             ],
             transitions: [
               {
-                from: 'viewing',
-                to: 'viewing',
-                event: 'INIT',
-                effects: [...profileViewingMainEffects],
-              },
-              {
-                from: 'viewing',
-                to: 'editing',
-                event: 'EDIT',
+                from: "viewing",
+                to: "viewing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'UserProfile'],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'edit', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: 'Edit Profile' },
-                    ]},
-                    { type: 'divider' },
-                    { type: 'form-section',
-                      entity: 'UserProfile',
-                      title: 'Edit Profile',
-                      submitEvent: 'UPDATE',
-                      cancelEvent: 'CANCEL',
+                  ["fetch", "UserProfile"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      align: "center",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "avatar",
+                              src: "@entity.avatarUrl",
+                              name: "@entity.displayName",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "@entity.displayName",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.bio",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "map-pin",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.location",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "lg",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Posts",
+                              value: "@entity.postsCount",
+                              icon: "file-text",
+                              compact: true,
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Followers",
+                              value: "@entity.followersCount",
+                              icon: "users",
+                              compact: true,
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Following",
+                              value: "@entity.followingCount",
+                              icon: "user-plus",
+                              compact: true,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "button",
+                          label: "Edit Profile",
+                          icon: "edit",
+                          variant: "primary",
+                          event: "EDIT",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "tabs",
+                          tabs: [
+                            {
+                              id: "posts",
+                              label: "Posts",
+                            },
+                            {
+                              id: "about",
+                              label: "About",
+                            },
+                            {
+                              id: "activity",
+                              label: "Activity",
+                            },
+                          ],
+                          defaultActiveTab: "posts",
+                        },
+                      ],
                     },
-                  ]}],
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'viewing',
-                event: 'UPDATE',
+                from: "viewing",
+                to: "editing",
+                event: "EDIT",
                 effects: [
-                  ['set', '@entity.displayName', '@payload.displayName'],
-                  ['set', '@entity.bio', '@payload.bio'],
-                  ['set', '@entity.avatarUrl', '@payload.avatarUrl'],
-                  ['render-ui', 'modal', null],
-                  ...profileViewingMainEffects,
+                  ["fetch", "UserProfile"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "edit",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "Edit Profile",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "UserProfile",
+                          title: "Edit Profile",
+                          submitEvent: "UPDATE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "displayName",
+                              type: "string",
+                            },
+                            {
+                              name: "bio",
+                              type: "string",
+                            },
+                            {
+                              name: "avatarUrl",
+                              type: "string",
+                            },
+                            {
+                              name: "location",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'viewing',
-                event: 'CANCEL',
+                from: "editing",
+                to: "viewing",
+                event: "UPDATE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.displayName", "@payload.displayName"],
+                  ["set", "@entity.bio", "@payload.bio"],
+                  ["set", "@entity.avatarUrl", "@payload.avatarUrl"],
+                  ["set", "@entity.location", "@payload.location"],
+                  ["render-ui", "modal", null],
+                  ["fetch", "UserProfile"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      align: "center",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "avatar",
+                              src: "@entity.avatarUrl",
+                              name: "@entity.displayName",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "@entity.displayName",
+                            },
+                            {
+                              type: "typography",
+                              variant: "body",
+                              content: "@entity.bio",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "xs",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "map-pin",
+                                  size: "sm",
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.location",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "lg",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "stat-display",
+                              label: "Posts",
+                              value: "@entity.postsCount",
+                              icon: "file-text",
+                              compact: true,
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Followers",
+                              value: "@entity.followersCount",
+                              icon: "users",
+                              compact: true,
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Following",
+                              value: "@entity.followingCount",
+                              icon: "user-plus",
+                              compact: true,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "button",
+                          label: "Edit Profile",
+                          icon: "edit",
+                          variant: "primary",
+                          event: "EDIT",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "tabs",
+                          tabs: [
+                            {
+                              id: "posts",
+                              label: "Posts",
+                            },
+                            {
+                              id: "about",
+                              label: "About",
+                            },
+                            {
+                              id: "activity",
+                              label: "Activity",
+                            },
+                          ],
+                          defaultActiveTab: "posts",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'viewing',
-                event: 'CLOSE',
+                from: "editing",
+                to: "viewing",
+                event: "CANCEL",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "editing",
+                to: "viewing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
                 ],
               },
             ],
@@ -681,10 +2180,14 @@ export const PROFILE_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ProfilePage',
-          path: '/profile',
+          name: "ProfilePage",
+          path: "/profile",
           isInitial: true,
-          traits: [{ ref: 'ProfileManager' }],
+          traits: [
+            {
+              ref: "ProfileManager",
+            },
+          ],
         },
       ],
     },
@@ -741,132 +2244,734 @@ const reactionsBrowsingMainEffects: BehaviorEffect[] = [
  * Supports browsing reactions and toggling reaction state.
  */
 export const REACTIONS_BEHAVIOR: BehaviorSchema = {
-  name: 'std-reactions',
-  version: '1.0.0',
-  description: 'Reaction system with add and remove',
-  theme: SOCIAL_THEME,
+  name: "std-reactions",
+  version: "1.0.0",
+  description: "Reaction system with add and remove",
+  theme: {
+    name: "social-sky",
+    tokens: {
+      colors: {
+        primary: "#0284c7",
+        "primary-hover": "#0369a1",
+        "primary-foreground": "#ffffff",
+        accent: "#38bdf8",
+        "accent-foreground": "#000000",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ReactionsOrbital',
+      name: "ReactionsOrbital",
       entity: {
-        name: 'Reaction',
-        persistence: 'persistent',
-        collection: 'reactions',
+        name: "Reaction",
+        persistence: "persistent",
+        collection: "reactions",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'reactionType', type: 'string', default: '' },
-          { name: 'userId', type: 'string', default: '' },
-          { name: 'targetId', type: 'string', default: '' },
-          { name: 'timestamp', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "reactionType",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "userId",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "targetId",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "timestamp",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'ReactionManager',
-          linkedEntity: 'Reaction',
-          category: 'interaction',
+          name: "ReactionManager",
+          linkedEntity: "Reaction",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'reacting' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "reacting",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'REACT', name: 'Add Reaction', payloadSchema: [
-                { name: 'reactionType', type: 'string', required: true },
-                { name: 'userId', type: 'string', required: true },
-                { name: 'targetId', type: 'string', required: true },
-              ] },
-              { key: 'CONFIRM', name: 'Confirm Reaction' },
-              { key: 'REMOVE', name: 'Remove Reaction' },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "REACT",
+                name: "Add Reaction",
+                payloadSchema: [
+                  {
+                    name: "reactionType",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "userId",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "targetId",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CONFIRM",
+                name: "Confirm Reaction",
+              },
+              {
+                key: "REMOVE",
+                name: "Remove Reaction",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "SHOW_REACTORS",
+                name: "Show Reactors",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
-                effects: [...reactionsBrowsingMainEffects],
-              },
-              {
-                from: 'browsing',
-                to: 'reacting',
-                event: 'REACT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['set', '@entity.reactionType', '@payload.reactionType'],
-                  ['set', '@entity.userId', '@payload.userId'],
-                  ['set', '@entity.targetId', '@payload.targetId'],
-                  ['render-ui', 'modal', { type: 'stack', direction: 'vertical', gap: 'md', children: [
-                    // Confirm reaction header
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                      { type: 'icon', name: 'heart', size: 'md' },
-                      { type: 'typography', variant: 'h3', content: 'Confirm Reaction' },
-                    ]},
-                    { type: 'divider' },
-                    // Reaction details
-                    { type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'typography', variant: 'label', content: 'Type' },
-                        { type: 'badge', label: '@entity.reactionType', variant: 'info' },
-                      ]},
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'user-plus', size: 'sm' },
-                        { type: 'typography', variant: 'label', content: 'User' },
-                        { type: 'typography', variant: 'body', content: '@entity.userId' },
-                      ]},
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'share-2', size: 'sm' },
-                        { type: 'typography', variant: 'label', content: 'Target' },
-                        { type: 'typography', variant: 'body', content: '@entity.targetId' },
-                      ]},
-                    ]},
-                    { type: 'divider' },
-                    // Actions: confirm, remove, close
-                    { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-                      { type: 'button', label: 'Confirm', icon: 'check', variant: 'primary', action: 'CONFIRM' },
-                      { type: 'button', label: 'Remove', icon: 'trash-2', variant: 'danger', action: 'REMOVE' },
-                      { type: 'button', label: 'Close', icon: 'x', variant: 'ghost', action: 'CLOSE' },
-                    ]},
-                  ]}],
+                  ["fetch", "Reaction"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Reactions",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              icon: "heart",
+                              entity: "Reaction",
+                              compact: true,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "card",
+                          title: "React to this content",
+                          longPressEvent: "SHOW_REACTORS",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Like",
+                                  icon: "heart",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Thumbs Up",
+                                  icon: "thumbs-up",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Smile",
+                                  icon: "smile",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Star",
+                                  icon: "star",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Fire",
+                                  icon: "flame",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                          label: "Recent Reactions",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Reaction",
+                          groupBy: "reactionType",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "heart",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.userId",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.timestamp",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.reactionType",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reacting',
-                to: 'browsing',
-                event: 'CONFIRM',
+                from: "browsing",
+                to: "reacting",
+                event: "REACT",
                 effects: [
-                  ['render-ui', 'modal', null],
-                  ...reactionsBrowsingMainEffects,
+                  ["set", "@entity.reactionType", "@payload.reactionType"],
+                  ["set", "@entity.userId", "@payload.userId"],
+                  ["set", "@entity.targetId", "@payload.targetId"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          align: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "heart",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              variant: "h3",
+                              content: "Confirm Reaction",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "card",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "heart",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "label",
+                                      content: "Reaction",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.reactionType",
+                                      variant: "info",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "avatar",
+                                      name: "@entity.userId",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "body",
+                                      content: "@entity.userId",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "link",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.targetId",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "end",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              icon: "x",
+                              variant: "ghost",
+                              event: "CANCEL",
+                            },
+                            {
+                              type: "button",
+                              label: "Remove",
+                              icon: "trash-2",
+                              variant: "danger",
+                              event: "REMOVE",
+                            },
+                            {
+                              type: "button",
+                              label: "Confirm",
+                              icon: "check",
+                              variant: "primary",
+                              event: "CONFIRM",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reacting',
-                to: 'browsing',
-                event: 'REMOVE',
+                from: "reacting",
+                to: "browsing",
+                event: "CONFIRM",
                 effects: [
-                  ['set', '@entity.reactionType', ''],
-                  ['set', '@entity.userId', ''],
-                  ['set', '@entity.targetId', ''],
-                  ['render-ui', 'modal', null],
-                  ...reactionsBrowsingMainEffects,
+                  ["render-ui", "modal", null],
+                  ["fetch", "Reaction"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Reactions",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              icon: "heart",
+                              entity: "Reaction",
+                              compact: true,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "card",
+                          title: "React to this content",
+                          longPressEvent: "SHOW_REACTORS",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Like",
+                                  icon: "heart",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Thumbs Up",
+                                  icon: "thumbs-up",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Smile",
+                                  icon: "smile",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Star",
+                                  icon: "star",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Fire",
+                                  icon: "flame",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                          label: "Recent Reactions",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Reaction",
+                          groupBy: "reactionType",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "heart",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.userId",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.timestamp",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.reactionType",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reacting',
-                to: 'browsing',
-                event: 'CANCEL',
+                from: "reacting",
+                to: "browsing",
+                event: "REMOVE",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["set", "@entity.reactionType", ""],
+                  ["set", "@entity.userId", ""],
+                  ["set", "@entity.targetId", ""],
+                  ["render-ui", "modal", null],
+                  ["fetch", "Reaction"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          align: "center",
+                          children: [
+                            {
+                              type: "typography",
+                              variant: "h2",
+                              content: "Reactions",
+                            },
+                            {
+                              type: "stat-display",
+                              label: "Total",
+                              icon: "heart",
+                              entity: "Reaction",
+                              compact: true,
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "card",
+                          title: "React to this content",
+                          longPressEvent: "SHOW_REACTORS",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Like",
+                                  icon: "heart",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Thumbs Up",
+                                  icon: "thumbs-up",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Smile",
+                                  icon: "smile",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Star",
+                                  icon: "star",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Fire",
+                                  icon: "flame",
+                                  variant: "ghost",
+                                  event: "REACT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                          label: "Recent Reactions",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Reaction",
+                          groupBy: "reactionType",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "heart",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.userId",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.timestamp",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.reactionType",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'reacting',
-                to: 'browsing',
-                event: 'CLOSE',
+                from: "reacting",
+                to: "browsing",
+                event: "CANCEL",
                 effects: [
-                  ['render-ui', 'modal', null],
+                  ["render-ui", "modal", null],
                 ],
+              },
+              {
+                from: "reacting",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "browsing",
+                to: "browsing",
+                event: "SHOW_REACTORS",
+                effects: [],
               },
             ],
           },
@@ -874,10 +2979,14 @@ export const REACTIONS_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ReactionsPage',
-          path: '/reactions',
+          name: "ReactionsPage",
+          path: "/reactions",
           isInitial: true,
-          traits: [{ ref: 'ReactionManager' }],
+          traits: [
+            {
+              ref: "ReactionManager",
+            },
+          ],
         },
       ],
     },

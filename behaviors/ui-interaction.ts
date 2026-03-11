@@ -65,209 +65,801 @@ const LIST_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
  * Implements complete CRUD operations with modal UI.
  */
 export const LIST_BEHAVIOR: BehaviorSchema = {
-  name: 'std-list',
-  version: '1.0.0',
-  description: 'Entity list management with CRUD operations',
-  theme: UI_SLATE_THEME,
+  name: "std-list",
+  version: "1.0.0",
+  description: "Entity list management with CRUD operations",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ListOrbital',
+      name: "ListOrbital",
       entity: {
-        name: 'Item',
-        persistence: 'persistent',
-        collection: 'items',
+        name: "Item",
+        persistence: "persistent",
+        collection: "items",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'status', type: 'enum', default: 'active', values: ['active', 'inactive', 'archived'] },
-          { name: 'createdAt', type: 'date', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "enum",
+            default: "active",
+            values: ["active", "inactive", "archived"],
+          },
+          {
+            name: "createdAt",
+            type: "date",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'ListManagement',
-          linkedEntity: 'Item',
-          category: 'interaction',
-          // When composed with other behaviors, add emits for cross-trait events:
-          // emits: [{ event: 'ITEM_CREATED', scope: 'external', payloadSchema: [...] }]
+          name: "ListManagement",
+          linkedEntity: "Item",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'creating' },
-              { name: 'viewing' },
-              { name: 'editing' },
-              { name: 'deleting' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "creating",
+              },
+              {
+                name: "viewing",
+              },
+              {
+                name: "editing",
+              },
+              {
+                name: "deleting",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'CREATE', name: 'Create' },
-              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'EDIT', name: 'Edit', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'DELETE', name: 'Delete', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'CONFIRM_DELETE', name: 'Confirm Delete', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'SAVE', name: 'Save', payloadSchema: [{ name: 'data', type: 'object', required: true }] },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "CREATE",
+                name: "Create",
+              },
+              {
+                key: "VIEW",
+                name: "View",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "EDIT",
+                name: "Edit",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "DELETE",
+                name: "Delete",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CONFIRM_DELETE",
+                name: "Confirm Delete",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "SAVE",
+                name: "Save",
+                payloadSchema: [
+                  {
+                    name: "data",
+                    type: "object",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Item'],
-                  LIST_MAIN_VIEW,
+                  ["fetch", "Item"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "list",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Items",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "Item",
+                          emptyIcon: "inbox",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Create your first item to get started.",
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                            {
+                              label: "Edit",
+                              event: "EDIT",
+                            },
+                            {
+                              label: "Delete",
+                              event: "DELETE",
+                              variant: "danger",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "vertical",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "list",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "typography",
+                                  variant: "caption",
+                                  content: "@entity.createdAt",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'creating',
-                event: 'CREATE',
+                from: "browsing",
+                to: "creating",
+                event: "CREATE",
                 effects: [
-                  ['fetch', 'Item'],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'plus-circle', size: 'md' },
-                        { type: 'typography', content: 'Create Item', variant: 'heading' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'form-section', entity: 'Item', mode: 'create', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
-                    ],
-                  }],
+                  ["fetch", "Item"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "plus-circle",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "Create Item",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Item",
+                          mode: "create",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "enum",
+                              values: ["active", "inactive", "archived"],
+                            },
+                            {
+                              name: "createdAt",
+                              type: "date",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'VIEW',
+                from: "browsing",
+                to: "viewing",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'Item', { id: '@payload.id' }],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'eye', size: 'md' },
-                        { type: 'typography', content: '@Item.name', variant: 'heading' },
-                        { type: 'badge', label: '@Item.status', variant: 'outline' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'detail-panel', entity: 'Item', fields: ['name', 'status', 'createdAt'] },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'button', label: 'Edit', event: 'EDIT', actionPayload: { id: '@payload.id' }, variant: 'primary', icon: 'pencil' },
-                        { type: 'button', label: 'Close', event: 'CLOSE', variant: 'secondary' },
-                      ] },
-                    ],
-                  }],
+                  [
+                    "fetch",
+                    "Item",
+                    {
+                      id: "@payload.id",
+                    },
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "eye",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "@Item.name",
+                              variant: "h3",
+                            },
+                            {
+                              type: "badge",
+                              label: "@Item.status",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Item",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "list",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.createdAt",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Close",
+                              event: "CLOSE",
+                              variant: "secondary",
+                            },
+                            {
+                              type: "button",
+                              label: "Edit",
+                              event: "EDIT",
+                              actionPayload: {
+                                id: "@payload.id",
+                              },
+                              variant: "primary",
+                              icon: "pencil",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'editing',
-                event: 'EDIT',
+                from: "browsing",
+                to: "editing",
+                event: "EDIT",
                 effects: [
-                  ['fetch', 'Item', { id: '@payload.id' }],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'pencil', size: 'md' },
-                        { type: 'typography', content: 'Edit Item', variant: 'heading' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'form-section', entity: 'Item', entityId: '@payload.id', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
-                    ],
-                  }],
+                  [
+                    "fetch",
+                    "Item",
+                    {
+                      id: "@payload.id",
+                    },
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pencil",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "Edit Item",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Item",
+                          entityId: "@payload.id",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "enum",
+                              values: ["active", "inactive", "archived"],
+                            },
+                            {
+                              name: "createdAt",
+                              type: "date",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'editing',
-                event: 'EDIT',
+                from: "viewing",
+                to: "editing",
+                event: "EDIT",
                 effects: [
-                  ['fetch', 'Item', { id: '@payload.id' }],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'pencil', size: 'md' },
-                        { type: 'typography', content: 'Edit Item', variant: 'heading' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'form-section', entity: 'Item', entityId: '@payload.id', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
-                    ],
-                  }],
+                  [
+                    "fetch",
+                    "Item",
+                    {
+                      id: "@payload.id",
+                    },
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pencil",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "Edit Item",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Item",
+                          entityId: "@payload.id",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "enum",
+                              values: ["active", "inactive", "archived"],
+                            },
+                            {
+                              name: "createdAt",
+                              type: "date",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'deleting',
-                event: 'DELETE',
+                from: "browsing",
+                to: "deleting",
+                event: "DELETE",
                 effects: [
-                  ['fetch', 'Item', { id: '@payload.id' }],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'alert-triangle', size: 'md' },
-                        { type: 'typography', content: 'Delete Confirmation', variant: 'heading' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'typography', content: 'Are you sure you want to delete this item?', variant: 'body' },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'button', label: 'Delete', event: 'CONFIRM_DELETE', actionPayload: { id: '@payload.id' }, variant: 'primary', icon: 'trash' },
-                        { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'secondary' },
-                      ] },
-                    ],
-                  }],
+                  [
+                    "fetch",
+                    "Item",
+                    {
+                      id: "@payload.id",
+                    },
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "alert-triangle",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "Delete Confirmation",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          content: "Are you sure you want to delete this item?",
+                          variant: "body",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              event: "CANCEL",
+                              variant: "secondary",
+                            },
+                            {
+                              type: "button",
+                              label: "Delete",
+                              event: "CONFIRM_DELETE",
+                              actionPayload: {
+                                id: "@payload.id",
+                              },
+                              variant: "danger",
+                              icon: "trash",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "creating",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['persist', 'create', 'Item', '@payload.data'],
-                  ['fetch', 'Item'],
-                  ['render-ui', 'modal', null],
+                  [
+                    "persist",
+                    "create",
+                    "Item",
+                    "@payload.data",
+                  ],
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                  ["notify", "Item created successfully"],
                 ],
               },
               {
-                from: 'editing',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "editing",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['persist', 'update', 'Item', '@payload.data'],
-                  ['fetch', 'Item'],
-                  ['render-ui', 'modal', null],
+                  [
+                    "persist",
+                    "update",
+                    "Item",
+                    "@payload.data",
+                  ],
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                  ["notify", "Item updated successfully"],
                 ],
               },
               {
-                from: 'deleting',
-                to: 'browsing',
-                event: 'CONFIRM_DELETE',
+                from: "deleting",
+                to: "browsing",
+                event: "CONFIRM_DELETE",
                 effects: [
-                  ['persist', 'delete', 'Item', { id: '@payload.id' }],
-                  ['fetch', 'Item'],
-                  ['render-ui', 'modal', null],
+                  [
+                    "persist",
+                    "delete",
+                    "Item",
+                    {
+                      id: "@payload.id",
+                    },
+                  ],
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                  ["notify", "Item deleted successfully"],
                 ],
               },
-              // CANCEL transitions (close modal + re-fetch collection)
-              { from: 'creating', to: 'browsing', event: 'CANCEL', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              { from: 'viewing', to: 'browsing', event: 'CANCEL', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              { from: 'editing', to: 'browsing', event: 'CANCEL', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              { from: 'deleting', to: 'browsing', event: 'CANCEL', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              // CLOSE transitions (alias for CANCEL on view states)
-              { from: 'creating', to: 'browsing', event: 'CLOSE', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              { from: 'viewing', to: 'browsing', event: 'CLOSE', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              { from: 'editing', to: 'browsing', event: 'CLOSE', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
-              { from: 'deleting', to: 'browsing', event: 'CLOSE', effects: [['fetch', 'Item'], ['render-ui', 'modal', null]] },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "editing",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "deleting",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "viewing",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "editing",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "deleting",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["fetch", "Item"],
+                  ["render-ui", "modal", null],
+                ],
+              },
             ],
           },
         },
       ],
       pages: [
         {
-          name: 'ItemsPage',
-          path: '/items',
+          name: "ItemsPage",
+          path: "/items",
           isInitial: true,
-          traits: [{ ref: 'ListManagement' }],
+          traits: [
+            {
+              ref: "ListManagement",
+            },
+          ],
         },
       ],
     },
@@ -331,182 +923,1198 @@ const DETAIL_MAIN_VIEW: BehaviorEffect = ['render-ui', 'main', {
 // ============================================================================
 
 export const DETAIL_BEHAVIOR: BehaviorSchema = {
-  name: 'std-detail',
-  version: '1.0.0',
-  description: 'Single entity view with edit/delete capabilities',
-  theme: UI_SLATE_THEME,
+  name: "std-detail",
+  version: "1.0.0",
+  description: "Single entity view with edit/delete capabilities",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'DetailOrbital',
+      name: "DetailOrbital",
       entity: {
-        name: 'Record',
-        persistence: 'persistent',
-        collection: 'records',
+        name: "Record",
+        persistence: "persistent",
+        collection: "records",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'description', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'active' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "description",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "active",
+          },
         ],
       },
       traits: [
         {
-          name: 'DetailView',
-          linkedEntity: 'Record',
-          category: 'interaction',
-          // When composed: emits: [{ event: 'RECORD_UPDATED', ... }, { event: 'RECORD_DELETED', ... }]
+          name: "DetailView",
+          linkedEntity: "Record",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'viewing' },
-              { name: 'creating' },
-              { name: 'editing' },
-              { name: 'deleting' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "viewing",
+              },
+              {
+                name: "creating",
+              },
+              {
+                name: "editing",
+              },
+              {
+                name: "deleting",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SELECT', name: 'Select Record' },
-              { key: 'CREATE', name: 'Create Record' },
-              { key: 'BACK', name: 'Back to List' },
-              { key: 'EDIT', name: 'Edit' },
-              { key: 'SAVE', name: 'Save', payloadSchema: [{ name: 'data', type: 'object', required: true }] },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'DELETE', name: 'Delete' },
-              { key: 'CONFIRM_DELETE', name: 'Confirm Delete' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SELECT",
+                name: "Select Record",
+              },
+              {
+                key: "CREATE",
+                name: "Create Record",
+              },
+              {
+                key: "BACK",
+                name: "Back to List",
+              },
+              {
+                key: "EDIT",
+                name: "Edit",
+              },
+              {
+                key: "SAVE",
+                name: "Save",
+                payloadSchema: [
+                  {
+                    name: "data",
+                    type: "object",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "DELETE",
+                name: "Delete",
+              },
+              {
+                key: "CONFIRM_DELETE",
+                name: "Confirm Delete",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Record'],
-                  DETAIL_LIST_VIEW,
+                  ["fetch", "Record"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Records",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          actions: [
+                            {
+                              label: "View",
+                              event: "SELECT",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'viewing',
-                event: 'SELECT',
+                from: "browsing",
+                to: "viewing",
+                event: "SELECT",
                 effects: [
-                  ['fetch', 'Record'],
-                  DETAIL_MAIN_VIEW,
+                  ["fetch", "Record"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "@entity.name",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "badge",
+                              label: "@entity.status",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Back",
+                              event: "BACK",
+                              variant: "ghost",
+                              icon: "arrow-left",
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "button",
+                                  label: "Edit",
+                                  event: "EDIT",
+                                  variant: "primary",
+                                  icon: "pencil",
+                                },
+                                {
+                                  type: "button",
+                                  label: "Delete",
+                                  event: "DELETE",
+                                  variant: "danger",
+                                  icon: "trash",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'browsing',
-                event: 'BACK',
+                from: "viewing",
+                to: "browsing",
+                event: "BACK",
                 effects: [
-                  ['fetch', 'Record'],
-                  DETAIL_LIST_VIEW,
+                  ["fetch", "Record"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Records",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          actions: [
+                            {
+                              label: "View",
+                              event: "SELECT",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'creating',
-                event: 'CREATE',
+                from: "browsing",
+                to: "creating",
+                event: "CREATE",
                 effects: [
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'plus', size: 'md' },
-                        { type: 'typography', content: 'New Record', variant: 'h3' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'form-section', entity: 'Record', mode: 'create', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "plus",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "New Record",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Record",
+                          mode: "create",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "description",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'creating',
-                to: 'browsing',
-                event: 'SAVE',
+                from: "creating",
+                to: "browsing",
+                event: "SAVE",
                 effects: [
-                  ['persist', 'create', 'Record', '@payload.data'],
-                  ['fetch', 'Record'],
-                  ['render-ui', 'modal', null],
-                  DETAIL_LIST_VIEW,
+                  [
+                    "persist",
+                    "create",
+                    "Record",
+                    "@payload.data",
+                  ],
+                  ["fetch", "Record"],
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Records",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          actions: [
+                            {
+                              label: "View",
+                              event: "SELECT",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                  ["notify", "Record created successfully"],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'editing',
-                event: 'EDIT',
+                from: "viewing",
+                to: "editing",
+                event: "EDIT",
                 effects: [
-                  ['fetch', 'Record'],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'pencil', size: 'md' },
-                        { type: 'typography', content: 'Edit Record', variant: 'h3' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'form-section', entity: 'Record', mode: 'edit', submitEvent: 'SAVE', cancelEvent: 'CANCEL' },
-                    ],
-                  }],
+                  ["fetch", "Record"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "pencil",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "Edit Record",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "Record",
+                          mode: "edit",
+                          submitEvent: "SAVE",
+                          cancelEvent: "CANCEL",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "description",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'viewing',
-                event: 'SAVE',
+                from: "editing",
+                to: "viewing",
+                event: "SAVE",
                 effects: [
-                  ['persist', 'update', 'Record', '@payload.data'],
-                  ['render-ui', 'modal', null],
+                  [
+                    "persist",
+                    "update",
+                    "Record",
+                    "@payload.data",
+                  ],
+                  ["render-ui", "modal", null],
+                  ["notify", "Record updated successfully"],
                 ],
               },
               {
-                from: 'viewing',
-                to: 'deleting',
-                event: 'DELETE',
+                from: "viewing",
+                to: "deleting",
+                event: "DELETE",
                 effects: [
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'alert-triangle', size: 'md' },
-                        { type: 'typography', content: 'Delete Confirmation', variant: 'h3' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'typography', content: 'Are you sure you want to delete this record?', variant: 'body' },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'button', label: 'Delete', action: 'CONFIRM_DELETE', variant: 'primary', icon: 'trash' },
-                        { type: 'button', label: 'Cancel', action: 'CANCEL', variant: 'secondary' },
-                      ] },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "alert-triangle",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "Delete Confirmation",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          content: "Are you sure you want to delete this record?",
+                          variant: "body",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              event: "CANCEL",
+                              variant: "secondary",
+                            },
+                            {
+                              type: "button",
+                              label: "Delete",
+                              event: "CONFIRM_DELETE",
+                              variant: "danger",
+                              icon: "trash",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'deleting',
-                to: 'browsing',
-                event: 'CONFIRM_DELETE',
+                from: "deleting",
+                to: "browsing",
+                event: "CONFIRM_DELETE",
                 effects: [
-                  ['persist', 'delete', 'Record'],
-                  ['fetch', 'Record'],
-                  ['render-ui', 'modal', null],
-                  DETAIL_LIST_VIEW,
+                  ["persist", "delete", "Record"],
+                  ["fetch", "Record"],
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Records",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          actions: [
+                            {
+                              label: "View",
+                              event: "SELECT",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                  ["notify", "Record deleted successfully"],
                 ],
               },
-              // Modal close transitions
-              { from: 'creating', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null], DETAIL_LIST_VIEW] },
-              { from: 'creating', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null], DETAIL_LIST_VIEW] },
-              { from: 'editing', to: 'viewing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
-              { from: 'editing', to: 'viewing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
-              { from: 'deleting', to: 'viewing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
-              { from: 'deleting', to: 'viewing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Records",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          actions: [
+                            {
+                              label: "View",
+                              event: "SELECT",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "creating",
+                to: "browsing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Records",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Create",
+                              event: "CREATE",
+                              variant: "primary",
+                              icon: "plus",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "Record",
+                          emptyIcon: "file-text",
+                          emptyTitle: "No records yet",
+                          emptyDescription: "Create your first record to get started.",
+                          actions: [
+                            {
+                              label: "View",
+                              event: "SELECT",
+                              icon: "eye",
+                              variant: "secondary",
+                            },
+                          ],
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "file-text",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.description",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+              {
+                from: "editing",
+                to: "viewing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "editing",
+                to: "viewing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "deleting",
+                to: "viewing",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
+              {
+                from: "deleting",
+                to: "viewing",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
+              },
             ],
           },
         },
       ],
       pages: [
         {
-          name: 'RecordsPage',
-          path: '/records',
+          name: "RecordsPage",
+          path: "/records",
           isInitial: true,
-          traits: [{ ref: 'DetailView' }],
+          traits: [
+            {
+              ref: "DetailView",
+            },
+          ],
         },
       ],
     },
@@ -533,124 +2141,392 @@ const FORM_EDITING_VIEW: BehaviorEffect = ['render-ui', 'main', {
 // ============================================================================
 
 export const FORM_BEHAVIOR: BehaviorSchema = {
-  name: 'std-form',
-  version: '1.0.0',
-  description: 'Form state management with validation and submission',
-  theme: UI_SLATE_THEME,
+  name: "std-form",
+  version: "1.0.0",
+  description: "Form state management with validation and submission",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'FormOrbital',
+      name: "FormOrbital",
       entity: {
-        name: 'FormEntry',
-        persistence: 'persistent',
-        collection: 'entries',
+        name: "FormEntry",
+        persistence: "persistent",
+        collection: "entries",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'value', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'draft' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "value",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "draft",
+          },
         ],
       },
       traits: [
         {
-          name: 'FormFlow',
-          linkedEntity: 'FormEntry',
-          category: 'interaction',
-          // When composed: emits: [{ event: 'FORM_SUBMITTED', ... }]
+          name: "FormFlow",
+          linkedEntity: "FormEntry",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'editing' },
-              { name: 'submitting' },
-              { name: 'success' },
-              { name: 'error' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "editing",
+              },
+              {
+                name: "submitting",
+              },
+              {
+                name: "success",
+              },
+              {
+                name: "error",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SUBMIT', name: 'Submit', payloadSchema: [{ name: 'data', type: 'object', required: true }] },
-              { key: 'SUBMIT_SUCCESS', name: 'Submit Success' },
-              { key: 'SUBMIT_ERROR', name: 'Submit Error', payloadSchema: [{ name: 'message', type: 'string', required: true }] },
-              { key: 'RESET', name: 'Reset' },
-              { key: 'RETRY', name: 'Retry' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SUBMIT",
+                name: "Submit",
+                payloadSchema: [
+                  {
+                    name: "data",
+                    type: "object",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "SUBMIT_SUCCESS",
+                name: "Submit Success",
+              },
+              {
+                key: "SUBMIT_ERROR",
+                name: "Submit Error",
+                payloadSchema: [
+                  {
+                    name: "message",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "RESET",
+                name: "Reset",
+              },
+              {
+                key: "RETRY",
+                name: "Retry",
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'editing',
-                event: 'INIT',
+                from: "idle",
+                to: "editing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'FormEntry'],
-                  FORM_EDITING_VIEW,
+                  ["fetch", "FormEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "file-plus",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "New Entry",
+                              variant: "h2",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "FormEntry",
+                          mode: "create",
+                          submitEvent: "SUBMIT",
+                          cancelEvent: "RESET",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "value",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'editing',
-                to: 'submitting',
-                event: 'SUBMIT',
+                from: "editing",
+                to: "submitting",
+                event: "SUBMIT",
                 effects: [
-                  ['persist', 'create', 'FormEntry', '@payload.data'],
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'icon', name: 'loader', size: 'lg' },
-                      { type: 'typography', content: 'Saving', variant: 'heading' },
-                      { type: 'typography', content: 'Please wait...', variant: 'body' },
-                      { type: 'progress-bar', value: 50 },
-                    ],
-                  }],
+                  [
+                    "persist",
+                    "create",
+                    "FormEntry",
+                    "@payload.data",
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      align: "center",
+                      children: [
+                        {
+                          type: "icon",
+                          name: "loader",
+                          size: "lg",
+                        },
+                        {
+                          type: "typography",
+                          content: "Saving",
+                          variant: "h2",
+                        },
+                        {
+                          type: "typography",
+                          content: "Please wait...",
+                          variant: "body",
+                        },
+                        {
+                          type: "progress-bar",
+                          value: 50,
+                        },
+                      ],
+                    },
+                  ],
+                  ["notify", "FormEntry created successfully"],
                 ],
               },
               {
-                from: 'submitting',
-                to: 'success',
-                event: 'SUBMIT_SUCCESS',
+                from: "submitting",
+                to: "success",
+                event: "SUBMIT_SUCCESS",
                 effects: [
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'icon', name: 'check-circle', size: 'lg' },
-                      { type: 'typography', content: 'Success', variant: 'heading' },
-                      { type: 'typography', content: 'Entry saved successfully.', variant: 'body' },
-                      { type: 'button', label: 'Start Over', event: 'RESET', variant: 'primary', icon: 'refresh-cw' },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      align: "center",
+                      children: [
+                        {
+                          type: "icon",
+                          name: "check-circle",
+                          size: "lg",
+                        },
+                        {
+                          type: "typography",
+                          content: "Success",
+                          variant: "h2",
+                        },
+                        {
+                          type: "typography",
+                          content: "Entry saved successfully.",
+                          variant: "body",
+                        },
+                        {
+                          type: "button",
+                          label: "Start Over",
+                          event: "RESET",
+                          variant: "primary",
+                          icon: "refresh-cw",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'submitting',
-                to: 'error',
-                event: 'SUBMIT_ERROR',
+                from: "submitting",
+                to: "error",
+                event: "SUBMIT_ERROR",
                 effects: [
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'icon', name: 'x-circle', size: 'lg' },
-                      { type: 'typography', content: 'Error', variant: 'heading' },
-                      { type: 'typography', content: 'Failed to save. Please try again.', variant: 'body' },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'button', label: 'Retry', event: 'RETRY', variant: 'primary', icon: 'refresh-cw' },
-                        { type: 'button', label: 'Reset', event: 'RESET', variant: 'secondary' },
-                      ] },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      align: "center",
+                      children: [
+                        {
+                          type: "icon",
+                          name: "x-circle",
+                          size: "lg",
+                        },
+                        {
+                          type: "typography",
+                          content: "Error",
+                          variant: "h2",
+                        },
+                        {
+                          type: "typography",
+                          content: "Failed to save. Please try again.",
+                          variant: "body",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Retry",
+                              event: "RETRY",
+                              variant: "primary",
+                              icon: "refresh-cw",
+                            },
+                            {
+                              type: "button",
+                              label: "Reset",
+                              event: "RESET",
+                              variant: "secondary",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'error',
-                to: 'editing',
-                event: 'RETRY',
+                from: "error",
+                to: "editing",
+                event: "RETRY",
                 effects: [
-                  ['fetch', 'FormEntry'],
-                  FORM_EDITING_VIEW,
+                  ["fetch", "FormEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "file-plus",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "New Entry",
+                              variant: "h2",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "FormEntry",
+                          mode: "create",
+                          submitEvent: "SUBMIT",
+                          cancelEvent: "RESET",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "value",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'success',
-                to: 'idle',
-                event: 'RESET',
+                from: "success",
+                to: "idle",
+                event: "RESET",
                 effects: [],
               },
               {
-                from: 'error',
-                to: 'idle',
-                event: 'RESET',
+                from: "error",
+                to: "idle",
+                event: "RESET",
                 effects: [],
               },
             ],
@@ -659,10 +2535,14 @@ export const FORM_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'FormPage',
-          path: '/entries/new',
+          name: "FormPage",
+          path: "/entries/new",
           isInitial: true,
-          traits: [{ ref: 'FormFlow' }],
+          traits: [
+            {
+              ref: "FormFlow",
+            },
+          ],
         },
       ],
     },
@@ -674,94 +2554,215 @@ export const FORM_BEHAVIOR: BehaviorSchema = {
 // ============================================================================
 
 export const MODAL_BEHAVIOR: BehaviorSchema = {
-  name: 'std-modal',
-  version: '1.0.0',
-  description: 'Modal dialog with open/close state management',
-  theme: UI_SLATE_THEME,
+  name: "std-modal",
+  version: "1.0.0",
+  description: "Modal dialog with open/close state management",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'ModalOrbital',
+      name: "ModalOrbital",
       entity: {
-        name: 'ModalContent',
-        persistence: 'runtime',
-        collection: 'modals',
+        name: "ModalContent",
+        persistence: "runtime",
+        collection: "modals",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
-          { name: 'message', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "message",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'ModalControl',
-          linkedEntity: 'ModalContent',
-          category: 'interaction',
+          name: "ModalControl",
+          linkedEntity: "ModalContent",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'closed', isInitial: true },
-              { name: 'open' },
+              {
+                name: "closed",
+                isInitial: true,
+              },
+              {
+                name: "open",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'OPEN', name: 'Open' },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
-              { key: 'CONFIRM', name: 'Confirm' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "OPEN",
+                name: "Open",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
+              {
+                key: "CONFIRM",
+                name: "Confirm",
+              },
             ],
             transitions: [
               {
-                from: 'closed',
-                to: 'closed',
-                event: 'INIT',
+                from: "closed",
+                to: "closed",
+                event: "INIT",
                 effects: [
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'icon', name: 'message-square', size: 'lg' },
-                      { type: 'typography', content: 'Ready', variant: 'heading' },
-                      { type: 'typography', content: 'Click to open dialog.', variant: 'body' },
-                      { type: 'button', label: 'Open Dialog', event: 'OPEN', variant: 'primary', icon: 'external-link' },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      align: "center",
+                      children: [
+                        {
+                          type: "icon",
+                          name: "message-square",
+                          size: "lg",
+                        },
+                        {
+                          type: "typography",
+                          content: "Ready",
+                          variant: "h2",
+                        },
+                        {
+                          type: "typography",
+                          content: "Click to open dialog.",
+                          variant: "body",
+                        },
+                        {
+                          type: "button",
+                          label: "Open Dialog",
+                          event: "OPEN",
+                          variant: "primary",
+                          icon: "external-link",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'closed',
-                to: 'open',
-                event: 'OPEN',
+                from: "closed",
+                to: "open",
+                event: "OPEN",
                 effects: [
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'help-circle', size: 'md' },
-                        { type: 'typography', content: '@entity.title', variant: 'heading' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'typography', content: '@entity.message', variant: 'body' },
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'button', label: 'Confirm', event: 'CONFIRM', variant: 'primary', icon: 'check' },
-                        { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'secondary' },
-                      ] },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "help-circle",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "@entity.title",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "typography",
+                          content: "@entity.message",
+                          variant: "body",
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Cancel",
+                              event: "CANCEL",
+                              variant: "secondary",
+                            },
+                            {
+                              type: "button",
+                              label: "Confirm",
+                              event: "CONFIRM",
+                              variant: "primary",
+                              icon: "check",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CLOSE',
-                effects: [['render-ui', 'modal', null]],
+                from: "open",
+                to: "closed",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CANCEL',
-                effects: [['render-ui', 'modal', null]],
+                from: "open",
+                to: "closed",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CONFIRM',
-                effects: [['render-ui', 'modal', null]],
+                from: "open",
+                to: "closed",
+                event: "CONFIRM",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
               },
             ],
           },
@@ -769,10 +2770,14 @@ export const MODAL_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'ModalDemoPage',
-          path: '/modal',
+          name: "ModalDemoPage",
+          path: "/",
           isInitial: true,
-          traits: [{ ref: 'ModalControl' }],
+          traits: [
+            {
+              ref: "ModalControl",
+            },
+          ],
         },
       ],
     },
@@ -784,83 +2789,215 @@ export const MODAL_BEHAVIOR: BehaviorSchema = {
 // ============================================================================
 
 export const DRAWER_BEHAVIOR: BehaviorSchema = {
-  name: 'std-drawer',
-  version: '1.0.0',
-  description: 'Side drawer panel for detail views',
-  theme: UI_SLATE_THEME,
+  name: "std-drawer",
+  version: "1.0.0",
+  description: "Side drawer panel for detail views",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'DrawerOrbital',
+      name: "DrawerOrbital",
       entity: {
-        name: 'DrawerItem',
-        persistence: 'runtime',
-        collection: 'draweritems',
+        name: "DrawerItem",
+        persistence: "runtime",
+        collection: "draweritems",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'title', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "title",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'DrawerControl',
-          linkedEntity: 'DrawerItem',
-          category: 'interaction',
+          name: "DrawerControl",
+          linkedEntity: "DrawerItem",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'closed', isInitial: true },
-              { name: 'open' },
+              {
+                name: "closed",
+                isInitial: true,
+              },
+              {
+                name: "open",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'OPEN', name: 'Open' },
-              { key: 'CLOSE', name: 'Close' },
-              { key: 'CANCEL', name: 'Cancel' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "OPEN",
+                name: "Open",
+              },
+              {
+                key: "CLOSE",
+                name: "Close",
+              },
+              {
+                key: "CANCEL",
+                name: "Cancel",
+              },
             ],
             transitions: [
               {
-                from: 'closed',
-                to: 'closed',
-                event: 'INIT',
+                from: "closed",
+                to: "closed",
+                event: "INIT",
                 effects: [
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'icon', name: 'sidebar', size: 'lg' },
-                      { type: 'typography', content: 'Drawer', variant: 'heading' },
-                      { type: 'typography', content: 'Select an item to open the drawer.', variant: 'body' },
-                    ],
-                  }],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      align: "center",
+                      children: [
+                        {
+                          type: "icon",
+                          name: "sidebar",
+                          size: "lg",
+                        },
+                        {
+                          type: "typography",
+                          content: "Drawer",
+                          variant: "h2",
+                        },
+                        {
+                          type: "typography",
+                          content: "Select an item to open the drawer.",
+                          variant: "body",
+                        },
+                        {
+                          type: "button",
+                          label: "Open Drawer",
+                          event: "OPEN",
+                          variant: "primary",
+                          icon: "sidebar",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'closed',
-                to: 'open',
-                event: 'OPEN',
+                from: "closed",
+                to: "open",
+                event: "OPEN",
                 effects: [
-                  ['fetch', 'DrawerItem'],
-                  ['render-ui', 'modal', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-                        { type: 'icon', name: 'info', size: 'md' },
-                        { type: 'typography', content: '@entity.title', variant: 'heading' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'data-list', entity: 'DrawerItem', fields: ['title'] },
-                      { type: 'button', label: 'Close', event: 'CLOSE', variant: 'secondary', icon: 'x' },
-                    ],
-                  }],
+                  ["fetch", "DrawerItem"],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "info",
+                              size: "md",
+                            },
+                            {
+                              type: "typography",
+                              content: "@entity.title",
+                              variant: "h3",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "DrawerItem",
+                          emptyIcon: "sidebar",
+                          emptyTitle: "No items",
+                          emptyDescription: "Nothing to display.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "panel-right",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.title",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "button",
+                          label: "Close",
+                          event: "CLOSE",
+                          variant: "secondary",
+                          icon: "x",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CLOSE',
-                effects: [['render-ui', 'modal', null]],
+                from: "open",
+                to: "closed",
+                event: "CLOSE",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
               },
               {
-                from: 'open',
-                to: 'closed',
-                event: 'CANCEL',
-                effects: [['render-ui', 'modal', null]],
+                from: "open",
+                to: "closed",
+                event: "CANCEL",
+                effects: [
+                  ["render-ui", "modal", null],
+                ],
               },
             ],
           },
@@ -868,10 +3005,14 @@ export const DRAWER_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'DrawerDemoPage',
-          path: '/drawer',
+          name: "DrawerDemoPage",
+          path: "/drawer",
           isInitial: true,
-          traits: [{ ref: 'DrawerControl' }],
+          traits: [
+            {
+              ref: "DrawerControl",
+            },
+          ],
         },
       ],
     },
@@ -883,65 +3024,153 @@ export const DRAWER_BEHAVIOR: BehaviorSchema = {
 // ============================================================================
 
 export const TABS_BEHAVIOR: BehaviorSchema = {
-  name: 'std-tabs',
-  version: '1.0.0',
-  description: 'Tabbed navigation within a page',
-  theme: UI_SLATE_THEME,
+  name: "std-tabs",
+  version: "1.0.0",
+  description: "Tabbed navigation within a page",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'TabsOrbital',
+      name: "TabsOrbital",
       entity: {
-        name: 'TabContent',
-        persistence: 'runtime',
-        collection: 'tabcontents',
+        name: "TabContent",
+        persistence: "runtime",
+        collection: "tabcontents",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'activeTab', type: 'string', default: 'overview' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "activeTab",
+            type: "string",
+            default: "overview",
+          },
         ],
       },
       traits: [
         {
-          name: 'TabNavigation',
-          linkedEntity: 'TabContent',
-          category: 'interaction',
+          name: "TabNavigation",
+          linkedEntity: "TabContent",
+          category: "interaction",
           stateMachine: {
-            states: [{ name: 'active', isInitial: true }],
+            states: [
+              {
+                name: "active",
+                isInitial: true,
+              },
+            ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SELECT_TAB', name: 'Select Tab', payloadSchema: [{ name: 'tabId', type: 'string', required: true }] },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SELECT_TAB",
+                name: "Select Tab",
+                payloadSchema: [
+                  {
+                    name: "tabId",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'active',
-                to: 'active',
-                event: 'INIT',
+                from: "active",
+                to: "active",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'TabContent'],
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'lg', children: [
-                      { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-                        { type: 'icon', name: 'layers', size: 'lg' },
-                        { type: 'typography', content: 'Tabs', variant: 'h2' },
-                        { type: 'button', label: 'Add Tab', action: 'SELECT_TAB', icon: 'plus', variant: 'primary' },
-                      ] },
-                      { type: 'divider' },
-                      { type: 'tabs', entity: 'TabContent', onTabChange: 'SELECT_TAB',
-                        tabs: [
-                          { id: 'overview', label: 'Overview' },
-                          { id: 'details', label: 'Details' },
-                          { id: 'settings', label: 'Settings' },
-                        ],
-                      },
-                    ],
-                  }],
+                  ["fetch", "TabContent"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layers",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Tabs",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "button",
+                              label: "Add Tab",
+                              event: "SELECT_TAB",
+                              icon: "plus",
+                              variant: "primary",
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "tabs",
+                          entity: "TabContent",
+                          onTabChange: "SELECT_TAB",
+                          tabs: [
+                            {
+                              id: "overview",
+                              label: "Overview",
+                            },
+                            {
+                              id: "details",
+                              label: "Details",
+                            },
+                            {
+                              id: "settings",
+                              label: "Settings",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'active',
-                to: 'active',
-                event: 'SELECT_TAB',
+                from: "active",
+                to: "active",
+                event: "SELECT_TAB",
                 effects: [
-                  ['set', '@entity.activeTab', '@payload.tabId'],
+                  ["set", "@entity.activeTab", "@payload.tabId"],
                 ],
               },
             ],
@@ -950,10 +3179,14 @@ export const TABS_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'TabsPage',
-          path: '/tabs',
+          name: "TabsPage",
+          path: "/tabs",
           isInitial: true,
-          traits: [{ ref: 'TabNavigation' }],
+          traits: [
+            {
+              ref: "TabNavigation",
+            },
+          ],
         },
       ],
     },
@@ -1014,113 +3247,637 @@ const WIZARD_REVIEW_VIEW: BehaviorEffect = ['render-ui', 'main', {
 // ============================================================================
 
 export const WIZARD_BEHAVIOR: BehaviorSchema = {
-  name: 'std-wizard',
-  version: '1.0.0',
-  description: 'Multi-step wizard flow',
-  theme: UI_SLATE_THEME,
+  name: "std-wizard",
+  version: "1.0.0",
+  description: "Multi-step wizard flow",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'WizardOrbital',
+      name: "WizardOrbital",
       entity: {
-        name: 'WizardEntry',
-        persistence: 'persistent',
-        collection: 'wizardentries',
+        name: "WizardEntry",
+        persistence: "persistent",
+        collection: "wizardentries",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'category', type: 'string', default: '' },
-          { name: 'details', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'draft' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "category",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "details",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "draft",
+          },
         ],
       },
       traits: [
         {
-          name: 'WizardFlow',
-          linkedEntity: 'WizardEntry',
-          category: 'interaction',
-          // When composed: emits: [{ event: 'WIZARD_COMPLETED', ... }]
+          name: "WizardFlow",
+          linkedEntity: "WizardEntry",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'step1', isInitial: true },
-              { name: 'step2' },
-              { name: 'review' },
-              { name: 'complete' },
+              {
+                name: "step1",
+                isInitial: true,
+              },
+              {
+                name: "step2",
+              },
+              {
+                name: "review",
+              },
+              {
+                name: "complete",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'NEXT', name: 'Next', payloadSchema: [{ name: 'data', type: 'object', required: true }] },
-              { key: 'PREV', name: 'Previous' },
-              { key: 'COMPLETE', name: 'Complete' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "NEXT",
+                name: "Next",
+                payloadSchema: [
+                  {
+                    name: "data",
+                    type: "object",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "PREV",
+                name: "Previous",
+              },
+              {
+                key: "COMPLETE",
+                name: "Complete",
+              },
             ],
             transitions: [
               {
-                from: 'step1',
-                to: 'step1',
-                event: 'INIT',
+                from: "step1",
+                to: "step1",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'WizardEntry'],
-                  WIZARD_STEP1_VIEW,
+                  ["fetch", "WizardEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Setup Wizard",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Step 1 of 3",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "wizard-progress",
+                          steps: ["Basic Info", "Details", "Review"],
+                          currentStep: 0,
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "WizardEntry",
+                          submitEvent: "NEXT",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "category",
+                              type: "string",
+                            },
+                            {
+                              name: "details",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'step1',
-                to: 'step2',
-                event: 'NEXT',
+                from: "step1",
+                to: "step2",
+                event: "NEXT",
                 effects: [
-                  ['fetch', 'WizardEntry'],
-                  WIZARD_STEP2_VIEW,
+                  ["fetch", "WizardEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Setup Wizard",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Step 2 of 3",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "wizard-progress",
+                          steps: ["Basic Info", "Details", "Review"],
+                          currentStep: 1,
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "WizardEntry",
+                          submitEvent: "NEXT",
+                          cancelEvent: "PREV",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "category",
+                              type: "string",
+                            },
+                            {
+                              name: "details",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'step2',
-                to: 'step1',
-                event: 'PREV',
+                from: "step2",
+                to: "step1",
+                event: "PREV",
                 effects: [
-                  ['fetch', 'WizardEntry'],
-                  WIZARD_STEP1_VIEW,
+                  ["fetch", "WizardEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Setup Wizard",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Step 1 of 3",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "wizard-progress",
+                          steps: ["Basic Info", "Details", "Review"],
+                          currentStep: 0,
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "WizardEntry",
+                          submitEvent: "NEXT",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "category",
+                              type: "string",
+                            },
+                            {
+                              name: "details",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'step2',
-                to: 'review',
-                event: 'NEXT',
+                from: "step2",
+                to: "review",
+                event: "NEXT",
                 effects: [
-                  ['fetch', 'WizardEntry'],
-                  WIZARD_REVIEW_VIEW,
+                  ["fetch", "WizardEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Setup Wizard",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Step 3 of 3",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "wizard-progress",
+                          steps: ["Basic Info", "Details", "Review"],
+                          currentStep: 2,
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "WizardEntry",
+                          emptyIcon: "clipboard",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              justify: "space-between",
+                              align: "center",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "sm",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "icon",
+                                      name: "wand-2",
+                                      size: "sm",
+                                    },
+                                    {
+                                      type: "typography",
+                                      variant: "h4",
+                                      content: "@entity.name",
+                                    },
+                                  ],
+                                },
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  gap: "md",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "typography",
+                                      variant: "caption",
+                                      content: "@entity.category",
+                                    },
+                                    {
+                                      type: "badge",
+                                      label: "@entity.status",
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "sm",
+                          justify: "space-between",
+                          children: [
+                            {
+                              type: "button",
+                              label: "Back",
+                              event: "PREV",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                            },
+                            {
+                              type: "button",
+                              label: "Complete",
+                              event: "COMPLETE",
+                              variant: "primary",
+                              icon: "check",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'review',
-                to: 'step2',
-                event: 'PREV',
+                from: "review",
+                to: "step2",
+                event: "PREV",
                 effects: [
-                  ['fetch', 'WizardEntry'],
-                  WIZARD_STEP2_VIEW,
+                  ["fetch", "WizardEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Setup Wizard",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Step 2 of 3",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "wizard-progress",
+                          steps: ["Basic Info", "Details", "Review"],
+                          currentStep: 1,
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "WizardEntry",
+                          submitEvent: "NEXT",
+                          cancelEvent: "PREV",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "category",
+                              type: "string",
+                            },
+                            {
+                              name: "details",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'review',
-                to: 'complete',
-                event: 'COMPLETE',
+                from: "review",
+                to: "complete",
+                event: "COMPLETE",
                 effects: [
-                  ['persist', 'create', 'WizardEntry', {}],
-                  ['render-ui', 'main', {
-                    type: 'stack', direction: 'vertical', gap: 'md', children: [
-                      { type: 'icon', name: 'check-circle', size: 'lg' },
-                      { type: 'typography', content: 'Complete', variant: 'heading' },
-                      { type: 'typography', content: 'Your entry has been submitted.', variant: 'body' },
-                      { type: 'button', label: 'Start New', event: 'INIT', variant: 'primary', icon: 'plus' },
-                    ],
-                  }],
+                  [
+                    "persist",
+                    "create",
+                    "WizardEntry",
+                    {},
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "md",
+                      align: "center",
+                      children: [
+                        {
+                          type: "icon",
+                          name: "check-circle",
+                          size: "lg",
+                        },
+                        {
+                          type: "typography",
+                          content: "Complete",
+                          variant: "h2",
+                        },
+                        {
+                          type: "typography",
+                          content: "Your entry has been submitted.",
+                          variant: "body",
+                        },
+                        {
+                          type: "button",
+                          label: "Start New",
+                          event: "INIT",
+                          variant: "primary",
+                          icon: "plus",
+                        },
+                      ],
+                    },
+                  ],
+                  ["notify", "WizardEntry created successfully"],
                 ],
               },
               {
-                from: 'complete',
-                to: 'step1',
-                event: 'INIT',
+                from: "complete",
+                to: "step1",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'WizardEntry'],
-                  WIZARD_STEP1_VIEW,
+                  ["fetch", "WizardEntry"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "clipboard",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Setup Wizard",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Step 1 of 3",
+                              variant: "outline",
+                            },
+                          ],
+                        },
+                        {
+                          type: "wizard-progress",
+                          steps: ["Basic Info", "Details", "Review"],
+                          currentStep: 0,
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "form-section",
+                          entity: "WizardEntry",
+                          submitEvent: "NEXT",
+                          fields: [
+                            {
+                              name: "name",
+                              type: "string",
+                            },
+                            {
+                              name: "category",
+                              type: "string",
+                            },
+                            {
+                              name: "details",
+                              type: "string",
+                            },
+                            {
+                              name: "status",
+                              type: "string",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -1129,10 +3886,14 @@ export const WIZARD_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'WizardPage',
-          path: '/wizard',
+          name: "WizardPage",
+          path: "/wizard",
           isInitial: true,
-          traits: [{ ref: 'WizardFlow' }],
+          traits: [
+            {
+              ref: "WizardFlow",
+            },
+          ],
         },
       ],
     },
@@ -1191,74 +3952,751 @@ const MASTER_DETAIL_SELECTED_VIEW: BehaviorEffect = ['render-ui', 'main', {
 // ============================================================================
 
 export const MASTER_DETAIL_BEHAVIOR: BehaviorSchema = {
-  name: 'std-masterdetail',
-  version: '1.0.0',
-  description: 'Master-detail layout with synchronized list and detail views',
-  theme: UI_SLATE_THEME,
+  name: "std-masterdetail",
+  version: "1.0.0",
+  description: "Master-detail layout with synchronized list and detail views",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'MasterDetailOrbital',
+      name: "MasterDetailOrbital",
       entity: {
-        name: 'Asset',
-        persistence: 'persistent',
-        collection: 'assets',
+        name: "Asset",
+        persistence: "persistent",
+        collection: "assets",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'type', type: 'string', default: '' },
-          { name: 'description', type: 'string', default: '' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "type",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "description",
+            type: "string",
+            default: "",
+          },
         ],
       },
       traits: [
         {
-          name: 'MasterDetailNav',
-          linkedEntity: 'Asset',
-          category: 'interaction',
+          name: "MasterDetailNav",
+          linkedEntity: "Asset",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'browsing', isInitial: true },
-              { name: 'selected' },
+              {
+                name: "browsing",
+                isInitial: true,
+              },
+              {
+                name: "selected",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SELECT', name: 'Select', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
-              { key: 'DESELECT', name: 'Deselect' },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SELECT",
+                name: "Select",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "DESELECT",
+                name: "Deselect",
+              },
             ],
             transitions: [
               {
-                from: 'browsing',
-                to: 'browsing',
-                event: 'INIT',
+                from: "browsing",
+                to: "browsing",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'Asset'],
-                  MASTER_LIST_VIEW,
+                  ["fetch", "Asset"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "horizontal",
+                      responsive: true,
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layout",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Assets",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "data-list",
+                              entity: "Asset",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "layout",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "md",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.description",
+                                        },
+                                        {
+                                          type: "badge",
+                                          label: "@entity.type",
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              emptyIcon: "layout",
+                              emptyTitle: "No assets yet",
+                              emptyDescription: "Assets will appear here.",
+                              itemActions: [
+                                {
+                                  label: "View",
+                                  event: "SELECT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "file-text",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              content: "Select an item to view details",
+                              variant: "body",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'browsing',
-                to: 'selected',
-                event: 'SELECT',
+                from: "browsing",
+                to: "selected",
+                event: "SELECT",
                 effects: [
-                  ['fetch', 'Asset'],
-                  MASTER_DETAIL_SELECTED_VIEW,
+                  ["fetch", "Asset"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "horizontal",
+                      responsive: true,
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layout",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Assets",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "data-list",
+                              entity: "Asset",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "layout",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "md",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "badge",
+                                          label: "@entity.type",
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              emptyIcon: "layout",
+                              emptyTitle: "No assets yet",
+                              emptyDescription: "Assets will appear here.",
+                              itemActions: [
+                                {
+                                  label: "View",
+                                  event: "SELECT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "md",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "@entity.name",
+                                  variant: "h3",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.type",
+                                  variant: "outline",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "stat-display",
+                                  label: "Name",
+                                  value: "@entity.name",
+                                  icon: "tag",
+                                },
+                                {
+                                  type: "stat-display",
+                                  label: "Type",
+                                  value: "@entity.type",
+                                  icon: "folder",
+                                },
+                              ],
+                            },
+                            {
+                              type: "data-list",
+                              entity: "Asset",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "layout",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "md",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.description",
+                                        },
+                                        {
+                                          type: "badge",
+                                          label: "@entity.type",
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              emptyIcon: "layout",
+                              emptyTitle: "No assets yet",
+                              emptyDescription: "Assets will appear here.",
+                            },
+                            {
+                              type: "button",
+                              label: "Back",
+                              event: "DESELECT",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'selected',
-                to: 'selected',
-                event: 'SELECT',
+                from: "selected",
+                to: "selected",
+                event: "SELECT",
                 effects: [
-                  ['fetch', 'Asset'],
-                  MASTER_DETAIL_SELECTED_VIEW,
+                  ["fetch", "Asset"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "horizontal",
+                      responsive: true,
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layout",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Assets",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "data-list",
+                              entity: "Asset",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "layout",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "md",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "badge",
+                                          label: "@entity.type",
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              emptyIcon: "layout",
+                              emptyTitle: "No assets yet",
+                              emptyDescription: "Assets will appear here.",
+                              itemActions: [
+                                {
+                                  label: "View",
+                                  event: "SELECT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "sm",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "file-text",
+                                  size: "md",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "@entity.name",
+                                  variant: "h3",
+                                },
+                                {
+                                  type: "badge",
+                                  label: "@entity.type",
+                                  variant: "outline",
+                                },
+                              ],
+                            },
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "stat-display",
+                                  label: "Name",
+                                  value: "@entity.name",
+                                  icon: "tag",
+                                },
+                                {
+                                  type: "stat-display",
+                                  label: "Type",
+                                  value: "@entity.type",
+                                  icon: "folder",
+                                },
+                              ],
+                            },
+                            {
+                              type: "data-list",
+                              entity: "Asset",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "layout",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "md",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.description",
+                                        },
+                                        {
+                                          type: "badge",
+                                          label: "@entity.type",
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              emptyIcon: "layout",
+                              emptyTitle: "No assets yet",
+                              emptyDescription: "Assets will appear here.",
+                            },
+                            {
+                              type: "button",
+                              label: "Back",
+                              event: "DESELECT",
+                              variant: "secondary",
+                              icon: "arrow-left",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'selected',
-                to: 'browsing',
-                event: 'DESELECT',
+                from: "selected",
+                to: "browsing",
+                event: "DESELECT",
                 effects: [
-                  ['fetch', 'Asset'],
-                  MASTER_LIST_VIEW,
+                  ["fetch", "Asset"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "horizontal",
+                      responsive: true,
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "stack",
+                              direction: "horizontal",
+                              gap: "md",
+                              children: [
+                                {
+                                  type: "icon",
+                                  name: "layout",
+                                  size: "lg",
+                                },
+                                {
+                                  type: "typography",
+                                  content: "Assets",
+                                  variant: "h2",
+                                },
+                              ],
+                            },
+                            {
+                              type: "data-list",
+                              entity: "Asset",
+                              children: [
+                                {
+                                  type: "stack",
+                                  direction: "horizontal",
+                                  justify: "space-between",
+                                  align: "center",
+                                  children: [
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "sm",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "icon",
+                                          name: "layout",
+                                          size: "sm",
+                                        },
+                                        {
+                                          type: "typography",
+                                          variant: "h4",
+                                          content: "@entity.name",
+                                        },
+                                      ],
+                                    },
+                                    {
+                                      type: "stack",
+                                      direction: "horizontal",
+                                      gap: "md",
+                                      align: "center",
+                                      children: [
+                                        {
+                                          type: "typography",
+                                          variant: "caption",
+                                          content: "@entity.description",
+                                        },
+                                        {
+                                          type: "badge",
+                                          label: "@entity.type",
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                              emptyIcon: "layout",
+                              emptyTitle: "No assets yet",
+                              emptyDescription: "Assets will appear here.",
+                              itemActions: [
+                                {
+                                  label: "View",
+                                  event: "SELECT",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "stack",
+                          direction: "vertical",
+                          gap: "md",
+                          align: "center",
+                          justify: "center",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "file-text",
+                              size: "xl",
+                            },
+                            {
+                              type: "typography",
+                              content: "Select an item to view details",
+                              variant: "body",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -1267,10 +4705,14 @@ export const MASTER_DETAIL_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'AssetsPage',
-          path: '/assets',
+          name: "AssetsPage",
+          path: "/assets",
           isInitial: true,
-          traits: [{ ref: 'MasterDetailNav' }],
+          traits: [
+            {
+              ref: "MasterDetailNav",
+            },
+          ],
         },
       ],
     },
@@ -1316,103 +4758,570 @@ const FILTER_ACTIVE_VIEW: BehaviorEffect = ['render-ui', 'main', {
 // ============================================================================
 
 export const FILTER_BEHAVIOR: BehaviorSchema = {
-  name: 'std-filter-ui',
-  version: '1.0.0',
-  description: 'Filter and search management for lists',
-  theme: UI_SLATE_THEME,
+  name: "std-filter-ui",
+  version: "1.0.0",
+  description: "Filter and search management for lists",
+  theme: {
+    name: "ui-slate",
+    tokens: {
+      colors: {
+        primary: "#475569",
+        "primary-hover": "#334155",
+        "primary-foreground": "#ffffff",
+        accent: "#64748b",
+        "accent-foreground": "#ffffff",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        error: "#ef4444",
+      },
+    },
+  },
   orbitals: [
     {
-      name: 'FilterOrbital',
+      name: "FilterOrbital",
       entity: {
-        name: 'FilterableItem',
-        persistence: 'persistent',
-        collection: 'filterableitems',
+        name: "FilterableItem",
+        persistence: "persistent",
+        collection: "filterableitems",
         fields: [
-          { name: 'id', type: 'string', required: true },
-          { name: 'name', type: 'string', default: '' },
-          { name: 'category', type: 'string', default: '' },
-          { name: 'status', type: 'string', default: 'active' },
+          {
+            name: "id",
+            type: "string",
+            required: true,
+          },
+          {
+            name: "name",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "category",
+            type: "string",
+            default: "",
+          },
+          {
+            name: "status",
+            type: "string",
+            default: "active",
+          },
         ],
       },
       traits: [
         {
-          name: 'FilterControl',
-          linkedEntity: 'FilterableItem',
-          category: 'interaction',
+          name: "FilterControl",
+          linkedEntity: "FilterableItem",
+          category: "interaction",
           stateMachine: {
             states: [
-              { name: 'idle', isInitial: true },
-              { name: 'filtering' },
+              {
+                name: "idle",
+                isInitial: true,
+              },
+              {
+                name: "filtering",
+              },
             ],
             events: [
-              { key: 'INIT', name: 'Initialize' },
-              { key: 'SET_FILTER', name: 'Set Filter', payloadSchema: [{ name: 'field', type: 'string', required: true }, { name: 'value', type: 'string', required: true }] },
-              { key: 'CLEAR_FILTERS', name: 'Clear Filters' },
-              { key: 'SEARCH', name: 'Search', payloadSchema: [{ name: 'term', type: 'string', required: true }] },
-              { key: 'VIEW', name: 'View', payloadSchema: [{ name: 'id', type: 'string', required: true }] },
+              {
+                key: "INIT",
+                name: "Initialize",
+              },
+              {
+                key: "SET_FILTER",
+                name: "Set Filter",
+                payloadSchema: [
+                  {
+                    name: "field",
+                    type: "string",
+                    required: true,
+                  },
+                  {
+                    name: "value",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "CLEAR_FILTERS",
+                name: "Clear Filters",
+              },
+              {
+                key: "SEARCH",
+                name: "Search",
+                payloadSchema: [
+                  {
+                    name: "term",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
+              {
+                key: "VIEW",
+                name: "View",
+                payloadSchema: [
+                  {
+                    name: "id",
+                    type: "string",
+                    required: true,
+                  },
+                ],
+              },
             ],
             transitions: [
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'INIT',
+                from: "idle",
+                to: "idle",
+                event: "INIT",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_DEFAULT_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'filtering',
-                event: 'SET_FILTER',
+                from: "idle",
+                to: "filtering",
+                event: "SET_FILTER",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_ACTIVE_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "outline",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_FILTERS",
+                              variant: "secondary",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'filtering',
-                to: 'filtering',
-                event: 'SET_FILTER',
+                from: "filtering",
+                to: "filtering",
+                event: "SET_FILTER",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_ACTIVE_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "outline",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_FILTERS",
+                              variant: "secondary",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'filtering',
-                to: 'idle',
-                event: 'CLEAR_FILTERS',
+                from: "filtering",
+                to: "idle",
+                event: "CLEAR_FILTERS",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_DEFAULT_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'filtering',
-                event: 'SEARCH',
+                from: "idle",
+                to: "filtering",
+                event: "SEARCH",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_ACTIVE_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "outline",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_FILTERS",
+                              variant: "secondary",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'filtering',
-                to: 'filtering',
-                event: 'VIEW',
+                from: "filtering",
+                to: "filtering",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_ACTIVE_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "filter",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                            {
+                              type: "badge",
+                              label: "Filtered",
+                              variant: "outline",
+                            },
+                            {
+                              type: "button",
+                              label: "Clear",
+                              event: "CLEAR_FILTERS",
+                              variant: "secondary",
+                              icon: "x",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "View",
+                              event: "VIEW",
+                            },
+                          ],
+                          emptyIcon: "filter",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
               {
-                from: 'idle',
-                to: 'idle',
-                event: 'VIEW',
+                from: "idle",
+                to: "idle",
+                event: "VIEW",
                 effects: [
-                  ['fetch', 'FilterableItem'],
-                  FILTER_DEFAULT_VIEW,
+                  ["fetch", "FilterableItem"],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      type: "stack",
+                      direction: "vertical",
+                      gap: "lg",
+                      children: [
+                        {
+                          type: "stack",
+                          direction: "horizontal",
+                          gap: "md",
+                          children: [
+                            {
+                              type: "icon",
+                              name: "search",
+                              size: "lg",
+                            },
+                            {
+                              type: "typography",
+                              content: "Items",
+                              variant: "h2",
+                            },
+                          ],
+                        },
+                        {
+                          type: "search-input",
+                          placeholder: "Search items...",
+                          event: "SEARCH",
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-grid",
+                          entity: "FilterableItem",
+                          columns: ["name", "category", "status"],
+                          itemActions: [
+                            {
+                              label: "Refresh",
+                              event: "INIT",
+                            },
+                          ],
+                          emptyIcon: "search",
+                          emptyTitle: "No items yet",
+                          emptyDescription: "Items will appear here when available.",
+                        },
+                      ],
+                    },
+                  ],
                 ],
               },
             ],
@@ -1421,10 +5330,14 @@ export const FILTER_BEHAVIOR: BehaviorSchema = {
       ],
       pages: [
         {
-          name: 'FilterPage',
-          path: '/filter',
+          name: "FilterPage",
+          path: "/filter",
           isInitial: true,
-          traits: [{ ref: 'FilterControl' }],
+          traits: [
+            {
+              ref: "FilterControl",
+            },
+          ],
         },
       ],
     },
