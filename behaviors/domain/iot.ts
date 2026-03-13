@@ -365,7 +365,7 @@ export const SENSOR_FEED_BEHAVIOR: BehaviorSchema = {
                                   value: [
                                     "round",
                                     [
-                                      "average",
+                                      "array/avg",
                                       ["map", "@SensorReading", "@item.value"],
                                     ],
                                   ],
@@ -771,7 +771,7 @@ export const SENSOR_FEED_BEHAVIOR: BehaviorSchema = {
                                   value: [
                                     "round",
                                     [
-                                      "average",
+                                      "array/avg",
                                       ["map", "@SensorReading", "@item.value"],
                                     ],
                                   ],

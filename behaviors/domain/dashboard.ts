@@ -171,7 +171,7 @@ export const STATS_PANEL_BEHAVIOR: BehaviorSchema = {
             transitions: [
               {
                 from: "loading",
-                to: "loading",
+                to: "displaying",
                 event: "INIT",
                 effects: [
                   ["fetch", "StatMetric"],
@@ -194,14 +194,60 @@ export const STATS_PANEL_BEHAVIOR: BehaviorSchema = {
                               variant: "h2",
                               content: "Dashboard",
                             },
+                            {
+                              type: "button",
+                              label: "Refresh",
+                              icon: "refresh-cw",
+                              variant: "secondary",
+                              action: "REFRESH",
+                            },
                           ],
                         },
                         {
                           type: "divider",
                         },
                         {
-                          type: "loading-state",
-                          title: "Loading metrics...",
+                          type: "simple-grid",
+                          cols: 4,
+                          gap: "md",
+                          children: [
+                            {
+                              type: "card",
+                              children: [
+                                {
+                                  type: "stat-display",
+                                  label: "Total Metrics",
+                                  icon: "hash",
+                                  entity: "StatMetric",
+                                },
+                              ],
+                            },
+                            {
+                              type: "card",
+                              children: [
+                                {
+                                  type: "stat-display",
+                                  label: "Active Trends",
+                                  icon: "trending-up",
+                                  entity: "StatMetric",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          type: "divider",
+                        },
+                        {
+                          type: "data-list",
+                          entity: "StatMetric",
+                          emptyTitle: "No metrics yet",
+                          emptyDescription: "Refresh to load metrics.",
+                          columns: [
+                            { field: "name", label: "Metric" },
+                            { field: "value", label: "Value" },
+                            { field: "unit", label: "Unit" },
+                          ],
                         },
                       ],
                     },
