@@ -43,6 +43,7 @@ const PUZZLE_ASSET_BASE_URL = 'https://almadar-kflow-assets.web.app/shared';
 
 const PUZZLE_ASSET_MANIFEST = {
   terrains: {
+    grass: '/terrain/Isometric/dirtTiles_N.png',
     dirt: '/terrain/Isometric/dirt_N.png',
     stone: '/terrain/Isometric/stoneSide_N.png',
     bridge: '/terrain/Isometric/stoneStep_N.png',

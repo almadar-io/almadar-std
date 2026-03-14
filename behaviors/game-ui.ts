@@ -36,6 +36,7 @@ const GAME_UI_THEME = {
 const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
 const GAME_MANIFEST = {
   terrains: {
+    grass: '/terrain/Isometric/dirtTiles_N.png',
     stone: '/terrain/Isometric/stoneSide_N.png',
     dirt: '/terrain/Isometric/dirt_N.png',
     bridge: '/terrain/Isometric/stoneStep_N.png',

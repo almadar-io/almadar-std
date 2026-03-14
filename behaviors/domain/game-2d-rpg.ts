@@ -37,6 +37,7 @@ const RPG_THEME = {
 const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
 const GAME_MANIFEST = {
   terrains: {
+    grass: '/terrain/Isometric/dirtTiles_N.png',
     stone: '/terrain/Isometric/stoneSide_N.png',
     dirt: '/terrain/Isometric/dirt_N.png',
     bridge: '/terrain/Isometric/stoneStep_N.png',
@@ -642,6 +643,7 @@ export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -1084,6 +1086,7 @@ export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -1516,6 +1519,7 @@ export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -1941,6 +1945,7 @@ export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -2372,6 +2377,7 @@ export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -2800,6 +2806,7 @@ export const OVERWORLD_BEHAVIOR: BehaviorSchema = {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -4640,9 +4647,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -4911,9 +4920,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -5238,9 +5249,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -5573,9 +5586,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -5812,9 +5827,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -6051,9 +6068,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -6290,9 +6309,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -6529,9 +6550,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
@@ -6768,9 +6791,11 @@ export const NPC_BEHAVIOR: BehaviorSchema = {
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
                         terrains: {
+                          grass: "/terrain/Isometric/dirtTiles_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
+                          wall: "/terrain/Isometric/stoneWallArchway_N.png",
                         },
                         units: {
                           archivist: "/sprite-sheets/archivist-sprite-sheet-se.png",
