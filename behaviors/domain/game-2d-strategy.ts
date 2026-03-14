@@ -36,7 +36,7 @@ const STRATEGY_THEME = {
 
 const KFLOW_ASSETS = 'https://almadar-kflow-assets.web.app/shared';
 const GAME_MANIFEST = {
-  terrain: {
+  terrains: {
     stone: '/terrain/Isometric/stoneSide_N.png',
     dirt: '/terrain/Isometric/dirt_N.png',
     bridge: '/terrain/Isometric/stoneStep_N.png',
@@ -430,7 +430,7 @@ export const TURN_SYSTEM_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                         },
@@ -723,7 +723,7 @@ export const TURN_SYSTEM_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                         },
@@ -1016,7 +1016,7 @@ export const TURN_SYSTEM_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                         },
@@ -1309,7 +1309,7 @@ export const TURN_SYSTEM_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                         },
@@ -1617,7 +1617,7 @@ export const TURN_SYSTEM_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           stone: "/terrain/Isometric/stoneSide_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                         },
@@ -2182,7 +2182,7 @@ export const UNIT_COMMAND_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
@@ -2470,7 +2470,7 @@ export const UNIT_COMMAND_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
@@ -2772,7 +2772,7 @@ export const UNIT_COMMAND_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
@@ -3083,7 +3083,7 @@ export const UNIT_COMMAND_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
@@ -3371,7 +3371,7 @@ export const UNIT_COMMAND_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           stone: "/terrain/Isometric/stoneSide_N.png",
@@ -4035,7 +4035,7 @@ export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
@@ -4488,7 +4488,7 @@ export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
@@ -4945,7 +4945,7 @@ export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
@@ -5401,7 +5401,7 @@ export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
@@ -5853,7 +5853,7 @@ export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
@@ -6306,7 +6306,7 @@ export const FOG_OF_WAR_BEHAVIOR: BehaviorSchema = {
                       enableCamera: true,
                       assetBaseUrl: "https://almadar-kflow-assets.web.app/shared",
                       assetManifest: {
-                        terrain: {
+                        terrains: {
                           grass: "/terrain/Isometric/dirtTiles_N.png",
                           dirt: "/terrain/Isometric/dirt_N.png",
                           bridge: "/terrain/Isometric/stoneStep_N.png",
