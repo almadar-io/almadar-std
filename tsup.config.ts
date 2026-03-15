@@ -7,6 +7,7 @@ export default defineConfig({
     'modules/*.ts',
     'behaviors/*.ts',
     'behaviors/domain/*.ts',
+    'behaviors/functions/index.ts',
   ],
   format: ['esm'],
   dts: true,
