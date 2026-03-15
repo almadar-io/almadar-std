@@ -18,7 +18,7 @@ import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almad
 import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdBrowse } from './std-browse.js';
 import { stdModal } from './std-modal.js';
-import { stdConfirmation } from './std-confirmation.js';
+// Delete confirmation is inline in the browse trait (single-trait for entity context)
 
 // ============================================================================
 // Params
@@ -192,7 +192,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       { label: 'Edit', event: 'EDIT' },
       { label: 'Delete', event: 'DELETE', variant: 'danger' },
     ],
-    refreshEvents: ['ENTITY_SAVED', 'ENTITY_DELETED'],
+    refreshEvents: ['ENTITY_SAVED'],
   }));
 
   const createTrait = extractTrait(stdModal({ standalone: false,
@@ -236,18 +236,46 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     openEffects: [['fetch', entityName, '@payload.id']],
   }));
 
-  const deleteTrait = extractTrait(stdConfirmation({ standalone: false,
-    entityName, fields,
-    traitName: `${entityName}Delete`,
-    confirmTitle: `Delete ${entityName}`,
-    confirmMessage: c.deleteMessage,
-    confirmLabel: 'Delete',
-    headerIcon: 'trash-2',
-    requestEvent: 'DELETE',
-    confirmEvent: 'CONFIRM_DELETE',
-    confirmEffects: [['persist', 'delete', entityName, '@payload.id'], ['fetch', entityName]],
-    emitOnConfirm: 'ENTITY_DELETED',
-  }));
+  // Delete: inline in browse trait (single-trait so entity context carries across DELETE → CONFIRM_DELETE)
+  // Add deleting state + transitions directly to the browse trait's state machine
+  const sm = browseTrait.stateMachine as { states: unknown[]; events: unknown[]; transitions: unknown[] };
+  sm.states.push({ name: 'deleting' });
+  sm.events.push(
+    { key: 'DELETE', name: 'Delete', payload: [{ name: 'id', type: 'string', required: true }] },
+    { key: 'CONFIRM_DELETE', name: 'Confirm Delete' },
+    { key: 'CANCEL', name: 'Cancel' },
+    { key: 'CLOSE', name: 'Close' },
+  );
+  sm.transitions.push(
+    // DELETE: browsing → deleting (fetch entity by ID, show confirmation modal)
+    { from: 'browsing', to: 'deleting', event: 'DELETE', effects: [
+      ['fetch', entityName, '@payload.id'],
+      ['render-ui', 'modal', {
+        type: 'stack', direction: 'vertical', gap: 'md',
+        children: [
+          { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+            { type: 'icon', name: 'trash-2', size: 'md' },
+            { type: 'typography', content: `Delete ${entityName}`, variant: 'h3' },
+          ] },
+          { type: 'divider' },
+          { type: 'typography', content: c.deleteMessage, variant: 'body' },
+          { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
+            { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'ghost' },
+            { type: 'button', label: 'Delete', event: 'CONFIRM_DELETE', variant: 'danger', icon: 'trash' },
+          ] },
+        ],
+      }],
+    ] },
+    // CONFIRM_DELETE: deleting → browsing (persist delete using selected entity's ID)
+    { from: 'deleting', to: 'browsing', event: 'CONFIRM_DELETE', effects: [
+      ['persist', 'delete', entityName, '@entity.id'],
+      ['render-ui', 'modal', null],
+      ['fetch', entityName],
+    ] },
+    // CANCEL/CLOSE from deleting
+    { from: 'deleting', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
+    { from: 'deleting', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
+  );
 
   // 2. Shared entity
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
@@ -261,7 +289,6 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       { ref: createTrait.name },
       { ref: editTrait.name },
       { ref: viewTrait.name },
-      { ref: deleteTrait.name },
     ],
   } as Page;
 
@@ -269,7 +296,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   return {
     name: `${entityName}Orbital`,
     entity,
-    traits: [browseTrait, createTrait, editTrait, viewTrait, deleteTrait],
+    traits: [browseTrait, createTrait, editTrait, viewTrait],
     pages: [page],
   } as OrbitalDefinition;
 }

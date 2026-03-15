@@ -111,7 +111,12 @@ function resolve(params: StdConfirmationParams): ConfirmationConfig {
 // ============================================================================
 
 function buildEntity(c: ConfirmationConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  // Add pendingId field to store the entity ID across REQUEST → CONFIRM flow
+  const fields = [
+    ...c.fields.filter(f => f.name !== 'pendingId'),
+    { name: 'pendingId', type: 'string' as const, default: '' },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence });
 }
 
 function buildTrait(c: ConfirmationConfig): Trait {
@@ -130,7 +135,7 @@ function buildTrait(c: ConfirmationConfig): Trait {
       events: [
         { key: 'INIT', name: 'Initialize' },
         { key: c.requestEvent, name: 'Request Confirmation', payload: [{ name: 'id', type: 'string', required: true }] },
-        { key: c.confirmEvent, name: 'Confirm', payload: [{ name: 'id', type: 'string', required: true }] },
+        { key: c.confirmEvent, name: 'Confirm' },
         { key: 'CANCEL', name: 'Cancel' },
         { key: 'CLOSE', name: 'Close' },
       ],
@@ -161,10 +166,12 @@ function buildTrait(c: ConfirmationConfig): Trait {
               }]]
             : [['fetch', entityName]],
         },
-        // REQUEST: idle -> confirming
+        // REQUEST: idle -> confirming (fetch entity by ID so server has context)
         {
           from: 'idle', to: 'confirming', event: c.requestEvent,
           effects: [
+            ['set', '@entity.pendingId', '@payload.id'],
+            ['fetch', entityName, '@payload.id'],
             ['render-ui', 'modal', {
               type: 'stack', direction: 'vertical', gap: 'md',
               children: [
