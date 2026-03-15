@@ -192,7 +192,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       { label: 'Edit', event: 'EDIT' },
       { label: 'Delete', event: 'DELETE', variant: 'danger' },
     ],
-    refreshEvents: ['SAVE', 'CONFIRM_DELETE'],
+    refreshEvents: ['ENTITY_SAVED', 'ENTITY_DELETED'],
   }));
 
   const createTrait = extractTrait(stdModal({ standalone: false,
@@ -206,6 +206,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     openEffects: [['fetch', entityName]],
     saveEvent: 'SAVE',
     saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
+    emitOnSave: 'ENTITY_SAVED',
   }));
 
   const editTrait = extractTrait(stdModal({ standalone: false,
@@ -220,6 +221,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     openEffects: [['fetch', entityName, '@payload.id']],
     saveEvent: 'SAVE',
     saveEffects: [['persist', 'update', entityName, '@payload.data'], ['fetch', entityName]],
+    emitOnSave: 'ENTITY_SAVED',
   }));
 
   const viewTrait = extractTrait(stdModal({ standalone: false,
@@ -244,6 +246,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     requestEvent: 'DELETE',
     confirmEvent: 'CONFIRM_DELETE',
     confirmEffects: [['persist', 'delete', entityName, '@payload.id'], ['fetch', entityName]],
+    emitOnConfirm: 'ENTITY_DELETED',
   }));
 
   // 2. Shared entity

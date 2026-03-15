@@ -173,10 +173,16 @@ function buildTrait(c: BrowseConfig): Trait {
     }),
   ];
 
+  // Declare listens for refresh events (emitted by modal/confirmation atoms after persist)
+  const listensDecl = c.refreshEvents.length > 0
+    ? c.refreshEvents.map(evt => ({ event: evt, triggers: evt }))
+    : undefined;
+
   return {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
+    ...(listensDecl ? { listens: listensDecl } : {}),
     stateMachine: {
       states: [{ name: 'browsing', isInitial: true }],
       events,

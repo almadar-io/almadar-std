@@ -40,6 +40,8 @@ export interface StdConfirmationParams {
   confirmEvent?: string;
   /** Additional effects to run on confirm (e.g., persist delete) */
   confirmEffects?: unknown[];
+  /** Event to emit after confirm succeeds. Browse traits listen for this. */
+  emitOnConfirm?: string;
   /** When false, INIT renders nothing to main (used inside molecules). Default true. */
   standalone?: boolean;
 
@@ -68,6 +70,7 @@ interface ConfirmationConfig {
   requestEvent: string;
   confirmEvent: string;
   confirmEffects: unknown[];
+  emitOnConfirm: string | null;
   standalone: boolean;
   pageName: string;
   pagePath: string;
@@ -95,6 +98,7 @@ function resolve(params: StdConfirmationParams): ConfirmationConfig {
     requestEvent: params.requestEvent ?? 'REQUEST',
     confirmEvent: params.confirmEvent ?? 'CONFIRM',
     confirmEffects: params.confirmEffects ?? [],
+    emitOnConfirm: params.emitOnConfirm ?? null,
     standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}ConfirmPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/confirm`,
@@ -117,6 +121,7 @@ function buildTrait(c: ConfirmationConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
+    ...(c.emitOnConfirm ? { emits: [{ event: c.emitOnConfirm }] } : {}),
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -189,6 +194,7 @@ function buildTrait(c: ConfirmationConfig): Trait {
           effects: [
             ...c.confirmEffects,
             ['render-ui', 'modal', null],
+            ...(c.emitOnConfirm ? [['emit', c.emitOnConfirm]] : []),
           ],
         },
         // CANCEL: confirming -> idle (dismiss modal)

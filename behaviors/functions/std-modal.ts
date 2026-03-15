@@ -42,6 +42,8 @@ export interface StdModalParams {
   /** If provided, adds a save transition: open → closed with these effects */
   saveEvent?: string;
   saveEffects?: unknown[];
+  /** Event to emit after save succeeds. Browse traits listen for this instead of raw SAVE. */
+  emitOnSave?: string;
   /** When false, INIT renders nothing to main (used inside molecules). Default true. */
   standalone?: boolean;
 
@@ -70,6 +72,7 @@ interface ModalConfig {
   openEffects: unknown[];
   saveEvent: string | null;
   saveEffects: unknown[];
+  emitOnSave: string | null;
   standalone: boolean;
   pageName: string;
   pagePath: string;
@@ -124,6 +127,7 @@ function resolve(params: StdModalParams): ModalConfig {
     openEffects: params.openEffects ?? [],
     saveEvent: params.saveEvent ?? null,
     saveEffects: params.saveEffects ?? [],
+    emitOnSave: params.emitOnSave ?? null,
     standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}ModalPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/modal`,
@@ -181,7 +185,12 @@ function buildTrait(c: ModalConfig): Trait {
   if (c.saveEvent) {
     transitions.push({
       from: 'open', to: 'closed', event: c.saveEvent,
-      effects: [...c.saveEffects, ['render-ui', 'modal', null]],
+      effects: [
+        ...c.saveEffects,
+        ['render-ui', 'modal', null],
+        // Emit after persist succeeds so browse traits can fetch fresh data
+        ...(c.emitOnSave ? [['emit', c.emitOnSave]] : []),
+      ],
     });
   }
 
@@ -189,6 +198,7 @@ function buildTrait(c: ModalConfig): Trait {
     name: c.traitName,
     linkedEntity: c.entityName,
     category: 'interaction',
+    ...(c.emitOnSave ? { emits: [{ event: c.emitOnSave }] } : {}),
     stateMachine: {
       states: [{ name: 'closed', isInitial: true }, { name: 'open' }],
       events,
