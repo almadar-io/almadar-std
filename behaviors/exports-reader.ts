@@ -12,9 +12,9 @@
  * @packageDocumentation
  */
 
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readdirSync, readFileSync, existsSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import type { BehaviorSchema } from './types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -27,8 +27,8 @@ export type BehaviorLevel = typeof LEVEL_DIRS[number];
 function readOrbDir(dir: string): Array<{ name: string; path: string }> {
   try {
     return readdirSync(dir)
-      .filter(f => f.endsWith('.orb'))
-      .map(f => ({ name: f.replace('.orb', ''), path: resolve(dir, f) }));
+      .filter((f: string) => f.endsWith('.orb'))
+      .map((f: string) => ({ name: f.replace('.orb', ''), path: resolve(dir, f) }));
   } catch {
     return [];
   }
