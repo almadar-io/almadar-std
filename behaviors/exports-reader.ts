@@ -54,11 +54,15 @@ export function getAllBehaviorNames(): string[] {
 
 /**
  * Load all golden .orb files as BehaviorSchema objects.
+ * Sets `.name` to the behavior identifier (e.g., "std-list") from the filename,
+ * overriding the orbital name inside the .orb file.
  */
 export function getAllBehaviors(): BehaviorSchema[] {
-  return readAllOrbEntries().map(e =>
-    JSON.parse(readFileSync(e.path, 'utf-8')) as BehaviorSchema
-  );
+  return readAllOrbEntries().map(e => {
+    const schema = JSON.parse(readFileSync(e.path, 'utf-8')) as BehaviorSchema;
+    schema.name = e.name;
+    return schema;
+  });
 }
 
 /**
