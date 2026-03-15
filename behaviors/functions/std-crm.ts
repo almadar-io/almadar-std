@@ -15,7 +15,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from './std-list.js';
@@ -28,17 +28,17 @@ import { stdMessaging } from './std-messaging.js';
 
 export interface StdCrmParams {
   appName?: string;
-  contactFields?: Array<{ name: string; type: string; default?: unknown }>;
-  dealFields?: Array<{ name: string; type: string; default?: unknown }>;
-  pipelineFields?: Array<{ name: string; type: string; default?: unknown }>;
-  noteFields?: Array<{ name: string; type: string; default?: unknown }>;
+  contactFields?: EntityField[];
+  dealFields?: EntityField[];
+  pipelineFields?: EntityField[];
+  noteFields?: EntityField[];
 }
 
 // ============================================================================
 // Defaults
 // ============================================================================
 
-const DEFAULT_CONTACT_FIELDS = [
+const DEFAULT_CONTACT_FIELDS: EntityField[] = [
   { name: 'name', type: 'string', default: '' },
   { name: 'company', type: 'string', default: '' },
   { name: 'email', type: 'string', default: '' },
@@ -46,7 +46,7 @@ const DEFAULT_CONTACT_FIELDS = [
   { name: 'status', type: 'string', default: 'lead' },
 ];
 
-const DEFAULT_DEAL_FIELDS = [
+const DEFAULT_DEAL_FIELDS: EntityField[] = [
   { name: 'title', type: 'string', default: '' },
   { name: 'contactId', type: 'string', default: '' },
   { name: 'value', type: 'number', default: 0 },
@@ -54,7 +54,7 @@ const DEFAULT_DEAL_FIELDS = [
   { name: 'closedAt', type: 'string', default: '' },
 ];
 
-const DEFAULT_PIPELINE_FIELDS = [
+const DEFAULT_PIPELINE_FIELDS: EntityField[] = [
   { name: 'totalDeals', type: 'number', default: 0 },
   { name: 'totalValue', type: 'number', default: 0 },
   { name: 'wonDeals', type: 'number', default: 0 },
@@ -62,7 +62,7 @@ const DEFAULT_PIPELINE_FIELDS = [
   { name: 'conversionRate', type: 'number', default: 0 },
 ];
 
-const DEFAULT_NOTE_FIELDS = [
+const DEFAULT_NOTE_FIELDS: EntityField[] = [
   { name: 'subject', type: 'string', default: '' },
   { name: 'body', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },

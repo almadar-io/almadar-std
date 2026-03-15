@@ -87,7 +87,6 @@ export function stdArcadeGame(params: StdArcadeGameParams): OrbitalSchema {
   const scoreOrbital = stdScoreBoard({
     entityName: 'ArcadeScore',
     fields: arcadeScoreFields,
-    headerIcon: 'award',
   });
 
   const hudOrbital = stdGameHud({

@@ -14,7 +14,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from './std-list.js';
@@ -27,16 +27,16 @@ import { stdDisplay } from './std-display.js';
 
 export interface StdHelpdeskParams {
   appName?: string;
-  ticketFields?: Array<{ name: string; type: string; default?: unknown }>;
-  responseFields?: Array<{ name: string; type: string; default?: unknown }>;
-  metricsFields?: Array<{ name: string; type: string; default?: unknown }>;
+  ticketFields?: EntityField[];
+  responseFields?: EntityField[];
+  metricsFields?: EntityField[];
 }
 
 // ============================================================================
 // Defaults
 // ============================================================================
 
-const DEFAULT_TICKET_FIELDS = [
+const DEFAULT_TICKET_FIELDS: EntityField[] = [
   { name: 'subject', type: 'string', default: '' },
   { name: 'description', type: 'string', default: '' },
   { name: 'priority', type: 'string', default: 'medium' },
@@ -44,14 +44,14 @@ const DEFAULT_TICKET_FIELDS = [
   { name: 'assignee', type: 'string', default: '' },
 ];
 
-const DEFAULT_RESPONSE_FIELDS = [
+const DEFAULT_RESPONSE_FIELDS: EntityField[] = [
   { name: 'ticketId', type: 'string', default: '' },
   { name: 'body', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
   { name: 'createdAt', type: 'string', default: '' },
 ];
 
-const DEFAULT_METRICS_FIELDS = [
+const DEFAULT_METRICS_FIELDS: EntityField[] = [
   { name: 'openTickets', type: 'number', default: 0 },
   { name: 'resolvedTickets', type: 'number', default: 0 },
   { name: 'avgResponseTime', type: 'string', default: '0h' },

@@ -13,7 +13,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdDetail } from './std-detail.js';
@@ -25,15 +25,15 @@ import { stdMessaging } from './std-messaging.js';
 
 export interface StdSocialFeedParams {
   appName?: string;
-  postFields?: Array<{ name: string; type: string; default?: unknown }>;
-  commentFields?: Array<{ name: string; type: string; default?: unknown }>;
+  postFields?: EntityField[];
+  commentFields?: EntityField[];
 }
 
 // ============================================================================
 // Defaults
 // ============================================================================
 
-const DEFAULT_POST_FIELDS = [
+const DEFAULT_POST_FIELDS: EntityField[] = [
   { name: 'title', type: 'string', default: '' },
   { name: 'content', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
@@ -41,7 +41,7 @@ const DEFAULT_POST_FIELDS = [
   { name: 'likes', type: 'number', default: 0 },
 ];
 
-const DEFAULT_COMMENT_FIELDS = [
+const DEFAULT_COMMENT_FIELDS: EntityField[] = [
   { name: 'body', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
   { name: 'postId', type: 'string', default: '' },

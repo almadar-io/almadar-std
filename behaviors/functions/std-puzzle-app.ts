@@ -61,7 +61,6 @@ export function stdPuzzleApp(params: StdPuzzleAppParams): OrbitalSchema {
   const scoreOrbital = stdScoreBoard({
     entityName: 'PuzzleScore',
     fields: puzzleScoreFields,
-    headerIcon: 'award',
   });
 
   const pages: ComposePage[] = [

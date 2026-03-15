@@ -114,8 +114,7 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalSchema {
       to: 'BattleStateBattleFlow',
       event: {
         event: 'ENCOUNTER_STARTED',
-        name: 'Encounter Started',
-        payload: [{ name: 'zoneId', type: 'string', required: true, description: 'ID of the zone where the encounter was triggered' }],
+        payload: [{ name: 'zoneId', type: 'string', required: true }],
       },
       triggers: 'START',
     },
@@ -124,8 +123,7 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalSchema {
       to: 'RpgItemBrowse',
       event: {
         event: 'LOOT_DROPPED',
-        name: 'Loot Dropped',
-        payload: [{ name: 'itemId', type: 'string', required: true, description: 'ID of the dropped loot item' }],
+        payload: [{ name: 'itemId', type: 'string', required: true }],
       },
       triggers: 'INIT',
     },
@@ -134,8 +132,7 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalSchema {
       to: 'MissionTracking',
       event: {
         event: 'QUEST_ACCEPTED',
-        name: 'Quest Accepted',
-        payload: [{ name: 'questId', type: 'string', required: true, description: 'ID of the accepted quest' }],
+        payload: [{ name: 'questId', type: 'string', required: true }],
       },
       triggers: 'INIT',
     },

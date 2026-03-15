@@ -15,7 +15,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from './std-list.js';
@@ -28,17 +28,17 @@ import { stdDisplay } from './std-display.js';
 
 export interface StdHrPortalParams {
   appName?: string;
-  employeeFields?: Array<{ name: string; type: string; default?: unknown }>;
-  onboardingFields?: Array<{ name: string; type: string; default?: unknown }>;
-  timeOffFields?: Array<{ name: string; type: string; default?: unknown }>;
-  orgChartFields?: Array<{ name: string; type: string; default?: unknown }>;
+  employeeFields?: EntityField[];
+  onboardingFields?: EntityField[];
+  timeOffFields?: EntityField[];
+  orgChartFields?: EntityField[];
 }
 
 // ============================================================================
 // Defaults
 // ============================================================================
 
-const DEFAULT_EMPLOYEE_FIELDS = [
+const DEFAULT_EMPLOYEE_FIELDS: EntityField[] = [
   { name: 'name', type: 'string', default: '' },
   { name: 'email', type: 'string', default: '' },
   { name: 'department', type: 'string', default: '' },
@@ -46,7 +46,7 @@ const DEFAULT_EMPLOYEE_FIELDS = [
   { name: 'startDate', type: 'string', default: '' },
 ];
 
-const DEFAULT_ONBOARDING_FIELDS = [
+const DEFAULT_ONBOARDING_FIELDS: EntityField[] = [
   { name: 'employeeName', type: 'string', default: '' },
   { name: 'department', type: 'string', default: '' },
   { name: 'manager', type: 'string', default: '' },
@@ -54,7 +54,7 @@ const DEFAULT_ONBOARDING_FIELDS = [
   { name: 'accessGranted', type: 'boolean', default: false },
 ];
 
-const DEFAULT_TIMEOFF_FIELDS = [
+const DEFAULT_TIMEOFF_FIELDS: EntityField[] = [
   { name: 'employeeName', type: 'string', default: '' },
   { name: 'leaveType', type: 'string', default: 'vacation' },
   { name: 'startDate', type: 'string', default: '' },
@@ -62,7 +62,7 @@ const DEFAULT_TIMEOFF_FIELDS = [
   { name: 'status', type: 'string', default: 'pending' },
 ];
 
-const DEFAULT_ORGCHART_FIELDS = [
+const DEFAULT_ORGCHART_FIELDS: EntityField[] = [
   { name: 'totalEmployees', type: 'number', default: 0 },
   { name: 'departments', type: 'number', default: 0 },
   { name: 'openPositions', type: 'number', default: 0 },

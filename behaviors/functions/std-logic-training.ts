@@ -78,7 +78,6 @@ export function stdLogicTraining(params: StdLogicTrainingParams): OrbitalSchema 
   const scoreOrbital = stdScoreBoard({
     entityName: 'TrainingScore',
     fields: trainingScoreFields,
-    headerIcon: 'award',
   });
 
   const pages: ComposePage[] = [

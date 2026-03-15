@@ -14,7 +14,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalSchema, EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from './std-list.js';
@@ -27,16 +27,16 @@ import { stdDisplay } from './std-display.js';
 
 export interface StdLmsParams {
   appName?: string;
-  courseFields?: Array<{ name: string; type: string; default?: unknown }>;
-  enrollmentFields?: Array<{ name: string; type: string; default?: unknown }>;
-  progressFields?: Array<{ name: string; type: string; default?: unknown }>;
+  courseFields?: EntityField[];
+  enrollmentFields?: EntityField[];
+  progressFields?: EntityField[];
 }
 
 // ============================================================================
 // Defaults
 // ============================================================================
 
-const DEFAULT_COURSE_FIELDS = [
+const DEFAULT_COURSE_FIELDS: EntityField[] = [
   { name: 'title', type: 'string', default: '' },
   { name: 'description', type: 'string', default: '' },
   { name: 'instructor', type: 'string', default: '' },
@@ -44,7 +44,7 @@ const DEFAULT_COURSE_FIELDS = [
   { name: 'level', type: 'string', default: 'Beginner' },
 ];
 
-const DEFAULT_ENROLLMENT_FIELDS = [
+const DEFAULT_ENROLLMENT_FIELDS: EntityField[] = [
   { name: 'studentName', type: 'string', default: '' },
   { name: 'email', type: 'string', default: '' },
   { name: 'courseId', type: 'string', default: '' },
@@ -52,7 +52,7 @@ const DEFAULT_ENROLLMENT_FIELDS = [
   { name: 'status', type: 'string', default: 'pending' },
 ];
 
-const DEFAULT_PROGRESS_FIELDS = [
+const DEFAULT_PROGRESS_FIELDS: EntityField[] = [
   { name: 'courseName', type: 'string', default: '' },
   { name: 'lessonsCompleted', type: 'number', default: 0 },
   { name: 'totalLessons', type: 'number', default: 0 },

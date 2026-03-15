@@ -71,13 +71,11 @@ export function stdPlatformerApp(params: StdPlatformerAppParams): OrbitalSchema 
   const scoreOrbital = stdScoreBoard({
     entityName: 'PlatScore',
     fields: platScoreFields,
-    headerIcon: 'award',
   });
 
   const collectibleOrbital = stdInventory({
     entityName: 'Collectible',
     fields: collectibleFields,
-    headerIcon: 'star',
     pageTitle: 'Collectibles',
   });
 
