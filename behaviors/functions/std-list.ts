@@ -240,12 +240,11 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   // Add deleting state + transitions directly to the browse trait's state machine
   const sm = browseTrait.stateMachine as { states: unknown[]; events: unknown[]; transitions: unknown[] };
   sm.states.push({ name: 'deleting' });
-  sm.events.push(
-    { key: 'DELETE', name: 'Delete', payload: [{ name: 'id', type: 'string', required: true }] },
-    { key: 'CONFIRM_DELETE', name: 'Confirm Delete' },
-    { key: 'CANCEL', name: 'Cancel' },
-    { key: 'CLOSE', name: 'Close' },
-  );
+  // DELETE already exists from itemActions. Only add events that aren't already there.
+  const existingKeys = new Set((sm.events as Array<{key: string}>).map(e => e.key));
+  if (!existingKeys.has('CONFIRM_DELETE')) sm.events.push({ key: 'CONFIRM_DELETE', name: 'Confirm Delete' });
+  if (!existingKeys.has('CANCEL')) sm.events.push({ key: 'CANCEL', name: 'Cancel' });
+  if (!existingKeys.has('CLOSE')) sm.events.push({ key: 'CLOSE', name: 'Close' });
   sm.transitions.push(
     // DELETE: browsing → deleting (fetch entity by ID, show confirmation modal)
     { from: 'browsing', to: 'deleting', event: 'DELETE', effects: [

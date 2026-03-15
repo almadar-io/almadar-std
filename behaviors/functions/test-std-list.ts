@@ -9,7 +9,7 @@
 import { writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
-import { stdList } from './std-list.ts';
+import { stdList } from './std-list.js';
 
 const ORBITAL_BIN = '/home/osamah/bin/orbital';
 const OUT_DIR = join(import.meta.dirname, '..', '..', '..', '..', 'docs', 'verification-screenshots', 'behaviors', 'std-list');
