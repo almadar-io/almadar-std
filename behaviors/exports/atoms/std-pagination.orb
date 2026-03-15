@@ -1,0 +1,331 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "currentPage",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pageSize",
+            "type": "number",
+            "default": 10
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemPagination",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PAGE",
+                "name": "Change Page",
+                "payload": [
+                  {
+                    "name": "page",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "pageSize",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items",
+                                  "variant": "h2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items yet",
+                          "emptyDescription": "Add items to see them here.",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "h4",
+                                  "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.id"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Previous",
+                              "event": "PAGE",
+                              "variant": "ghost",
+                              "icon": "chevron-left"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "color": "muted",
+                              "content": [
+                                "concat",
+                                "Page ",
+                                "@entity.currentPage"
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "PAGE",
+                              "variant": "ghost",
+                              "icon": "chevron-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "PAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentPage",
+                    "@payload.page"
+                  ],
+                  [
+                    "set",
+                    "@entity.pageSize",
+                    "@payload.pageSize"
+                  ],
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items",
+                                  "variant": "h2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items yet",
+                          "emptyDescription": "Add items to see them here.",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "h4",
+                                  "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.id"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Previous",
+                              "event": "PAGE",
+                              "variant": "ghost",
+                              "icon": "chevron-left"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "color": "muted",
+                              "content": [
+                                "concat",
+                                "Page ",
+                                "@entity.currentPage"
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "PAGE",
+                              "variant": "ghost",
+                              "icon": "chevron-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemPaginationPage",
+          "path": "/items/paginated",
+          "traits": [
+            {
+              "ref": "ItemPagination"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

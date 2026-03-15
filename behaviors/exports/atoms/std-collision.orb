@@ -1,0 +1,616 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "y",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "collisionStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "targetId",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemCollision",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "detecting"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CHECK",
+                "name": "Check Collision"
+              },
+              {
+                "key": "COLLISION_DETECTED",
+                "name": "Collision Detected",
+                "payload": [
+                  {
+                    "name": "targetId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "crosshair",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Item Collision",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Position",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.x",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.y",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.collisionStatus"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Check",
+                              "event": "CHECK",
+                              "variant": "primary",
+                              "icon": "scan"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "detecting",
+                "event": "CHECK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "detecting"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "crosshair",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Item Collision",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Position",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.x",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.y",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Detecting..."
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.targetId",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "detecting",
+                "to": "detecting",
+                "event": "COLLISION_DETECTED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.targetId",
+                    "@payload.targetId"
+                  ],
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "detected"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "crosshair",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Item Collision",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Position",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.x",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.y",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Detecting..."
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.targetId",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "detecting",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.collisionStatus",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.targetId",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "crosshair",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Item Collision",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Position",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.x",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.y",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.collisionStatus"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Check",
+                              "event": "CHECK",
+                              "variant": "primary",
+                              "icon": "scan"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "detecting",
+                "to": "detecting",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "crosshair",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Item Collision",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Position",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.x",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.y",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Detecting..."
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.targetId",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemCollisionPage",
+          "path": "/items/collision",
+          "traits": [
+            {
+              "ref": "ItemCollision"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -67,13 +67,14 @@ export {
   ASYNC_OPERATORS,
 } from './modules/index.js';
 
-// Standard Behaviors
+// Standard Behaviors (functions-based)
 export {
   // Types
   type BehaviorTrait,
   type BehaviorMetadata,
+  type BehaviorSchema,
+  type BehaviorEffect,
   type ItemAction,
-  // Re-exported core types
   type Trait,
   type StateMachine,
   type State,
@@ -87,61 +88,17 @@ export {
   validateBehaviorStructure,
   validateBehaviorEvents,
   validateBehaviorStates,
-  // Action Affinity
-  type ActionAffinity,
-  type ActionPlacement,
-  type UIEventInfo,
-  ACTION_AFFINITY,
-  UI_EVENTS,
-  isActionValidForComponent,
-  isActionInvalidForComponent,
-  getValidActionsForComponent,
-  getInvalidActionsForComponent,
-  getComponentsForEvent,
-  validateActionsForComponent,
-  getAllKnownComponents,
-  getComponentsByCategory,
-  // Behaviors
-  STANDARD_BEHAVIORS,
-  BEHAVIOR_REGISTRY,
-  getBehavior,
-  isKnownBehavior,
+  // Golden .orb exports reader
+  type BehaviorLevel,
   getAllBehaviorNames,
   getAllBehaviors,
-  getAllBehaviorMetadata,
-  findBehaviorsForUseCase,
-  getBehaviorsForEvent,
-  getBehaviorsWithState,
-  validateBehaviorReference,
-  getBehaviorLibraryStats,
-  // Individual behaviors
-  LIST_BEHAVIOR,
-  DETAIL_BEHAVIOR,
-  FORM_BEHAVIOR,
-  MODAL_BEHAVIOR,
-  DRAWER_BEHAVIOR,
-  TABS_BEHAVIOR,
-  WIZARD_BEHAVIOR,
-  MASTER_DETAIL_BEHAVIOR,
-  PAGINATION_BEHAVIOR,
-  SELECTION_BEHAVIOR,
-  SORT_BEHAVIOR,
-  FILTER_BEHAVIOR,
-  SEARCH_BEHAVIOR,
-  LOADING_BEHAVIOR,
-  FETCH_BEHAVIOR,
-  SUBMIT_BEHAVIOR,
-  RETRY_BEHAVIOR,
-  POLL_BEHAVIOR,
-  NOTIFICATION_BEHAVIOR,
-  CONFIRMATION_BEHAVIOR,
-  UNDO_BEHAVIOR,
-  // Behavior category arrays
-  UI_INTERACTION_BEHAVIORS,
-  DATA_MANAGEMENT_BEHAVIORS,
-  ASYNC_BEHAVIORS,
-  FEEDBACK_BEHAVIORS,
+  getBehaviorsByLevel,
+  loadGoldenOrb,
+  hasGoldenOrb,
 } from './behaviors/index.js';
+
+// All behavior functions
+export * from './behaviors/functions/index.js';
 
 // Documentation Generator
 export {

@@ -1,0 +1,980 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemTracking",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "available",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              },
+              {
+                "name": "progressing"
+              },
+              {
+                "name": "complete"
+              },
+              {
+                "name": "failed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ACCEPT",
+                "name": "Accept"
+              },
+              {
+                "key": "PROGRESS",
+                "name": "Progress",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              },
+              {
+                "key": "FAIL",
+                "name": "Fail"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "available",
+                "to": "available",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items available",
+                          "emptyDescription": "Check back later for new items.",
+                          "itemActions": [
+                            {
+                              "label": "Accept",
+                              "event": "ACCEPT"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "flag",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "available",
+                "to": "active",
+                "event": "ACCEPT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No active quests",
+                          "emptyDescription": "Accept a quest to begin.",
+                          "itemActions": [
+                            {
+                              "label": "Progress",
+                              "event": "PROGRESS"
+                            },
+                            {
+                              "label": "Complete",
+                              "event": "COMPLETE"
+                            },
+                            {
+                              "label": "Fail",
+                              "event": "FAIL",
+                              "variant": "danger"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "flag",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No active quests",
+                          "emptyDescription": "Accept a quest to begin.",
+                          "itemActions": [
+                            {
+                              "label": "Progress",
+                              "event": "PROGRESS"
+                            },
+                            {
+                              "label": "Complete",
+                              "event": "COMPLETE"
+                            },
+                            {
+                              "label": "Fail",
+                              "event": "FAIL",
+                              "variant": "danger"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "flag",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "progressing",
+                "event": "PROGRESS",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "trending-up",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Update Progress",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Item",
+                          "mode": "edit",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CANCEL",
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "progressing",
+                "to": "active",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Item",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No active quests",
+                          "emptyDescription": "Accept a quest to begin.",
+                          "itemActions": [
+                            {
+                              "label": "Progress",
+                              "event": "PROGRESS"
+                            },
+                            {
+                              "label": "Complete",
+                              "event": "COMPLETE"
+                            },
+                            {
+                              "label": "Fail",
+                              "event": "FAIL",
+                              "variant": "danger"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "flag",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "Item updated successfully"
+                  ]
+                ]
+              },
+              {
+                "from": "progressing",
+                "to": "active",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "progressing",
+                "to": "active",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Quest Complete",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Congratulations! The quest has been completed.",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "View Quests",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "icon": "arrow-left"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "failed",
+                "event": "FAIL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "x-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Quest Failed",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "The quest was not completed. You can try again.",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "View Quests",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "icon": "arrow-left"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "available",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items available",
+                          "emptyDescription": "Check back later for new items.",
+                          "itemActions": [
+                            {
+                              "label": "Accept",
+                              "event": "ACCEPT"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "flag",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "failed",
+                "to": "available",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items available",
+                          "emptyDescription": "Check back later for new items.",
+                          "itemActions": [
+                            {
+                              "label": "Accept",
+                              "event": "ACCEPT"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "flag",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemPage",
+          "path": "/items",
+          "traits": [
+            {
+              "ref": "ItemTracking"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,483 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemNavigation",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "exploring",
+                "isInitial": true
+              },
+              {
+                "name": "transitioning"
+              },
+              {
+                "name": "entered"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TRAVEL",
+                "name": "Travel",
+                "payload": [
+                  {
+                    "name": "zoneId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ARRIVE",
+                "name": "Arrive"
+              },
+              {
+                "key": "BACK",
+                "name": "Back"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "exploring",
+                "to": "exploring",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "map",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "World Map",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Exploring"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "compass",
+                          "emptyTitle": "No items discovered",
+                          "emptyDescription": "Explore to discover new items.",
+                          "itemActions": [
+                            {
+                              "label": "Travel",
+                              "event": "TRAVEL"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "map-pin",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "exploring",
+                "to": "transitioning",
+                "event": "TRAVEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "loader",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Traveling...",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Traveling to the destination items map.",
+                          "variant": "body"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "transitioning",
+                "to": "entered",
+                "event": "ARRIVE",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "map",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Items Map",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Entered"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "Nothing here",
+                          "emptyDescription": "This zone is empty.",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "map-pin",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back to Map",
+                              "event": "BACK",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "entered",
+                "to": "exploring",
+                "event": "BACK",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "map",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "World Map",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Exploring"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "compass",
+                          "emptyTitle": "No items discovered",
+                          "emptyDescription": "Explore to discover new items.",
+                          "itemActions": [
+                            {
+                              "label": "Travel",
+                              "event": "TRAVEL"
+                            }
+                          ],
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "map-pin",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "@entity.status"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemPage",
+          "path": "/items",
+          "traits": [
+            {
+              "ref": "ItemNavigation"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

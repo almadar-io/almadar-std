@@ -1,0 +1,666 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemWizard",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "step1",
+                "isInitial": true
+              },
+              {
+                "name": "review"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "NEXT",
+                "name": "Next Step",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PREV",
+                "name": "Previous Step"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete Wizard",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart Wizard"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "step1",
+                "to": "step1",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "clipboard",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Setup Wizard",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 1"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Details"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Details",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Item",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step1",
+                "to": "review",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "clipboard",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Setup Wizard",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Review"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Details"
+                          ],
+                          "currentStep": 1
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-list",
+                          "entity": "Item",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Name"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.name"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Description"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.status"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CreatedAt"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.createdAt"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "event": "PREV",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Complete",
+                              "event": "COMPLETE",
+                              "variant": "primary",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "step1",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "clipboard",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Setup Wizard",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 1"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Details"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Details",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Item",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Item",
+                    "@payload.data"
+                  ],
+                  [
+                    "notify",
+                    "success",
+                    "Item created successfully"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Complete!",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Your item has been created successfully.",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start New",
+                          "event": "RESTART",
+                          "variant": "primary",
+                          "icon": "refresh-cw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "step1",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "clipboard",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Setup Wizard",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 1"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Details"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Details",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Item",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "step1",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "clipboard",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Setup Wizard",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 1"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Details"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Details",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Item",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemPage",
+          "path": "/wizard",
+          "traits": [
+            {
+              "ref": "ItemWizard"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3977 @@
+{
+  "name": "BookingSystemApp",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "ProviderOrbital",
+      "entity": {
+        "name": "Provider",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "specialty",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "name": "rating",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "available",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ProviderBrowse",
+          "linkedEntity": "Provider",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "PROVIDER_CREATED",
+              "triggers": "PROVIDER_CREATED"
+            },
+            {
+              "event": "PROVIDER_UPDATED",
+              "triggers": "PROVIDER_UPDATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              },
+              {
+                "name": "deleting"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CREATE",
+                "name": "CREATE"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "EDIT",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DELETE",
+                "name": "DELETE",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PROVIDER_CREATED",
+                "name": "PROVIDER_CREATED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PROVIDER_UPDATED",
+                "name": "PROVIDER_UPDATED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm Delete"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "briefcase",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Providers",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Create Provider",
+                                  "event": "CREATE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Provider",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No providers yet",
+                          "emptyDescription": "Create your first provider to get started.",
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "event": "VIEW"
+                            },
+                            {
+                              "label": "Edit",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "DELETE",
+                              "variant": "danger"
+                            }
+                          ],
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "briefcase",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.name"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.specialty"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.location"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PROVIDER_CREATED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PROVIDER_UPDATED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "deleting",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "trash-2",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Provider",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Are you sure you want to delete this provider?",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "browsing",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Provider",
+                    "@entity.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "Provider"
+                  ],
+                  [
+                    "notify",
+                    "Provider deleted successfully"
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "browsing",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "browsing",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          },
+          "emits": [
+            {
+              "event": "BOOK",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ],
+              "scope": "external"
+            }
+          ]
+        },
+        {
+          "name": "ProviderCreate",
+          "linkedEntity": "Provider",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "PROVIDER_CREATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CREATE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "plus-circle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Create Provider",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Provider",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "name",
+                            "specialty",
+                            "location",
+                            "phone",
+                            "rating",
+                            "available"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Provider",
+                    "@payload.data"
+                  ],
+                  [
+                    "fetch",
+                    "Provider"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "PROVIDER_CREATED"
+                  ],
+                  [
+                    "notify",
+                    "Provider created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ProviderEdit",
+          "linkedEntity": "Provider",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "PROVIDER_UPDATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EDIT",
+                "name": "Open",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "edit",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Edit Provider",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Provider",
+                          "mode": "edit",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "name",
+                            "specialty",
+                            "location",
+                            "phone",
+                            "rating",
+                            "available"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Provider",
+                    "@payload.data"
+                  ],
+                  [
+                    "fetch",
+                    "Provider"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "PROVIDER_UPDATED"
+                  ],
+                  [
+                    "notify",
+                    "Provider updated successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ProviderView",
+          "linkedEntity": "Provider",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "Open",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Provider",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "eye",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.name"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Name"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.name"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Specialty"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.specialty"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Location"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.location"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Phone"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.phone"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Rating"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.rating"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Available"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.available"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Edit",
+                              "event": "EDIT",
+                              "variant": "primary",
+                              "icon": "edit"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Close",
+                              "event": "CLOSE",
+                              "variant": "ghost"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ProvidersPage",
+          "path": "/providers",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "ProviderBrowse"
+            },
+            {
+              "ref": "ProviderCreate"
+            },
+            {
+              "ref": "ProviderEdit"
+            },
+            {
+              "ref": "ProviderView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BookingOrbital",
+      "entity": {
+        "name": "Booking",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "providerName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerEmail",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "time",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "notes",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BookingWizard",
+          "linkedEntity": "Booking",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "step1",
+                "isInitial": true
+              },
+              {
+                "name": "step2"
+              },
+              {
+                "name": "step3"
+              },
+              {
+                "name": "review"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "NEXT",
+                "name": "Next Step",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PREV",
+                "name": "Previous Step"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete Wizard",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart Wizard"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "step1",
+                "to": "step1",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Provider Selection",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "providerName"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step1",
+                "to": "step2",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 2 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 1
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Your Details",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
+                          "fields": [
+                            "customerName",
+                            "customerEmail"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "event": "PREV",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step2",
+                "to": "step3",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 3 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 2
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Date and Time",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
+                          "fields": [
+                            "date",
+                            "time",
+                            "notes"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "event": "PREV",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step3",
+                "to": "review",
+                "event": "NEXT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Review"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 3
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-list",
+                          "entity": "Booking",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ProviderName"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.providerName"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CustomerName"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.customerName"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CustomerEmail"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.customerEmail"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Date"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.date"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Time"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.time"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Notes"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@entity.notes"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "event": "PREV",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Confirm Booking",
+                              "event": "COMPLETE",
+                              "variant": "primary",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step2",
+                "to": "step1",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Provider Selection",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "providerName"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "step3",
+                "to": "step2",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 2 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 1
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Your Details",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
+                          "fields": [
+                            "customerName",
+                            "customerEmail"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "event": "PREV",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "step3",
+                "event": "PREV",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 3 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 2
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Date and Time",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "PREV",
+                          "fields": [
+                            "date",
+                            "time",
+                            "notes"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Back",
+                              "event": "PREV",
+                              "variant": "ghost",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "review",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Booking",
+                    "@payload.data"
+                  ],
+                  [
+                    "notify",
+                    "success",
+                    "Booking created successfully"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Booking Confirmed",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Your appointment has been booked successfully.",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start New",
+                          "event": "RESTART",
+                          "variant": "primary",
+                          "icon": "refresh-cw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "step1",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Provider Selection",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "providerName"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "step1",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Booking"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "calendar",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Book Appointment",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "badge",
+                          "label": "Step 1 of 3"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "steps": [
+                            "Provider Selection",
+                            "Your Details",
+                            "Date and Time"
+                          ],
+                          "currentStep": 0
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Provider Selection",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Booking",
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
+                          "fields": [
+                            "providerName"
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Next",
+                              "event": "NEXT",
+                              "variant": "primary",
+                              "icon": "arrow-right"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "BOOK",
+              "triggers": "INIT",
+              "scope": "external"
+            }
+          ],
+          "emits": [
+            {
+              "event": "CONFIRM",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                }
+              ],
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "BookPage",
+          "path": "/book",
+          "traits": [
+            {
+              "ref": "BookingWizard"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AppointmentOrbital",
+      "entity": {
+        "name": "Appointment",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "providerName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "customerName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "date",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "time",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "confirmed"
+          },
+          {
+            "name": "notes",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AppointmentBrowse",
+          "linkedEntity": "Appointment",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "APPOINTMENT_CREATED",
+              "triggers": "APPOINTMENT_CREATED"
+            },
+            {
+              "event": "APPOINTMENT_UPDATED",
+              "triggers": "APPOINTMENT_UPDATED"
+            },
+            {
+              "event": "CONFIRM",
+              "triggers": "INIT",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              },
+              {
+                "name": "deleting"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CREATE",
+                "name": "CREATE"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "EDIT",
+                "name": "EDIT",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DELETE",
+                "name": "DELETE",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "APPOINTMENT_CREATED",
+                "name": "APPOINTMENT_CREATED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "APPOINTMENT_UPDATED",
+                "name": "APPOINTMENT_UPDATED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm Delete"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clock",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Appointments",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Create Appointment",
+                                  "event": "CREATE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Appointment",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No appointments yet",
+                          "emptyDescription": "Create your first appointment to get started.",
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "event": "VIEW"
+                            },
+                            {
+                              "label": "Edit",
+                              "event": "EDIT"
+                            },
+                            {
+                              "label": "Delete",
+                              "event": "DELETE",
+                              "variant": "danger"
+                            }
+                          ],
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "name": "clock",
+                                          "size": "sm"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "h4",
+                                          "content": "@entity.providerName"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.customerName"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.date"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "APPOINTMENT_CREATED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "APPOINTMENT_UPDATED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "deleting",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "trash-2",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Appointment",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Are you sure you want to delete this appointment?",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "browsing",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Appointment",
+                    "@entity.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "Appointment"
+                  ],
+                  [
+                    "notify",
+                    "Appointment deleted successfully"
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "browsing",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "deleting",
+                "to": "browsing",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AppointmentCreate",
+          "linkedEntity": "Appointment",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "APPOINTMENT_CREATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CREATE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "CREATE",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "plus-circle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Create Appointment",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Appointment",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "providerName",
+                            "customerName",
+                            "date",
+                            "time",
+                            "status",
+                            "notes"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Appointment",
+                    "@payload.data"
+                  ],
+                  [
+                    "fetch",
+                    "Appointment"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "APPOINTMENT_CREATED"
+                  ],
+                  [
+                    "notify",
+                    "Appointment created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AppointmentEdit",
+          "linkedEntity": "Appointment",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "APPOINTMENT_UPDATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EDIT",
+                "name": "Open",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "EDIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "edit",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Edit Appointment",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Appointment",
+                          "mode": "edit",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "providerName",
+                            "customerName",
+                            "date",
+                            "time",
+                            "status",
+                            "notes"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "Appointment",
+                    "@payload.data"
+                  ],
+                  [
+                    "fetch",
+                    "Appointment"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "APPOINTMENT_UPDATED"
+                  ],
+                  [
+                    "notify",
+                    "Appointment updated successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AppointmentView",
+          "linkedEntity": "Appointment",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "Open",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "VIEW",
+                "effects": [
+                  [
+                    "fetch",
+                    "Appointment",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "eye",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h3",
+                              "content": "@entity.providerName"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "ProviderName"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.providerName"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "CustomerName"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.customerName"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Date"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.date"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Time"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.time"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Status"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.status"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Notes"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.notes"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Edit",
+                              "event": "EDIT",
+                              "variant": "primary",
+                              "icon": "edit"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Close",
+                              "event": "CLOSE",
+                              "variant": "ghost"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AppointmentsPage",
+          "path": "/appointments",
+          "traits": [
+            {
+              "ref": "AppointmentBrowse"
+            },
+            {
+              "ref": "AppointmentCreate"
+            },
+            {
+              "ref": "AppointmentEdit"
+            },
+            {
+              "ref": "AppointmentView"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ScheduleOrbital",
+      "entity": {
+        "name": "Schedule",
+        "persistence": "singleton",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "totalBookings",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "confirmedToday",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "pendingBookings",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "availableSlots",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ScheduleDisplay",
+          "linkedEntity": "Schedule",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "displaying"
+              },
+              {
+                "name": "refreshing"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOADED",
+                "name": "Loaded"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "key": "REFRESHED",
+                "name": "Refreshed"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Schedule"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "bar-chart-2",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Schedule Overview",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 4,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ConfirmedToday"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.confirmedToday"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "PendingBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.pendingBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvailableSlots"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.availableSlots"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "LOADED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Schedule"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "bar-chart-2",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Schedule Overview",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 4,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ConfirmedToday"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.confirmedToday"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "PendingBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.pendingBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvailableSlots"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.availableSlots"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Schedule"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "bar-chart-2",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Schedule Overview",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 4,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ConfirmedToday"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.confirmedToday"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "PendingBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.pendingBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvailableSlots"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.availableSlots"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "refreshing",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Schedule"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "bar-chart-2",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Schedule Overview",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 4,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ConfirmedToday"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.confirmedToday"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "PendingBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.pendingBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvailableSlots"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.availableSlots"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "refreshing",
+                "to": "displaying",
+                "event": "REFRESHED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Schedule"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "bar-chart-2",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Schedule Overview",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 4,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ConfirmedToday"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.confirmedToday"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "PendingBookings"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.pendingBookings"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvailableSlots"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.availableSlots"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SchedulePage",
+          "path": "/schedule",
+          "traits": [
+            {
+              "ref": "ScheduleDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

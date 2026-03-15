@@ -1,0 +1,224 @@
+{
+  "name": "Canvas3dApp",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "Scene3dOrbital",
+      "entity": {
+        "name": "Scene3d",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "cameraAngle",
+            "type": "number"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "Scene3dGameCanvas3d",
+          "linkedEntity": "Scene3d",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payload": [
+                  {
+                    "name": "tileId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payload": [
+                  {
+                    "name": "unitId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CAMERA_CHANGE",
+                "name": "Camera Change"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Scene3d"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas3-d",
+                      "tiles": "@Scene3d",
+                      "units": "@Scene3d",
+                      "features": "@Scene3d",
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "TILE_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas3-d",
+                      "tiles": "@Scene3d",
+                      "units": "@Scene3d",
+                      "features": "@Scene3d",
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "UNIT_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas3-d",
+                      "tiles": "@Scene3d",
+                      "units": "@Scene3d",
+                      "features": "@Scene3d",
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "TILE_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas3-d",
+                      "tiles": "@Scene3d",
+                      "units": "@Scene3d",
+                      "features": "@Scene3d",
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "UNIT_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas3-d",
+                      "tiles": "@Scene3d",
+                      "units": "@Scene3d",
+                      "features": "@Scene3d",
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "CAMERA_CHANGE",
+                "effects": []
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CAMERA_CHANGE",
+                "effects": []
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Scene3dCanvas3dPage",
+          "path": "/scene3ds",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "Scene3dGameCanvas3d"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

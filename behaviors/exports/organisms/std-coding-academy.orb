@@ -1,0 +1,1394 @@
+{
+  "name": "Coding Academy",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "SeqChallengeOrbital",
+      "entity": {
+        "name": "SeqChallenge",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "difficulty",
+            "type": "string",
+            "default": "easy"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "completed",
+            "type": "boolean",
+            "default": false
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SeqChallengeSequencerGame",
+          "linkedEntity": "SeqChallenge",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "menu",
+                "isInitial": true
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SeqChallenge"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Sequencer Challenge",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "playing",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "sequencer-board",
+                      "entity": "SeqChallenge",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "playing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-over-screen",
+                      "title": "Well Done!",
+                      "menuItems": [
+                        {
+                          "label": "Play Again",
+                          "event": "RESTART",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Sequencer Challenge",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SequencerPage",
+          "path": "/sequencer",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "SeqChallengeSequencerGame"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BuildChallengeOrbital",
+      "entity": {
+        "name": "BuildChallenge",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "difficulty",
+            "type": "string",
+            "default": "easy"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "completed",
+            "type": "boolean",
+            "default": false
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "BuildChallengeBuilderGame",
+          "linkedEntity": "BuildChallenge",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "menu",
+                "isInitial": true
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BuildChallenge"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Builder Challenge",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "playing",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "builder-board",
+                      "entity": "BuildChallenge",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "playing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-over-screen",
+                      "title": "Well Done!",
+                      "menuItems": [
+                        {
+                          "label": "Play Again",
+                          "event": "RESTART",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Builder Challenge",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "BuilderPage",
+          "path": "/builder",
+          "traits": [
+            {
+              "ref": "BuildChallengeBuilderGame"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EventChallengeOrbital",
+      "entity": {
+        "name": "EventChallenge",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "difficulty",
+            "type": "string",
+            "default": "easy"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "completed",
+            "type": "boolean",
+            "default": false
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "EventChallengeEventHandlerGame",
+          "linkedEntity": "EventChallenge",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "menu",
+                "isInitial": true
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "EventChallenge"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Event Handler Challenge",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "playing",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "event-handler-board",
+                      "entity": "EventChallenge",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "playing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-over-screen",
+                      "title": "Well Done!",
+                      "menuItems": [
+                        {
+                          "label": "Play Again",
+                          "event": "RESTART",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Event Handler Challenge",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "EventsPage",
+          "path": "/events",
+          "traits": [
+            {
+              "ref": "EventChallengeEventHandlerGame"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "StudentProgressOrbital",
+      "entity": {
+        "name": "StudentProgress",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "totalLessons",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "completedLessons",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "averageScore",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "streak",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "StudentProgressDisplay",
+          "linkedEntity": "StudentProgress",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "displaying"
+              },
+              {
+                "name": "refreshing"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOADED",
+                "name": "Loaded"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "key": "REFRESHED",
+                "name": "Refreshed"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentProgress"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "trending-up",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Progress",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CompletedLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.completedLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AverageScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.averageScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Streak"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.streak"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "LOADED",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentProgress"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "trending-up",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Progress",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CompletedLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.completedLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AverageScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.averageScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Streak"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.streak"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentProgress"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "trending-up",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Progress",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CompletedLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.completedLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AverageScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.averageScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Streak"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.streak"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "refreshing",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentProgress"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "trending-up",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Progress",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CompletedLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.completedLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AverageScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.averageScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Streak"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.streak"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "refreshing",
+                "to": "displaying",
+                "event": "REFRESHED",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentProgress"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "trending-up",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Progress",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "CompletedLessons"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.completedLessons"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AverageScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.averageScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Streak"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.streak"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ProgressPage",
+          "path": "/progress",
+          "traits": [
+            {
+              "ref": "StudentProgressDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

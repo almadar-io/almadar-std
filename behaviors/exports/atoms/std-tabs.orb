@@ -1,0 +1,274 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "activeTab",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemTabs",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_TAB",
+                "name": "Select Tab"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "layout-grid",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Items",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "tabs",
+                          "tabs": [
+                            {
+                              "label": "Name",
+                              "value": "name"
+                            },
+                            {
+                              "label": "Description",
+                              "value": "description"
+                            },
+                            {
+                              "label": "Status",
+                              "value": "status"
+                            },
+                            {
+                              "label": "CreatedAt",
+                              "value": "createdAt"
+                            }
+                          ],
+                          "defaultActiveTab": "name",
+                          "activeTab": "@entity.activeTab",
+                          "onTabChange": "SELECT_TAB"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items yet",
+                          "emptyDescription": "Add items to see them here.",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "h4",
+                                  "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.name"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_TAB",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "layout-grid",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Items",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "tabs",
+                          "tabs": [
+                            {
+                              "label": "Name",
+                              "value": "name"
+                            },
+                            {
+                              "label": "Description",
+                              "value": "description"
+                            },
+                            {
+                              "label": "Status",
+                              "value": "status"
+                            },
+                            {
+                              "label": "CreatedAt",
+                              "value": "createdAt"
+                            }
+                          ],
+                          "defaultActiveTab": "name",
+                          "activeTab": "@entity.activeTab",
+                          "onTabChange": "SELECT_TAB"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "Item",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No items yet",
+                          "emptyDescription": "Add items to see them here.",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "h4",
+                                  "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.name"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemTabsPage",
+          "path": "/items",
+          "traits": [
+            {
+              "ref": "ItemTabs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

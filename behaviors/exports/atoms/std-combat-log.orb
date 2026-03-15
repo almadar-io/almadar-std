@@ -1,0 +1,145 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemCombatLog",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOG_EVENT",
+                "name": "Log Event",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "combat-log",
+                      "events": "@Item",
+                      "maxVisible": 10,
+                      "autoScroll": true,
+                      "showTimestamps": true,
+                      "title": "Combat Log"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "LOG_EVENT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "combat-log",
+                      "events": "@Item",
+                      "maxVisible": 10,
+                      "autoScroll": true,
+                      "showTimestamps": true,
+                      "title": "Combat Log"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "combat-log",
+                      "events": "@Item",
+                      "maxVisible": 10,
+                      "autoScroll": true,
+                      "showTimestamps": true,
+                      "title": "Combat Log"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemLogPage",
+          "path": "/items",
+          "traits": [
+            {
+              "ref": "ItemCombatLog"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

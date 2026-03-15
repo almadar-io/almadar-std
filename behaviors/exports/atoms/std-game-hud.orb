@@ -1,0 +1,151 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemHud",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "position": "top-left",
+                      "size": "md",
+                      "transparent": false,
+                      "stats": [
+                        {
+                          "label": "Name",
+                          "value": "@entity.name"
+                        },
+                        {
+                          "label": "Description",
+                          "value": "@entity.description"
+                        },
+                        {
+                          "label": "Status",
+                          "value": "@entity.status"
+                        },
+                        {
+                          "label": "CreatedAt",
+                          "value": "@entity.createdAt"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "position": "top-left",
+                      "size": "md",
+                      "transparent": false,
+                      "stats": [
+                        {
+                          "label": "Name",
+                          "value": "@entity.name"
+                        },
+                        {
+                          "label": "Description",
+                          "value": "@entity.description"
+                        },
+                        {
+                          "label": "Status",
+                          "value": "@entity.status"
+                        },
+                        {
+                          "label": "CreatedAt",
+                          "value": "@entity.createdAt"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemHudPage",
+          "path": "/items",
+          "traits": [
+            {
+              "ref": "ItemHud"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

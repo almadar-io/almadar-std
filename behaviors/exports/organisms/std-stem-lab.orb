@@ -1,0 +1,1210 @@
+{
+  "name": "STEM Lab",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "ExperimentOrbital",
+      "entity": {
+        "name": "Experiment",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "hypothesis",
+            "type": "string"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "completed",
+            "type": "boolean",
+            "default": false
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ExperimentSimulatorGame",
+          "linkedEntity": "Experiment",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "menu",
+                "isInitial": true
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Experiment"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Experiment Simulator",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "playing",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "simulator-board",
+                      "entity": "Experiment",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "playing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-over-screen",
+                      "title": "Well Done!",
+                      "menuItems": [
+                        {
+                          "label": "Play Again",
+                          "event": "RESTART",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Experiment Simulator",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SimulatorPage",
+          "path": "/simulator",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "ExperimentSimulatorGame"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ClassificationOrbital",
+      "entity": {
+        "name": "Classification",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "accuracy",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ClassificationClassifierGame",
+          "linkedEntity": "Classification",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "menu",
+                "isInitial": true
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Classification"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Classification Lab",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "playing",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "classifier-board",
+                      "entity": "Classification",
+                      "completeEvent": "COMPLETE"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "playing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-over-screen",
+                      "title": "Well Done!",
+                      "menuItems": [
+                        {
+                          "label": "Play Again",
+                          "event": "RESTART",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "title": "Classification Lab",
+                      "menuItems": [
+                        {
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ClassifierPage",
+          "path": "/classifier",
+          "traits": [
+            {
+              "ref": "ClassificationClassifierGame"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LabResultOrbital",
+      "entity": {
+        "name": "LabResult",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "experimentCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "avgAccuracy",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalScore",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "grade",
+            "type": "string",
+            "default": "N/A"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LabResultDisplay",
+          "linkedEntity": "LabResult",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "displaying"
+              },
+              {
+                "name": "refreshing"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOADED",
+                "name": "Loaded"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "key": "REFRESHED",
+                "name": "Refreshed"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "LabResult"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clipboard",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Lab Results",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ExperimentCount"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.experimentCount"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvgAccuracy"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.avgAccuracy"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Grade"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.grade"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "displaying",
+                "event": "LOADED",
+                "effects": [
+                  [
+                    "fetch",
+                    "LabResult"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clipboard",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Lab Results",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ExperimentCount"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.experimentCount"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvgAccuracy"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.avgAccuracy"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Grade"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.grade"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "displaying",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "LabResult"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clipboard",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Lab Results",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ExperimentCount"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.experimentCount"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvgAccuracy"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.avgAccuracy"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Grade"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.grade"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "displaying",
+                "to": "refreshing",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "LabResult"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clipboard",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Lab Results",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ExperimentCount"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.experimentCount"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvgAccuracy"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.avgAccuracy"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Grade"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.grade"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "refreshing",
+                "to": "displaying",
+                "event": "REFRESHED",
+                "effects": [
+                  [
+                    "fetch",
+                    "LabResult"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "clipboard",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Lab Results",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Refresh",
+                              "event": "REFRESH",
+                              "variant": "secondary",
+                              "icon": "refresh-cw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "ExperimentCount"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.experimentCount"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "AvgAccuracy"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.avgAccuracy"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "TotalScore"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.totalScore"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Grade"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h3",
+                                      "content": "@entity.grade"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ResultsPage",
+          "path": "/results",
+          "traits": [
+            {
+              "ref": "LabResultDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

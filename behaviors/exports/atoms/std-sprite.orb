@@ -1,0 +1,156 @@
+{
+  "name": "ItemOrbital",
+  "orbitals": [
+    {
+      "name": "ItemOrbital",
+      "entity": {
+        "name": "Item",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "x",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "y",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "frame",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "spritesheet",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ItemSprite",
+          "linkedEntity": "Item",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SET_FRAME",
+                "name": "Set Frame",
+                "payload": [
+                  {
+                    "name": "frame",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLICK",
+                "name": "Click"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Item"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "sprite",
+                      "spritesheet": "@Item.spritesheet",
+                      "frameWidth": 64,
+                      "frameHeight": 64,
+                      "frame": "@Item.frame",
+                      "x": "@Item.x",
+                      "y": "@Item.y",
+                      "scale": 1
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SET_FRAME",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "sprite",
+                      "spritesheet": "@Item.spritesheet",
+                      "frameWidth": 64,
+                      "frameHeight": 64,
+                      "frame": "@Item.frame",
+                      "x": "@Item.x",
+                      "y": "@Item.y",
+                      "scale": 1
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CLICK",
+                "effects": []
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ItemSpritePage",
+          "path": "/items",
+          "traits": [
+            {
+              "ref": "ItemSprite"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

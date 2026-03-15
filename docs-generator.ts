@@ -12,7 +12,7 @@ import type { BehaviorTrait } from './behaviors/types.js';
 import type { State, Event, Transition } from '@almadar/core/types';
 import { STD_MODULES } from './types.js';
 import { STD_OPERATORS_BY_MODULE } from './registry.js';
-import { STANDARD_BEHAVIORS } from './behaviors/registry.js';
+import { getAllBehaviors } from './behaviors/exports-reader.js';
 
 // ============================================================================
 // Domain Language Mappings
@@ -617,11 +617,33 @@ export function generateModulesDocs(): StdLibDocs {
 /**
  * Generate documentation for all standard behaviors
  */
+/**
+ * Load all exported .orb files and extract the first trait from each as a BehaviorTrait.
+ */
+function loadBehaviorTraitsFromExports(): BehaviorTrait[] {
+    const schemas = getAllBehaviors();
+    const traits: BehaviorTrait[] = [];
+
+    for (const schema of schemas) {
+        const orbitals = schema.orbitals as Array<{ traits?: BehaviorTrait[] }> | undefined;
+        if (orbitals) {
+            for (const orbital of orbitals) {
+                for (const trait of orbital.traits ?? []) {
+                    traits.push(trait);
+                }
+            }
+        }
+    }
+
+    return traits;
+}
+
 export function generateBehaviorsDocs(): BehaviorsDocs {
     const categories: CategoryDoc[] = [];
 
-    // Generate flat list of all behaviors (categories deprecated)
-    const allBehaviors = STANDARD_BEHAVIORS.map((b: BehaviorTrait) => generateBehaviorDoc(b));
+    // Load behaviors from exported .orb files
+    const allTraits = loadBehaviorTraitsFromExports();
+    const allBehaviors = allTraits.map((b: BehaviorTrait) => generateBehaviorDoc(b));
 
     // Create a single "All Behaviors" category
     categories.push({

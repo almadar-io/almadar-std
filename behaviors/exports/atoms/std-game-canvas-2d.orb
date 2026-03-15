@@ -1,0 +1,135 @@
+{
+  "name": "Canvas2dApp",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "Canvas2dOrbital",
+      "entity": {
+        "name": "Canvas2d",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "frameCount",
+            "type": "number"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "Canvas2dGameCanvas2d",
+          "linkedEntity": "Canvas2d",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "rendering"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "STOP",
+                "name": "Stop"
+              },
+              {
+                "key": "TICK",
+                "name": "Tick"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Canvas2d"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas2-d",
+                      "width": 800,
+                      "height": 600,
+                      "fps": 60
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "rendering",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas2-d",
+                      "width": 800,
+                      "height": 600,
+                      "fps": 60
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "rendering",
+                "to": "rendering",
+                "event": "TICK",
+                "effects": []
+              },
+              {
+                "from": "rendering",
+                "to": "idle",
+                "event": "STOP",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas2-d",
+                      "width": 800,
+                      "height": 600,
+                      "fps": 60
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Canvas2dCanvas2dPage",
+          "path": "/canvas2ds",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "Canvas2dGameCanvas2d"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
