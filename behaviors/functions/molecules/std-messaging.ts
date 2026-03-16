@@ -81,7 +81,7 @@ function resolve(params: StdMessagingParams): MessagingConfig {
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
     formFields: params.formFields ?? nonIdFields.map(f => f.name),
     detailFields: params.detailFields ?? nonIdFields.map(f => f.name),
-    persistence: params.persistence ?? 'runtime',
+    persistence: params.persistence ?? 'persistent',
     collection: params.collection,
     pageTitle: params.pageTitle ?? p,
     composerTitle: params.composerTitle ?? `New ${entityName}`,

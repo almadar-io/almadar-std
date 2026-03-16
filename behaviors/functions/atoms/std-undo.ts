@@ -171,8 +171,26 @@ function buildPage(c: UndoConfig): Page {
 // Public API
 // ============================================================================
 
+/**
+ * Build the undo entity.
+ *
+ * @param {StdUndoParams} params - Undo configuration parameters
+ * @returns {Entity} The configured undo entity
+ */
 export function stdUndoEntity(params: StdUndoParams): Entity { return buildEntity(resolve(params)); }
+/**
+ * Build the undo trait.
+ *
+ * @param {StdUndoParams} params - Undo configuration parameters
+ * @returns {Trait} The configured undo trait
+ */
 export function stdUndoTrait(params: StdUndoParams): Trait { return buildTrait(resolve(params)); }
+/**
+ * Build the undo page.
+ *
+ * @param {StdUndoParams} params - Undo configuration parameters
+ * @returns {Page} The configured undo page
+ */
 export function stdUndoPage(params: StdUndoParams): Page { return buildPage(resolve(params)); }
 
 export function stdUndo(params: StdUndoParams): OrbitalDefinition {

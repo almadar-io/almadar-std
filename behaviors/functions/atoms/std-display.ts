@@ -146,6 +146,12 @@ export function stdDisplayEntity(params: StdDisplayParams): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
 }
 
+/**
+ * Build the display trait.
+ *
+ * @param {StdDisplayParams} params - Display configuration parameters
+ * @returns {Trait} The configured display trait
+ */
 export function stdDisplayTrait(params: StdDisplayParams): Trait { return buildTrait(resolve(params)); }
 
 export function stdDisplayPage(params: StdDisplayParams): Page {

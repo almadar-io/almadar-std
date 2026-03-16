@@ -126,8 +126,26 @@ function buildPage(c: ScoreBoardConfig): Page {
 // Public API
 // ============================================================================
 
+/**
+ * Build the score board entity.
+ *
+ * @param {StdScoreBoardParams} params - Score board configuration parameters
+ * @returns {Entity} The configured score board entity
+ */
 export function stdScoreBoardEntity(params: StdScoreBoardParams): Entity { return buildEntity(resolve(params)); }
+/**
+ * Build the score board trait.
+ *
+ * @param {StdScoreBoardParams} params - Score board configuration parameters
+ * @returns {Trait} The configured score board trait
+ */
 export function stdScoreBoardTrait(params: StdScoreBoardParams): Trait { return buildTrait(resolve(params)); }
+/**
+ * Build the score board page.
+ *
+ * @param {StdScoreBoardParams} params - Score board configuration parameters
+ * @returns {Page} The configured score board page
+ */
 export function stdScoreBoardPage(params: StdScoreBoardParams): Page { return buildPage(resolve(params)); }
 
 export function stdScoreBoard(params: StdScoreBoardParams): OrbitalDefinition {

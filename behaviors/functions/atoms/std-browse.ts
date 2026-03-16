@@ -226,8 +226,26 @@ function buildPage(c: BrowseConfig): Page {
 // Public API
 // ============================================================================
 
+/**
+ * Build the browse entity.
+ *
+ * @param {StdBrowseParams} params - Browse configuration parameters
+ * @returns {Entity} The configured browse entity
+ */
 export function stdBrowseEntity(params: StdBrowseParams): Entity { return buildEntity(resolve(params)); }
+/**
+ * Build the browse trait.
+ *
+ * @param {StdBrowseParams} params - Browse configuration parameters
+ * @returns {Trait} The configured browse trait
+ */
 export function stdBrowseTrait(params: StdBrowseParams): Trait { return buildTrait(resolve(params)); }
+/**
+ * Build the browse page.
+ *
+ * @param {StdBrowseParams} params - Browse configuration parameters
+ * @returns {Page} The configured browse page
+ */
 export function stdBrowsePage(params: StdBrowseParams): Page { return buildPage(resolve(params)); }
 
 export function stdBrowse(params: StdBrowseParams): OrbitalDefinition {

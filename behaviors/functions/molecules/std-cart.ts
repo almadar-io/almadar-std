@@ -68,7 +68,7 @@ function resolve(params: StdCartParams): CartConfig {
     entityName, fields, nonIdFields,
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
     formFields: params.formFields ?? nonIdFields.map(f => f.name),
-    persistence: params.persistence ?? 'runtime',
+    persistence: params.persistence ?? 'persistent',
     collection: params.collection,
     pageTitle: params.pageTitle ?? 'Shopping Cart',
     addButtonLabel: params.addButtonLabel ?? 'Add Item',

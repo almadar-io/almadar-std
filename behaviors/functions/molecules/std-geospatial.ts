@@ -88,7 +88,7 @@ function resolve(params: StdGeospatialParams): GeospatialConfig {
     entityName, fields, nonIdFields,
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
     detailFields: params.detailFields ?? nonIdFields.map(f => f.name),
-    persistence: params.persistence ?? 'runtime',
+    persistence: params.persistence ?? 'persistent',
     collection: params.collection,
     pageTitle: params.pageTitle ?? `${p} Picker`,
     selectLabel: params.selectLabel ?? `Select ${entityName}`,
