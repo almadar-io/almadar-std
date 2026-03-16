@@ -1,10 +1,10 @@
 {
-  "name": "GameAudioOrbital",
+  "name": "GameCanvas2dOrbital",
   "orbitals": [
     {
-      "name": "GameAudioOrbital",
+      "name": "GameCanvas2dOrbital",
       "entity": {
-        "name": "GameAudio",
+        "name": "GameCanvas2d",
         "persistence": "runtime",
         "fields": [
           {
@@ -32,14 +32,17 @@
       },
       "traits": [
         {
-          "name": "GameAudioGameAudio",
-          "linkedEntity": "GameAudio",
+          "name": "GameCanvas2dGameCanvas2d",
+          "linkedEntity": "GameCanvas2d",
           "category": "interaction",
           "stateMachine": {
             "states": [
               {
                 "name": "idle",
                 "isInitial": true
+              },
+              {
+                "name": "rendering"
               }
             ],
             "events": [
@@ -48,8 +51,16 @@
                 "name": "Initialize"
               },
               {
-                "key": "TOGGLE_MUTE",
-                "name": "Toggle Mute"
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "STOP",
+                "name": "Stop"
+              },
+              {
+                "key": "TICK",
+                "name": "Tick"
               }
             ],
             "transitions": [
@@ -60,35 +71,56 @@
                 "effects": [
                   [
                     "fetch",
-                    "GameAudio"
+                    "GameCanvas2d"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-audio-provider",
-                      "manifest": {},
-                      "baseUrl": "",
-                      "initialMuted": false,
-                      "children": []
+                      "type": "game-canvas2-d",
+                      "width": 800,
+                      "height": 600,
+                      "fps": 60
                     }
                   ]
                 ]
               },
               {
                 "from": "idle",
-                "to": "idle",
-                "event": "TOGGLE_MUTE",
+                "to": "rendering",
+                "event": "START",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-audio-provider",
-                      "manifest": {},
-                      "baseUrl": "",
-                      "initialMuted": false,
-                      "children": []
+                      "type": "game-canvas2-d",
+                      "width": 800,
+                      "height": 600,
+                      "fps": 60
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "rendering",
+                "to": "rendering",
+                "event": "TICK",
+                "effects": []
+              },
+              {
+                "from": "rendering",
+                "to": "idle",
+                "event": "STOP",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas2-d",
+                      "width": 800,
+                      "height": 600,
+                      "fps": 60
                     }
                   ]
                 ]
@@ -99,16 +131,15 @@
       ],
       "pages": [
         {
-          "name": "GameAudioAudioPage",
-          "path": "/gameaudios",
+          "name": "GameCanvas2dCanvas2dPage",
+          "path": "/gamecanvas2ds",
           "traits": [
             {
-              "ref": "GameAudioGameAudio"
+              "ref": "GameCanvas2dGameCanvas2d"
             }
           ]
         }
       ]
     }
-  ],
-  "description": "Game audio provider atom using the `game-audio-provider` pattern. Wraps child content with an audio context, providing sound playback and mute toggling."
+  ]
 }

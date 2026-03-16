@@ -103,6 +103,10 @@ function resolve(params: StdListParams): ListConfig {
 // ============================================================================
 
 function formContent(entityName: string, mode: 'create' | 'edit', title: string, icon: string, formFields: string[], saveEvent: string, cancelEvent: string): unknown {
+  const formSection: Record<string, unknown> = { type: 'form-section', entity: entityName, mode, submitEvent: saveEvent, cancelEvent, fields: formFields };
+  if (mode === 'edit') {
+    formSection.entityId = '@entity.id';
+  }
   return {
     type: 'stack', direction: 'vertical', gap: 'md',
     children: [
@@ -111,7 +115,7 @@ function formContent(entityName: string, mode: 'create' | 'edit', title: string,
         { type: 'typography', content: title, variant: 'h3' },
       ] },
       { type: 'divider' },
-      { type: 'form-section', entity: entityName, mode, submitEvent: saveEvent, cancelEvent, fields: formFields },
+      formSection,
     ],
   };
 }

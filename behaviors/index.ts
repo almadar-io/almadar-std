@@ -50,6 +50,7 @@ export {
   getBehaviorsByLevel,
   loadGoldenOrb,
   hasGoldenOrb,
+  getBehavior,
 } from './exports-reader.js';
 
 // All behavior functions (atoms, molecules, organisms)

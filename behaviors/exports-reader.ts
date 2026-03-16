@@ -100,3 +100,11 @@ export function hasGoldenOrb(behaviorName: string): boolean {
     existsSync(resolve(EXPORTS_DIR, level, `${behaviorName}.orb`))
   );
 }
+
+/**
+ * Get a single behavior by name.
+ * Alias for loadGoldenOrb for compatibility.
+ */
+export function getBehavior(behaviorName: string): BehaviorSchema | null {
+  return loadGoldenOrb(behaviorName);
+}
