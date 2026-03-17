@@ -78,18 +78,40 @@ function buildEntity(c: GameCanvas2dConfig): Entity {
 function buildTrait(c: GameCanvas2dConfig): Trait {
   const { width, height, fps } = c;
 
-  const idleView = {
+  const canvasConfig = {
     type: 'game-canvas2-d',
     width,
     height,
     fps,
   };
 
+  const idleView = {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
+        { type: 'icon', name: 'monitor', size: 'md' },
+        { type: 'typography', content: `${c.entityName} Canvas`, variant: 'h3' },
+      ]},
+      { type: 'typography', content: `${width}x${height} @ ${fps}fps`, variant: 'caption', color: 'muted' },
+      canvasConfig,
+      { type: 'button', label: 'Start', event: 'START', variant: 'primary', icon: 'play' },
+    ],
+  };
+
   const renderingView = {
-    type: 'game-canvas2-d',
-    width,
-    height,
-    fps,
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
+        { type: 'icon', name: 'monitor', size: 'md' },
+        { type: 'typography', content: `${c.entityName} Canvas`, variant: 'h3' },
+      ]},
+      canvasConfig,
+      { type: 'button', label: 'Stop', event: 'STOP', variant: 'ghost', icon: 'square' },
+    ],
   };
 
   return {
