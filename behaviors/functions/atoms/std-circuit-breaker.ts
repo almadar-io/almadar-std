@@ -82,61 +82,97 @@ function resolve(params: StdCircuitBreakerParams): CircuitBreakerConfig {
 // ============================================================================
 
 function buildEntity(c: CircuitBreakerConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
+  // Add circuit breaker metric fields
+  const fields = [
+    ...c.fields.filter(f => !['failureCount', 'successCount', 'threshold'].includes(f.name)),
+    { name: 'failureCount', type: 'number' as const, default: 0 },
+    { name: 'successCount', type: 'number' as const, default: 0 },
+    { name: 'threshold', type: 'number' as const, default: 5 },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
 }
 
 function buildTrait(c: CircuitBreakerConfig): Trait {
   const { entityName, headerIcon, closedLabel, openLabel, halfOpenLabel } = c;
 
-  // Closed view (healthy, accepting requests)
+  // Closed view: healthy, accepting requests
   const closedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: headerIcon, size: 'lg' },
-          { type: 'typography', content: entityName, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: headerIcon, size: 'lg' },
+            { type: 'typography', content: entityName, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'success', pulse: false, label: closedLabel },
         ],
       },
       { type: 'divider' },
-      { type: 'badge', label: closedLabel },
-      { type: 'typography', content: 'Service is healthy. All requests are being processed.', variant: 'body' },
+      { type: 'alert', variant: 'success', message: 'Service is healthy. All requests are being processed.' },
+      {
+        type: 'simple-grid', columns: 2,
+        children: [
+          { type: 'stat-display', label: 'Failures', value: '@entity.failureCount' },
+          { type: 'stat-display', label: 'Successes', value: '@entity.successCount' },
+        ],
+      },
+      { type: 'meter', value: '@entity.failureCount', min: 0, max: '@entity.threshold' },
     ],
   };
 
-  // Open view (tripped, rejecting requests)
+  // Open view: tripped, rejecting requests
   const openUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: 'alert-triangle', size: 'lg' },
-          { type: 'typography', content: entityName, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: 'alert-triangle', size: 'lg' },
+            { type: 'typography', content: entityName, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'error', pulse: true, label: openLabel },
         ],
       },
       { type: 'divider' },
-      { type: 'badge', label: openLabel },
-      { type: 'typography', content: 'Circuit is open. Requests are being rejected to prevent cascading failures.', variant: 'body' },
+      { type: 'alert', variant: 'danger', message: 'Circuit is open. Requests are being rejected to prevent cascading failures.' },
+      {
+        type: 'simple-grid', columns: 2,
+        children: [
+          { type: 'stat-display', label: 'Failures', value: '@entity.failureCount' },
+          { type: 'stat-display', label: 'Successes', value: '@entity.successCount' },
+        ],
+      },
+      { type: 'meter', value: '@entity.failureCount', min: 0, max: '@entity.threshold' },
       { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
     ],
   };
 
-  // Half-open view (testing recovery)
+  // Half-open view: testing recovery
   const halfOpenUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: 'activity', size: 'lg' },
-          { type: 'typography', content: entityName, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: 'activity', size: 'lg' },
+            { type: 'typography', content: entityName, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'warning', pulse: true, label: halfOpenLabel },
         ],
       },
       { type: 'divider' },
-      { type: 'badge', label: halfOpenLabel },
-      { type: 'typography', content: 'Testing recovery. Limited requests are being allowed through.', variant: 'body' },
+      { type: 'alert', variant: 'warning', message: 'Testing recovery. Limited requests are being allowed through.' },
+      {
+        type: 'simple-grid', columns: 2,
+        children: [
+          { type: 'stat-display', label: 'Failures', value: '@entity.failureCount' },
+          { type: 'stat-display', label: 'Successes', value: '@entity.successCount' },
+        ],
+      },
     ],
   };
 

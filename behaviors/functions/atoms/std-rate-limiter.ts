@@ -98,29 +98,28 @@ function buildTrait(c: RateLimiterConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
   const openView = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: headerIcon, size: 'lg' },
-          { type: 'typography', content: pageTitle, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: headerIcon, size: 'lg' },
+            { type: 'typography', content: pageTitle, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'success', pulse: false, label: 'Open' },
         ],
       },
       { type: 'divider' },
       {
-        type: 'card',
+        type: 'simple-grid', columns: 2,
         children: [
-          {
-            type: 'stack', direction: 'vertical', gap: 'sm',
-            children: [
-              { type: 'typography', content: 'Requests', variant: 'caption' },
-              { type: 'typography', content: '@entity.count', variant: 'h4' },
-              { type: 'badge', label: '@entity.limiterStatus' },
-            ],
-          },
+          { type: 'stat-display', label: 'Requests', value: '@entity.count' },
+          { type: 'stat-display', label: 'Window', value: '@entity.window' },
         ],
       },
+      { type: 'meter', value: '@entity.count', min: 0, max: 100 },
+      { type: 'progress-bar', value: '@entity.count', max: 100, showPercentage: true },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [
@@ -132,29 +131,28 @@ function buildTrait(c: RateLimiterConfig): Trait {
   };
 
   const throttledView = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: headerIcon, size: 'lg' },
-          { type: 'typography', content: pageTitle, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: headerIcon, size: 'lg' },
+            { type: 'typography', content: pageTitle, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'error', pulse: true, label: 'Throttled' },
         ],
       },
       { type: 'divider' },
+      { type: 'alert', variant: 'danger', message: 'Rate limit exceeded. Requests are being throttled.' },
       {
-        type: 'card',
+        type: 'simple-grid', columns: 2,
         children: [
-          {
-            type: 'stack', direction: 'vertical', gap: 'sm',
-            children: [
-              { type: 'typography', content: 'Requests', variant: 'caption' },
-              { type: 'typography', content: '@entity.count', variant: 'h4' },
-              { type: 'badge', label: 'Throttled' },
-            ],
-          },
+          { type: 'stat-display', label: 'Requests', value: '@entity.count' },
+          { type: 'stat-display', label: 'Window', value: '@entity.window' },
         ],
       },
+      { type: 'meter', value: '@entity.count', min: 0, max: 100 },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

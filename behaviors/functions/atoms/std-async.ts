@@ -93,7 +93,7 @@ function buildEntity(c: AsyncConfig): Entity {
 function buildTrait(c: AsyncConfig): Trait {
   const { entityName, headerIcon, loadingMessage, successMessage, errorMessage, retryable } = c;
 
-  // Idle view
+  // Idle view with descriptive prompt
   const idleUI = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
@@ -105,25 +105,26 @@ function buildTrait(c: AsyncConfig): Trait {
         ],
       },
       { type: 'divider' },
+      { type: 'typography', variant: 'body', color: 'muted', content: `Ready to start ${entityName.toLowerCase()} operation.` },
       { type: 'button', label: 'Start', event: 'START', variant: 'primary', icon: 'play' },
     ],
   };
 
-  // Loading view
+  // Loading view: loading-state molecule + skeleton placeholder
   const loadingUI = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
-      { type: 'icon', name: 'loader', size: 'lg' },
-      { type: 'typography', content: loadingMessage, variant: 'h3' },
+      { type: 'loading-state', title: loadingMessage, message: `Processing ${entityName.toLowerCase()}...` },
+      { type: 'skeleton', variant: 'text' },
     ],
   };
 
-  // Success view
+  // Success view: alert molecule
   const successUI = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
       { type: 'icon', name: 'check-circle', size: 'lg' },
-      { type: 'typography', content: successMessage, variant: 'h3' },
+      { type: 'alert', variant: 'success', message: successMessage },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [
@@ -133,7 +134,7 @@ function buildTrait(c: AsyncConfig): Trait {
     ],
   };
 
-  // Error view
+  // Error view: error-state molecule
   const errorButtons: unknown[] = [
     { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
   ];
@@ -144,8 +145,7 @@ function buildTrait(c: AsyncConfig): Trait {
   const errorUI = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
-      { type: 'icon', name: 'alert-circle', size: 'lg' },
-      { type: 'typography', content: errorMessage, variant: 'h3' },
+      { type: 'error-state', title: 'Operation Failed', message: errorMessage, onRetry: retryable ? 'RETRY' : undefined },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: errorButtons,

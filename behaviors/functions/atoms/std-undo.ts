@@ -96,11 +96,16 @@ function buildTrait(c: UndoConfig): Trait {
           { type: 'typography', content: pageTitle, variant: 'h2' },
         ] },
         { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
-          { type: 'button', label: 'Undo', event: 'UNDO', variant: 'ghost', icon: 'undo' },
-          { type: 'button', label: 'Redo', event: 'REDO', variant: 'ghost', icon: 'redo' },
-          // gap-6 spacer between Redo and Clear to prevent misclicking destructive action
+          { type: 'tooltip', content: 'Undo the last action', children: [
+            { type: 'button', label: 'Undo', event: 'UNDO', variant: 'ghost', icon: 'undo' },
+          ] },
+          { type: 'tooltip', content: 'Redo the last undone action', children: [
+            { type: 'button', label: 'Redo', event: 'REDO', variant: 'ghost', icon: 'redo' },
+          ] },
           { type: 'divider', orientation: 'vertical' },
-          { type: 'button', label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'trash-2' },
+          { type: 'tooltip', content: 'Clear all history', children: [
+            { type: 'button', label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'trash-2' },
+          ] },
         ] },
       ] },
       { type: 'divider' },
@@ -108,6 +113,7 @@ function buildTrait(c: UndoConfig): Trait {
         { type: 'typography', variant: 'caption', color: 'muted', content: 'Last action:' },
         { type: 'badge', label: '@entity.current' },
       ] },
+      { type: 'timeline', entity: entityName, data: '@entity.undoStack' },
     ],
   };
 

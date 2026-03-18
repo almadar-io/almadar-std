@@ -109,6 +109,8 @@ function buildTrait(c: ScoreConfig): Trait {
         multiplier: 1,
         level: 1,
       },
+      { type: 'animated-counter', value: '@entity.total', prefix: 'Score: ', duration: 300 },
+      { type: 'trend-indicator', value: '@entity.points', showValue: true },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

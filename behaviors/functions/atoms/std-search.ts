@@ -96,7 +96,7 @@ function buildEntity(c: SearchConfig): Entity {
 function buildTrait(c: SearchConfig): Trait {
   const { entityName, displayField, pluralName, searchIcon, placeholder } = c;
 
-  // Reusable search input view
+  // Search input view with idle prompt
   const searchInputView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -109,6 +109,7 @@ function buildTrait(c: SearchConfig): Trait {
       },
       { type: 'divider' },
       { type: 'search-input', placeholder, event: 'SEARCH' },
+      { type: 'empty-state', icon: searchIcon, title: 'Search to find results', description: `Type a query to search across ${pluralName.toLowerCase()}.` },
     ],
   };
 

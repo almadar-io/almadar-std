@@ -99,6 +99,7 @@ function buildEntity(c: InputConfig): Entity {
 function buildTrait(c: InputConfig): Trait {
   const { entityName, inputLabel, placeholder, headerIcon } = c;
 
+  // Use form-field molecule for proper label+input+error structure
   const inputView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -111,16 +112,14 @@ function buildTrait(c: InputConfig): Trait {
       },
       { type: 'divider' },
       {
-        // Form field pattern: label above, input below, help text below input
-        type: 'stack', direction: 'vertical', gap: 'sm',
+        type: 'form-field',
+        label: inputLabel,
+        hint: 'Type to enter a value.',
         children: [
-          { type: 'typography', variant: 'caption', content: inputLabel },
           { type: 'input', placeholder, event: 'CHANGE' },
-          // show current entered value as status below the field (not a mystery bar)
-          { type: 'typography', variant: 'caption', color: 'muted',
-            content: '@entity.value' },
         ],
       },
+      { type: 'typography', variant: 'caption', color: 'muted', content: '@entity.value' },
     ],
   };
 
@@ -136,15 +135,14 @@ function buildTrait(c: InputConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'stack', direction: 'vertical', gap: 'sm',
+        type: 'form-field',
+        label: inputLabel,
+        hint: 'Validating...',
         children: [
-          { type: 'typography', variant: 'caption', content: inputLabel },
           { type: 'input', placeholder, event: 'CHANGE' },
-          // semantic validation message — shown only in validating state
-          { type: 'typography', variant: 'caption', color: 'muted',
-            content: 'Validating...' },
         ],
       },
+      { type: 'alert', variant: 'info', message: 'Validating input...' },
     ],
   };
 

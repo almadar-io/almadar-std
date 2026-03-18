@@ -100,7 +100,7 @@ function buildEntity(c: TimerConfig): Entity {
 function buildTrait(c: TimerConfig): Trait {
   const { entityName, timerTitle, headerIcon } = c;
 
-  // Shared timer display component — shows formatted MM:SS + label + progress track
+  // Shared timer display: animated counter + meter gauge + stat display
   const timerDisplay = {
     type: 'stack', direction: 'vertical', gap: 'md', align: 'center',
     children: [
@@ -112,12 +112,10 @@ function buildTrait(c: TimerConfig): Trait {
         ],
       },
       { type: 'divider' },
-      // Large MM:SS time display — the entity.remaining field drives this
-      { type: 'typography', content: '@entity.remaining', variant: 'h1' },
-      // Unit/label subtitle: shows what is being timed
-      { type: 'typography', content: 'seconds remaining', variant: 'caption', color: 'muted' },
-      // Progress bar track — always visible, filled as timer decrements
-      { type: 'progress-bar', value: '@entity.remaining', max: c.duration, color: 'primary' },
+      { type: 'animated-counter', value: '@entity.remaining', suffix: 's', duration: 500 },
+      { type: 'stat-display', label: 'Time Remaining', value: '@entity.remaining', max: c.duration },
+      { type: 'meter', value: '@entity.remaining', min: 0, max: c.duration },
+      { type: 'progress-bar', value: '@entity.remaining', max: c.duration, color: 'primary', showPercentage: true },
       { type: 'badge', label: '@entity.status' },
     ],
   };

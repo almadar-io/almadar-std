@@ -75,13 +75,18 @@ function resolve(params: StdSortParams): SortConfig {
 // ============================================================================
 
 function buildEntity(c: SortConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  const fields = [
+    ...c.fields.filter(f => !['activeSortField', 'activeSortDirection'].includes(f.name)),
+    { name: 'activeSortField', type: 'string' as const, default: '' },
+    { name: 'activeSortDirection', type: 'string' as const, default: 'asc' },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence });
 }
 
 function buildTrait(c: SortConfig): Trait {
   const { entityName, sortableFields, displayField, pluralName, headerIcon, pageTitle } = c;
 
-  // Sort toolbar: placed directly above the data list (not in the page header)
+  // Sort toolbar: each button carries its field name + direction in actionPayload
   const sortToolbar = {
     type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
     children: [
@@ -90,7 +95,7 @@ function buildTrait(c: SortConfig): Trait {
         type: 'button',
         label: f.charAt(0).toUpperCase() + f.slice(1),
         event: 'SORT',
-        // secondary in idle; molecules can override active to primary
+        actionPayload: { field: f, direction: 'asc' },
         variant: 'secondary',
         icon: 'arrow-up-down',
       })),
@@ -106,6 +111,7 @@ function buildTrait(c: SortConfig): Trait {
         type: 'button',
         label: f.charAt(0).toUpperCase() + f.slice(1),
         event: 'SORT',
+        actionPayload: { field: f, direction: f === activeField ? 'desc' : 'asc' },
         // highlight the active sort field with primary + directional arrow
         variant: f === activeField ? 'primary' : 'secondary',
         icon: f === activeField ? 'chevron-up' : 'arrow-up-down',
@@ -119,9 +125,8 @@ function buildTrait(c: SortConfig): Trait {
     emptyTitle: `No ${pluralName.toLowerCase()} yet`,
     emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
     className: 'transition-shadow hover:shadow-md cursor-pointer',
-    children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
+    children: [{ type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between', children: [
       { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
-      // Show the first sortable field as a secondary datum so sorting is visually meaningful
       ...(sortableFields[1]
         ? [{ type: 'typography', variant: 'caption', color: 'muted', content: `@entity.${sortableFields[1]}` }]
         : []),
@@ -138,13 +143,12 @@ function buildTrait(c: SortConfig): Trait {
         ] },
       ] },
       { type: 'divider' },
-      // Sort toolbar lives just above the data list
       sortToolbar,
       dataGrid,
     ],
   };
 
-  // After sorting: show active sort with primary variant
+  // After sorting: show active sort with primary variant + sortable-list for manual reorder
   const sortedView = activeSortToolbar(sortableFields[0] ?? displayField);
   const mainSortedView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
@@ -170,12 +174,25 @@ function buildTrait(c: SortConfig): Trait {
       states: [{ name: 'idle', isInitial: true }, { name: 'sorted' }],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'SORT', name: 'Sort' },
+        { key: 'SORT', name: 'Sort', payload: [
+          { name: 'field', type: 'string', required: true },
+          { name: 'direction', type: 'string' },
+        ] },
       ],
       transitions: [
         { from: 'idle', to: 'idle', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', mainView]] },
-        { from: 'idle', to: 'sorted', event: 'SORT', effects: [['fetch', entityName], ['render-ui', 'main', mainSortedView]] },
-        { from: 'sorted', to: 'sorted', event: 'SORT', effects: [['fetch', entityName], ['render-ui', 'main', mainSortedView]] },
+        { from: 'idle', to: 'sorted', event: 'SORT', effects: [
+          ['set', '@entity.activeSortField', '@payload.field'],
+          ['set', '@entity.activeSortDirection', '@payload.direction'],
+          ['fetch', entityName, null, ['concat', '@payload.field', ':', '@payload.direction']],
+          ['render-ui', 'main', mainSortedView],
+        ] },
+        { from: 'sorted', to: 'sorted', event: 'SORT', effects: [
+          ['set', '@entity.activeSortField', '@payload.field'],
+          ['set', '@entity.activeSortDirection', '@payload.direction'],
+          ['fetch', entityName, null, ['concat', '@payload.field', ':', '@payload.direction']],
+          ['render-ui', 'main', mainSortedView],
+        ] },
         { from: 'sorted', to: 'idle', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', mainView]] },
       ],
     },

@@ -101,7 +101,6 @@ function buildTrait(c: LoadingConfig): Trait {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
       {
-        // Neutral icon in idle (not the spinner — that lives only in the loading state)
         type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
         children: [
           { type: 'icon', name: 'play-circle', size: 'lg' },
@@ -109,31 +108,23 @@ function buildTrait(c: LoadingConfig): Trait {
         ],
       },
       { type: 'divider' },
-      // Contextual description of what this loading operation does
       { type: 'typography', variant: 'body', color: 'muted',
         content: `Ready to load ${title.toLowerCase()}. Click Start to begin.` },
       { type: 'button', label: 'Start', event: 'START', variant: 'primary', icon: 'play' },
     ],
   };
 
+  // Loading view: loading-state molecule + progress bar with percentage
   const loadingView = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
-      {
-        // Spinner icon appears only in the loading state — not permanently
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'loader', size: 'lg' },
-          { type: 'typography', content: 'Loading...', variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'progress-bar', value: 50 },
-      { type: 'typography', variant: 'caption', color: 'muted',
-        content: 'Please wait while the operation completes.' },
+      { type: 'loading-state', title: 'Loading', message: `Loading ${title.toLowerCase()}...` },
+      { type: 'progress-bar', value: 50, showPercentage: true },
+      { type: 'skeleton', variant: 'text' },
     ],
   };
 
+  // Success view: alert molecule with success variant
   const successView = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
@@ -145,23 +136,16 @@ function buildTrait(c: LoadingConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'typography', variant: 'body', content: 'Operation completed successfully.' },
+      { type: 'alert', variant: 'success', message: 'Operation completed successfully.' },
       { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
     ],
   };
 
+  // Error view: error-state molecule with retry support
   const errorView = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
-        children: [
-          { type: 'icon', name: 'alert-circle', size: 'lg' },
-          { type: 'typography', content: 'Error', variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'typography', variant: 'body', content: 'Something went wrong.' },
+      { type: 'error-state', title: 'Error', message: 'Something went wrong. Please try again.', onRetry: 'START' },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

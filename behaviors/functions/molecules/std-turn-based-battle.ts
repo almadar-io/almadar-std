@@ -217,15 +217,15 @@ function buildBattleFlowTrait(c: BattleConfig): Trait {
           from: 'playing', to: 'paused', event: 'PAUSE',
           effects: [['render-ui', 'modal', pausedModalUI]],
         },
-        // RESUME: paused -> playing
+        // RESUME: paused -> playing (dismiss modal, re-render main)
         {
           from: 'paused', to: 'playing', event: 'RESUME',
-          effects: [['render-ui', 'modal', null]],
+          effects: [['render-ui', 'modal', null], ['render-ui', 'main', playingUI]],
         },
         // CLOSE: paused -> playing (modal exit requirement)
         {
           from: 'paused', to: 'playing', event: 'CLOSE',
-          effects: [['render-ui', 'modal', null]],
+          effects: [['render-ui', 'modal', null], ['render-ui', 'main', playingUI]],
         },
         // GAME_OVER: playing -> gameover
         {

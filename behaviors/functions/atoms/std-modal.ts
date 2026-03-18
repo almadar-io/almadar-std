@@ -85,29 +85,28 @@ function resolve(params: StdModalParams): ModalConfig {
   const nonIdFields = fields.filter(f => f.name !== 'id');
   const p = plural(entityName);
 
-  // Default open content: field detail view
+  // Default open content: modal molecule wrapping field detail view
   const defaultContent = {
-    type: 'stack', direction: 'vertical', gap: 'md',
+    type: 'modal',
+    title: params.modalTitle ?? 'Details',
+    isOpen: true,
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+        type: 'stack', direction: 'vertical', gap: 'md',
         children: [
-          { type: 'icon', name: params.headerIcon ?? 'maximize-2', size: 'md' },
-          { type: 'typography', content: params.modalTitle ?? 'Details', variant: 'h3' },
+          ...nonIdFields.map(f => ({
+            type: 'stack', direction: 'horizontal', gap: 'md',
+            children: [
+              { type: 'typography', variant: 'caption', content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
+              { type: 'typography', variant: 'body', content: `@entity.${f.name}` },
+            ],
+          })),
+          { type: 'divider' },
+          {
+            type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
+            children: [{ type: 'button', label: 'Close', event: params.closeEvent ?? 'CLOSE', variant: 'ghost' }],
+          },
         ],
-      },
-      { type: 'divider' },
-      ...nonIdFields.map(f => ({
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
-          { type: 'typography', variant: 'body', content: `@entity.${f.name}` },
-        ],
-      })),
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
-        children: [{ type: 'button', label: 'Close', event: params.closeEvent ?? 'CLOSE', variant: 'ghost' }],
       },
     ],
   };
@@ -119,7 +118,7 @@ function resolve(params: StdModalParams): ModalConfig {
     persistence: params.persistence ?? 'runtime',
     traitName: params.traitName ?? `${entityName}Modal`,
     modalTitle: params.modalTitle ?? 'Details',
-    headerIcon: params.headerIcon ?? 'maximize-2',
+    headerIcon: params.headerIcon ?? 'layout-panel-top',
     openContent: params.openContent ?? defaultContent,
     openEvent: params.openEvent ?? 'OPEN',
     openPayload: params.openPayload ?? [],
@@ -168,6 +167,8 @@ function buildTrait(c: ModalConfig): Trait {
                 ] },
                 { type: 'button', label: 'Open', event: c.openEvent, variant: 'primary', icon: c.headerIcon },
               ] },
+              { type: 'divider' },
+              { type: 'empty-state', icon: c.headerIcon, title: 'Nothing open', description: 'Click Open to view details in a modal overlay.' },
             ],
           }]]
         : [['fetch', c.entityName]],
@@ -177,8 +178,24 @@ function buildTrait(c: ModalConfig): Trait {
       from: 'closed', to: 'open', event: c.openEvent,
       effects: [...c.openEffects, ['render-ui', 'modal', c.openContent]],
     },
-    // CLOSE: open → closed
-    { from: 'open', to: 'closed', event: c.closeEvent, effects: [['render-ui', 'modal', null]] },
+    // CLOSE: open → closed (re-render main to avoid stale content)
+    { from: 'open', to: 'closed', event: c.closeEvent, effects: [
+      ['render-ui', 'modal', null],
+      ...(c.standalone ? [['fetch', c.entityName], ['render-ui', 'main', {
+        type: 'stack', direction: 'vertical', gap: 'lg',
+        children: [
+          { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
+            { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+              { type: 'icon', name: c.headerIcon, size: 'lg' },
+              { type: 'typography', content: c.modalTitle, variant: 'h2' },
+            ] },
+            { type: 'button', label: 'Open', event: c.openEvent, variant: 'primary', icon: c.headerIcon },
+          ] },
+          { type: 'divider' },
+          { type: 'empty-state', icon: c.headerIcon, title: 'Nothing open', description: 'Click Open to view details in a modal overlay.' },
+        ],
+      }]] : []),
+    ] },
   ];
 
   // Save transition (molecule injects this for create/edit modals)

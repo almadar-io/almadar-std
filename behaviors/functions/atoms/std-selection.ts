@@ -108,7 +108,6 @@ function buildTrait(c: SelectionConfig): Trait {
         ],
       },
       { type: 'divider' },
-      // Meaningful action prompt using entity name
       { type: 'typography', variant: 'caption', color: 'muted',
         content: `Choose a ${entityName.toLowerCase()} to continue.` },
       {
@@ -117,13 +116,11 @@ function buildTrait(c: SelectionConfig): Trait {
         emptyTitle: `No ${pluralName.toLowerCase()} yet`,
         emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
         className: 'transition-shadow hover:shadow-md cursor-pointer',
+        itemActions: [{ label: 'Select', event: 'SELECT', icon: 'check' }],
         children: [{
-          // Checkbox-style affordance on LEFT of each row, then the entity name
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
-            { type: 'icon', name: 'circle', size: 'sm', color: 'muted' },
-            { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
-            { type: 'button', label: 'Select', event: 'SELECT', variant: 'ghost', icon: 'check' },
+            { type: 'checkbox', label: `@entity.${displayField}`, checked: ['==', '@entity.id', `@${entityName}.selectedId`] },
           ],
         }],
       },
@@ -154,12 +151,23 @@ function buildTrait(c: SelectionConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Selected ID:' },
-          { type: 'typography', variant: 'body', content: '@entity.selectedId' },
-        ],
+        type: 'alert', variant: 'info',
+        message: ['concat', 'Selected: ', '@entity.selectedId'],
       },
+      {
+        type: 'data-grid', entity: entityName,
+        emptyIcon: 'inbox',
+        emptyTitle: `No ${pluralName.toLowerCase()} yet`,
+        emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
+        itemActions: [{ label: 'Select', event: 'SELECT', icon: 'check' }],
+        children: [{
+          type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+          children: [
+            { type: 'checkbox', label: `@entity.${displayField}`, checked: ['==', '@entity.id', `@${entityName}.selectedId`] },
+          ],
+        }],
+      },
+      { type: 'divider' },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [
@@ -187,6 +195,10 @@ function buildTrait(c: SelectionConfig): Trait {
         ],
       },
       { type: 'divider' },
+      {
+        type: 'alert', variant: 'success',
+        message: 'Selection confirmed successfully.',
+      },
       {
         type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
         children: [

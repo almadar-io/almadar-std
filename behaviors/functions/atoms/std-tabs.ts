@@ -94,6 +94,34 @@ function buildEntity(c: TabsConfig): Entity {
 function buildTrait(c: TabsConfig): Trait {
   const { entityName, displayField, pluralName, headerIcon, pageTitle, tabItems } = c;
 
+  // Tab content with accordion for hierarchical data within each tab
+  const tabContentChildren: unknown[] = [
+    {
+      type: 'data-grid', entity: entityName,
+      emptyIcon: 'inbox',
+      emptyTitle: `No ${pluralName.toLowerCase()} yet`,
+      emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
+      className: 'transition-shadow hover:shadow-md cursor-pointer',
+      children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
+        { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+        { type: 'typography', variant: 'caption', color: 'muted', content: `@entity.${tabItems[0]?.value ?? displayField}` },
+      ] }],
+    },
+  ];
+
+  // Use accordion for content sections when tabs have multiple data groups
+  if (tabItems.length > 2) {
+    tabContentChildren.push({
+      type: 'accordion',
+      items: tabItems.map(tab => ({
+        id: tab.value,
+        title: tab.label,
+        content: { type: 'typography', variant: 'body', content: `@entity.${tab.value}` },
+      })),
+      multiple: true,
+    });
+  }
+
   const mainView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -106,23 +134,11 @@ function buildTrait(c: TabsConfig): Trait {
         type: 'tabs',
         tabs: tabItems,
         defaultActiveTab: tabItems[0]?.value ?? '',
-        // active tab gets primary color underline and text
         activeTab: '@entity.activeTab',
         onTabChange: 'SELECT_TAB',
       },
-      // divider separates tab bar from content
       { type: 'divider' },
-      {
-        type: 'data-grid', entity: entityName,
-        emptyIcon: 'inbox',
-        emptyTitle: `No ${pluralName.toLowerCase()} yet`,
-        emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
-        className: 'transition-shadow hover:shadow-md cursor-pointer',
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
-          { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
-          { type: 'typography', variant: 'caption', color: 'muted', content: `@entity.${tabItems[0]?.value ?? displayField}` },
-        ] }],
-      },
+      ...tabContentChildren,
     ],
   };
 

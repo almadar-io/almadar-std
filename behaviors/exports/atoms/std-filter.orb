@@ -22,11 +22,26 @@
           {
             "name": "status",
             "type": "string",
-            "default": "active"
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
+          },
+          {
+            "name": "activeFilterField",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "activeFilterValue",
+            "type": "string",
+            "default": ""
           }
         ]
       },
@@ -52,7 +67,19 @@
               },
               {
                 "key": "FILTER",
-                "name": "Filter"
+                "name": "Filter",
+                "payload": [
+                  {
+                    "name": "field",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               },
               {
                 "key": "CLEAR_FILTERS",
@@ -112,8 +139,20 @@
                           "type": "divider"
                         },
                         {
-                          "type": "badge",
-                          "label": "No filter fields defined"
+                          "type": "filter-group",
+                          "entity": "FilterTarget",
+                          "filters": [
+                            {
+                              "field": "status",
+                              "label": "Status",
+                              "options": [
+                                "active",
+                                "inactive",
+                                "pending"
+                              ],
+                              "filterType": "select"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
@@ -135,6 +174,12 @@
                                   "type": "typography",
                                   "variant": "h4",
                                   "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.status"
                                 }
                               ]
                             }
@@ -151,8 +196,27 @@
                 "event": "FILTER",
                 "effects": [
                   [
+                    "set",
+                    "@entity.activeFilterField",
+                    "@payload.field"
+                  ],
+                  [
+                    "set",
+                    "@entity.activeFilterValue",
+                    "@payload.value"
+                  ],
+                  [
                     "fetch",
-                    "FilterTarget"
+                    "FilterTarget",
+                    [
+                      "==",
+                      [
+                        "object/get",
+                        "@entity",
+                        "@payload.field"
+                      ],
+                      "@payload.value"
+                    ]
                   ],
                   [
                     "render-ui",
@@ -191,6 +255,7 @@
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "badge",
@@ -199,7 +264,7 @@
                                 },
                                 {
                                   "type": "button",
-                                  "label": "Clear",
+                                  "label": "Clear All",
                                   "event": "CLEAR_FILTERS",
                                   "variant": "ghost",
                                   "icon": "x"
@@ -209,7 +274,57 @@
                           ]
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "filter",
+                              "size": "sm"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "color": "muted",
+                              "content": "Filtered by"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.activeFilterField",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "="
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.activeFilterValue",
+                              "variant": "primary"
+                            }
+                          ]
+                        },
+                        {
                           "type": "divider"
+                        },
+                        {
+                          "type": "filter-group",
+                          "entity": "FilterTarget",
+                          "filters": [
+                            {
+                              "field": "status",
+                              "label": "Status",
+                              "options": [
+                                "active",
+                                "inactive",
+                                "pending"
+                              ],
+                              "filterType": "select"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
@@ -231,6 +346,12 @@
                                   "type": "typography",
                                   "variant": "h4",
                                   "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.status"
                                 }
                               ]
                             }
@@ -247,8 +368,27 @@
                 "event": "FILTER",
                 "effects": [
                   [
+                    "set",
+                    "@entity.activeFilterField",
+                    "@payload.field"
+                  ],
+                  [
+                    "set",
+                    "@entity.activeFilterValue",
+                    "@payload.value"
+                  ],
+                  [
                     "fetch",
-                    "FilterTarget"
+                    "FilterTarget",
+                    [
+                      "==",
+                      [
+                        "object/get",
+                        "@entity",
+                        "@payload.field"
+                      ],
+                      "@payload.value"
+                    ]
                   ],
                   [
                     "render-ui",
@@ -287,6 +427,7 @@
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
                                   "type": "badge",
@@ -295,7 +436,7 @@
                                 },
                                 {
                                   "type": "button",
-                                  "label": "Clear",
+                                  "label": "Clear All",
                                   "event": "CLEAR_FILTERS",
                                   "variant": "ghost",
                                   "icon": "x"
@@ -305,7 +446,57 @@
                           ]
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "filter",
+                              "size": "sm"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "color": "muted",
+                              "content": "Filtered by"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.activeFilterField",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "="
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.activeFilterValue",
+                              "variant": "primary"
+                            }
+                          ]
+                        },
+                        {
                           "type": "divider"
+                        },
+                        {
+                          "type": "filter-group",
+                          "entity": "FilterTarget",
+                          "filters": [
+                            {
+                              "field": "status",
+                              "label": "Status",
+                              "options": [
+                                "active",
+                                "inactive",
+                                "pending"
+                              ],
+                              "filterType": "select"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
@@ -327,6 +518,12 @@
                                   "type": "typography",
                                   "variant": "h4",
                                   "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.status"
                                 }
                               ]
                             }
@@ -342,6 +539,16 @@
                 "to": "browsing",
                 "event": "CLEAR_FILTERS",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.activeFilterField",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.activeFilterValue",
+                    ""
+                  ],
                   [
                     "fetch",
                     "FilterTarget"
@@ -389,8 +596,20 @@
                           "type": "divider"
                         },
                         {
-                          "type": "badge",
-                          "label": "No filter fields defined"
+                          "type": "filter-group",
+                          "entity": "FilterTarget",
+                          "filters": [
+                            {
+                              "field": "status",
+                              "label": "Status",
+                              "options": [
+                                "active",
+                                "inactive",
+                                "pending"
+                              ],
+                              "filterType": "select"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
@@ -412,6 +631,12 @@
                                   "type": "typography",
                                   "variant": "h4",
                                   "content": "@entity.name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "@entity.status"
                                 }
                               ]
                             }

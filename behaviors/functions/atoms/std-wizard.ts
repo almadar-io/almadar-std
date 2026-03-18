@@ -141,7 +141,7 @@ function buildStepUI(c: WizardConfig, stepIndex: number): Record<string, unknown
           { type: 'typography', content: c.wizardTitle, variant: 'h2' },
         ],
       },
-      { type: 'badge', label: `Step ${stepNumber} of ${c.totalSteps}` },
+      { type: 'progress-dots', count: c.totalSteps, currentIndex: stepIndex },
       { type: 'wizard-progress', steps: c.wizardProgressSteps, currentStep: stepIndex },
       { type: 'divider' },
       { type: 'typography', content: step.name, variant: 'h3' },
@@ -186,11 +186,12 @@ function buildReviewUI(c: WizardConfig): Record<string, unknown> {
         ],
       },
       {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
-        children: [
-          { type: 'button', label: 'Back', event: 'PREV', variant: 'ghost', icon: 'arrow-left' },
-          { type: 'button', label: c.submitButtonLabel, event: 'COMPLETE', variant: 'primary', icon: 'check' },
-        ],
+        type: 'wizard-navigation',
+        currentStep: c.totalSteps,
+        totalSteps: c.totalSteps + 1,
+        showBack: true,
+        showComplete: true,
+        showNext: false,
       },
     ],
   };

@@ -131,14 +131,11 @@ function buildTrait(c: PaginationConfig): Trait {
         }],
       },
       {
-        // Pagination footer with context: "Page N" and Prev/Next nav
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center', align: 'center',
-        children: [
-          { type: 'button', label: 'Previous', event: 'PAGE', variant: 'ghost', icon: 'chevron-left' },
-          { type: 'typography', variant: 'body', color: 'muted',
-            content: ['concat', 'Page ', '@entity.currentPage'] },
-          { type: 'button', label: 'Next', event: 'PAGE', variant: 'ghost', icon: 'chevron-right' },
-        ],
+        type: 'pagination',
+        currentPage: '@entity.currentPage',
+        totalPages: 10,
+        onPageChange: 'PAGE',
+        showPageSize: false,
       },
     ],
   };

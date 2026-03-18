@@ -84,16 +84,24 @@ function resolve(params: StdDisplayParams): DisplayConfig {
 function buildTrait(c: DisplayConfig): Trait {
   const { entityName, displayFields, headerIcon, pageTitle, refreshButtonLabel, columns } = c;
 
-  const cardChildren = displayFields.map(f => ({
-    type: 'card',
-    children: [{
-      type: 'stack', direction: 'vertical', gap: 'sm',
-      children: [
-        { type: 'typography', variant: 'caption', content: f.charAt(0).toUpperCase() + f.slice(1) },
-        { type: 'typography', variant: 'h3', content: `@entity.${f}` },
-      ],
-    }],
-  }));
+  // Use stat-display molecule for numeric fields, card+typography for others
+  const cardChildren = displayFields.map(f => {
+    const field = c.nonIdFields.find(nf => nf.name === f);
+    const isNumeric = field?.type === 'number';
+    if (isNumeric) {
+      return { type: 'stat-display', label: f.charAt(0).toUpperCase() + f.slice(1), value: `@entity.${f}` };
+    }
+    return {
+      type: 'card',
+      children: [{
+        type: 'stack', direction: 'vertical', gap: 'sm',
+        children: [
+          { type: 'typography', variant: 'caption', content: f.charAt(0).toUpperCase() + f.slice(1) },
+          { type: 'typography', variant: 'h3', content: `@entity.${f}` },
+        ],
+      }],
+    };
+  });
 
   const mainView = {
     type: 'stack', direction: 'vertical', gap: 'lg',

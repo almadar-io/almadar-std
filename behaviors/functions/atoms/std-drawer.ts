@@ -125,35 +125,43 @@ function buildTrait(c: DrawerConfig): Trait {
     ],
   };
 
+  // Use drawer molecule with accordion for grouped field sections
   const openView = {
-    type: 'stack', direction: 'vertical', gap: 'md',
+    type: 'drawer',
+    title: drawerTitle,
+    isOpen: true,
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'space-between', align: 'center',
+        type: 'stack', direction: 'vertical', gap: 'md',
         children: [
           {
-            type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+            type: 'accordion',
+            items: [
+              {
+                id: 'details',
+                title: 'Details',
+                content: {
+                  type: 'stack', direction: 'vertical', gap: 'sm',
+                  children: nonIdFields.map(field => ({
+                    type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
+                    children: [
+                      { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
+                      { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
+                    ],
+                  })),
+                },
+              },
+            ],
+            defaultOpen: [0],
+            multiple: true,
+          },
+          { type: 'divider' },
+          {
+            type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
             children: [
-              { type: 'icon', name: headerIcon, size: 'md' },
-              { type: 'typography', content: drawerTitle, variant: 'h3' },
+              { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost' },
             ],
           },
-          { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost', icon: 'x' },
-        ],
-      },
-      { type: 'divider' },
-      ...nonIdFields.map(field => ({
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-          { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
-        ],
-      })),
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
-        children: [
-          { type: 'button', label: 'Close', event: 'CLOSE', variant: 'ghost' },
         ],
       },
     ],
@@ -192,6 +200,8 @@ function buildTrait(c: DrawerConfig): Trait {
           from: 'open', to: 'closed', event: 'CLOSE',
           effects: [
             ['render-ui', 'drawer', null],
+            ['fetch', entityName],
+            ['render-ui', 'main', closedView],
           ],
         },
       ],

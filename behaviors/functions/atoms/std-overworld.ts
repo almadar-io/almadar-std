@@ -119,7 +119,7 @@ function buildTrait(c: OverworldConfig): Trait {
     listItemChildren.push({ type: 'typography', variant: 'caption', content: `@entity.${listFields[2]}` });
   }
 
-  // Exploring main view
+  // Exploring main view with map-view and status
   const exploringMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -133,10 +133,11 @@ function buildTrait(c: OverworldConfig): Trait {
               { type: 'typography', content: worldTitle, variant: 'h2' },
             ],
           },
-          { type: 'badge', label: 'Exploring' },
+          { type: 'status-dot', status: 'active', pulse: false, label: 'Exploring' },
         ],
       },
       { type: 'divider' },
+      { type: 'map-view', markers: [], height: '200px', zoom: 10 },
       {
         type: 'data-grid', entity: entityName, emptyIcon: 'compass', emptyTitle, emptyDescription,
         itemActions: [{ label: 'Travel', event: 'TRAVEL' }],
@@ -175,7 +176,7 @@ function buildTrait(c: OverworldConfig): Trait {
               { type: 'typography', content: pageTitle, variant: 'h2' },
             ],
           },
-          { type: 'badge', label: 'Entered' },
+          { type: 'status-dot', status: 'success', label: 'Entered' },
         ],
       },
       { type: 'divider' },

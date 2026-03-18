@@ -136,21 +136,22 @@ function buildTrait(c: QuestConfig): Trait {
     ],
   };
 
-  // Available quests view (browsing)
+  // Available quests view with timeline for quest progression
   const availableMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       headerBar,
       { type: 'divider' },
       {
-        type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle, emptyDescription,
+        type: 'data-list', entity: entityName, groupBy: 'status',
+        emptyIcon: 'inbox', emptyTitle, emptyDescription,
         itemActions: [{ label: 'Accept', event: 'ACCEPT' }],
         children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };
 
-  // Active quest view
+  // Active quest view with progress tracking + accordion for objectives
   const activeMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -168,36 +169,44 @@ function buildTrait(c: QuestConfig): Trait {
         ],
       },
       { type: 'divider' },
+      { type: 'progress-bar', value: 50, showPercentage: true },
+      { type: 'timeline', entity: entityName },
       {
-        type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle: 'No active quests', emptyDescription: 'Accept a quest to begin.',
-        itemActions: [
-          { label: 'Progress', event: 'PROGRESS' },
-          { label: 'Complete', event: 'COMPLETE' },
-          { label: 'Fail', event: 'FAIL', variant: 'danger' },
+        type: 'accordion',
+        items: [
+          { id: 'objectives', title: 'Objectives', content: {
+            type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle: 'No active quests', emptyDescription: 'Accept a quest to begin.',
+            itemActions: [
+              { label: 'Progress', event: 'PROGRESS' },
+              { label: 'Complete', event: 'COMPLETE' },
+              { label: 'Fail', event: 'FAIL', variant: 'danger' },
+            ],
+            children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+          } },
         ],
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+        defaultOpen: [0],
       },
     ],
   };
 
-  // Complete view
+  // Complete view with success alert
   const completeMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
       { type: 'icon', name: 'check-circle', size: 'lg' },
       { type: 'typography', content: 'Quest Complete', variant: 'h2' },
-      { type: 'typography', content: 'Congratulations! The quest has been completed.', variant: 'body' },
+      { type: 'alert', variant: 'success', message: 'Congratulations! The quest has been completed.' },
       { type: 'button', label: 'View Quests', event: 'RESET', variant: 'primary', icon: 'arrow-left' },
     ],
   };
 
-  // Failed view
+  // Failed view with error alert
   const failedMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
       { type: 'icon', name: 'x-circle', size: 'lg' },
       { type: 'typography', content: 'Quest Failed', variant: 'h2' },
-      { type: 'typography', content: 'The quest was not completed. You can try again.', variant: 'body' },
+      { type: 'alert', variant: 'danger', message: 'The quest was not completed. You can try again.' },
       { type: 'button', label: 'View Quests', event: 'RESET', variant: 'primary', icon: 'arrow-left' },
     ],
   };
@@ -283,15 +292,23 @@ function buildTrait(c: QuestConfig): Trait {
             ['render-ui', 'main', activeMainUI],
           ],
         },
-        // CANCEL: progressing -> active
+        // CANCEL: progressing -> active (re-render main to avoid stale content)
         {
           from: 'progressing', to: 'active', event: 'CANCEL',
-          effects: [['render-ui', 'modal', null]],
+          effects: [
+            ['render-ui', 'modal', null],
+            ['fetch', entityName],
+            ['render-ui', 'main', activeMainUI],
+          ],
         },
-        // CLOSE: progressing -> active
+        // CLOSE: progressing -> active (re-render main to avoid stale content)
         {
           from: 'progressing', to: 'active', event: 'CLOSE',
-          effects: [['render-ui', 'modal', null]],
+          effects: [
+            ['render-ui', 'modal', null],
+            ['fetch', entityName],
+            ['render-ui', 'main', activeMainUI],
+          ],
         },
         // COMPLETE: active -> complete
         {

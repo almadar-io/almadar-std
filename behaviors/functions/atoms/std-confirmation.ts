@@ -94,7 +94,7 @@ function resolve(params: StdConfirmationParams): ConfirmationConfig {
     confirmMessage: params.confirmMessage ?? 'Are you sure?',
     confirmLabel: params.confirmLabel ?? 'Confirm',
     cancelLabel: params.cancelLabel ?? 'Cancel',
-    headerIcon: params.headerIcon ?? 'alert-triangle',
+    headerIcon: params.headerIcon ?? 'shield-check',
     requestEvent: params.requestEvent ?? 'REQUEST',
     confirmEvent: params.confirmEvent ?? 'CONFIRM',
     confirmEffects: params.confirmEffects ?? [],
@@ -122,6 +122,59 @@ function buildEntity(c: ConfirmationConfig): Entity {
 function buildTrait(c: ConfirmationConfig): Trait {
   const { entityName, displayField, pluralName, confirmTitle, confirmMessage, confirmLabel, cancelLabel, headerIcon } = c;
 
+  const idleMainView = {
+    type: 'stack', direction: 'vertical', gap: 'lg',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+        { type: 'icon', name: headerIcon, size: 'lg' },
+        { type: 'typography', content: pluralName, variant: 'h2' },
+      ] },
+      { type: 'divider' },
+      {
+        type: 'data-grid', entity: entityName,
+        emptyIcon: 'inbox',
+        emptyTitle: `No ${pluralName.toLowerCase()} yet`,
+        emptyDescription: 'Items will appear here.',
+        itemActions: [{ label: confirmTitle, event: c.requestEvent, variant: 'danger' }],
+        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
+          { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+        ] }],
+      },
+    ],
+  };
+
+  const confirmModalView = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      {
+        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+        children: [
+          { type: 'icon', name: 'alert-triangle', size: 'md' },
+          { type: 'typography', content: confirmTitle, variant: 'h3' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'alert',
+        variant: 'danger',
+        message: confirmMessage,
+      },
+      {
+        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
+        children: [
+          { type: 'button', label: cancelLabel, event: 'CANCEL', variant: 'ghost' },
+          { type: 'button', label: confirmLabel, event: c.confirmEvent, variant: 'danger', icon: 'check' },
+        ],
+      },
+    ],
+  };
+
+  // Effects to dismiss modal and refresh main view
+  const dismissAndRefresh: unknown[] = [
+    ['render-ui', 'modal', null],
+    ...(c.standalone ? [['fetch', entityName], ['render-ui', 'main', idleMainView]] : [['fetch', entityName]]),
+  ];
+
   return {
     name: c.traitName,
     linkedEntity: entityName,
@@ -140,83 +193,35 @@ function buildTrait(c: ConfirmationConfig): Trait {
         { key: 'CLOSE', name: 'Close' },
       ],
       transitions: [
-        // INIT: idle -> idle
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: c.standalone
-            ? [['fetch', entityName], ['render-ui', 'main', {
-                type: 'stack', direction: 'vertical', gap: 'lg',
-                children: [
-                  { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
-                    { type: 'icon', name: headerIcon, size: 'lg' },
-                    { type: 'typography', content: pluralName, variant: 'h2' },
-                  ] },
-                  { type: 'divider' },
-                  {
-                    type: 'data-grid', entity: entityName,
-                    emptyIcon: 'inbox',
-                    emptyTitle: `No ${pluralName.toLowerCase()} yet`,
-                    emptyDescription: 'Items will appear here.',
-                    itemActions: [{ label: confirmTitle, event: c.requestEvent, variant: 'danger' }],
-                    children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
-                      { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
-                    ] }],
-                  },
-                ],
-              }]]
+            ? [['fetch', entityName], ['render-ui', 'main', idleMainView]]
             : [['fetch', entityName]],
         },
-        // REQUEST: idle -> confirming (fetch entity by ID so server has context)
         {
           from: 'idle', to: 'confirming', event: c.requestEvent,
           effects: [
             ['set', '@entity.pendingId', '@payload.id'],
             ['fetch', entityName, '@payload.id'],
-            ['render-ui', 'modal', {
-              type: 'stack', direction: 'vertical', gap: 'md',
-              children: [
-                {
-                  type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-                  children: [
-                    { type: 'icon', name: headerIcon, size: 'md' },
-                    { type: 'typography', content: confirmTitle, variant: 'h3' },
-                  ],
-                },
-                { type: 'divider' },
-                { type: 'typography', content: confirmMessage, variant: 'body' },
-                {
-                  type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
-                  children: [
-                    { type: 'button', label: cancelLabel, event: 'CANCEL', variant: 'ghost' },
-                    { type: 'button', label: confirmLabel, event: c.confirmEvent, variant: 'danger', icon: 'check' },
-                  ],
-                },
-              ],
-            }],
+            ['render-ui', 'modal', confirmModalView],
           ],
         },
-        // CONFIRM: confirming -> idle (run injected effects, dismiss modal)
         {
           from: 'confirming', to: 'idle', event: c.confirmEvent,
           effects: [
             ...c.confirmEffects,
-            ['render-ui', 'modal', null],
+            ...dismissAndRefresh,
             ...(c.emitOnConfirm ? [['emit', c.emitOnConfirm]] : []),
           ],
         },
-        // CANCEL: confirming -> idle (dismiss modal)
         {
           from: 'confirming', to: 'idle', event: 'CANCEL',
-          effects: [
-            ['render-ui', 'modal', null],
-          ],
+          effects: dismissAndRefresh,
         },
-        // CLOSE: confirming -> idle (dismiss modal)
         {
           from: 'confirming', to: 'idle', event: 'CLOSE',
-          effects: [
-            ['render-ui', 'modal', null],
-          ],
+          effects: dismissAndRefresh,
         },
       ],
     },

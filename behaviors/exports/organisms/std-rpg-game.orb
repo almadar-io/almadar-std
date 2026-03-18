@@ -226,6 +226,23 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "stats": [
+                        {
+                          "label": "Turn",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        }
+                      ]
+                    }
                   ]
                 ]
               },
@@ -238,6 +255,23 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "stats": [
+                        {
+                          "label": "Turn",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        }
+                      ]
+                    }
                   ]
                 ]
               },
@@ -570,13 +604,21 @@
                               ]
                             },
                             {
-                              "type": "badge",
+                              "type": "status-dot",
+                              "status": "active",
+                              "pulse": false,
                               "label": "Exploring"
                             }
                           ]
                         },
                         {
                           "type": "divider"
+                        },
+                        {
+                          "type": "map-view",
+                          "markers": [],
+                          "height": "200px",
+                          "zoom": 10
                         },
                         {
                           "type": "data-grid",
@@ -725,7 +767,8 @@
                               ]
                             },
                             {
-                              "type": "badge",
+                              "type": "status-dot",
+                              "status": "success",
                               "label": "Entered"
                             }
                           ]
@@ -848,13 +891,21 @@
                               ]
                             },
                             {
-                              "type": "badge",
+                              "type": "status-dot",
+                              "status": "active",
+                              "pulse": false,
                               "label": "Exploring"
                             }
                           ]
                         },
                         {
                           "type": "divider"
+                        },
+                        {
+                          "type": "map-view",
+                          "markers": [],
+                          "height": "200px",
+                          "zoom": 10
                         },
                         {
                           "type": "data-grid",
@@ -1694,7 +1745,7 @@
                           "children": [
                             {
                               "type": "icon",
-                              "name": "trash-2",
+                              "name": "alert-triangle",
                               "size": "md"
                             },
                             {
@@ -1708,9 +1759,9 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
-                          "content": "Are you sure you want to drop this rpgitem?",
-                          "variant": "body"
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "Are you sure you want to drop this rpgitem?"
                         },
                         {
                           "type": "stack",
@@ -1759,6 +1810,10 @@
                     null
                   ],
                   [
+                    "fetch",
+                    "RpgItem"
+                  ],
+                  [
                     "emit",
                     "CONFIRM_DROP"
                   ],
@@ -1777,6 +1832,10 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "RpgItem"
                   ]
                 ]
               },
@@ -1789,6 +1848,10 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "RpgItem"
                   ]
                 ]
               }
@@ -1971,8 +2034,9 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "type": "data-list",
                           "entity": "Mission",
+                          "groupBy": "status",
                           "emptyIcon": "inbox",
                           "emptyTitle": "No missions available",
                           "emptyDescription": "Check back later for new missions.",
@@ -2082,69 +2146,96 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "type": "progress-bar",
+                          "value": 50,
+                          "showPercentage": true
+                        },
+                        {
+                          "type": "timeline",
                           "entity": "Mission",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No active quests",
-                          "emptyDescription": "Accept a quest to begin.",
-                          "itemActions": [
+                          "fields": [
+                            "title",
+                            "description",
+                            "status",
+                            "reward"
+                          ]
+                        },
+                        {
+                          "type": "accordion",
+                          "items": [
                             {
-                              "label": "Progress",
-                              "event": "PROGRESS"
-                            },
-                            {
-                              "label": "Complete",
-                              "event": "COMPLETE"
-                            },
-                            {
-                              "label": "Fail",
-                              "event": "FAIL",
-                              "variant": "danger"
+                              "id": "objectives",
+                              "title": "Objectives",
+                              "content": {
+                                "type": "data-grid",
+                                "entity": "Mission",
+                                "emptyIcon": "inbox",
+                                "emptyTitle": "No active quests",
+                                "emptyDescription": "Accept a quest to begin.",
+                                "itemActions": [
+                                  {
+                                    "label": "Progress",
+                                    "event": "PROGRESS"
+                                  },
+                                  {
+                                    "label": "Complete",
+                                    "event": "COMPLETE"
+                                  },
+                                  {
+                                    "label": "Fail",
+                                    "event": "FAIL",
+                                    "variant": "danger"
+                                  }
+                                ],
+                                "children": [
+                                  {
+                                    "type": "stack",
+                                    "direction": "vertical",
+                                    "gap": "sm",
+                                    "children": [
+                                      {
+                                        "type": "stack",
+                                        "direction": "horizontal",
+                                        "justify": "space-between",
+                                        "align": "center",
+                                        "children": [
+                                          {
+                                            "type": "stack",
+                                            "direction": "horizontal",
+                                            "gap": "sm",
+                                            "align": "center",
+                                            "children": [
+                                              {
+                                                "type": "icon",
+                                                "name": "flag",
+                                                "size": "sm"
+                                              },
+                                              {
+                                                "type": "typography",
+                                                "variant": "h4",
+                                                "content": "@entity.title"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "badge",
+                                            "label": "@entity.description"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "typography",
+                                        "variant": "caption",
+                                        "content": "@entity.status"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
                             }
                           ],
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "flag",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@entity.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@entity.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@entity.status"
-                                }
-                              ]
-                            }
+                          "defaultOpen": [
+                            0
                           ]
                         }
                       ]
@@ -2202,69 +2293,96 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "type": "progress-bar",
+                          "value": 50,
+                          "showPercentage": true
+                        },
+                        {
+                          "type": "timeline",
                           "entity": "Mission",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No active quests",
-                          "emptyDescription": "Accept a quest to begin.",
-                          "itemActions": [
+                          "fields": [
+                            "title",
+                            "description",
+                            "status",
+                            "reward"
+                          ]
+                        },
+                        {
+                          "type": "accordion",
+                          "items": [
                             {
-                              "label": "Progress",
-                              "event": "PROGRESS"
-                            },
-                            {
-                              "label": "Complete",
-                              "event": "COMPLETE"
-                            },
-                            {
-                              "label": "Fail",
-                              "event": "FAIL",
-                              "variant": "danger"
+                              "id": "objectives",
+                              "title": "Objectives",
+                              "content": {
+                                "type": "data-grid",
+                                "entity": "Mission",
+                                "emptyIcon": "inbox",
+                                "emptyTitle": "No active quests",
+                                "emptyDescription": "Accept a quest to begin.",
+                                "itemActions": [
+                                  {
+                                    "label": "Progress",
+                                    "event": "PROGRESS"
+                                  },
+                                  {
+                                    "label": "Complete",
+                                    "event": "COMPLETE"
+                                  },
+                                  {
+                                    "label": "Fail",
+                                    "event": "FAIL",
+                                    "variant": "danger"
+                                  }
+                                ],
+                                "children": [
+                                  {
+                                    "type": "stack",
+                                    "direction": "vertical",
+                                    "gap": "sm",
+                                    "children": [
+                                      {
+                                        "type": "stack",
+                                        "direction": "horizontal",
+                                        "justify": "space-between",
+                                        "align": "center",
+                                        "children": [
+                                          {
+                                            "type": "stack",
+                                            "direction": "horizontal",
+                                            "gap": "sm",
+                                            "align": "center",
+                                            "children": [
+                                              {
+                                                "type": "icon",
+                                                "name": "flag",
+                                                "size": "sm"
+                                              },
+                                              {
+                                                "type": "typography",
+                                                "variant": "h4",
+                                                "content": "@entity.title"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "badge",
+                                            "label": "@entity.description"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "typography",
+                                        "variant": "caption",
+                                        "content": "@entity.status"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
                             }
                           ],
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "flag",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@entity.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@entity.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@entity.status"
-                                }
-                              ]
-                            }
+                          "defaultOpen": [
+                            0
                           ]
                         }
                       ]
@@ -2384,69 +2502,96 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "type": "progress-bar",
+                          "value": 50,
+                          "showPercentage": true
+                        },
+                        {
+                          "type": "timeline",
                           "entity": "Mission",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No active quests",
-                          "emptyDescription": "Accept a quest to begin.",
-                          "itemActions": [
+                          "fields": [
+                            "title",
+                            "description",
+                            "status",
+                            "reward"
+                          ]
+                        },
+                        {
+                          "type": "accordion",
+                          "items": [
                             {
-                              "label": "Progress",
-                              "event": "PROGRESS"
-                            },
-                            {
-                              "label": "Complete",
-                              "event": "COMPLETE"
-                            },
-                            {
-                              "label": "Fail",
-                              "event": "FAIL",
-                              "variant": "danger"
+                              "id": "objectives",
+                              "title": "Objectives",
+                              "content": {
+                                "type": "data-grid",
+                                "entity": "Mission",
+                                "emptyIcon": "inbox",
+                                "emptyTitle": "No active quests",
+                                "emptyDescription": "Accept a quest to begin.",
+                                "itemActions": [
+                                  {
+                                    "label": "Progress",
+                                    "event": "PROGRESS"
+                                  },
+                                  {
+                                    "label": "Complete",
+                                    "event": "COMPLETE"
+                                  },
+                                  {
+                                    "label": "Fail",
+                                    "event": "FAIL",
+                                    "variant": "danger"
+                                  }
+                                ],
+                                "children": [
+                                  {
+                                    "type": "stack",
+                                    "direction": "vertical",
+                                    "gap": "sm",
+                                    "children": [
+                                      {
+                                        "type": "stack",
+                                        "direction": "horizontal",
+                                        "justify": "space-between",
+                                        "align": "center",
+                                        "children": [
+                                          {
+                                            "type": "stack",
+                                            "direction": "horizontal",
+                                            "gap": "sm",
+                                            "align": "center",
+                                            "children": [
+                                              {
+                                                "type": "icon",
+                                                "name": "flag",
+                                                "size": "sm"
+                                              },
+                                              {
+                                                "type": "typography",
+                                                "variant": "h4",
+                                                "content": "@entity.title"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "badge",
+                                            "label": "@entity.description"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "typography",
+                                        "variant": "caption",
+                                        "content": "@entity.status"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
                             }
                           ],
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "flag",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@entity.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@entity.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@entity.status"
-                                }
-                              ]
-                            }
+                          "defaultOpen": [
+                            0
                           ]
                         }
                       ]
@@ -2467,6 +2612,146 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "Mission"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Missions Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": 50,
+                          "showPercentage": true
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "Mission",
+                          "fields": [
+                            "title",
+                            "description",
+                            "status",
+                            "reward"
+                          ]
+                        },
+                        {
+                          "type": "accordion",
+                          "items": [
+                            {
+                              "id": "objectives",
+                              "title": "Objectives",
+                              "content": {
+                                "type": "data-grid",
+                                "entity": "Mission",
+                                "emptyIcon": "inbox",
+                                "emptyTitle": "No active quests",
+                                "emptyDescription": "Accept a quest to begin.",
+                                "itemActions": [
+                                  {
+                                    "label": "Progress",
+                                    "event": "PROGRESS"
+                                  },
+                                  {
+                                    "label": "Complete",
+                                    "event": "COMPLETE"
+                                  },
+                                  {
+                                    "label": "Fail",
+                                    "event": "FAIL",
+                                    "variant": "danger"
+                                  }
+                                ],
+                                "children": [
+                                  {
+                                    "type": "stack",
+                                    "direction": "vertical",
+                                    "gap": "sm",
+                                    "children": [
+                                      {
+                                        "type": "stack",
+                                        "direction": "horizontal",
+                                        "justify": "space-between",
+                                        "align": "center",
+                                        "children": [
+                                          {
+                                            "type": "stack",
+                                            "direction": "horizontal",
+                                            "gap": "sm",
+                                            "align": "center",
+                                            "children": [
+                                              {
+                                                "type": "icon",
+                                                "name": "flag",
+                                                "size": "sm"
+                                              },
+                                              {
+                                                "type": "typography",
+                                                "variant": "h4",
+                                                "content": "@entity.title"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "badge",
+                                            "label": "@entity.description"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "typography",
+                                        "variant": "caption",
+                                        "content": "@entity.status"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "defaultOpen": [
+                            0
+                          ]
+                        }
+                      ]
+                    }
                   ]
                 ]
               },
@@ -2479,6 +2764,146 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "fetch",
+                    "Mission"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "flag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Missions Board",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": 50,
+                          "showPercentage": true
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "Mission",
+                          "fields": [
+                            "title",
+                            "description",
+                            "status",
+                            "reward"
+                          ]
+                        },
+                        {
+                          "type": "accordion",
+                          "items": [
+                            {
+                              "id": "objectives",
+                              "title": "Objectives",
+                              "content": {
+                                "type": "data-grid",
+                                "entity": "Mission",
+                                "emptyIcon": "inbox",
+                                "emptyTitle": "No active quests",
+                                "emptyDescription": "Accept a quest to begin.",
+                                "itemActions": [
+                                  {
+                                    "label": "Progress",
+                                    "event": "PROGRESS"
+                                  },
+                                  {
+                                    "label": "Complete",
+                                    "event": "COMPLETE"
+                                  },
+                                  {
+                                    "label": "Fail",
+                                    "event": "FAIL",
+                                    "variant": "danger"
+                                  }
+                                ],
+                                "children": [
+                                  {
+                                    "type": "stack",
+                                    "direction": "vertical",
+                                    "gap": "sm",
+                                    "children": [
+                                      {
+                                        "type": "stack",
+                                        "direction": "horizontal",
+                                        "justify": "space-between",
+                                        "align": "center",
+                                        "children": [
+                                          {
+                                            "type": "stack",
+                                            "direction": "horizontal",
+                                            "gap": "sm",
+                                            "align": "center",
+                                            "children": [
+                                              {
+                                                "type": "icon",
+                                                "name": "flag",
+                                                "size": "sm"
+                                              },
+                                              {
+                                                "type": "typography",
+                                                "variant": "h4",
+                                                "content": "@entity.title"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "type": "badge",
+                                            "label": "@entity.description"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "typography",
+                                        "variant": "caption",
+                                        "content": "@entity.status"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "defaultOpen": [
+                            0
+                          ]
+                        }
+                      ]
+                    }
                   ]
                 ]
               },
@@ -2507,9 +2932,9 @@
                           "variant": "h2"
                         },
                         {
-                          "type": "typography",
-                          "content": "Congratulations! The quest has been completed.",
-                          "variant": "body"
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "Congratulations! The quest has been completed."
                         },
                         {
                           "type": "button",
@@ -2548,9 +2973,9 @@
                           "variant": "h2"
                         },
                         {
-                          "type": "typography",
-                          "content": "The quest was not completed. You can try again.",
-                          "variant": "body"
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "The quest was not completed. You can try again."
                         },
                         {
                           "type": "button",
@@ -2610,8 +3035,9 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "type": "data-list",
                           "entity": "Mission",
+                          "groupBy": "status",
                           "emptyIcon": "inbox",
                           "emptyTitle": "No missions available",
                           "emptyDescription": "Check back later for new missions.",
@@ -2717,8 +3143,9 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
+                          "type": "data-list",
                           "entity": "Mission",
+                          "groupBy": "status",
                           "emptyIcon": "inbox",
                           "emptyTitle": "No missions available",
                           "emptyDescription": "Check back later for new missions.",

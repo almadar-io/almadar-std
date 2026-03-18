@@ -99,33 +99,24 @@ function buildTrait(c: CollisionConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
   const idleView = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: headerIcon, size: 'lg' },
-          { type: 'typography', content: pageTitle, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: headerIcon, size: 'lg' },
+            { type: 'typography', content: pageTitle, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'inactive', label: 'Idle' },
         ],
       },
       { type: 'divider' },
       {
-        type: 'card',
+        type: 'simple-grid', columns: 2,
         children: [
-          {
-            type: 'stack', direction: 'vertical', gap: 'sm',
-            children: [
-              { type: 'typography', content: 'Position', variant: 'caption' },
-              {
-                type: 'stack', direction: 'horizontal', gap: 'md',
-                children: [
-                  { type: 'typography', content: '@entity.x', variant: 'body' },
-                  { type: 'typography', content: '@entity.y', variant: 'body' },
-                ],
-              },
-              { type: 'badge', label: '@entity.collisionStatus' },
-            ],
-          },
+          { type: 'stat-display', label: 'X', value: '@entity.x' },
+          { type: 'stat-display', label: 'Y', value: '@entity.y' },
         ],
       },
       {
@@ -138,36 +129,28 @@ function buildTrait(c: CollisionConfig): Trait {
   };
 
   const detectingView = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: headerIcon, size: 'lg' },
-          { type: 'typography', content: pageTitle, variant: 'h2' },
+          { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
+            { type: 'icon', name: headerIcon, size: 'lg' },
+            { type: 'typography', content: pageTitle, variant: 'h2' },
+          ] },
+          { type: 'status-dot', status: 'warning', pulse: true, label: 'Detecting' },
         ],
       },
       { type: 'divider' },
+      { type: 'alert', variant: 'warning', message: 'Collision detection in progress...' },
       {
-        type: 'card',
+        type: 'simple-grid', columns: 2,
         children: [
-          {
-            type: 'stack', direction: 'vertical', gap: 'sm',
-            children: [
-              { type: 'typography', content: 'Position', variant: 'caption' },
-              {
-                type: 'stack', direction: 'horizontal', gap: 'md',
-                children: [
-                  { type: 'typography', content: '@entity.x', variant: 'body' },
-                  { type: 'typography', content: '@entity.y', variant: 'body' },
-                ],
-              },
-              { type: 'badge', label: 'Detecting...' },
-              { type: 'typography', content: '@entity.targetId', variant: 'body' },
-            ],
-          },
+          { type: 'stat-display', label: 'X', value: '@entity.x' },
+          { type: 'stat-display', label: 'Y', value: '@entity.y' },
         ],
       },
+      { type: 'typography', variant: 'caption', color: 'muted', content: '@entity.targetId' },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

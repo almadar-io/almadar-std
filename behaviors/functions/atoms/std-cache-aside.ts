@@ -94,7 +94,13 @@ function resolve(params: StdCacheAsideParams): CacheAsideConfig {
 // ============================================================================
 
 function buildEntity(c: CacheAsideConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
+  // Add cache metric fields
+  const fields = [
+    ...c.fields.filter(f => !['hitCount', 'cacheAge'].includes(f.name)),
+    { name: 'hitCount', type: 'number' as const, default: 0 },
+    { name: 'cacheAge', type: 'number' as const, default: 0 },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
 }
 
 function buildTrait(c: CacheAsideConfig): Trait {
@@ -136,17 +142,23 @@ function buildTrait(c: CacheAsideConfig): Trait {
     ],
   };
 
-  // Empty state main view
+  // Empty state main view with status dot
   const emptyMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
-      headerBar,
+      {
+        type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
+        children: [
+          headerBar,
+          { type: 'status-dot', status: 'inactive', pulse: false, label: 'Empty' },
+        ],
+      },
       { type: 'divider' },
       { type: 'empty-state', icon: 'inbox', title: emptyTitle, description: emptyDescription },
     ],
   };
 
-  // Cached state main view
+  // Cached state main view with status dot + stats
   const cachedMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -161,9 +173,9 @@ function buildTrait(c: CacheAsideConfig): Trait {
             ],
           },
           {
-            type: 'stack', direction: 'horizontal', gap: 'sm',
+            type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
             children: [
-              { type: 'badge', label: 'Cached' },
+              { type: 'status-dot', status: 'success', pulse: false, label: 'Cached' },
               { type: 'button', label: 'Invalidate', event: 'INVALIDATE', variant: 'ghost', icon: 'trash' },
             ],
           },
@@ -171,13 +183,20 @@ function buildTrait(c: CacheAsideConfig): Trait {
       },
       { type: 'divider' },
       {
+        type: 'simple-grid', columns: 2,
+        children: [
+          { type: 'stat-display', label: 'Hit Count', value: '@entity.hitCount' },
+          { type: 'stat-display', label: 'Cache Age', value: '@entity.cacheAge' },
+        ],
+      },
+      {
         type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle, emptyDescription,
         children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };
 
-  // Stale state main view
+  // Stale state main view with warning status + timeline
   const staleMainUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -192,15 +211,16 @@ function buildTrait(c: CacheAsideConfig): Trait {
             ],
           },
           {
-            type: 'stack', direction: 'horizontal', gap: 'sm',
+            type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
             children: [
-              { type: 'badge', label: 'Stale' },
+              { type: 'status-dot', status: 'warning', pulse: true, label: 'Stale' },
               { type: 'button', label: 'Refresh', event: 'REFRESH', variant: 'primary', icon: 'refresh-cw' },
             ],
           },
         ],
       },
       { type: 'divider' },
+      { type: 'alert', variant: 'warning', message: 'Cache data is stale. Refresh to get the latest data.' },
       {
         type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle, emptyDescription,
         children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],

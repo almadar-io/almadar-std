@@ -83,20 +83,34 @@ function resolve(params: StdMovementParams): MovementConfig {
 // ============================================================================
 
 function buildEntity(c: MovementConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
+  const fields = [
+    ...c.fields.filter(f => !['x', 'y'].includes(f.name)),
+    { name: 'x', type: 'number' as const, default: 0 },
+    { name: 'y', type: 'number' as const, default: 0 },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
 }
 
 function buildTrait(c: MovementConfig): Trait {
   const { entityName, nonIdFields, headerIcon, pageTitle } = c;
 
-  // Entity field summary for display
-  const fieldSummaryChildren: unknown[] = nonIdFields.slice(0, 4).map(field => ({
-    type: 'stack', direction: 'horizontal', gap: 'md',
-    children: [
-      { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-      { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
-    ],
-  }));
+  // Entity field summary: use stat-display for position, badge for status
+  const fieldSummaryChildren: unknown[] = [
+    {
+      type: 'simple-grid', columns: 2,
+      children: [
+        { type: 'stat-display', label: 'X', value: `@entity.${nonIdFields.find(f => f.name === 'x')?.name ?? 'x'}` },
+        { type: 'stat-display', label: 'Y', value: `@entity.${nonIdFields.find(f => f.name === 'y')?.name ?? 'y'}` },
+      ],
+    },
+    ...nonIdFields.slice(0, 4).filter(f => f.name !== 'x' && f.name !== 'y').map(field => ({
+      type: 'stack', direction: 'horizontal', gap: 'md',
+      children: [
+        { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
+        { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
+      ],
+    })),
+  ];
 
   // Idle main view
   const idleMainUI = {
@@ -112,7 +126,7 @@ function buildTrait(c: MovementConfig): Trait {
               { type: 'typography', content: pageTitle, variant: 'h2' },
             ],
           },
-          { type: 'badge', label: 'Idle' },
+          { type: 'status-dot', status: 'inactive', label: 'Idle' },
         ],
       },
       { type: 'divider' },
@@ -141,7 +155,7 @@ function buildTrait(c: MovementConfig): Trait {
               { type: 'typography', content: pageTitle, variant: 'h2' },
             ],
           },
-          { type: 'badge', label: 'Moving' },
+          { type: 'status-dot', status: 'active', pulse: true, label: 'Moving' },
         ],
       },
       { type: 'divider' },

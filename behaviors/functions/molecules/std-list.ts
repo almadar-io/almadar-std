@@ -252,6 +252,14 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   if (!existingKeys.has('CONFIRM_DELETE')) sm.events.push({ key: 'CONFIRM_DELETE', name: 'Confirm Delete' });
   if (!existingKeys.has('CANCEL')) sm.events.push({ key: 'CANCEL', name: 'Cancel' });
   if (!existingKeys.has('CLOSE')) sm.events.push({ key: 'CLOSE', name: 'Close' });
+
+  // Extract the browse main view from INIT transition so we can re-render it after modal dismiss
+  const initTransition = sm.transitions[0] as { effects: unknown[] };
+  const initRenderEffect = initTransition.effects.find(
+    (e: unknown) => Array.isArray(e) && (e as unknown[])[0] === 'render-ui' && (e as unknown[])[1] === 'main',
+  ) as unknown[] | undefined;
+  const browseMainView = initRenderEffect ? initRenderEffect[2] : null;
+
   sm.transitions.push(
     // DELETE: browsing → deleting (fetch entity by ID, show confirmation modal)
     { from: 'browsing', to: 'deleting', event: 'DELETE', effects: [
@@ -272,15 +280,24 @@ export function stdList(params: StdListParams): OrbitalDefinition {
         ],
       }],
     ] },
-    // CONFIRM_DELETE: deleting → browsing (persist delete using selected entity's ID)
+    // CONFIRM_DELETE: deleting → browsing (persist delete, dismiss modal, re-render main)
     { from: 'deleting', to: 'browsing', event: 'CONFIRM_DELETE', effects: [
       ['persist', 'delete', entityName, '@entity.id'],
       ['render-ui', 'modal', null],
       ['fetch', entityName],
+      ['render-ui', 'main', browseMainView],
     ] },
-    // CANCEL/CLOSE from deleting
-    { from: 'deleting', to: 'browsing', event: 'CANCEL', effects: [['render-ui', 'modal', null]] },
-    { from: 'deleting', to: 'browsing', event: 'CLOSE', effects: [['render-ui', 'modal', null]] },
+    // CANCEL/CLOSE from deleting (dismiss modal, re-render main)
+    { from: 'deleting', to: 'browsing', event: 'CANCEL', effects: [
+      ['render-ui', 'modal', null],
+      ['fetch', entityName],
+      ['render-ui', 'main', browseMainView],
+    ] },
+    { from: 'deleting', to: 'browsing', event: 'CLOSE', effects: [
+      ['render-ui', 'modal', null],
+      ['fetch', entityName],
+      ['render-ui', 'main', browseMainView],
+    ] },
   );
 
   // 2. Shared entity

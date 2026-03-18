@@ -81,49 +81,40 @@ function resolve(params: StdFilterParams): FilterConfig {
 // ============================================================================
 
 function buildEntity(c: FilterConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  const fields = [
+    ...c.fields.filter(f => !['activeFilterField', 'activeFilterValue'].includes(f.name)),
+    { name: 'activeFilterField', type: 'string' as const, default: '' },
+    { name: 'activeFilterValue', type: 'string' as const, default: '' },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence });
 }
 
 function buildTrait(c: FilterConfig): Trait {
   const { entityName, displayField, pluralName, headerIcon, pageTitle, filterableFields } = c;
 
-  // Build filter button rows: one row per filterable field
-  // In 'browsing' state all chips are secondary; in 'filtered' state the matching chip is primary
-  const filterButtons: unknown[] = filterableFields.map(f => ({
-    type: 'stack', direction: 'vertical', gap: 'xs',
-    children: [
-      // overline group label for visual hierarchy
-      { type: 'typography', variant: 'overline', color: 'muted',
-        content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: (f.values ?? []).map(v => ({
-          type: 'button', label: v, event: 'FILTER', variant: 'secondary',
+  // Build filter controls using filter-group molecule for proper chip state management
+  const filterControls: unknown[] = filterableFields.length > 0
+    ? [{
+        type: 'filter-group',
+        entity: entityName,
+        filters: filterableFields.map(f => ({
+          field: f.name,
+          label: f.name.charAt(0).toUpperCase() + f.name.slice(1),
+          options: f.values ?? [],
+          filterType: f.type === 'boolean' ? 'toggle' : 'select',
         })),
-      },
+      }]
+    : [{ type: 'empty-state', icon: 'filter-x', title: 'No filter fields', description: 'Add fields with predefined values to enable filtering.' }];
+
+  // Boolean filter fields get switch toggles
+  const booleanFilters = filterableFields.filter(f => f.type === 'boolean');
+  const switchControls: unknown[] = booleanFilters.map(f => ({
+    type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', justify: 'space-between',
+    children: [
+      { type: 'typography', variant: 'body', content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
+      { type: 'switch', checked: false },
     ],
   }));
-
-  // Same filter buttons but with active styling hint comment for runtime
-  const activeFilterButtons: unknown[] = filterableFields.map(f => ({
-    type: 'stack', direction: 'vertical', gap: 'xs',
-    children: [
-      { type: 'typography', variant: 'overline', color: 'muted',
-        content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: (f.values ?? []).map(v => ({
-          // active filter chip uses 'primary' variant so runtime highlights it
-          type: 'button', label: v, event: 'FILTER', variant: 'primary',
-        })),
-      },
-    ],
-  }));
-
-  // If no filterable fields, show a simple "All" badge
-  if (filterButtons.length === 0) {
-    filterButtons.push({ type: 'badge', label: 'No filter fields defined' });
-  }
 
   const header = {
     type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', align: 'center',
@@ -153,7 +144,26 @@ function buildTrait(c: FilterConfig): Trait {
 
   const browsingView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [header, { type: 'divider' }, ...filterButtons, { type: 'divider' }, dataGrid],
+    children: [
+      header,
+      { type: 'divider' },
+      ...filterControls,
+      ...(switchControls.length > 0 ? [{ type: 'divider' }, ...switchControls] : []),
+      { type: 'divider' },
+      dataGrid,
+    ],
+  };
+
+  // Active filter indicator: shows what field and value are currently filtering
+  const activeFilterIndicator = {
+    type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+    children: [
+      { type: 'icon', name: 'filter', size: 'sm' },
+      { type: 'typography', variant: 'caption', color: 'muted', content: 'Filtered by' },
+      { type: 'badge', label: '@entity.activeFilterField', variant: 'secondary' },
+      { type: 'typography', variant: 'caption', content: '=' },
+      { type: 'badge', label: '@entity.activeFilterValue', variant: 'primary' },
+    ],
   };
 
   const filteredView = {
@@ -166,15 +176,16 @@ function buildTrait(c: FilterConfig): Trait {
             { type: 'icon', name: headerIcon, size: 'lg' },
             { type: 'typography', content: pageTitle, variant: 'h2' },
           ] },
-          { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+          { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
             { type: 'badge', label: 'Filtered', variant: 'primary' },
-            { type: 'button', label: 'Clear', event: 'CLEAR_FILTERS', variant: 'ghost', icon: 'x' },
+            { type: 'button', label: 'Clear All', event: 'CLEAR_FILTERS', variant: 'ghost', icon: 'x' },
           ] },
         ],
       },
+      activeFilterIndicator,
       { type: 'divider' },
-      // activeFilterButtons show primary variant for selected state
-      ...activeFilterButtons,
+      ...filterControls,
+      ...(switchControls.length > 0 ? [{ type: 'divider' }, ...switchControls] : []),
       { type: 'divider' },
       dataGrid,
     ],
@@ -191,14 +202,35 @@ function buildTrait(c: FilterConfig): Trait {
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'FILTER', name: 'Filter' },
+        { key: 'FILTER', name: 'Filter', payload: [
+          { name: 'field', type: 'string', required: true },
+          { name: 'value', type: 'string', required: true },
+        ] },
         { key: 'CLEAR_FILTERS', name: 'Clear Filters' },
       ],
       transitions: [
-        { from: 'browsing', to: 'browsing', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', browsingView]] },
-        { from: 'browsing', to: 'filtered', event: 'FILTER', effects: [['fetch', entityName], ['render-ui', 'main', filteredView]] },
-        { from: 'filtered', to: 'filtered', event: 'FILTER', effects: [['fetch', entityName], ['render-ui', 'main', filteredView]] },
-        { from: 'filtered', to: 'browsing', event: 'CLEAR_FILTERS', effects: [['fetch', entityName], ['render-ui', 'main', browsingView]] },
+        { from: 'browsing', to: 'browsing', event: 'INIT', effects: [
+          ['fetch', entityName],
+          ['render-ui', 'main', browsingView],
+        ] },
+        { from: 'browsing', to: 'filtered', event: 'FILTER', effects: [
+          ['set', '@entity.activeFilterField', '@payload.field'],
+          ['set', '@entity.activeFilterValue', '@payload.value'],
+          ['fetch', entityName, ['==', ['object/get', '@entity', '@payload.field'], '@payload.value']],
+          ['render-ui', 'main', filteredView],
+        ] },
+        { from: 'filtered', to: 'filtered', event: 'FILTER', effects: [
+          ['set', '@entity.activeFilterField', '@payload.field'],
+          ['set', '@entity.activeFilterValue', '@payload.value'],
+          ['fetch', entityName, ['==', ['object/get', '@entity', '@payload.field'], '@payload.value']],
+          ['render-ui', 'main', filteredView],
+        ] },
+        { from: 'filtered', to: 'browsing', event: 'CLEAR_FILTERS', effects: [
+          ['set', '@entity.activeFilterField', ''],
+          ['set', '@entity.activeFilterValue', ''],
+          ['fetch', entityName],
+          ['render-ui', 'main', browsingView],
+        ] },
       ],
     },
   } as Trait;

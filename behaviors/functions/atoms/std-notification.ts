@@ -95,7 +95,7 @@ function buildEntity(c: NotificationConfig): Entity {
 function buildTrait(c: NotificationConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
-  // Hidden state view (empty notification area)
+  // Hidden state view: empty-state molecule
   const hiddenView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -107,18 +107,11 @@ function buildTrait(c: NotificationConfig): Trait {
         ],
       },
       { type: 'divider' },
-      {
-        type: 'stack', direction: 'vertical', gap: 'md', align: 'center',
-        children: [
-          { type: 'icon', name: 'bell-off', size: 'lg' },
-          { type: 'typography', content: 'No notifications', variant: 'body' },
-          { type: 'typography', content: 'New notifications will appear here.', variant: 'caption' },
-        ],
-      },
+      { type: 'empty-state', icon: 'bell-off', title: 'No notifications', description: 'New notifications will appear here.' },
     ],
   };
 
-  // Visible state view (showing notification)
+  // Visible state view: alert molecule for proper notification styling
   const visibleView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -137,17 +130,9 @@ function buildTrait(c: NotificationConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
-        children: [
-          { type: 'icon', name: headerIcon, size: 'md' },
-          {
-            type: 'stack', direction: 'vertical', gap: 'xs',
-            children: [
-              { type: 'typography', content: '@entity.message', variant: 'body' },
-              { type: 'badge', label: '@entity.notificationType' },
-            ],
-          },
-        ],
+        type: 'alert',
+        variant: '@entity.notificationType',
+        message: '@entity.message',
       },
     ],
   };
