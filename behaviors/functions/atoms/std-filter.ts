@@ -128,11 +128,11 @@ function buildTrait(c: FilterConfig): Trait {
     emptyTitle: `No ${pluralName.toLowerCase()} yet`,
     emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
     className: 'transition-shadow hover:shadow-md cursor-pointer',
-    children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
-      { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+    renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+      { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
       // show the filterable field value to confirm what was filtered
       ...(filterableFields[0]
-        ? [{ type: 'typography', variant: 'caption', color: 'muted', content: `@entity.${filterableFields[0].name}` }]
+        ? [{ type: 'typography', variant: 'caption', color: 'muted', content: `@item.${filterableFields[0].name}` }]
         : []),
     ] }],
   };

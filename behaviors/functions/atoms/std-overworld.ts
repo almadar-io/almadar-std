@@ -108,15 +108,15 @@ function buildTrait(c: OverworldConfig): Trait {
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
             { type: 'icon', name: 'map-pin', size: 'sm' },
-            { type: 'typography', variant: 'h4', content: `@entity.${listFields[0] ?? 'id'}` },
+            { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
           ],
         },
-        ...(listFields.length > 1 ? [{ type: 'badge', label: `@entity.${listFields[1]}` }] : []),
+        ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
       ],
     },
   ];
   if (listFields.length > 2) {
-    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@entity.${listFields[2]}` });
+    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@item.${listFields[2]}` });
   }
 
   // Exploring main view with map-view and status
@@ -141,7 +141,7 @@ function buildTrait(c: OverworldConfig): Trait {
       {
         type: 'data-grid', entity: entityName, emptyIcon: 'compass', emptyTitle, emptyDescription,
         itemActions: [{ label: 'Travel', event: 'TRAVEL' }],
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };
@@ -182,7 +182,7 @@ function buildTrait(c: OverworldConfig): Trait {
       { type: 'divider' },
       {
         type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle: 'Nothing here', emptyDescription: 'This zone is empty.',
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
       { type: 'divider' },
       {

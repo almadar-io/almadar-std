@@ -91,6 +91,9 @@ function buildEntity(c: MovementConfig): Entity {
   return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: MovementConfig): Trait {
   const { entityName, nonIdFields, headerIcon, pageTitle } = c;
 
@@ -99,15 +102,15 @@ function buildTrait(c: MovementConfig): Trait {
     {
       type: 'simple-grid', columns: 2,
       children: [
-        { type: 'stat-display', label: 'X', value: `@entity.${nonIdFields.find(f => f.name === 'x')?.name ?? 'x'}` },
-        { type: 'stat-display', label: 'Y', value: `@entity.${nonIdFields.find(f => f.name === 'y')?.name ?? 'y'}` },
+        { type: 'stat-display', label: 'X', value: ef(nonIdFields.find(f => f.name === 'x')?.name ?? 'x') },
+        { type: 'stat-display', label: 'Y', value: ef(nonIdFields.find(f => f.name === 'y')?.name ?? 'y') },
       ],
     },
     ...nonIdFields.slice(0, 4).filter(f => f.name !== 'x' && f.name !== 'y').map(field => ({
       type: 'stack', direction: 'horizontal', gap: 'md',
       children: [
         { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-        { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
+        { type: 'typography', variant: 'body', content: ef(field.name) },
       ],
     })),
   ];

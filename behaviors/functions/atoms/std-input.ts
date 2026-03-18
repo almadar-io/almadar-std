@@ -96,6 +96,9 @@ function buildEntity(c: InputConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: InputConfig): Trait {
   const { entityName, inputLabel, placeholder, headerIcon } = c;
 
@@ -119,7 +122,7 @@ function buildTrait(c: InputConfig): Trait {
           { type: 'input', placeholder, event: 'CHANGE' },
         ],
       },
-      { type: 'typography', variant: 'caption', color: 'muted', content: '@entity.value' },
+      { type: 'typography', variant: 'caption', color: 'muted', content: ef('value') },
     ],
   };
 

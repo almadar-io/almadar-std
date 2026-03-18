@@ -159,7 +159,7 @@ function buildReviewUI(c: WizardConfig): Record<string, unknown> {
     type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
     children: [
       { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-      { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
+      { type: 'typography', variant: 'body', content: `@item.${field.name}` },
     ],
   }));
 
@@ -178,12 +178,10 @@ function buildReviewUI(c: WizardConfig): Record<string, unknown> {
       { type: 'divider' },
       {
         type: 'data-list', entity: c.entityName,
-        children: [
-          {
-            type: 'stack', direction: 'vertical', gap: 'sm',
-            children: reviewDetailChildren,
-          },
-        ],
+        renderItem: ['fn', 'item', {
+          type: 'stack', direction: 'vertical', gap: 'sm',
+          children: reviewDetailChildren,
+        }],
       },
       {
         type: 'wizard-navigation',

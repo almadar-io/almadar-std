@@ -101,6 +101,9 @@ function buildEntity(c: GameflowConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: GameflowConfig): Trait {
   const { entityName, gameTitle, menuTitle, pauseTitle, gameoverTitle } = c;
 
@@ -118,8 +121,8 @@ function buildTrait(c: GameflowConfig): Trait {
   const playingUI = {
     type: 'game-hud',
     stats: [
-      { label: 'Score', value: '@entity.score' },
-      { label: 'Level', value: '@entity.level' },
+      { label: 'Score', value: ef('score') },
+      { label: 'Level', value: ef('level') },
     ],
   };
 
@@ -138,8 +141,8 @@ function buildTrait(c: GameflowConfig): Trait {
     type: 'game-over-screen',
     title: gameoverTitle,
     stats: [
-      { label: 'Score', value: '@entity.score' },
-      { label: 'Level', value: '@entity.level' },
+      { label: 'Score', value: ef('score') },
+      { label: 'Level', value: ef('level') },
     ],
     menuItems: [
       { label: 'Play Again', event: 'RESTART', variant: 'primary' },

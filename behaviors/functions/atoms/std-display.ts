@@ -81,6 +81,9 @@ function resolve(params: StdDisplayParams): DisplayConfig {
 // Trait builder
 // ============================================================================
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: DisplayConfig): Trait {
   const { entityName, displayFields, headerIcon, pageTitle, refreshButtonLabel, columns } = c;
 
@@ -89,7 +92,7 @@ function buildTrait(c: DisplayConfig): Trait {
     const field = c.nonIdFields.find(nf => nf.name === f);
     const isNumeric = field?.type === 'number';
     if (isNumeric) {
-      return { type: 'stat-display', label: f.charAt(0).toUpperCase() + f.slice(1), value: `@entity.${f}` };
+      return { type: 'stat-display', label: f.charAt(0).toUpperCase() + f.slice(1), value: ef(f) };
     }
     return {
       type: 'card',
@@ -97,7 +100,7 @@ function buildTrait(c: DisplayConfig): Trait {
         type: 'stack', direction: 'vertical', gap: 'sm',
         children: [
           { type: 'typography', variant: 'caption', content: f.charAt(0).toUpperCase() + f.slice(1) },
-          { type: 'typography', variant: 'h3', content: `@entity.${f}` },
+          { type: 'typography', variant: 'h3', content: ef(f) },
         ],
       }],
     };

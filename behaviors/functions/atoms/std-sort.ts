@@ -120,10 +120,10 @@ function buildTrait(c: SortConfig): Trait {
     emptyTitle: `No ${pluralName.toLowerCase()} yet`,
     emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
     className: 'transition-shadow hover:shadow-md cursor-pointer',
-    children: [{ type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between', children: [
-      { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+    renderItem: ['fn', 'item', { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between', children: [
+      { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
       ...(sortableFields[1]
-        ? [{ type: 'typography', variant: 'caption', color: 'muted', content: `@entity.${sortableFields[1]}` }]
+        ? [{ type: 'typography', variant: 'caption', color: 'muted', content: `@item.${sortableFields[1]}` }]
         : []),
     ] }],
   };

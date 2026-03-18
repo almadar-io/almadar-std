@@ -84,6 +84,9 @@ function buildEntity(c: UndoConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: UndoConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
@@ -111,9 +114,8 @@ function buildTrait(c: UndoConfig): Trait {
       { type: 'divider' },
       { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', children: [
         { type: 'typography', variant: 'caption', color: 'muted', content: 'Last action:' },
-        { type: 'badge', label: '@entity.current' },
+        { type: 'badge', label: ef('current') },
       ] },
-      { type: 'timeline', entity: entityName, data: '@entity.undoStack' },
     ],
   };
 

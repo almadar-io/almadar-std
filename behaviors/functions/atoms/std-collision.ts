@@ -95,6 +95,9 @@ function buildEntity(c: CollisionConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: CollisionConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
@@ -115,8 +118,8 @@ function buildTrait(c: CollisionConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'X', value: '@entity.x' },
-          { type: 'stat-display', label: 'Y', value: '@entity.y' },
+          { type: 'stat-display', label: 'X', value: ef('x') },
+          { type: 'stat-display', label: 'Y', value: ef('y') },
         ],
       },
       {
@@ -146,11 +149,11 @@ function buildTrait(c: CollisionConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'X', value: '@entity.x' },
-          { type: 'stat-display', label: 'Y', value: '@entity.y' },
+          { type: 'stat-display', label: 'X', value: ef('x') },
+          { type: 'stat-display', label: 'Y', value: ef('y') },
         ],
       },
-      { type: 'typography', variant: 'caption', color: 'muted', content: '@entity.targetId' },
+      { type: 'typography', variant: 'caption', color: 'muted', content: ef('targetId') },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

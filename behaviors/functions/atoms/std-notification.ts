@@ -92,6 +92,9 @@ function buildEntity(c: NotificationConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: NotificationConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
@@ -131,8 +134,8 @@ function buildTrait(c: NotificationConfig): Trait {
       { type: 'divider' },
       {
         type: 'alert',
-        variant: '@entity.notificationType',
-        message: '@entity.message',
+        variant: ef('notificationType'),
+        message: ef('message'),
       },
     ],
   };

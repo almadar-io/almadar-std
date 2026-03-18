@@ -94,6 +94,9 @@ function buildEntity(c: RateLimiterConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: RateLimiterConfig): Trait {
   const { entityName, headerIcon, pageTitle } = c;
 
@@ -114,12 +117,12 @@ function buildTrait(c: RateLimiterConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'Requests', value: '@entity.count' },
-          { type: 'stat-display', label: 'Window', value: '@entity.window' },
+          { type: 'stat-display', label: 'Requests', value: ef('count') },
+          { type: 'stat-display', label: 'Window', value: ef('window') },
         ],
       },
-      { type: 'meter', value: '@entity.count', min: 0, max: 100 },
-      { type: 'progress-bar', value: '@entity.count', max: 100, showPercentage: true },
+      { type: 'meter', value: ef('count'), min: 0, max: 100 },
+      { type: 'progress-bar', value: ef('count'), max: 100, showPercentage: true },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [
@@ -148,11 +151,11 @@ function buildTrait(c: RateLimiterConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'Requests', value: '@entity.count' },
-          { type: 'stat-display', label: 'Window', value: '@entity.window' },
+          { type: 'stat-display', label: 'Requests', value: ef('count') },
+          { type: 'stat-display', label: 'Window', value: ef('window') },
         ],
       },
-      { type: 'meter', value: '@entity.count', min: 0, max: 100 },
+      { type: 'meter', value: ef('count'), min: 0, max: 100 },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

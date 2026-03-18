@@ -95,6 +95,9 @@ function buildEntity(c: ScoreConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: ScoreConfig): Trait {
   const { entityName } = c;
 
@@ -103,14 +106,14 @@ function buildTrait(c: ScoreConfig): Trait {
     children: [
       {
         type: 'score-board',
-        score: '@entity.total',
+        score: ef('total'),
         highScore: 0,
-        combo: '@entity.combo',
+        combo: ef('combo'),
         multiplier: 1,
         level: 1,
       },
-      { type: 'animated-counter', value: '@entity.total', prefix: 'Score: ', duration: 300 },
-      { type: 'trend-indicator', value: '@entity.points', showValue: true },
+      { type: 'animated-counter', value: ef('total'), prefix: 'Score: ', duration: 300 },
+      { type: 'trend-indicator', value: ef('points'), showValue: true },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [

@@ -103,6 +103,9 @@ function buildEntity(c: CacheAsideConfig): Entity {
   return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: CacheAsideConfig): Trait {
   const { entityName, listFields, headerIcon } = c;
   const { pageTitle, emptyTitle, emptyDescription } = c;
@@ -116,15 +119,15 @@ function buildTrait(c: CacheAsideConfig): Trait {
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
             { type: 'icon', name: headerIcon, size: 'sm' },
-            { type: 'typography', variant: 'h4', content: `@entity.${listFields[0] ?? 'id'}` },
+            { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
           ],
         },
-        ...(listFields.length > 1 ? [{ type: 'badge', label: `@entity.${listFields[1]}` }] : []),
+        ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
       ],
     },
   ];
   if (listFields.length > 2) {
-    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@entity.${listFields[2]}` });
+    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@item.${listFields[2]}` });
   }
 
   // Header bar
@@ -185,13 +188,13 @@ function buildTrait(c: CacheAsideConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'Hit Count', value: '@entity.hitCount' },
-          { type: 'stat-display', label: 'Cache Age', value: '@entity.cacheAge' },
+          { type: 'stat-display', label: 'Hit Count', value: ef('hitCount') },
+          { type: 'stat-display', label: 'Cache Age', value: ef('cacheAge') },
         ],
       },
       {
         type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle, emptyDescription,
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };
@@ -223,7 +226,7 @@ function buildTrait(c: CacheAsideConfig): Trait {
       { type: 'alert', variant: 'warning', message: 'Cache data is stale. Refresh to get the latest data.' },
       {
         type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle, emptyDescription,
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };

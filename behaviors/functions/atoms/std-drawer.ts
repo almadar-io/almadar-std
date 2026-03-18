@@ -90,6 +90,9 @@ function buildEntity(c: DrawerConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: DrawerConfig): Trait {
   const { entityName, nonIdFields, displayField, pluralName, drawerTitle, headerIcon } = c;
 
@@ -115,10 +118,10 @@ function buildTrait(c: DrawerConfig): Trait {
         emptyIcon: 'inbox',
         emptyTitle: `No ${pluralName.toLowerCase()} yet`,
         emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
-        children: [{
+        renderItem: ['fn', 'item', {
           type: 'stack', direction: 'vertical', gap: 'sm',
           children: [
-            { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+            { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
           ],
         }],
       },
@@ -146,7 +149,7 @@ function buildTrait(c: DrawerConfig): Trait {
                     type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
                     children: [
                       { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-                      { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
+                      { type: 'typography', variant: 'body', content: ef(field.name) },
                     ],
                   })),
                 },

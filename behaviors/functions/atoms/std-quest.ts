@@ -111,15 +111,15 @@ function buildTrait(c: QuestConfig): Trait {
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
             { type: 'icon', name: headerIcon, size: 'sm' },
-            { type: 'typography', variant: 'h4', content: `@entity.${listFields[0] ?? 'id'}` },
+            { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
           ],
         },
-        ...(listFields.length > 1 ? [{ type: 'badge', label: `@entity.${listFields[1]}` }] : []),
+        ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
       ],
     },
   ];
   if (listFields.length > 2) {
-    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@entity.${listFields[2]}` });
+    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@item.${listFields[2]}` });
   }
 
   // Header bar
@@ -146,7 +146,7 @@ function buildTrait(c: QuestConfig): Trait {
         type: 'data-list', entity: entityName, groupBy: 'status',
         emptyIcon: 'inbox', emptyTitle, emptyDescription,
         itemActions: [{ label: 'Accept', event: 'ACCEPT' }],
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };
@@ -170,21 +170,14 @@ function buildTrait(c: QuestConfig): Trait {
       },
       { type: 'divider' },
       { type: 'progress-bar', value: 50, showPercentage: true },
-      { type: 'timeline', entity: entityName },
       {
-        type: 'accordion',
-        items: [
-          { id: 'objectives', title: 'Objectives', content: {
-            type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle: 'No active quests', emptyDescription: 'Accept a quest to begin.',
-            itemActions: [
-              { label: 'Progress', event: 'PROGRESS' },
-              { label: 'Complete', event: 'COMPLETE' },
-              { label: 'Fail', event: 'FAIL', variant: 'danger' },
-            ],
-            children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
-          } },
+        type: 'data-grid', entity: entityName, emptyIcon: 'inbox', emptyTitle: 'No active quests', emptyDescription: 'Accept a quest to begin.',
+        itemActions: [
+          { label: 'Progress', event: 'PROGRESS' },
+          { label: 'Complete', event: 'COMPLETE' },
+          { label: 'Fail', event: 'FAIL', variant: 'danger' },
         ],
-        defaultOpen: [0],
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
       },
     ],
   };

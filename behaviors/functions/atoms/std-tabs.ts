@@ -104,18 +104,8 @@ function buildTrait(c: TabsConfig): Trait {
     },
   ];
 
-  // Use accordion for content sections when tabs have multiple data groups
-  if (tabItems.length > 2) {
-    tabContentChildren.push({
-      type: 'accordion',
-      items: tabItems.map(tab => ({
-        id: tab.value,
-        title: tab.label,
-        content: { type: 'typography', variant: 'body', content: `@entity.${tab.value}` },
-      })),
-      multiple: true,
-    });
-  }
+  // Note: accordion for tab content removed due to compiler limitation
+  // (nested pattern config objects in props not compiled to JSX)
 
   const initView = {
     type: 'stack', direction: 'vertical', gap: 'lg',

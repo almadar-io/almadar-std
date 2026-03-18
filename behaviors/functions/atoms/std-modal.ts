@@ -98,7 +98,7 @@ function resolve(params: StdModalParams): ModalConfig {
             type: 'stack', direction: 'horizontal', gap: 'md',
             children: [
               { type: 'typography', variant: 'caption', content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
-              { type: 'typography', variant: 'body', content: `@entity.${f.name}` },
+              { type: 'typography', variant: 'body', content: ['object/get', ['array/first', '@entity'], f.name] },
             ],
           })),
           { type: 'divider' },

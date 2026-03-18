@@ -97,6 +97,9 @@ function buildEntity(c: TimerConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
+/** S-expression: get field from first entity in collection */
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: TimerConfig): Trait {
   const { entityName, timerTitle, headerIcon } = c;
 
@@ -112,11 +115,11 @@ function buildTrait(c: TimerConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'animated-counter', value: '@entity.remaining', suffix: 's', duration: 500 },
-      { type: 'stat-display', label: 'Time Remaining', value: '@entity.remaining', max: c.duration },
-      { type: 'meter', value: '@entity.remaining', min: 0, max: c.duration },
-      { type: 'progress-bar', value: '@entity.remaining', max: c.duration, color: 'primary', showPercentage: true },
-      { type: 'badge', label: '@entity.status' },
+      { type: 'animated-counter', value: ef('remaining'), suffix: 's', duration: 500 },
+      { type: 'stat-display', label: 'Time Remaining', value: ef('remaining'), max: c.duration },
+      { type: 'meter', value: ef('remaining'), min: 0, max: c.duration },
+      { type: 'progress-bar', value: ef('remaining'), max: c.duration, color: 'primary', showPercentage: true },
+      { type: 'badge', label: ef('status') },
     ],
   };
 

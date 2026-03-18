@@ -136,8 +136,8 @@ function buildTrait(c: ConfirmationConfig): Trait {
         emptyTitle: `No ${pluralName.toLowerCase()} yet`,
         emptyDescription: 'Items will appear here.',
         itemActions: [{ label: confirmTitle, event: c.requestEvent, variant: 'danger' }],
-        children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
-          { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+        renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+          { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
         ] }],
       },
     ],

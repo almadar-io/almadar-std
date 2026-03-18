@@ -92,6 +92,9 @@ function buildEntity(c: CircuitBreakerConfig): Entity {
   return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
 }
 
+// Helper: read a field from the first entity in the collection
+const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity'], field];
+
 function buildTrait(c: CircuitBreakerConfig): Trait {
   const { entityName, headerIcon, closedLabel, openLabel, halfOpenLabel } = c;
 
@@ -114,11 +117,11 @@ function buildTrait(c: CircuitBreakerConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'Failures', value: '@entity.failureCount' },
-          { type: 'stat-display', label: 'Successes', value: '@entity.successCount' },
+          { type: 'stat-display', label: 'Failures', value: ef('failureCount') },
+          { type: 'stat-display', label: 'Successes', value: ef('successCount') },
         ],
       },
-      { type: 'meter', value: '@entity.failureCount', min: 0, max: '@entity.threshold' },
+      { type: 'meter', value: ef('failureCount'), min: 0, max: ef('threshold') },
     ],
   };
 
@@ -141,11 +144,11 @@ function buildTrait(c: CircuitBreakerConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'Failures', value: '@entity.failureCount' },
-          { type: 'stat-display', label: 'Successes', value: '@entity.successCount' },
+          { type: 'stat-display', label: 'Failures', value: ef('failureCount') },
+          { type: 'stat-display', label: 'Successes', value: ef('successCount') },
         ],
       },
-      { type: 'meter', value: '@entity.failureCount', min: 0, max: '@entity.threshold' },
+      { type: 'meter', value: ef('failureCount'), min: 0, max: ef('threshold') },
       { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
     ],
   };
@@ -169,8 +172,8 @@ function buildTrait(c: CircuitBreakerConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'stat-display', label: 'Failures', value: '@entity.failureCount' },
-          { type: 'stat-display', label: 'Successes', value: '@entity.successCount' },
+          { type: 'stat-display', label: 'Failures', value: ef('failureCount') },
+          { type: 'stat-display', label: 'Successes', value: ef('successCount') },
         ],
       },
     ],
