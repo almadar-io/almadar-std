@@ -62,14 +62,8 @@ function resolve(params: StdPaginationParams): PaginationConfig {
   const { entityName } = params;
   const baseFields = ensureIdField(params.fields);
 
-  // Ensure pagination tracking fields exist on entity
-  const fields = [
-    ...baseFields,
-    ...(baseFields.some(f => f.name === 'currentPage') ? [] : [{ name: 'currentPage', type: 'number' as const, default: 1 }]),
-    ...(baseFields.some(f => f.name === 'pageSize') ? [] : [{ name: 'pageSize', type: 'number' as const, default: 10 }]),
-  ];
-
-  const nonIdFields = baseFields.filter(f => f.name !== 'id' && f.name !== 'currentPage' && f.name !== 'pageSize');
+  const fields = baseFields;
+  const nonIdFields = baseFields.filter(f => f.name !== 'id');
   const p = plural(entityName);
 
   return {
@@ -121,18 +115,17 @@ function buildTrait(c: PaginationConfig): Trait {
         emptyTitle: `No ${pluralName.toLowerCase()} yet`,
         emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
         className: 'transition-shadow hover:shadow-md cursor-pointer',
-        children: [{
+        renderItem: ['fn', 'item', {
           type: 'stack', direction: 'vertical', gap: 'sm',
           children: [
-            { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
-            // secondary caption row to distinguish items
-            { type: 'typography', variant: 'caption', color: 'muted', content: `@entity.id` },
+            { type: 'typography', variant: 'h4', content: '@item.name' },
+            { type: 'typography', variant: 'caption', color: 'muted', content: '@item.id' },
           ],
         }],
       },
       {
         type: 'pagination',
-        currentPage: '@entity.currentPage',
+        currentPage: 1,
         totalPages: 10,
         onPageChange: 'PAGE',
         showPageSize: false,
@@ -166,10 +159,46 @@ function buildTrait(c: PaginationConfig): Trait {
         {
           from: 'idle', to: 'idle', event: 'PAGE',
           effects: [
-            ['set', '@entity.currentPage', '@payload.page'],
-            ['set', '@entity.pageSize', '@payload.pageSize'],
             ['fetch', entityName],
-            ['render-ui', 'main', mainView],
+            ['render-ui', 'main', {
+              type: 'stack', direction: 'vertical', gap: 'lg',
+              children: [
+                {
+                  type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'space-between', align: 'center',
+                  children: [
+                    {
+                      type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+                      children: [
+                        { type: 'icon', name: headerIcon, size: 'lg' },
+                        { type: 'typography', content: pageTitle, variant: 'h2' },
+                      ],
+                    },
+                  ],
+                },
+                { type: 'divider' },
+                {
+                  type: 'data-grid', entity: entityName,
+                  emptyIcon: 'inbox',
+                  emptyTitle: `No ${pluralName.toLowerCase()} yet`,
+                  emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
+                  className: 'transition-shadow hover:shadow-md cursor-pointer',
+                  renderItem: ['fn', 'item', {
+                    type: 'stack', direction: 'vertical', gap: 'sm',
+                    children: [
+                      { type: 'typography', variant: 'h4', content: '@item.name' },
+                      { type: 'typography', variant: 'caption', color: 'muted', content: '@item.id' },
+                    ],
+                  }],
+                },
+                {
+                  type: 'pagination',
+                  currentPage: '@payload.page',
+                  totalPages: 10,
+                  onPageChange: 'PAGE',
+                  showPageSize: false,
+                },
+              ],
+            }],
           ],
         },
       ],

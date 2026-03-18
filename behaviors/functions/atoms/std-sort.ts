@@ -75,12 +75,7 @@ function resolve(params: StdSortParams): SortConfig {
 // ============================================================================
 
 function buildEntity(c: SortConfig): Entity {
-  const fields = [
-    ...c.fields.filter(f => !['activeSortField', 'activeSortDirection'].includes(f.name)),
-    { name: 'activeSortField', type: 'string' as const, default: '' },
-    { name: 'activeSortDirection', type: 'string' as const, default: 'asc' },
-  ];
-  return makeEntity({ name: c.entityName, fields, persistence: c.persistence });
+  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
 function buildTrait(c: SortConfig): Trait {
@@ -182,14 +177,10 @@ function buildTrait(c: SortConfig): Trait {
       transitions: [
         { from: 'idle', to: 'idle', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', mainView]] },
         { from: 'idle', to: 'sorted', event: 'SORT', effects: [
-          ['set', '@entity.activeSortField', '@payload.field'],
-          ['set', '@entity.activeSortDirection', '@payload.direction'],
           ['fetch', entityName, null, ['concat', '@payload.field', ':', '@payload.direction']],
           ['render-ui', 'main', mainSortedView],
         ] },
         { from: 'sorted', to: 'sorted', event: 'SORT', effects: [
-          ['set', '@entity.activeSortField', '@payload.field'],
-          ['set', '@entity.activeSortDirection', '@payload.direction'],
           ['fetch', entityName, null, ['concat', '@payload.field', ':', '@payload.direction']],
           ['render-ui', 'main', mainSortedView],
         ] },

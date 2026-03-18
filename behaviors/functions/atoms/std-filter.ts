@@ -81,12 +81,7 @@ function resolve(params: StdFilterParams): FilterConfig {
 // ============================================================================
 
 function buildEntity(c: FilterConfig): Entity {
-  const fields = [
-    ...c.fields.filter(f => !['activeFilterField', 'activeFilterValue'].includes(f.name)),
-    { name: 'activeFilterField', type: 'string' as const, default: '' },
-    { name: 'activeFilterValue', type: 'string' as const, default: '' },
-  ];
-  return makeEntity({ name: c.entityName, fields, persistence: c.persistence });
+  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
 function buildTrait(c: FilterConfig): Trait {
@@ -154,15 +149,15 @@ function buildTrait(c: FilterConfig): Trait {
     ],
   };
 
-  // Active filter indicator: shows what field and value are currently filtering
+  // Active filter indicator: reads directly from @payload (available during render-ui)
   const activeFilterIndicator = {
     type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
     children: [
       { type: 'icon', name: 'filter', size: 'sm' },
       { type: 'typography', variant: 'caption', color: 'muted', content: 'Filtered by' },
-      { type: 'badge', label: '@entity.activeFilterField', variant: 'secondary' },
+      { type: 'badge', label: '@payload.field', variant: 'secondary' },
       { type: 'typography', variant: 'caption', content: '=' },
-      { type: 'badge', label: '@entity.activeFilterValue', variant: 'primary' },
+      { type: 'badge', label: '@payload.value', variant: 'primary' },
     ],
   };
 
@@ -214,20 +209,14 @@ function buildTrait(c: FilterConfig): Trait {
           ['render-ui', 'main', browsingView],
         ] },
         { from: 'browsing', to: 'filtered', event: 'FILTER', effects: [
-          ['set', '@entity.activeFilterField', '@payload.field'],
-          ['set', '@entity.activeFilterValue', '@payload.value'],
           ['fetch', entityName, ['==', ['object/get', '@entity', '@payload.field'], '@payload.value']],
           ['render-ui', 'main', filteredView],
         ] },
         { from: 'filtered', to: 'filtered', event: 'FILTER', effects: [
-          ['set', '@entity.activeFilterField', '@payload.field'],
-          ['set', '@entity.activeFilterValue', '@payload.value'],
           ['fetch', entityName, ['==', ['object/get', '@entity', '@payload.field'], '@payload.value']],
           ['render-ui', 'main', filteredView],
         ] },
         { from: 'filtered', to: 'browsing', event: 'CLEAR_FILTERS', effects: [
-          ['set', '@entity.activeFilterField', ''],
-          ['set', '@entity.activeFilterValue', ''],
           ['fetch', entityName],
           ['render-ui', 'main', browsingView],
         ] },

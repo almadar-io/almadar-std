@@ -22,16 +22,16 @@
           {
             "name": "status",
             "type": "string",
-            "default": "active"
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
-          },
-          {
-            "name": "query",
-            "type": "string",
-            "default": ""
           }
         ]
       },
@@ -132,11 +132,6 @@
                 "event": "SEARCH",
                 "effects": [
                   [
-                    "set",
-                    "@entity.query",
-                    "@payload.query"
-                  ],
-                  [
                     "fetch",
                     "SearchResult"
                   ],
@@ -171,7 +166,7 @@
                                   "content": [
                                     "concat",
                                     "Results for \"",
-                                    "@entity.query",
+                                    "@payload.query",
                                     "\""
                                   ],
                                   "variant": "h2"
@@ -196,7 +191,9 @@
                           "emptyIcon": "search",
                           "emptyTitle": "No results found",
                           "emptyDescription": "Try a different search term.",
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "vertical",
@@ -205,7 +202,7 @@
                                 {
                                   "type": "typography",
                                   "variant": "h4",
-                                  "content": "@entity.name"
+                                  "content": "@item.name"
                                 }
                               ]
                             }
@@ -222,11 +219,6 @@
                 "event": "SEARCH",
                 "effects": [
                   [
-                    "set",
-                    "@entity.query",
-                    "@payload.query"
-                  ],
-                  [
                     "fetch",
                     "SearchResult"
                   ],
@@ -261,7 +253,7 @@
                                   "content": [
                                     "concat",
                                     "Results for \"",
-                                    "@entity.query",
+                                    "@payload.query",
                                     "\""
                                   ],
                                   "variant": "h2"
@@ -286,7 +278,9 @@
                           "emptyIcon": "search",
                           "emptyTitle": "No results found",
                           "emptyDescription": "Try a different search term.",
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "vertical",
@@ -295,7 +289,7 @@
                                 {
                                   "type": "typography",
                                   "variant": "h4",
-                                  "content": "@entity.name"
+                                  "content": "@item.name"
                                 }
                               ]
                             }
@@ -311,11 +305,6 @@
                 "to": "idle",
                 "event": "CLEAR",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.query",
-                    ""
-                  ],
                   [
                     "fetch",
                     "SearchResult"

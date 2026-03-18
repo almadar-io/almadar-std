@@ -22,21 +22,16 @@
           {
             "name": "status",
             "type": "string",
-            "default": "active"
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
-          },
-          {
-            "name": "currentPage",
-            "type": "number",
-            "default": 1
-          },
-          {
-            "name": "pageSize",
-            "type": "number",
-            "default": 10
           }
         ]
       },
@@ -129,7 +124,9 @@
                           "emptyTitle": "No pageditems yet",
                           "emptyDescription": "Add pageditems to see them here.",
                           "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "vertical",
@@ -138,13 +135,13 @@
                                 {
                                   "type": "typography",
                                   "variant": "h4",
-                                  "content": "@entity.name"
+                                  "content": "@item.name"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "@entity.id"
+                                  "content": "@item.id"
                                 }
                               ]
                             }
@@ -152,7 +149,7 @@
                         },
                         {
                           "type": "pagination",
-                          "currentPage": "@entity.currentPage",
+                          "currentPage": 1,
                           "totalPages": 10,
                           "onPageChange": "PAGE",
                           "showPageSize": false
@@ -167,16 +164,6 @@
                 "to": "idle",
                 "event": "PAGE",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.currentPage",
-                    "@payload.page"
-                  ],
-                  [
-                    "set",
-                    "@entity.pageSize",
-                    "@payload.pageSize"
-                  ],
                   [
                     "fetch",
                     "PagedItem"
@@ -226,7 +213,9 @@
                           "emptyTitle": "No pageditems yet",
                           "emptyDescription": "Add pageditems to see them here.",
                           "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "vertical",
@@ -235,13 +224,13 @@
                                 {
                                   "type": "typography",
                                   "variant": "h4",
-                                  "content": "@entity.name"
+                                  "content": "@item.name"
                                 },
                                 {
                                   "type": "typography",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "@entity.id"
+                                  "content": "@item.id"
                                 }
                               ]
                             }
@@ -249,7 +238,7 @@
                         },
                         {
                           "type": "pagination",
-                          "currentPage": "@entity.currentPage",
+                          "currentPage": "@payload.page",
                           "totalPages": 10,
                           "onPageChange": "PAGE",
                           "showPageSize": false

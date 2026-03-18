@@ -32,11 +32,6 @@
           {
             "name": "createdAt",
             "type": "string"
-          },
-          {
-            "name": "selectedId",
-            "type": "string",
-            "default": ""
           }
         ]
       },
@@ -84,7 +79,14 @@
               },
               {
                 "key": "CONFIRM_SELECTION",
-                "name": "Confirm Selection"
+                "name": "Confirm Selection",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -146,7 +148,9 @@
                               "icon": "check"
                             }
                           ],
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
@@ -155,7 +159,7 @@
                               "children": [
                                 {
                                   "type": "checkbox",
-                                  "label": "@entity.name"
+                                  "label": "@item.name"
                                 }
                               ]
                             }
@@ -172,9 +176,8 @@
                 "event": "SELECT",
                 "effects": [
                   [
-                    "set",
-                    "@entity.selectedId",
-                    "@payload.id"
+                    "fetch",
+                    "SelectableItem"
                   ],
                   [
                     "render-ui",
@@ -239,7 +242,7 @@
                           "message": [
                             "concat",
                             "Selected: ",
-                            "@entity.selectedId"
+                            "@payload.id"
                           ]
                         },
                         {
@@ -255,7 +258,9 @@
                               "icon": "check"
                             }
                           ],
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
@@ -264,7 +269,12 @@
                               "children": [
                                 {
                                   "type": "checkbox",
-                                  "label": "@entity.name"
+                                  "label": "@item.name",
+                                  "checked": [
+                                    "==",
+                                    "@item.id",
+                                    "@payload.id"
+                                  ]
                                 }
                               ]
                             }
@@ -283,6 +293,9 @@
                               "type": "button",
                               "label": "Confirm",
                               "event": "CONFIRM_SELECTION",
+                              "actionPayload": {
+                                "id": "@payload.id"
+                              },
                               "variant": "primary",
                               "icon": "check"
                             },
@@ -306,9 +319,8 @@
                 "event": "SELECT",
                 "effects": [
                   [
-                    "set",
-                    "@entity.selectedId",
-                    "@payload.id"
+                    "fetch",
+                    "SelectableItem"
                   ],
                   [
                     "render-ui",
@@ -373,7 +385,7 @@
                           "message": [
                             "concat",
                             "Selected: ",
-                            "@entity.selectedId"
+                            "@payload.id"
                           ]
                         },
                         {
@@ -389,7 +401,9 @@
                               "icon": "check"
                             }
                           ],
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
@@ -398,7 +412,12 @@
                               "children": [
                                 {
                                   "type": "checkbox",
-                                  "label": "@entity.name"
+                                  "label": "@item.name",
+                                  "checked": [
+                                    "==",
+                                    "@item.id",
+                                    "@payload.id"
+                                  ]
                                 }
                               ]
                             }
@@ -417,6 +436,9 @@
                               "type": "button",
                               "label": "Confirm",
                               "event": "CONFIRM_SELECTION",
+                              "actionPayload": {
+                                "id": "@payload.id"
+                              },
                               "variant": "primary",
                               "icon": "check"
                             },
@@ -440,11 +462,6 @@
                 "event": "DESELECT",
                 "effects": [
                   [
-                    "set",
-                    "@entity.selectedId",
-                    ""
-                  ],
-                  [
                     "fetch",
                     "SelectableItem"
                   ],
@@ -497,7 +514,9 @@
                               "icon": "check"
                             }
                           ],
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
@@ -506,7 +525,7 @@
                               "children": [
                                 {
                                   "type": "checkbox",
-                                  "label": "@entity.name"
+                                  "label": "@item.name"
                                 }
                               ]
                             }
@@ -523,11 +542,6 @@
                 "event": "CLEAR",
                 "effects": [
                   [
-                    "set",
-                    "@entity.selectedId",
-                    ""
-                  ],
-                  [
                     "fetch",
                     "SelectableItem"
                   ],
@@ -580,7 +594,9 @@
                               "icon": "check"
                             }
                           ],
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
@@ -589,7 +605,7 @@
                               "children": [
                                 {
                                   "type": "checkbox",
-                                  "label": "@entity.name"
+                                  "label": "@item.name"
                                 }
                               ]
                             }
@@ -666,7 +682,7 @@
                             {
                               "type": "typography",
                               "variant": "body",
-                              "content": "@entity.selectedId"
+                              "content": "@payload.id"
                             }
                           ]
                         },
@@ -687,11 +703,6 @@
                 "to": "idle",
                 "event": "CLEAR",
                 "effects": [
-                  [
-                    "set",
-                    "@entity.selectedId",
-                    ""
-                  ],
                   [
                     "fetch",
                     "SelectableItem"
@@ -745,7 +756,9 @@
                               "icon": "check"
                             }
                           ],
-                          "children": [
+                          "renderItem": [
+                            "fn",
+                            "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
@@ -754,7 +767,7 @@
                               "children": [
                                 {
                                   "type": "checkbox",
-                                  "label": "@entity.name"
+                                  "label": "@item.name"
                                 }
                               ]
                             }

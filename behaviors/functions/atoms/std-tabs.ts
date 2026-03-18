@@ -54,12 +54,7 @@ function resolve(params: StdTabsParams): TabsConfig {
   const baseFields = ensureIdField(params.fields);
   const p = plural(entityName);
 
-  // Domain fields required by render-ui bindings (@entity.activeTab)
-  const domainFields: EntityField[] = [
-    { name: 'activeTab', type: 'string', default: '' },
-  ];
-  const userFieldNames = new Set(baseFields.map(f => f.name));
-  const fields = [...baseFields, ...domainFields.filter(f => !userFieldNames.has(f.name))];
+  const fields = baseFields;
 
   const nonIdFields = fields.filter(f => f.name !== 'id');
 
@@ -102,9 +97,9 @@ function buildTrait(c: TabsConfig): Trait {
       emptyTitle: `No ${pluralName.toLowerCase()} yet`,
       emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
       className: 'transition-shadow hover:shadow-md cursor-pointer',
-      children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: [
-        { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
-        { type: 'typography', variant: 'caption', color: 'muted', content: `@entity.${tabItems[0]?.value ?? displayField}` },
+      renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: [
+        { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
+        { type: 'typography', variant: 'caption', color: 'muted', content: `@item.${tabItems[0]?.value ?? displayField}` },
       ] }],
     },
   ];
@@ -122,7 +117,7 @@ function buildTrait(c: TabsConfig): Trait {
     });
   }
 
-  const mainView = {
+  const initView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
       { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
@@ -134,7 +129,26 @@ function buildTrait(c: TabsConfig): Trait {
         type: 'tabs',
         tabs: tabItems,
         defaultActiveTab: tabItems[0]?.value ?? '',
-        activeTab: '@entity.activeTab',
+        onTabChange: 'SELECT_TAB',
+      },
+      { type: 'divider' },
+      ...tabContentChildren,
+    ],
+  };
+
+  const tabSelectedView = {
+    type: 'stack', direction: 'vertical', gap: 'lg',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
+        { type: 'icon', name: headerIcon, size: 'lg' },
+        { type: 'typography', content: pageTitle, variant: 'h2' },
+      ] },
+      { type: 'divider' },
+      {
+        type: 'tabs',
+        tabs: tabItems,
+        defaultActiveTab: tabItems[0]?.value ?? '',
+        activeTab: '@payload.tab',
         onTabChange: 'SELECT_TAB',
       },
       { type: 'divider' },
@@ -150,11 +164,13 @@ function buildTrait(c: TabsConfig): Trait {
       states: [{ name: 'idle', isInitial: true }],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'SELECT_TAB', name: 'Select Tab' },
+        { key: 'SELECT_TAB', name: 'Select Tab', payload: [
+          { name: 'tab', type: 'string', required: true },
+        ] },
       ],
       transitions: [
-        { from: 'idle', to: 'idle', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', mainView]] },
-        { from: 'idle', to: 'idle', event: 'SELECT_TAB', effects: [['fetch', entityName], ['render-ui', 'main', mainView]] },
+        { from: 'idle', to: 'idle', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', initView]] },
+        { from: 'idle', to: 'idle', event: 'SELECT_TAB', effects: [['fetch', entityName], ['render-ui', 'main', tabSelectedView]] },
       ],
     },
   } as Trait;

@@ -62,12 +62,8 @@ function resolve(params: StdSearchParams): SearchConfig {
   const { entityName } = params;
   const baseFields = ensureIdField(params.fields);
 
-  // Ensure query field exists on entity for binding
-  const fields = baseFields.some(f => f.name === 'query')
-    ? baseFields
-    : [...baseFields, { name: 'query', type: 'string' as const, default: '' }];
-
-  const nonIdFields = baseFields.filter(f => f.name !== 'id' && f.name !== 'query');
+  const fields = baseFields;
+  const nonIdFields = baseFields.filter(f => f.name !== 'id');
   const p = plural(entityName);
 
   return {
@@ -124,7 +120,7 @@ function buildTrait(c: SearchConfig): Trait {
             type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
             children: [
               { type: 'icon', name: searchIcon, size: 'lg' },
-              { type: 'typography', content: ['concat', 'Results for "', '@entity.query', '"'], variant: 'h2' },
+              { type: 'typography', content: ['concat', 'Results for "', '@payload.query', '"'], variant: 'h2' },
             ],
           },
           { type: 'button', label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'x' },
@@ -136,10 +132,10 @@ function buildTrait(c: SearchConfig): Trait {
         emptyIcon: searchIcon,
         emptyTitle: 'No results found',
         emptyDescription: 'Try a different search term.',
-        children: [{
+        renderItem: ['fn', 'item', {
           type: 'stack', direction: 'vertical', gap: 'sm',
           children: [
-            { type: 'typography', variant: 'h4', content: `@entity.${displayField}` },
+            { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
           ],
         }],
       },
@@ -171,7 +167,6 @@ function buildTrait(c: SearchConfig): Trait {
         {
           from: 'idle', to: 'searching', event: 'SEARCH',
           effects: [
-            ['set', '@entity.query', '@payload.query'],
             ['fetch', entityName],
             ['render-ui', 'main', resultsView],
           ],
@@ -179,7 +174,6 @@ function buildTrait(c: SearchConfig): Trait {
         {
           from: 'searching', to: 'searching', event: 'SEARCH',
           effects: [
-            ['set', '@entity.query', '@payload.query'],
             ['fetch', entityName],
             ['render-ui', 'main', resultsView],
           ],
@@ -187,7 +181,6 @@ function buildTrait(c: SearchConfig): Trait {
         {
           from: 'searching', to: 'idle', event: 'CLEAR',
           effects: [
-            ['set', '@entity.query', ''],
             ['fetch', entityName],
             ['render-ui', 'main', searchInputView],
           ],

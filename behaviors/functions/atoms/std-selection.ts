@@ -62,13 +62,8 @@ function resolve(params: StdSelectionParams): SelectionConfig {
   const { entityName } = params;
   const baseFields = ensureIdField(params.fields);
 
-  // Ensure selectedId tracking field exists on entity
-  const fields = [
-    ...baseFields,
-    ...(baseFields.some(f => f.name === 'selectedId') ? [] : [{ name: 'selectedId', type: 'string' as const, default: '' }]),
-  ];
-
-  const nonIdFields = baseFields.filter(f => f.name !== 'id' && f.name !== 'selectedId');
+  const fields = baseFields;
+  const nonIdFields = baseFields.filter(f => f.name !== 'id');
   const p = plural(entityName);
 
   return {
@@ -117,10 +112,10 @@ function buildTrait(c: SelectionConfig): Trait {
         emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
         className: 'transition-shadow hover:shadow-md cursor-pointer',
         itemActions: [{ label: 'Select', event: 'SELECT', icon: 'check' }],
-        children: [{
+        renderItem: ['fn', 'item', {
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
-            { type: 'checkbox', label: `@entity.${displayField}` },
+            { type: 'checkbox', label: `@item.${displayField}` },
           ],
         }],
       },
@@ -152,7 +147,7 @@ function buildTrait(c: SelectionConfig): Trait {
       { type: 'divider' },
       {
         type: 'alert', variant: 'info',
-        message: ['concat', 'Selected: ', '@entity.selectedId'],
+        message: ['concat', 'Selected: ', '@payload.id'],
       },
       {
         type: 'data-grid', entity: entityName,
@@ -160,10 +155,10 @@ function buildTrait(c: SelectionConfig): Trait {
         emptyTitle: `No ${pluralName.toLowerCase()} yet`,
         emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
         itemActions: [{ label: 'Select', event: 'SELECT', icon: 'check' }],
-        children: [{
+        renderItem: ['fn', 'item', {
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
-            { type: 'checkbox', label: `@entity.${displayField}` },
+            { type: 'checkbox', label: `@item.${displayField}`, checked: ['==', '@item.id', '@payload.id'] },
           ],
         }],
       },
@@ -171,7 +166,7 @@ function buildTrait(c: SelectionConfig): Trait {
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [
-          { type: 'button', label: 'Confirm', event: 'CONFIRM_SELECTION', variant: 'primary', icon: 'check' },
+          { type: 'button', label: 'Confirm', event: 'CONFIRM_SELECTION', actionPayload: { id: '@payload.id' }, variant: 'primary', icon: 'check' },
           { type: 'button', label: 'Deselect', event: 'DESELECT', variant: 'ghost', icon: 'x' },
         ],
       },
@@ -203,7 +198,7 @@ function buildTrait(c: SelectionConfig): Trait {
         type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
         children: [
           { type: 'typography', variant: 'caption', content: 'Selected ID:' },
-          { type: 'typography', variant: 'body', content: '@entity.selectedId' },
+          { type: 'typography', variant: 'body', content: '@payload.id' },
         ],
       },
       { type: 'button', label: 'Clear Selection', event: 'CLEAR', variant: 'ghost', icon: 'rotate-ccw' },
@@ -227,7 +222,9 @@ function buildTrait(c: SelectionConfig): Trait {
         ] },
         { key: 'DESELECT', name: 'Deselect' },
         { key: 'CLEAR', name: 'Clear' },
-        { key: 'CONFIRM_SELECTION', name: 'Confirm Selection' },
+        { key: 'CONFIRM_SELECTION', name: 'Confirm Selection', payload: [
+          { name: 'id', type: 'string', required: true },
+        ] },
       ],
       transitions: [
         {
@@ -240,21 +237,20 @@ function buildTrait(c: SelectionConfig): Trait {
         {
           from: 'idle', to: 'selecting', event: 'SELECT',
           effects: [
-            ['set', '@entity.selectedId', '@payload.id'],
+            ['fetch', entityName],
             ['render-ui', 'main', selectingView],
           ],
         },
         {
           from: 'selecting', to: 'selecting', event: 'SELECT',
           effects: [
-            ['set', '@entity.selectedId', '@payload.id'],
+            ['fetch', entityName],
             ['render-ui', 'main', selectingView],
           ],
         },
         {
           from: 'selecting', to: 'idle', event: 'DESELECT',
           effects: [
-            ['set', '@entity.selectedId', ''],
             ['fetch', entityName],
             ['render-ui', 'main', idleView],
           ],
@@ -262,7 +258,6 @@ function buildTrait(c: SelectionConfig): Trait {
         {
           from: 'selecting', to: 'idle', event: 'CLEAR',
           effects: [
-            ['set', '@entity.selectedId', ''],
             ['fetch', entityName],
             ['render-ui', 'main', idleView],
           ],
@@ -276,7 +271,6 @@ function buildTrait(c: SelectionConfig): Trait {
         {
           from: 'selected', to: 'idle', event: 'CLEAR',
           effects: [
-            ['set', '@entity.selectedId', ''],
             ['fetch', entityName],
             ['render-ui', 'main', idleView],
           ],
