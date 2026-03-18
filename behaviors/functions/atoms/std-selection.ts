@@ -120,7 +120,7 @@ function buildTrait(c: SelectionConfig): Trait {
         children: [{
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
-            { type: 'checkbox', label: `@entity.${displayField}`, checked: ['==', '@entity.id', `@${entityName}.selectedId`] },
+            { type: 'checkbox', label: `@entity.${displayField}` },
           ],
         }],
       },
@@ -163,7 +163,7 @@ function buildTrait(c: SelectionConfig): Trait {
         children: [{
           type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
           children: [
-            { type: 'checkbox', label: `@entity.${displayField}`, checked: ['==', '@entity.id', `@${entityName}.selectedId`] },
+            { type: 'checkbox', label: `@entity.${displayField}` },
           ],
         }],
       },
