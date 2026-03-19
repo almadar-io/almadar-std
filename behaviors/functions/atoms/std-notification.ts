@@ -125,7 +125,7 @@ function buildTrait(c: NotificationConfig): Trait {
     ],
   };
 
-  // Visible state view: alert + toast + violation-alert for comprehensive notification display
+  // Visible state view: alert + toast-slot + violation-alert for comprehensive notification display
   const visibleView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -147,6 +147,13 @@ function buildTrait(c: NotificationConfig): Trait {
         type: 'alert',
         variant: ef('notificationType'),
         message: ef('message'),
+      },
+      { type: 'toast-slot', position: 'top-right' },
+      {
+        type: 'violation-alert',
+        severity: 'warning',
+        message: ef('message'),
+        category: 'compliance',
       },
     ],
   };

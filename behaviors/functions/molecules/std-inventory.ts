@@ -20,6 +20,7 @@ import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/b
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
 import { stdConfirmation } from '../atoms/std-confirmation.js';
+import { SYSTEM_FIELDS } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -86,7 +87,7 @@ function resolve(params: StdInventoryParams): InventoryConfig {
     fields,
     nonIdFields,
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
-    formFields: params.formFields ?? nonIdFields.map(f => f.name),
+    formFields: params.formFields ?? nonIdFields.filter(f => !SYSTEM_FIELDS.has(f.name)).map(f => f.name),
     persistence: params.persistence ?? 'persistent',
     collection: params.collection,
     pageTitle: params.pageTitle ?? `${p} Inventory`,
@@ -238,8 +239,13 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     }
   }
 
-  // 2. Shared entity
-  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
+  // 2. Shared entity with seed instances so INIT fetch returns data
+  const instances = [
+    { id: 'item-1', name: 'Health Potion', description: 'Restores 50 HP', status: 'active', pendingId: '' },
+    { id: 'item-2', name: 'Iron Sword', description: 'A sturdy blade', status: 'active', pendingId: '' },
+    { id: 'item-3', name: 'Wooden Shield', description: 'Basic protection', status: 'active', pendingId: '' },
+  ];
+  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection, instances });
 
   // 3. Page references all traits
   const page: Page = {

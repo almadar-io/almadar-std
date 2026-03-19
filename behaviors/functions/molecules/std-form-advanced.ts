@@ -11,6 +11,7 @@
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -61,7 +62,7 @@ function resolve(params: StdFormAdvancedParams): FormAdvancedConfig {
     ...(baseFields.some(f => f.name === 'priority') ? [] : [{ name: 'priority', type: 'string' as const, default: 'medium', values: ['low', 'medium', 'high', 'critical'] }]),
     ...(baseFields.some(f => f.name === 'categoryId') ? [] : [{ name: 'categoryId', type: 'relation' as EntityField['type'], default: '', relation: { entity: params.relatedEntity ?? entityName, cardinality: 'many-to-one' as const } }]),
   ];
-  const nonIdFields = fields.filter(f => f.name !== 'id');
+  const nonIdFields = fields.filter(f => f.name !== 'id' && !SYSTEM_FIELDS.has(f.name));
   const p = plural(entityName);
 
   return {
@@ -104,7 +105,7 @@ function buildTrait(c: FormAdvancedConfig): Trait {
       { type: 'divider' },
       { type: 'form-section', entity: entityName, mode: 'create', submitEvent: 'SUBMIT', cancelEvent: 'INIT',
         fields: nonIdFields.map(f => {
-          const fieldDef: Record<string, unknown> = { name: f.name, label: f.name.charAt(0).toUpperCase() + f.name.slice(1) };
+          const fieldDef: Record<string, unknown> = { name: f.name, label: humanizeLabel(f.name) };
           if (f.type === 'number') fieldDef.type = 'number';
           else if (f.type === 'boolean') fieldDef.type = 'boolean';
           else if (f.type === 'date') fieldDef.type = 'date';
@@ -128,7 +129,7 @@ function buildTrait(c: FormAdvancedConfig): Trait {
         children: nonIdFields.map(f => ({
           type: 'stack', direction: 'vertical', gap: 'xs',
           children: [
-            { type: 'typography', variant: 'caption', color: 'muted', content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
+            { type: 'typography', variant: 'caption', color: 'muted', content: humanizeLabel(f.name) },
             { type: 'typography', variant: 'body', content: ['object/get', ['array/first', '@entity'], f.name] },
           ],
         })),

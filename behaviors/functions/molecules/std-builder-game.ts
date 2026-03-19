@@ -45,8 +45,16 @@ interface BuilderGameConfig {
 
 function resolve(params: StdBuilderGameParams): BuilderGameConfig {
   const { entityName } = params;
-  const fields = ensureIdField(params.fields);
+  const baseFields = ensureIdField(params.fields);
   const p = plural(entityName);
+
+  // Domain fields for game HUD bindings
+  const domainFields: EntityField[] = [
+    { name: 'score', type: 'number', default: 0 },
+    { name: 'level', type: 'number', default: 1 },
+  ];
+  const userFieldNames = new Set(baseFields.map(f => f.name));
+  const fields = [...baseFields, ...domainFields.filter(f => !userFieldNames.has(f.name))];
 
   return {
     entityName,
@@ -77,9 +85,21 @@ function buildTrait(c: BuilderGameConfig): Trait {
   };
 
   const playingUI = {
-    type: 'builder-board',
-    entity: entityName,
-    completeEvent: 'COMPLETE',
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      {
+        type: 'game-hud',
+        stats: [
+          { label: 'Score', value: '@entity.score' },
+          { label: 'Level', value: '@entity.level' },
+        ],
+      },
+      {
+        type: 'builder-board',
+        entity: entityName,
+        completeEvent: 'COMPLETE',
+      },
+    ],
   };
 
   const completeUI = {
@@ -141,7 +161,10 @@ function buildTrait(c: BuilderGameConfig): Trait {
 // ============================================================================
 
 function buildEntity(c: BuilderGameConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
+  const instances = [
+    { id: 'game-1', name: 'Builder Session', description: 'Active game session', status: 'active', score: 0, level: 1 },
+  ];
+  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection, instances });
 }
 
 function buildPage(c: BuilderGameConfig): Page {

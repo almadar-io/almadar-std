@@ -39,6 +39,29 @@
             "type": "string",
             "default": ""
           }
+        ],
+        "instances": [
+          {
+            "id": "item-1",
+            "name": "Health Potion",
+            "description": "Restores 50 HP",
+            "status": "active",
+            "pendingId": ""
+          },
+          {
+            "id": "item-2",
+            "name": "Iron Sword",
+            "description": "A sturdy blade",
+            "status": "active",
+            "pendingId": ""
+          },
+          {
+            "id": "item-3",
+            "name": "Wooden Shield",
+            "description": "Basic protection",
+            "status": "active",
+            "pendingId": ""
+          }
         ]
       },
       "traits": [
@@ -149,12 +172,14 @@
                       "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
+                      "className": "p-6",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "type": "flex",
+                          "direction": "row",
                           "gap": "md",
                           "justify": "space-between",
+                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
@@ -206,12 +231,15 @@
                               "itemActions": [
                                 {
                                   "label": "Use",
-                                  "event": "USE_ITEM"
+                                  "event": "USE_ITEM",
+                                  "variant": "ghost",
+                                  "size": "sm"
                                 },
                                 {
                                   "label": "Drop",
                                   "event": "DROP",
-                                  "variant": "danger"
+                                  "variant": "danger",
+                                  "size": "sm"
                                 }
                               ],
                               "columns": [
@@ -224,7 +252,21 @@
                                 {
                                   "name": "description",
                                   "label": "Description",
-                                  "variant": "badge"
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
                                 },
                                 {
                                   "name": "status",
@@ -239,7 +281,8 @@
                           "type": "floating-action-button",
                           "icon": "plus",
                           "event": "ADD_ITEM",
-                          "label": "Create"
+                          "label": "Create",
+                          "tooltip": "Add InventoryItem"
                         }
                       ]
                     }
@@ -393,9 +436,7 @@
                               "fields": [
                                 "name",
                                 "description",
-                                "status",
-                                "createdAt",
-                                "pendingId"
+                                "status"
                               ]
                             }
                           ]
@@ -414,6 +455,11 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
                   ]
                 ]
               },
@@ -604,6 +650,11 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
                   ]
                 ]
               },

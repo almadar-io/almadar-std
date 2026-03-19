@@ -19,6 +19,7 @@ import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/b
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
 import { stdConfirmation } from '../atoms/std-confirmation.js';
+import { humanizeLabel } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -117,7 +118,7 @@ function detailContent(detailFields: string[], headerIcon: string): unknown {
       ...detailFields.map(f => ({
         type: 'stack', direction: 'horizontal', gap: 'md',
         children: [
-          { type: 'typography', variant: 'caption', content: f.charAt(0).toUpperCase() + f.slice(1) },
+          { type: 'typography', variant: 'caption', content: humanizeLabel(f) },
           { type: 'typography', variant: 'body', content: `@entity.${f}` },
         ],
       })),

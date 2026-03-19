@@ -13,6 +13,8 @@
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
 import { makeEntity, ensureIdField, extractTrait } from '@almadar/core/builders';
 import { stdModal } from '../atoms/std-modal.js';
+import { stdConfirmation } from '../atoms/std-confirmation.js';
+import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -61,13 +63,19 @@ interface CartConfig {
 
 function resolve(params: StdCartParams): CartConfig {
   const { entityName } = params;
-  const fields = ensureIdField(params.fields);
+  const baseFields = ensureIdField(params.fields);
+  // Domain field required by stdConfirmation's render-ui bindings (@entity.pendingId)
+  const domainFields: EntityField[] = [
+    { name: 'pendingId', type: 'string', default: '' },
+  ];
+  const userFieldNames = new Set(baseFields.map(f => f.name));
+  const fields = [...baseFields, ...domainFields.filter(f => !userFieldNames.has(f.name))];
   const nonIdFields = fields.filter(f => f.name !== 'id');
 
   return {
     entityName, fields, nonIdFields,
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
-    formFields: params.formFields ?? nonIdFields.map(f => f.name),
+    formFields: params.formFields ?? nonIdFields.filter(f => !SYSTEM_FIELDS.has(f.name)).map(f => f.name),
     persistence: params.persistence ?? 'persistent',
     collection: params.collection,
     pageTitle: params.pageTitle ?? 'Shopping Cart',
@@ -89,21 +97,13 @@ function resolve(params: StdCartParams): CartConfig {
 function buildCartTrait(c: CartConfig): Trait {
   const { entityName, listFields, headerIcon, pageTitle, addButtonLabel, checkoutButtonLabel, emptyTitle, emptyDescription } = c;
 
-  const listItemChildren: unknown[] = [
-    {
-      type: 'stack', direction: 'horizontal', justify: 'space-between', align: 'center',
-      children: [
-        { type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', children: [
-          { type: 'icon', name: headerIcon, size: 'sm' },
-          { type: 'typography', variant: 'h4', content: `@entity.${listFields[0] ?? 'id'}` },
-        ] },
-        ...(listFields.length > 1 ? [{ type: 'badge', label: `@entity.${listFields[1]}` }] : []),
-      ],
-    },
+  // Use columns-based rendering instead of legacy children/renderItem pattern
+  // This leverages DataGrid's built-in card layout with proper entity binding
+  const cartColumns = [
+    { name: listFields[0] ?? 'id', label: humanizeLabel(listFields[0] ?? 'id'), variant: 'h4', icon: headerIcon },
+    ...(listFields.length > 1 ? [{ name: listFields[1], label: humanizeLabel(listFields[1]), variant: 'caption' as const, format: 'currency' as const }] : []),
+    ...(listFields.length > 2 ? [{ name: listFields[2], label: humanizeLabel(listFields[2]), variant: 'badge' as const }] : []),
   ];
-  if (listFields.length > 2) {
-    listItemChildren.push({ type: 'typography', variant: 'caption', content: `@entity.${listFields[2]}` });
-  }
 
   const headerBar = {
     type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
@@ -119,14 +119,15 @@ function buildCartTrait(c: CartConfig): Trait {
   const cartGrid = {
     type: 'data-grid', entity: entityName,
     emptyIcon: 'inbox', emptyTitle, emptyDescription,
-    itemActions: [{ label: 'Remove', event: 'REMOVE_ITEM', variant: 'danger' }],
-    children: [{ type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+    itemActions: [{ label: 'Remove', event: 'REQUEST_REMOVE', variant: 'danger', size: 'sm' }],
+    columns: cartColumns,
   };
 
   return {
     name: `${entityName}CartBrowse`,
     linkedEntity: entityName,
     category: 'interaction',
+    listens: [{ event: 'CONFIRM_REMOVE', triggers: 'CONFIRM_REMOVE' }],
     stateMachine: {
       states: [
         { name: 'browsing', isInitial: true },
@@ -136,7 +137,8 @@ function buildCartTrait(c: CartConfig): Trait {
         { key: 'INIT', name: 'Initialize' },
         { key: 'ADD_ITEM', name: 'Add Item' },
         { key: 'SAVE', name: 'Save', payload: [{ name: 'data', type: 'object', required: true }] },
-        { key: 'REMOVE_ITEM', name: 'Remove Item', payload: [{ name: 'id', type: 'string', required: true }] },
+        { key: 'REQUEST_REMOVE', name: 'Request Remove', payload: [{ name: 'id', type: 'string', required: true }] },
+        { key: 'CONFIRM_REMOVE', name: 'Confirm Remove', payload: [{ name: 'data', type: 'object', required: true }] },
         { key: 'PROCEED_CHECKOUT', name: 'Proceed to Checkout' },
         { key: 'BACK_TO_CART', name: 'Back to Cart' },
         { key: 'CONFIRM_ORDER', name: 'Confirm Order' },
@@ -146,16 +148,25 @@ function buildCartTrait(c: CartConfig): Trait {
         { from: 'browsing', to: 'browsing', event: 'INIT', effects: [
           ['fetch', entityName],
           ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
-            headerBar, { type: 'divider' }, cartGrid,
+            headerBar, { type: 'divider' },
+            // Order summary stats
+            {
+              type: 'simple-grid', columns: 3,
+              children: [
+                { type: 'stats-display', label: 'Items', value: ['array/length', '@entity'], icon: 'package' },
+                { type: 'stats-display', label: 'Subtotal', value: ['array/length', '@entity'], icon: 'dollar-sign' },
+                { type: 'stats-display', label: 'Total', value: ['array/length', '@entity'], icon: 'receipt' },
+              ],
+            },
+            { type: 'divider' },
+            cartGrid,
             { type: 'button', label: checkoutButtonLabel, event: 'PROCEED_CHECKOUT', variant: 'primary', icon: 'arrow-right' },
           ] }],
         ] },
         // SAVE: re-fetch after modal adds an item (shared event bus)
         { from: 'browsing', to: 'browsing', event: 'SAVE', effects: [['fetch', entityName]] },
-        // REMOVE_ITEM
-        { from: 'browsing', to: 'browsing', event: 'REMOVE_ITEM', effects: [
-          ['persist', 'delete', entityName, '@payload.id'], ['fetch', entityName],
-        ] },
+        // CONFIRM_REMOVE: re-fetch after confirmation trait deletes item
+        { from: 'browsing', to: 'browsing', event: 'CONFIRM_REMOVE', effects: [['fetch', entityName]] },
         // PROCEED_CHECKOUT
         { from: 'browsing', to: 'checkout', event: 'PROCEED_CHECKOUT', effects: [
           ['fetch', entityName],
@@ -207,7 +218,7 @@ export function stdCartPage(params: StdCartParams): Page {
   return {
     name: c.pageName, path: c.pagePath,
     ...(c.isInitial ? { isInitial: true } : {}),
-    traits: [{ ref: `${c.entityName}CartBrowse` }, { ref: `${c.entityName}AddItem` }],
+    traits: [{ ref: `${c.entityName}CartBrowse` }, { ref: `${c.entityName}AddItem` }, { ref: `${c.entityName}RemoveConfirm` }],
   } as Page;
 }
 
@@ -246,18 +257,42 @@ export function stdCart(params: StdCartParams): OrbitalDefinition {
     saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
   }));
 
+  // Remove confirmation (stdConfirmation atom)
+  const removeTrait = extractTrait(stdConfirmation({ standalone: false,
+    entityName, fields,
+    traitName: `${entityName}RemoveConfirm`,
+    confirmTitle: 'Remove Item',
+    confirmMessage: 'Are you sure you want to remove this item from your cart?',
+    confirmLabel: 'Remove',
+    headerIcon: 'trash-2',
+    requestEvent: 'REQUEST_REMOVE',
+    confirmEvent: 'CONFIRM_REMOVE',
+    confirmEffects: [['persist', 'delete', entityName, '@payload.id'], ['fetch', entityName]],
+    emitOnConfirm: 'CONFIRM_REMOVE',
+  }));
+
+  // CONFIRM_REMOVE effects reference @payload.id, so declare the payload on the event
+  const removeSm = removeTrait.stateMachine;
+  if (removeSm && 'events' in removeSm) {
+    const events = removeSm.events as Array<{ key: string; payload?: unknown[] }>;
+    const confirmEvt = events.find(e => e.key === 'CONFIRM_REMOVE');
+    if (confirmEvt && !confirmEvt.payload) {
+      confirmEvt.payload = [{ name: 'id', type: 'string', required: true }];
+    }
+  }
+
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
 
   const page: Page = {
     name: c.pageName, path: c.pagePath,
     ...(c.isInitial ? { isInitial: true } : {}),
-    traits: [{ ref: cartTrait.name }, { ref: addTrait.name }],
+    traits: [{ ref: cartTrait.name }, { ref: addTrait.name }, { ref: removeTrait.name }],
   } as Page;
 
   return {
     name: `${entityName}Orbital`,
     entity,
-    traits: [cartTrait, addTrait],
+    traits: [cartTrait, addTrait, removeTrait],
     pages: [page],
   } as OrbitalDefinition;
 }

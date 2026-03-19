@@ -44,9 +44,39 @@
             "default": ""
           },
           {
+            "name": "optionA",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "optionB",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "optionC",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "optionD",
+            "type": "string",
+            "default": ""
+          },
+          {
             "name": "difficulty",
             "type": "string",
             "default": "medium"
+          },
+          {
+            "name": "currentIndex",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalQuestions",
+            "type": "number",
+            "default": 3
           }
         ],
         "instances": [
@@ -58,7 +88,13 @@
             "createdAt": "2026-01-01",
             "question": "What planet is closest to the Sun?",
             "answer": "Mercury",
-            "difficulty": "easy"
+            "optionA": "Mercury",
+            "optionB": "Venus",
+            "optionC": "Mars",
+            "optionD": "Earth",
+            "difficulty": "easy",
+            "currentIndex": 0,
+            "totalQuestions": 3
           },
           {
             "id": "q-2",
@@ -67,8 +103,14 @@
             "status": "active",
             "createdAt": "2026-01-02",
             "question": "What is the chemical symbol for gold?",
-            "answer": "Au (from Latin aurum)",
-            "difficulty": "medium"
+            "answer": "Au",
+            "optionA": "Ag",
+            "optionB": "Au",
+            "optionC": "Fe",
+            "optionD": "Cu",
+            "difficulty": "medium",
+            "currentIndex": 0,
+            "totalQuestions": 3
           },
           {
             "id": "q-3",
@@ -78,7 +120,13 @@
             "createdAt": "2026-01-03",
             "question": "Who painted the Mona Lisa?",
             "answer": "Leonardo da Vinci",
-            "difficulty": "easy"
+            "optionA": "Michelangelo",
+            "optionB": "Raphael",
+            "optionC": "Leonardo da Vinci",
+            "optionD": "Donatello",
+            "difficulty": "easy",
+            "currentIndex": 0,
+            "totalQuestions": 3
           }
         ]
       },
@@ -200,7 +248,14 @@
                           "children": [
                             {
                               "type": "button",
-                              "label": "Option A",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionA"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -209,7 +264,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option B",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionB"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -218,7 +280,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option C",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionC"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -227,7 +296,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option D",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionD"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -239,30 +315,86 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
+                          "gap": "md",
                           "align": "center",
-                          "justify": "center",
+                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "signal",
-                              "size": "sm"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "signal",
+                                  "size": "sm"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Difficulty:"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@entity"
+                                    ],
+                                    "difficulty"
+                                  ]
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "color": "muted",
-                              "content": "Difficulty:"
-                            },
-                            {
-                              "type": "badge",
-                              "label": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "difficulty"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Question"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/first",
+                                        "@entity"
+                                      ],
+                                      "currentIndex"
+                                    ],
+                                    1
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "of"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@entity"
+                                    ],
+                                    "totalQuestions"
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -388,6 +520,15 @@
                 "event": "NEXT",
                 "effects": [
                   [
+                    "set",
+                    "@entity.currentIndex",
+                    [
+                      "+",
+                      "@entity.currentIndex",
+                      1
+                    ]
+                  ],
+                  [
                     "fetch",
                     "QuizItem"
                   ],
@@ -456,7 +597,14 @@
                           "children": [
                             {
                               "type": "button",
-                              "label": "Option A",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionA"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -465,7 +613,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option B",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionB"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -474,7 +629,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option C",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionC"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -483,7 +645,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option D",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionD"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -495,30 +664,86 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
+                          "gap": "md",
                           "align": "center",
-                          "justify": "center",
+                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "signal",
-                              "size": "sm"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "signal",
+                                  "size": "sm"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Difficulty:"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@entity"
+                                    ],
+                                    "difficulty"
+                                  ]
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "color": "muted",
-                              "content": "Difficulty:"
-                            },
-                            {
-                              "type": "badge",
-                              "label": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "difficulty"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Question"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/first",
+                                        "@entity"
+                                      ],
+                                      "currentIndex"
+                                    ],
+                                    1
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "of"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@entity"
+                                    ],
+                                    "totalQuestions"
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -643,7 +868,14 @@
                           "children": [
                             {
                               "type": "button",
-                              "label": "Option A",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionA"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -652,7 +884,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option B",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionB"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -661,7 +900,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option C",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionC"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -670,7 +916,14 @@
                             },
                             {
                               "type": "button",
-                              "label": "Option D",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "optionD"
+                              ],
                               "event": "ANSWER",
                               "variant": "secondary",
                               "actionPayload": {
@@ -682,30 +935,86 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
+                          "gap": "md",
                           "align": "center",
-                          "justify": "center",
+                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "signal",
-                              "size": "sm"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "signal",
+                                  "size": "sm"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Difficulty:"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@entity"
+                                    ],
+                                    "difficulty"
+                                  ]
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "color": "muted",
-                              "content": "Difficulty:"
-                            },
-                            {
-                              "type": "badge",
-                              "label": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "difficulty"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "Question"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/first",
+                                        "@entity"
+                                      ],
+                                      "currentIndex"
+                                    ],
+                                    1
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "color": "muted",
+                                  "content": "of"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      "@entity"
+                                    ],
+                                    "totalQuestions"
+                                  ]
+                                }
                               ]
                             }
                           ]

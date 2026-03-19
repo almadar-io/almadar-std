@@ -75,12 +75,12 @@ function resolve(params: StdPuzzleGameParams): PuzzleGameConfig {
   // Merge in score-board fields that the extracted PuzzleScore trait references
   // plus domain fields required by render-ui bindings (@entity.moves)
   const domainFields: EntityField[] = [
-    { name: 'score', type: 'number', default: 0 },
-    { name: 'highScore', type: 'number', default: 0 },
-    { name: 'combo', type: 'number', default: 0 },
-    { name: 'multiplier', type: 'number', default: 1 },
-    { name: 'level', type: 'number', default: 1 },
-    { name: 'moves', type: 'number', default: 0 },
+    { name: 'score', type: 'number', default: 0, min: 0, max: 9999 },
+    { name: 'highScore', type: 'number', default: 0, min: 0, max: 9999 },
+    { name: 'combo', type: 'number', default: 0, min: 0, max: 99 },
+    { name: 'multiplier', type: 'number', default: 1, min: 1, max: 10 },
+    { name: 'level', type: 'number', default: 1, min: 1, max: 99 },
+    { name: 'moves', type: 'number', default: 0, min: 0, max: 9999 },
   ];
   const userFieldNames = new Set(baseFields.map(f => f.name));
   const fields = [...baseFields, ...domainFields.filter(f => !userFieldNames.has(f.name))];
@@ -289,11 +289,15 @@ function buildPuzzleScoreTrait(c: PuzzleGameConfig): Trait {
 // ============================================================================
 
 function buildEntity(c: PuzzleGameConfig): Entity {
+  const instances = [
+    { id: 'puzzle-1', name: 'Puzzle Board', description: 'Active puzzle', status: 'active', score: 0, highScore: 0, combo: 0, multiplier: 1, level: 1, moves: 0 },
+  ];
   return makeEntity({
     name: c.entityName,
     fields: c.fields,
     persistence: c.persistence,
     collection: c.collection,
+    instances,
   });
 }
 

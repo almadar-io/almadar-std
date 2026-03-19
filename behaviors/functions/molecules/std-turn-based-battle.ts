@@ -293,11 +293,17 @@ function buildBattleLogTrait(c: BattleConfig): Trait {
 // ============================================================================
 
 function buildEntity(c: BattleConfig): Entity {
+  const instances = [
+    { id: 'unit-1', name: 'Knight', description: 'Armored warrior', status: 'active', turn: 0, score: 0 },
+    { id: 'unit-2', name: 'Archer', description: 'Ranged attacker', status: 'active', turn: 0, score: 0 },
+    { id: 'unit-3', name: 'Mage', description: 'Magic caster', status: 'active', turn: 0, score: 0 },
+  ];
   return makeEntity({
     name: c.entityName,
     fields: c.fields,
     persistence: c.persistence,
     collection: c.collection,
+    instances,
   });
 }
 

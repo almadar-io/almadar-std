@@ -18,6 +18,7 @@ import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almad
 import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
+import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -86,7 +87,7 @@ function resolve(params: StdMessagingParams): MessagingConfig {
     fields,
     nonIdFields,
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
-    formFields: params.formFields ?? nonIdFields.map(f => f.name),
+    formFields: params.formFields ?? nonIdFields.filter(f => !SYSTEM_FIELDS.has(f.name)).map(f => f.name),
     detailFields: params.detailFields ?? nonIdFields.map(f => f.name),
     persistence: params.persistence ?? 'persistent',
     collection: params.collection,
@@ -129,7 +130,7 @@ function viewContent(detailFields: string[]): unknown {
       ...detailFields.map(f => ({
         type: 'stack', direction: 'horizontal', gap: 'md',
         children: [
-          { type: 'typography', variant: 'caption', content: f.charAt(0).toUpperCase() + f.slice(1) },
+          { type: 'typography', variant: 'caption', content: humanizeLabel(f) },
           { type: 'typography', variant: 'body', content: `@entity.${f}` },
         ],
       })),
@@ -175,6 +176,13 @@ export function stdMessaging(params: StdMessagingParams): OrbitalDefinition {
   const c = resolve(params);
   const { entityName, fields, formFields, detailFields } = c;
 
+  // Messaging-specific columns: sender, content preview, timestamp
+  const messagingColumns = params.displayColumns ?? [
+    { name: c.listFields[0] ?? 'name', label: humanizeLabel(c.listFields[0] ?? 'name'), variant: 'h4', icon: c.headerIcon },
+    ...(c.listFields.length > 1 ? [{ name: c.listFields[1], label: humanizeLabel(c.listFields[1]), variant: 'caption' as const }] : []),
+    ...(c.listFields.length > 2 ? [{ name: c.listFields[2], label: humanizeLabel(c.listFields[2]), variant: 'caption' as const, format: 'date' as const }] : []),
+  ];
+
   // 1. Build atoms (shared event names, no wiring needed)
   const browseTrait = extractTrait(stdBrowse({
     entityName, fields,
@@ -189,9 +197,9 @@ export function stdMessaging(params: StdMessagingParams): OrbitalDefinition {
     refreshEvents: ['SEND'],
     displayPattern: params.displayPattern,
     customRenderItem: params.customRenderItem,
-    displayColumns: params.displayColumns,
+    displayColumns: messagingColumns,
     statsBar: params.statsBar,
-    displayProps: params.displayProps,
+    displayProps: params.displayProps ?? { variant: 'compact' },
   }));
 
   const composeTrait = extractTrait(stdModal({ standalone: false,

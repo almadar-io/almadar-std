@@ -124,6 +124,10 @@ function buildTrait(c: DisplayConfig): Trait {
           { type: 'simple-grid', columns, children: cardChildren },
         ] },
         { type: 'divider' },
+        { type: 'grid', columns: 2, gap: 'md', children: [
+          { type: 'card', children: [{ type: 'typography', variant: 'caption', content: 'Chart View' }] },
+          { type: 'card', children: [{ type: 'typography', variant: 'caption', content: 'Graph View' }] },
+        ] },
         { type: 'line-chart', data: [
           { date: 'Jan', value: 12 }, { date: 'Feb', value: 19 }, { date: 'Mar', value: 15 },
           { date: 'Apr', value: 25 }, { date: 'May', value: 22 }, { date: 'Jun', value: 30 },

@@ -74,8 +74,8 @@ function resolve(params: StdPlatformerGameParams): PlatformerGameConfig {
 
   // Domain fields required by render-ui bindings (@entity.score, @entity.lives, @entity.player, @entity.platforms)
   const domainFields: EntityField[] = [
-    { name: 'score', type: 'number', default: 0 },
-    { name: 'lives', type: 'number', default: 3 },
+    { name: 'score', type: 'number', default: 0, min: 0, max: 9999 },
+    { name: 'lives', type: 'number', default: 3, min: 0, max: 10 },
     { name: 'player', type: 'string', default: '' },
     { name: 'platforms', type: 'string', default: '' },
   ];
@@ -303,11 +303,15 @@ function buildPlatformerCanvasTrait(c: PlatformerGameConfig): Trait {
 // ============================================================================
 
 function buildEntity(c: PlatformerGameConfig): Entity {
+  const instances = [
+    { id: 'player-1', name: 'Player', description: 'Main character', status: 'active', score: 0, lives: 3, player: '', platforms: '' },
+  ];
   return makeEntity({
     name: c.entityName,
     fields: c.fields,
     persistence: c.persistence,
     collection: c.collection,
+    instances,
   });
 }
 

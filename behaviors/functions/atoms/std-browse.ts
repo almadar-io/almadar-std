@@ -12,6 +12,7 @@
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { humanizeLabel } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -132,7 +133,7 @@ function buildDisplayPattern(c: BrowseConfig, entityName: string, emptyTitle: st
   const base: Record<string, unknown> = {
     type: c.displayPattern, entity: entityName,
     emptyIcon: 'inbox', emptyTitle, emptyDescription,
-    ...(c.itemActions.length > 0 ? { itemActions: c.itemActions } : {}),
+    ...(c.itemActions.length > 0 ? { itemActions: c.itemActions.map(a => ({ ...a, variant: a.variant ?? 'ghost', size: 'sm' })) } : {}),
   };
 
   if (c.displayColumns) {
@@ -156,11 +157,31 @@ function buildEntity(c: BrowseConfig): Entity {
 function buildTrait(c: BrowseConfig): Trait {
   const { entityName, listFields, headerIcon, pageTitle, emptyTitle, emptyDescription } = c;
 
+  // Helper: detect date fields and add format
+  const dateFormat = (fieldName: string): Record<string, string> => {
+    const fieldDef = c.nonIdFields.find(f => f.name === fieldName);
+    return (fieldDef?.type === 'date' || fieldDef?.type === 'datetime') ? { format: 'date' } : {};
+  };
+
   // Default columns for DataGrid built-in card rendering (proper badge colors, formatting)
   const defaultColumns = [
-    { name: listFields[0] ?? 'name', label: listFields[0]?.charAt(0).toUpperCase() + (listFields[0]?.slice(1) ?? ''), variant: 'h4', icon: headerIcon },
-    ...(listFields.length > 1 ? [{ name: listFields[1], label: listFields[1].charAt(0).toUpperCase() + listFields[1].slice(1), variant: 'badge' as const }] : []),
-    ...(listFields.length > 2 ? [{ name: listFields[2], label: listFields[2].charAt(0).toUpperCase() + listFields[2].slice(1), variant: 'caption' as const }] : []),
+    { name: listFields[0] ?? 'name', label: humanizeLabel(listFields[0] ?? 'name'), variant: 'h4', icon: headerIcon, ...dateFormat(listFields[0] ?? 'name') },
+    ...(listFields.length > 1 ? [{
+      name: listFields[1], label: humanizeLabel(listFields[1]),
+      variant: 'badge' as const,
+      colorMap: {
+        active: 'success', completed: 'success', done: 'success',
+        pending: 'warning', draft: 'warning', scheduled: 'warning',
+        inactive: 'neutral', archived: 'neutral', disabled: 'neutral',
+        error: 'destructive', cancelled: 'destructive', failed: 'destructive',
+      },
+      ...dateFormat(listFields[1]),
+    }] : []),
+    ...(listFields.length > 2 ? [{
+      name: listFields[2], label: humanizeLabel(listFields[2]),
+      variant: 'caption' as const,
+      ...dateFormat(listFields[2]),
+    }] : []),
   ];
 
   // Legacy renderItem for backward compatibility when customRenderItem is used
@@ -247,9 +268,9 @@ function buildTrait(c: BrowseConfig): Trait {
           effects: [
             ['fetch', entityName],
             ['render-ui', 'main', {
-              type: 'stack', direction: 'vertical', gap: 'lg',
+              type: 'stack', direction: 'vertical', gap: 'lg', className: 'p-6',
               children: [
-                { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: headerChildren },
+                { type: 'flex', direction: 'row', gap: 'md', justify: 'space-between', align: 'center', children: headerChildren },
                 { type: 'divider' },
                 // Stats bar (dashboard-style summary above the list)
                 ...(c.statsBar.length > 0 ? [{
@@ -264,7 +285,7 @@ function buildTrait(c: BrowseConfig): Trait {
                   ],
                 },
                 // Floating action button for quick create
-                { type: 'floating-action-button', icon: 'plus', event: c.headerActions[0]?.event ?? 'INIT', label: 'Create' },
+                { type: 'floating-action-button', icon: 'plus', event: c.headerActions[0]?.event ?? 'INIT', label: 'Create', tooltip: c.headerActions[0]?.label ?? 'Create' },
               ],
             }],
           ],

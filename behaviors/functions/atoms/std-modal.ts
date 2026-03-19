@@ -11,6 +11,7 @@
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
 
 // ============================================================================
 // Params
@@ -86,6 +87,7 @@ function resolve(params: StdModalParams): ModalConfig {
   const p = plural(entityName);
 
   // Default open content: modal molecule wrapping field detail view
+  const displayFields = nonIdFields.filter(f => !SYSTEM_FIELDS.has(f.name));
   const defaultContent = {
     type: 'modal',
     title: params.modalTitle ?? 'Details',
@@ -94,10 +96,10 @@ function resolve(params: StdModalParams): ModalConfig {
       {
         type: 'stack', direction: 'vertical', gap: 'md',
         children: [
-          ...nonIdFields.map(f => ({
+          ...displayFields.map(f => ({
             type: 'stack', direction: 'horizontal', gap: 'md',
             children: [
-              { type: 'typography', variant: 'caption', content: f.name.charAt(0).toUpperCase() + f.name.slice(1) },
+              { type: 'typography', variant: 'caption', content: humanizeLabel(f.name) },
               { type: 'typography', variant: 'body', content: ['object/get', ['array/first', '@entity'], f.name] },
             ],
           })),
@@ -187,6 +189,7 @@ function buildTrait(c: ModalConfig): Trait {
     // CLOSE: open → closed (re-render main to avoid stale content)
     { from: 'open', to: 'closed', event: c.closeEvent, effects: [
       ['render-ui', 'modal', null],
+      ['notify', 'Cancelled', 'info'],
       ...(c.standalone ? [['fetch', c.entityName], ['render-ui', 'main', {
         type: 'stack', direction: 'vertical', gap: 'lg',
         children: [

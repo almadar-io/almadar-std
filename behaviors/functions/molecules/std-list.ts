@@ -18,6 +18,7 @@ import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almad
 import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
+import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
 // Delete confirmation is inline in the browse trait (single-trait for entity context)
 
 // ============================================================================
@@ -88,7 +89,7 @@ function resolve(params: StdListParams): ListConfig {
     entityName, fields, nonIdFields,
     listFields: params.listFields ?? nonIdFields.slice(0, 3).map(f => f.name),
     detailFields: params.detailFields ?? nonIdFields.map(f => f.name),
-    formFields: params.formFields ?? nonIdFields.map(f => f.name),
+    formFields: params.formFields ?? nonIdFields.filter(f => !SYSTEM_FIELDS.has(f.name)).map(f => f.name),
     persistence: params.persistence ?? 'persistent',
     collection: params.collection,
     pageTitle: params.pageTitle ?? p,
@@ -139,7 +140,7 @@ function detailContent(detailFields: string[], closeEvent: string): unknown {
       ...detailFields.map(f => ({
         type: 'stack', direction: 'horizontal', gap: 'md',
         children: [
-          { type: 'typography', variant: 'caption', content: f.charAt(0).toUpperCase() + f.slice(1) },
+          { type: 'typography', variant: 'caption', content: humanizeLabel(f) },
           { type: 'typography', variant: 'body', content: `@entity.${f}` },
         ],
       })),

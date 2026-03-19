@@ -164,11 +164,11 @@ function buildTrait(c: SelectionConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'form-actions',
-        primary: { label: 'Confirm', event: 'CONFIRM_SELECTION', actionType: 'submit' },
-        secondary: [
-          { label: 'Select All', event: 'SELECT' },
-          { label: 'Deselect All', event: 'DESELECT' },
+        type: 'button-group', variant: 'outline',
+        buttons: [
+          { label: 'Select All', event: 'SELECT', icon: 'check-square' },
+          { label: 'Deselect All', event: 'DESELECT', icon: 'square' },
+          { label: 'Confirm', event: 'CONFIRM_SELECTION', icon: 'check' },
         ],
       },
     ],

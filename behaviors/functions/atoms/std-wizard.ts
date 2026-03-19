@@ -131,26 +131,34 @@ function buildStepUI(c: WizardConfig, stepIndex: number): Record<string, unknown
   }
   navButtons.push({ type: 'button', label: 'Next', event: 'NEXT', variant: 'primary', icon: 'arrow-right' });
 
+  // Wrap step content in container; use repeatable-form-section for repeatable steps
+  const formNode = step.fields.length > 1 && stepIndex > 0
+    ? { type: 'repeatable-form-section', entity: c.entityName, mode: 'create', submitEvent: 'NEXT', cancelEvent: isFirst ? 'INIT' : 'PREV', fields: step.fields }
+    : { type: 'form-section', entity: c.entityName, mode: 'create', submitEvent: 'NEXT', cancelEvent: isFirst ? 'INIT' : 'PREV', fields: step.fields };
+
   return {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: c.headerIcon, size: 'lg' },
-          { type: 'typography', content: c.wizardTitle, variant: 'h2' },
-        ],
-      },
-      { type: 'progress-dots', count: c.totalSteps, currentIndex: stepIndex },
-      { type: 'wizard-progress', steps: c.wizardProgressSteps, currentStep: stepIndex },
-      { type: 'divider' },
-      { type: 'typography', content: step.name, variant: 'h3' },
-      { type: 'form-section', entity: c.entityName, mode: 'create', submitEvent: 'NEXT', cancelEvent: isFirst ? 'INIT' : 'PREV', fields: step.fields },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
-        children: navButtons,
-      },
-    ],
+    type: 'container', maxWidth: 'lg', padding: 'lg',
+    children: [{
+      type: 'stack', direction: 'vertical', gap: 'lg',
+      children: [
+        {
+          type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+          children: [
+            { type: 'icon', name: c.headerIcon, size: 'lg' },
+            { type: 'typography', content: c.wizardTitle, variant: 'h2' },
+          ],
+        },
+        { type: 'progress-dots', count: c.totalSteps, currentIndex: stepIndex },
+        { type: 'wizard-progress', steps: c.wizardProgressSteps, currentStep: stepIndex },
+        { type: 'divider' },
+        { type: 'typography', content: step.name, variant: 'h3' },
+        formNode,
+        {
+          type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
+          children: navButtons,
+        },
+      ],
+    }],
   };
 }
 

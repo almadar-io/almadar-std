@@ -53,7 +53,13 @@ function resolve(params: StdQuizParams): QuizConfig {
     ...baseFields,
     ...(baseFields.some(f => f.name === 'question') ? [] : [{ name: 'question', type: 'string' as const, default: '' }]),
     ...(baseFields.some(f => f.name === 'answer') ? [] : [{ name: 'answer', type: 'string' as const, default: '' }]),
+    ...(baseFields.some(f => f.name === 'optionA') ? [] : [{ name: 'optionA', type: 'string' as const, default: '' }]),
+    ...(baseFields.some(f => f.name === 'optionB') ? [] : [{ name: 'optionB', type: 'string' as const, default: '' }]),
+    ...(baseFields.some(f => f.name === 'optionC') ? [] : [{ name: 'optionC', type: 'string' as const, default: '' }]),
+    ...(baseFields.some(f => f.name === 'optionD') ? [] : [{ name: 'optionD', type: 'string' as const, default: '' }]),
     ...(baseFields.some(f => f.name === 'difficulty') ? [] : [{ name: 'difficulty', type: 'string' as const, default: 'medium' }]),
+    ...(baseFields.some(f => f.name === 'currentIndex') ? [] : [{ name: 'currentIndex', type: 'number' as const, default: 0 }]),
+    ...(baseFields.some(f => f.name === 'totalQuestions') ? [] : [{ name: 'totalQuestions', type: 'number' as const, default: 3 }]),
   ];
   const nonIdFields = baseFields.filter(f => f.name !== 'id');
   const p = plural(entityName);
@@ -82,9 +88,9 @@ const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity
 
 function buildEntity(c: QuizConfig): Entity {
   const instances = [
-    { id: 'q-1', name: 'What planet is closest to the Sun?', description: 'Mercury', status: 'active', createdAt: '2026-01-01', question: 'What planet is closest to the Sun?', answer: 'Mercury', difficulty: 'easy' },
-    { id: 'q-2', name: 'What is the chemical symbol for gold?', description: 'Au', status: 'active', createdAt: '2026-01-02', question: 'What is the chemical symbol for gold?', answer: 'Au (from Latin aurum)', difficulty: 'medium' },
-    { id: 'q-3', name: 'Who painted the Mona Lisa?', description: 'Leonardo da Vinci', status: 'active', createdAt: '2026-01-03', question: 'Who painted the Mona Lisa?', answer: 'Leonardo da Vinci', difficulty: 'easy' },
+    { id: 'q-1', name: 'What planet is closest to the Sun?', description: 'Mercury', status: 'active', createdAt: '2026-01-01', question: 'What planet is closest to the Sun?', answer: 'Mercury', optionA: 'Mercury', optionB: 'Venus', optionC: 'Mars', optionD: 'Earth', difficulty: 'easy', currentIndex: 0, totalQuestions: 3 },
+    { id: 'q-2', name: 'What is the chemical symbol for gold?', description: 'Au', status: 'active', createdAt: '2026-01-02', question: 'What is the chemical symbol for gold?', answer: 'Au', optionA: 'Ag', optionB: 'Au', optionC: 'Fe', optionD: 'Cu', difficulty: 'medium', currentIndex: 0, totalQuestions: 3 },
+    { id: 'q-3', name: 'Who painted the Mona Lisa?', description: 'Leonardo da Vinci', status: 'active', createdAt: '2026-01-03', question: 'Who painted the Mona Lisa?', answer: 'Leonardo da Vinci', optionA: 'Michelangelo', optionB: 'Raphael', optionC: 'Leonardo da Vinci', optionD: 'Donatello', difficulty: 'easy', currentIndex: 0, totalQuestions: 3 },
   ];
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, instances });
 }
@@ -116,18 +122,32 @@ function buildTrait(c: QuizConfig): Trait {
       {
         type: 'simple-grid', columns: 2,
         children: [
-          { type: 'button', label: 'Option A', event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'A' } },
-          { type: 'button', label: 'Option B', event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'B' } },
-          { type: 'button', label: 'Option C', event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'C' } },
-          { type: 'button', label: 'Option D', event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'D' } },
+          { type: 'button', label: ef('optionA'), event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'A' } },
+          { type: 'button', label: ef('optionB'), event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'B' } },
+          { type: 'button', label: ef('optionC'), event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'C' } },
+          { type: 'button', label: ef('optionD'), event: 'ANSWER', variant: 'secondary', actionPayload: { answer: 'D' } },
         ],
       },
       {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', justify: 'center',
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between',
         children: [
-          { type: 'icon', name: 'signal', size: 'sm' },
-          { type: 'typography', variant: 'caption', color: 'muted', content: 'Difficulty:' },
-          { type: 'badge', label: ef('difficulty') },
+          {
+            type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+            children: [
+              { type: 'icon', name: 'signal', size: 'sm' },
+              { type: 'typography', variant: 'caption', color: 'muted', content: 'Difficulty:' },
+              { type: 'badge', label: ef('difficulty') },
+            ],
+          },
+          {
+            type: 'stack', direction: 'horizontal', gap: 'xs', align: 'center',
+            children: [
+              { type: 'typography', variant: 'caption', color: 'muted', content: 'Question' },
+              { type: 'typography', variant: 'caption', content: ['+', ef('currentIndex'), 1] },
+              { type: 'typography', variant: 'caption', color: 'muted', content: 'of' },
+              { type: 'typography', variant: 'caption', content: ef('totalQuestions') },
+            ],
+          },
         ],
       },
     ],
@@ -196,7 +216,11 @@ function buildTrait(c: QuizConfig): Trait {
       transitions: [
         { from: 'question', to: 'question', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', questionView]] },
         { from: 'question', to: 'answer-revealed', event: 'ANSWER', effects: [['render-ui', 'main', revealedView]] },
-        { from: 'answer-revealed', to: 'question', event: 'NEXT', effects: [['fetch', entityName], ['render-ui', 'main', questionView]] },
+        { from: 'answer-revealed', to: 'question', event: 'NEXT', effects: [
+          ['set', '@entity.currentIndex', ['+', '@entity.currentIndex', 1]],
+          ['fetch', entityName],
+          ['render-ui', 'main', questionView],
+        ] },
         { from: 'answer-revealed', to: 'complete', event: 'RESTART', effects: [['render-ui', 'main', completeView]] },
         { from: 'complete', to: 'question', event: 'RESTART', effects: [['fetch', entityName], ['render-ui', 'main', questionView]] },
       ],
