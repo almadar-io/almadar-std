@@ -102,7 +102,7 @@ const ef = (field: string): unknown[] => ['object/get', ['array/first', '@entity
 function buildTrait(c: InputConfig): Trait {
   const { entityName, inputLabel, placeholder, headerIcon } = c;
 
-  // Comprehensive input showcase with all input pattern types
+  // Input view using form-field for proper label+input+error structure
   const inputView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -114,63 +114,12 @@ function buildTrait(c: InputConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'form-section-header', title: 'Text Inputs', description: 'Standard text entry fields' },
       {
-        type: 'input-group',
+        type: 'form-field',
+        label: inputLabel,
+        hint: 'Type to enter a value.',
         children: [
-          { type: 'label', text: inputLabel, htmlFor: 'main-input' },
-          {
-            type: 'form-field',
-            label: inputLabel,
-            hint: 'Type to enter a value.',
-            children: [
-              { type: 'input', placeholder, event: 'CHANGE' },
-            ],
-          },
-        ],
-      },
-      {
-        type: 'input-group',
-        children: [
-          { type: 'label', text: 'Description', htmlFor: 'description-input' },
-          { type: 'textarea', placeholder: 'Enter a longer description...', event: 'CHANGE', rows: 3 },
-        ],
-      },
-      { type: 'form-section-header', title: 'Selection Inputs', description: 'Choose from options' },
-      {
-        type: 'input-group',
-        children: [
-          { type: 'label', text: 'Category', htmlFor: 'category-select' },
-          { type: 'select', options: ['Option A', 'Option B', 'Option C'], event: 'CHANGE', placeholder: 'Select a category' },
-        ],
-      },
-      {
-        type: 'input-group',
-        children: [
-          { type: 'label', text: 'Priority', htmlFor: 'priority-radio' },
-          { type: 'radio', options: ['Low', 'Medium', 'High'], event: 'CHANGE' },
-        ],
-      },
-      { type: 'form-section-header', title: 'Toggle & Range', description: 'Adjustable controls' },
-      {
-        type: 'input-group',
-        children: [
-          { type: 'label', text: 'Enabled', htmlFor: 'enabled-switch' },
-          { type: 'switch', event: 'CHANGE' },
-        ],
-      },
-      {
-        type: 'input-group',
-        children: [
-          { type: 'label', text: 'Volume', htmlFor: 'volume-slider' },
-          { type: 'range-slider', min: 0, max: 100, step: 1, event: 'CHANGE' },
-        ],
-      },
-      {
-        type: 'input-group',
-        children: [
-          { type: 'label', text: 'Quantity', htmlFor: 'quantity-stepper' },
-          { type: 'number-stepper', min: 0, max: 99, step: 1, event: 'CHANGE' },
+          { type: 'input', placeholder, event: 'CHANGE' },
         ],
       },
       { type: 'typography', variant: 'caption', color: 'muted', content: ef('value') },
@@ -188,19 +137,12 @@ function buildTrait(c: InputConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'form-section-header', title: 'Validating', description: 'Checking input...' },
       {
-        type: 'input-group',
+        type: 'form-field',
+        label: inputLabel,
+        hint: 'Validating...',
         children: [
-          { type: 'label', text: inputLabel, htmlFor: 'main-input' },
-          {
-            type: 'form-field',
-            label: inputLabel,
-            hint: 'Validating...',
-            children: [
-              { type: 'input', placeholder, event: 'CHANGE' },
-            ],
-          },
+          { type: 'input', placeholder, event: 'CHANGE' },
         ],
       },
       { type: 'alert', variant: 'info', message: 'Validating input...' },
