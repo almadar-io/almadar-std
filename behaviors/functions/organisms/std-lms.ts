@@ -21,6 +21,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { lmsCourseView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -130,5 +131,8 @@ export function stdLms(params: StdLmsParams): OrbitalSchema {
     },
   ];
 
-  return compose([courseOrbital, enrollmentOrbital, progressOrbital], pages, connections, appName);
+  const schema = compose([courseOrbital, enrollmentOrbital, progressOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

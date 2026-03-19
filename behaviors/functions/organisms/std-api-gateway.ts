@@ -18,6 +18,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdCircuitBreaker } from '../atoms/std-circuit-breaker.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { apiRouteView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -94,10 +95,11 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [routeOrbital, backendOrbital, analyticsOrbital],
-    pages,
-    connections,
-    'API Gateway',
-  );
+  const appName = 'API Gateway';
+
+
+  const schema = compose([routeOrbital, backendOrbital, analyticsOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

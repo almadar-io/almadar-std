@@ -18,6 +18,7 @@ import { stdDisplay } from '../atoms/std-display.js';
 import { stdList } from '../molecules/std-list.js';
 import { stdCircuitBreaker } from '../atoms/std-circuit-breaker.js';
 import { iotDeviceView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -94,10 +95,11 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [sensorOrbital, deviceOrbital, alertOrbital],
-    pages,
-    connections,
-    'IoT Dashboard',
-  );
+  const appName = 'IoT Dashboard';
+
+
+  const schema = compose([sensorOrbital, deviceOrbital, alertOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

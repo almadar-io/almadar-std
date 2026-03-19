@@ -18,6 +18,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdDetail } from '../molecules/std-detail.js';
 import { financeTransactionView, financeReportView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -98,10 +99,11 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalSchem
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [transactionOrbital, summaryOrbital, reportOrbital],
-    pages,
-    connections,
-    'Finance Tracker',
-  );
+  const appName = 'Finance Tracker';
+
+
+  const schema = compose([transactionOrbital, summaryOrbital, reportOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

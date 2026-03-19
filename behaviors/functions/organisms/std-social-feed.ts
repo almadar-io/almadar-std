@@ -19,6 +19,7 @@ import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdDetail } from '../molecules/std-detail.js';
 import { stdMessaging } from '../molecules/std-messaging.js';
 import { socialPostView, socialCommentView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -97,5 +98,8 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalSchema {
     },
   ];
 
-  return compose([postOrbital, commentOrbital], pages, connections, appName);
+  const schema = compose([postOrbital, commentOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

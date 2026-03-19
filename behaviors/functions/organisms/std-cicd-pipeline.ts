@@ -18,6 +18,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdAsync } from '../atoms/std-async.js';
 import { cicdBuildView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -97,10 +98,11 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [buildOrbital, stageOrbital, deploymentOrbital],
-    pages,
-    connections,
-    'CI/CD Pipeline',
-  );
+  const appName = 'CI/CD Pipeline';
+
+
+  const schema = compose([buildOrbital, stageOrbital, deploymentOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

@@ -20,11 +20,13 @@
 import type { OrbitalSchema } from '@almadar/core/types';
 import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
+import type { ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDetail } from '../molecules/std-detail.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { healthcarePatientView, healthcareAppointmentView, healthcarePrescriptionView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -165,19 +167,40 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalSchema {
     persistence: 'singleton',
   });
 
-  return compose(
-    [patients, appointments, intake, prescriptions, dashboard],
-    [
+  const appName = params.appName ?? 'HealthcareApp';
+
+
+
+  const pages: ComposePage[] = [
       { name: 'PatientsPage', path: '/patients', traits: ['PatientBrowse', 'PatientCreate', 'PatientEdit', 'PatientView', 'PatientDelete'], isInitial: true },
       { name: 'AppointmentsPage', path: '/appointments', traits: ['AppointmentBrowse', 'AppointmentCreate', 'AppointmentEdit', 'AppointmentView', 'AppointmentDelete'] },
       { name: 'IntakePage', path: '/intake', traits: ['IntakeFormWizard'] },
       { name: 'PrescriptionsPage', path: '/prescriptions', traits: ['PrescriptionBrowse', 'PrescriptionCreate', 'PrescriptionView'] },
       { name: 'DashboardPage', path: '/dashboard', traits: ['DashboardDisplay'] },
-    ],
+    ];
+
+
+
+  const schema = compose(
+
+
+    [patients, appointments, intake, prescriptions, dashboard],
+
+
+    pages,
+
+
     [
       { from: 'IntakeFormWizard', to: 'PatientBrowse', event: { event: 'INTAKE_COMPLETE', payload: [{ name: 'id', type: 'string', required: true }] } },
       { from: 'AppointmentBrowse', to: 'PrescriptionBrowse', event: { event: 'PRESCRIBE', payload: [{ name: 'id', type: 'string', required: true }] } },
     ],
-    params.appName ?? 'HealthcareApp',
+
+
+    appName,
+
+
   );
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

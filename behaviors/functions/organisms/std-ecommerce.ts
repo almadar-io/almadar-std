@@ -20,10 +20,12 @@
 import type { OrbitalSchema } from '@almadar/core/types';
 import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
+import type { ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdCart } from '../molecules/std-cart.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { ecommerceProductView, ecommerceOrderView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -125,19 +127,40 @@ export function stdEcommerce(params: StdEcommerceParams): OrbitalSchema {
     ...ecommerceOrderView(),
   });
 
-  return compose(
-    [products, cart, checkout, orderHistory],
-    [
+  const appName = params.appName ?? 'EcommerceApp';
+
+
+
+  const pages: ComposePage[] = [
       { name: 'ProductsPage', path: '/products', traits: ['ProductBrowse', 'ProductCreate', 'ProductEdit', 'ProductView', 'ProductDelete'], isInitial: true },
       { name: 'CartPage', path: '/cart', traits: ['CartItemCartBrowse', 'CartItemAddItem'] },
       { name: 'CheckoutPage', path: '/checkout', traits: ['CheckoutWizard'] },
       { name: 'OrdersPage', path: '/orders', traits: ['OrderRecordBrowse', 'OrderRecordCreate', 'OrderRecordEdit', 'OrderRecordView', 'OrderRecordDelete'] },
-    ],
+    ];
+
+
+
+  const schema = compose(
+
+
+    [products, cart, checkout, orderHistory],
+
+
+    pages,
+
+
     [
       { from: 'ProductBrowse', to: 'CartItemCartBrowse', event: { event: 'ADD_TO_CART', payload: [{ name: 'id', type: 'string', required: true }] } },
       { from: 'CartItemCartBrowse', to: 'CheckoutWizard', event: { event: 'CHECKOUT_STARTED', payload: [{ name: 'id', type: 'string', required: true }] } },
       { from: 'CheckoutWizard', to: 'OrderRecordBrowse', event: { event: 'ORDER_PLACED', payload: [{ name: 'id', type: 'string', required: true }] } },
     ],
-    params.appName ?? 'EcommerceApp',
+
+
+    appName,
+
+
   );
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

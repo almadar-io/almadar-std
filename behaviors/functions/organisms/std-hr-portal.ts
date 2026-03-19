@@ -22,6 +22,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { hrEmployeeView, hrTimeOffView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -157,5 +158,8 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalSchema {
     },
   ];
 
-  return compose([employeeOrbital, onboardingOrbital, timeOffOrbital, orgChartOrbital], pages, connections, appName);
+  const schema = compose([employeeOrbital, onboardingOrbital, timeOffOrbital, orgChartOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

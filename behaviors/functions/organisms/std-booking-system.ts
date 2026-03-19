@@ -19,10 +19,12 @@
 import type { OrbitalSchema } from '@almadar/core/types';
 import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
+import type { ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { bookingProviderView, bookingAppointmentView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -137,18 +139,39 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalSchema 
     persistence: 'singleton',
   });
 
-  return compose(
-    [providers, booking, appointments, schedule],
-    [
+  const appName = params.appName ?? 'BookingSystemApp';
+
+
+
+  const pages: ComposePage[] = [
       { name: 'ProvidersPage', path: '/providers', traits: ['ProviderBrowse', 'ProviderCreate', 'ProviderEdit', 'ProviderView', 'ProviderDelete'], isInitial: true },
       { name: 'BookPage', path: '/book', traits: ['BookingWizard'] },
       { name: 'AppointmentsPage', path: '/appointments', traits: ['AppointmentBrowse', 'AppointmentCreate', 'AppointmentEdit', 'AppointmentView', 'AppointmentDelete'] },
       { name: 'SchedulePage', path: '/schedule', traits: ['ScheduleDisplay'] },
-    ],
+    ];
+
+
+
+  const schema = compose(
+
+
+    [providers, booking, appointments, schedule],
+
+
+    pages,
+
+
     [
       { from: 'ProviderBrowse', to: 'BookingWizard', event: { event: 'BOOK', payload: [{ name: 'id', type: 'string', required: true }] } },
       { from: 'BookingWizard', to: 'AppointmentBrowse', event: { event: 'CONFIRM', payload: [{ name: 'id', type: 'string', required: true }] } },
     ],
-    params.appName ?? 'BookingSystemApp',
+
+
+    appName,
+
+
   );
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

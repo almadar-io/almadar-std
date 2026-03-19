@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdTurnBasedBattle } from '../molecules/std-turn-based-battle.js';
 import { stdOverworld } from '../atoms/std-overworld.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -91,10 +92,11 @@ export function stdStrategyGame(params: StdStrategyGameParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [battleOrbital, overworldOrbital, resourceOrbital],
-    pages,
-    connections,
-    'Strategy Game',
-  );
+  const appName = 'Strategy Game';
+
+
+  const schema = compose([battleOrbital, overworldOrbital, resourceOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

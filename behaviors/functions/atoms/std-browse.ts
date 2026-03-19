@@ -268,24 +268,19 @@ function buildTrait(c: BrowseConfig): Trait {
           effects: [
             ['fetch', entityName],
             ['render-ui', 'main', {
-              type: 'stack', direction: 'vertical', gap: 'lg', className: 'p-6',
+              type: 'stack', direction: 'vertical', gap: 'lg', className: 'max-w-5xl mx-auto w-full',
               children: [
-                { type: 'flex', direction: 'row', gap: 'md', justify: 'space-between', align: 'center', children: headerChildren },
+                { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', align: 'center', children: headerChildren },
                 { type: 'divider' },
                 // Stats bar (dashboard-style summary above the list)
                 ...(c.statsBar.length > 0 ? [{
                   type: 'simple-grid', columns: Math.min(c.statsBar.length, 4),
                   children: c.statsBar,
                 }, { type: 'divider' }] : []),
-                // Pull-to-refresh wrapper around data display
-                {
-                  type: 'pull-to-refresh', onRefresh: 'INIT',
-                  children: [
-                    buildDisplayPattern(c, entityName, emptyTitle, emptyDescription, defaultColumns, listItemChildren),
-                  ],
-                },
-                // Floating action button for quick create
-                { type: 'floating-action-button', icon: 'plus', event: c.headerActions[0]?.event ?? 'INIT', label: 'Create', tooltip: c.headerActions[0]?.label ?? 'Create' },
+                // Data display
+                buildDisplayPattern(c, entityName, emptyTitle, emptyDescription, defaultColumns, listItemChildren),
+                // Floating action button for quick create (only when no header button exists)
+                ...(c.headerActions.length === 0 ? [{ type: 'floating-action-button', icon: 'plus', event: 'INIT', label: 'Create', tooltip: 'Create' }] : []),
               ],
             }],
           ],

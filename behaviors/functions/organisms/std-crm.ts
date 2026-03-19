@@ -22,6 +22,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdMessaging } from '../molecules/std-messaging.js';
 import { crmContactView, crmDealView, crmNoteView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -154,5 +155,6 @@ export function stdCrm(params: StdCrmParams): OrbitalSchema {
     },
   ];
 
-  return compose([contactOrbital, dealOrbital, pipelineOrbital, noteOrbital], pages, connections, appName);
+  const schema = compose([contactOrbital, dealOrbital, pipelineOrbital, noteOrbital], pages, connections, appName);
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

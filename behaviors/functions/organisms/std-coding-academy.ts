@@ -19,6 +19,7 @@ import { stdSequencerGame } from '../molecules/std-sequencer-game.js';
 import { stdBuilderGame } from '../molecules/std-builder-game.js';
 import { stdEventHandlerGame } from '../molecules/std-event-handler-game.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -107,10 +108,11 @@ export function stdCodingAcademy(params: StdCodingAcademyParams): OrbitalSchema 
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [sequencerOrbital, builderOrbital, eventHandlerOrbital, progressOrbital],
-    pages,
-    connections,
-    'Coding Academy',
-  );
+  const appName = 'Coding Academy';
+
+
+  const schema = compose([sequencerOrbital, builderOrbital, eventHandlerOrbital, progressOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

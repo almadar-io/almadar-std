@@ -18,9 +18,11 @@
 import type { OrbitalSchema } from '@almadar/core/types';
 import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
+import type { ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDetail } from '../molecules/std-detail.js';
 import { cmsArticleView, cmsCategoryView, cmsMediaView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -109,17 +111,38 @@ export function stdCms(params: StdCmsParams): OrbitalSchema {
     ...cmsCategoryView(),
   });
 
-  return compose(
-    [articles, media, categories],
-    [
+  const appName = params.appName ?? 'CmsApp';
+
+
+
+  const pages: ComposePage[] = [
       { name: 'ArticlesPage', path: '/articles', traits: ['ArticleBrowse', 'ArticleCreate', 'ArticleEdit', 'ArticleView', 'ArticleDelete'], isInitial: true },
       { name: 'MediaPage', path: '/media', traits: ['MediaAssetBrowse', 'MediaAssetCreate', 'MediaAssetView'] },
       { name: 'CategoriesPage', path: '/categories', traits: ['CategoryBrowse', 'CategoryCreate', 'CategoryEdit', 'CategoryView', 'CategoryDelete'] },
-    ],
+    ];
+
+
+
+  const schema = compose(
+
+
+    [articles, media, categories],
+
+
+    pages,
+
+
     [
       { from: 'ArticleBrowse', to: 'MediaAssetBrowse', event: { event: 'PUBLISH', payload: [{ name: 'id', type: 'string', required: true }] } },
       { from: 'ArticleBrowse', to: 'CategoryBrowse', event: { event: 'CATEGORIZE', payload: [{ name: 'id', type: 'string', required: true }] } },
     ],
-    params.appName ?? 'CmsApp',
+
+
+    appName,
+
+
   );
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

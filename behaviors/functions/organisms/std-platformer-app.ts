@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdPlatformerGame } from '../molecules/std-platformer-game.js';
 import { stdScoreBoard } from '../atoms/std-score-board.js';
 import { stdInventory } from '../molecules/std-inventory.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -87,10 +88,11 @@ export function stdPlatformerApp(params: StdPlatformerAppParams): OrbitalSchema 
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [gameOrbital, scoreOrbital, collectibleOrbital],
-    pages,
-    connections,
-    'Platformer App',
-  );
+  const appName = 'Platformer App';
+
+
+  const schema = compose([gameOrbital, scoreOrbital, collectibleOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

@@ -18,6 +18,7 @@ import { stdMessaging } from '../molecules/std-messaging.js';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { chatChannelView, chatMessageView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -96,10 +97,11 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [messagingOrbital, channelOrbital, onlineOrbital],
-    pages,
-    connections,
-    'Realtime Chat',
-  );
+  const appName = 'Realtime Chat';
+
+
+  const schema = compose([messagingOrbital, channelOrbital, onlineOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

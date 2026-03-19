@@ -21,6 +21,7 @@ import { stdTurnBasedBattle } from '../molecules/std-turn-based-battle.js';
 import { stdOverworld } from '../atoms/std-overworld.js';
 import { stdInventory } from '../molecules/std-inventory.js';
 import { stdQuest } from '../atoms/std-quest.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -138,10 +139,11 @@ export function stdRpgGame(params: StdRpgGameParams): OrbitalSchema {
     },
   ];
 
-  return compose(
-    [battleOrbital, worldOrbital, inventoryOrbital, questOrbital],
-    pages,
-    connections,
-    'RPG Game',
-  );
+  const appName = 'RPG Game';
+
+
+  const schema = compose([battleOrbital, worldOrbital, inventoryOrbital, questOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

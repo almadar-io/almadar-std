@@ -18,6 +18,7 @@ import { compose } from '@almadar/core/builders';
 import { stdDebuggerGame } from '../molecules/std-debugger-game.js';
 import { stdNegotiatorGame } from '../molecules/std-negotiator-game.js';
 import { stdScoreBoard } from '../atoms/std-score-board.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -88,10 +89,11 @@ export function stdLogicTraining(params: StdLogicTrainingParams): OrbitalSchema 
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [debuggerOrbital, negotiatorOrbital, scoreOrbital],
-    pages,
-    connections,
-    'Logic Training',
-  );
+  const appName = 'Logic Training';
+
+
+  const schema = compose([debuggerOrbital, negotiatorOrbital, scoreOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

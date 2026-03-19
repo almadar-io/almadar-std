@@ -19,6 +19,7 @@ import { stdGameflow } from '../atoms/std-gameflow.js';
 import { stdGameCanvas2d } from '../atoms/std-game-canvas-2d.js';
 import { stdScoreBoard } from '../atoms/std-score-board.js';
 import { stdGameHud } from '../atoms/std-game-hud.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -103,10 +104,11 @@ export function stdArcadeGame(params: StdArcadeGameParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [gameflowOrbital, canvasOrbital, scoreOrbital, hudOrbital],
-    pages,
-    connections,
-    'Arcade Game',
-  );
+  const appName = 'Arcade Game';
+
+
+  const schema = compose([gameflowOrbital, canvasOrbital, scoreOrbital, hudOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

@@ -19,6 +19,7 @@ import { stdCircuitBreaker } from '../atoms/std-circuit-breaker.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdList } from '../molecules/std-list.js';
 import { devopsLogView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -112,10 +113,11 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalSch
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [serviceNodeOrbital, alertMetricOrbital, logEntryOrbital, systemMetricOrbital],
-    pages,
-    connections,
-    'DevOps Dashboard',
-  );
+  const appName = 'DevOps Dashboard';
+
+
+  const schema = compose([serviceNodeOrbital, alertMetricOrbital, logEntryOrbital, systemMetricOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

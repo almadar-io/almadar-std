@@ -18,9 +18,11 @@
 import type { OrbitalSchema } from '@almadar/core/types';
 import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
+import type { ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { projectTaskView, projectSprintView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -109,17 +111,38 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalSchem
     persistence: 'singleton',
   });
 
-  return compose(
-    [tasks, sprints, burndown],
-    [
+  const appName = params.appName ?? 'ProjectManagerApp';
+
+
+
+  const pages: ComposePage[] = [
       { name: 'TasksPage', path: '/tasks', traits: ['TaskBrowse', 'TaskCreate', 'TaskEdit', 'TaskView', 'TaskDelete'], isInitial: true },
       { name: 'SprintsPage', path: '/sprints', traits: ['SprintBrowse', 'SprintCreate', 'SprintEdit', 'SprintView', 'SprintDelete'] },
       { name: 'BurndownPage', path: '/burndown', traits: ['BurndownDisplay'] },
-    ],
+    ];
+
+
+
+  const schema = compose(
+
+
+    [tasks, sprints, burndown],
+
+
+    pages,
+
+
     [
       { from: 'SprintBrowse', to: 'TaskBrowse', event: { event: 'ASSIGN_TASK', payload: [{ name: 'id', type: 'string', required: true }] } },
       { from: 'SprintBrowse', to: 'BurndownDisplay', event: { event: 'COMPLETE_SPRINT', payload: [{ name: 'id', type: 'string', required: true }] } },
     ],
-    params.appName ?? 'ProjectManagerApp',
+
+
+    appName,
+
+
   );
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

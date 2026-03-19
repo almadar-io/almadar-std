@@ -18,6 +18,7 @@ import { compose } from '@almadar/core/builders';
 import { stdSimulatorGame } from '../molecules/std-simulator-game.js';
 import { stdClassifierGame } from '../molecules/std-classifier-game.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -90,10 +91,11 @@ export function stdStemLab(params: StdStemLabParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [simulatorOrbital, classifierOrbital, resultsOrbital],
-    pages,
-    connections,
-    'STEM Lab',
-  );
+  const appName = 'STEM Lab';
+
+
+  const schema = compose([simulatorOrbital, classifierOrbital, resultsOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

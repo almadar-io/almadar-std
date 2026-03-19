@@ -18,6 +18,7 @@ import { stdDisplay } from '../atoms/std-display.js';
 import { stdList } from '../molecules/std-list.js';
 import { stdAsync } from '../atoms/std-async.js';
 import { tradingOrderView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -97,10 +98,11 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalS
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [portfolioOrbital, orderOrbital, marketOrbital],
-    pages,
-    connections,
-    'Trading Dashboard',
-  );
+  const appName = 'Trading Dashboard';
+
+
+  const schema = compose([portfolioOrbital, orderOrbital, marketOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }

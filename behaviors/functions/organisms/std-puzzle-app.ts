@@ -16,6 +16,7 @@ import type { ComposePage, ComposeConnection } from '@almadar/core/builders';
 import { compose } from '@almadar/core/builders';
 import { stdPuzzleGame } from '../molecules/std-puzzle-game.js';
 import { stdScoreBoard } from '../atoms/std-score-board.js';
+import { wrapInGameShell } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -70,10 +71,11 @@ export function stdPuzzleApp(params: StdPuzzleAppParams): OrbitalSchema {
 
   const connections: ComposeConnection[] = [];
 
-  return compose(
-    [puzzleOrbital, scoreOrbital],
-    pages,
-    connections,
-    'Puzzle App',
-  );
+  const appName = 'Puzzle App';
+
+
+  const schema = compose([puzzleOrbital, scoreOrbital], pages, connections, appName);
+
+
+  return wrapInGameShell(schema, appName);
 }

@@ -21,6 +21,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdMessaging } from '../molecules/std-messaging.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { helpdeskTicketView, helpdeskResponseView } from '../views/domain-views.js';
+import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
 // Params
@@ -125,5 +126,8 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalSchema {
     },
   ];
 
-  return compose([ticketOrbital, responseOrbital, metricsOrbital], pages, connections, appName);
+  const schema = compose([ticketOrbital, responseOrbital, metricsOrbital], pages, connections, appName);
+
+
+  return wrapInDashboardLayout(schema, appName, buildNavItems(pages));
 }
