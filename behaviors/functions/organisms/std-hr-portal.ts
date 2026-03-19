@@ -21,6 +21,7 @@ import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { hrEmployeeView, hrTimeOffView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -43,7 +44,7 @@ const DEFAULT_EMPLOYEE_FIELDS: EntityField[] = [
   { name: 'email', type: 'string', default: '' },
   { name: 'department', type: 'string', default: '' },
   { name: 'role', type: 'string', default: '' },
-  { name: 'startDate', type: 'string', default: '' },
+  { name: 'startDate', type: 'date', default: '' },
 ];
 
 const DEFAULT_ONBOARDING_FIELDS: EntityField[] = [
@@ -56,10 +57,10 @@ const DEFAULT_ONBOARDING_FIELDS: EntityField[] = [
 
 const DEFAULT_TIMEOFF_FIELDS: EntityField[] = [
   { name: 'employeeName', type: 'string', default: '' },
-  { name: 'leaveType', type: 'string', default: 'vacation' },
-  { name: 'startDate', type: 'string', default: '' },
-  { name: 'endDate', type: 'string', default: '' },
-  { name: 'status', type: 'string', default: 'pending' },
+  { name: 'leaveType', type: 'string', default: 'vacation', values: ['vacation', 'sick', 'personal', 'parental'] },
+  { name: 'startDate', type: 'date', default: '' },
+  { name: 'endDate', type: 'date', default: '' },
+  { name: 'status', type: 'string', default: 'pending', values: ['pending', 'approved', 'denied'] },
 ];
 
 const DEFAULT_ORGCHART_FIELDS: EntityField[] = [
@@ -85,9 +86,12 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalSchema {
     headerIcon: 'users',
     createButtonLabel: 'Add Employee',
     createFormTitle: 'New Employee',
+    emptyTitle: 'No employees yet',
+    emptyDescription: 'Add employees to your organization.',
     pageName: 'EmployeesPage',
     pagePath: '/employees',
     isInitial: true,
+    ...hrEmployeeView(),
   });
 
   const onboardingOrbital = stdWizard({
@@ -115,8 +119,11 @@ export function stdHrPortal(params: StdHrPortalParams): OrbitalSchema {
     headerIcon: 'calendar',
     createButtonLabel: 'Request Time Off',
     createFormTitle: 'New Time Off Request',
+    emptyTitle: 'No time-off requests',
+    emptyDescription: 'Submit a request when you need time off.',
     pageName: 'TimeOffPage',
     pagePath: '/timeoff',
+    ...hrTimeOffView(),
   });
 
   const orgChartOrbital = stdDisplay({

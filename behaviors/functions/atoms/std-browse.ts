@@ -40,6 +40,18 @@ export interface StdBrowseParams {
   // Refresh events: when these events fire (from other traits), re-fetch entity data
   refreshEvents?: string[];
 
+  // Display customization (organisms override these for domain-specific layouts)
+  /** Display pattern: 'data-grid' (default), 'entity-table', 'entity-cards', 'data-list' */
+  displayPattern?: string;
+  /** Custom renderItem template (overrides the auto-generated icon+title+badge template) */
+  customRenderItem?: unknown;
+  /** Field definitions for DataGrid/DataList built-in rendering (skips renderItem when provided) */
+  displayColumns?: unknown[];
+  /** Stats bar: array of stat-display patterns rendered above the list */
+  statsBar?: unknown[];
+  /** Extra props passed to the display pattern (e.g., variant, groupBy, cols) */
+  displayProps?: Record<string, unknown>;
+
   // Page
   pageName?: string;
   pagePath?: string;
@@ -65,6 +77,11 @@ interface BrowseConfig {
   headerActions: Array<{ label: string; event: string; variant?: string; icon?: string }>;
   itemActions: Array<{ label: string; event: string; variant?: string }>;
   refreshEvents: string[];
+  displayPattern: string;
+  customRenderItem: unknown | null;
+  displayColumns: unknown[] | null;
+  statsBar: unknown[];
+  displayProps: Record<string, unknown>;
   pageName: string;
   pagePath: string;
   isInitial: boolean;
@@ -91,6 +108,11 @@ function resolve(params: StdBrowseParams): BrowseConfig {
     headerActions: params.headerActions ?? [],
     itemActions: params.itemActions ?? [],
     refreshEvents: params.refreshEvents ?? [],
+    displayPattern: params.displayPattern ?? 'data-grid',
+    customRenderItem: params.customRenderItem ?? null,
+    displayColumns: params.displayColumns ?? null,
+    statsBar: params.statsBar ?? [],
+    displayProps: params.displayProps ?? {},
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
     isInitial: params.isInitial ?? false,
@@ -101,6 +123,32 @@ function resolve(params: StdBrowseParams): BrowseConfig {
 // Projections
 // ============================================================================
 
+/**
+ * Build the display pattern node for the browse view.
+ * When displayColumns is provided, uses DataGrid/DataList built-in field rendering
+ * (proper card styling, grid layout, format support). Otherwise uses renderItem.
+ */
+function buildDisplayPattern(c: BrowseConfig, entityName: string, emptyTitle: string, emptyDescription: string, listItemChildren: unknown[]): unknown {
+  const base: Record<string, unknown> = {
+    type: c.displayPattern, entity: entityName,
+    emptyIcon: 'inbox', emptyTitle, emptyDescription,
+    ...(c.itemActions.length > 0 ? { itemActions: c.itemActions } : {}),
+  };
+
+  if (c.displayColumns) {
+    // Field-based rendering: DataGrid/DataList uses built-in card layout
+    base.columns = c.displayColumns;
+  } else if (c.customRenderItem) {
+    // Custom renderItem template from organism
+    base.renderItem = ['fn', 'item', c.customRenderItem];
+  } else {
+    // Default renderItem: icon+title+badge
+    base.renderItem = ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }];
+  }
+
+  return { ...base, ...c.displayProps };
+}
+
 function buildEntity(c: BrowseConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, collection: c.collection });
 }
@@ -108,20 +156,37 @@ function buildEntity(c: BrowseConfig): Entity {
 function buildTrait(c: BrowseConfig): Trait {
   const { entityName, listFields, headerIcon, pageTitle, emptyTitle, emptyDescription } = c;
 
-  // List item template — each card gets a hover lift and muted secondary field
+  // List item template — avatar + title + badge + menu, wrapped in swipeable-row
+  const itemContent: unknown = {
+    type: 'stack', direction: 'horizontal', justify: 'space-between', align: 'center',
+    children: [
+      {
+        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+        children: [
+          { type: 'avatar', name: `@item.${listFields[0] ?? 'id'}`, size: 'sm' },
+          { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
+        ],
+      },
+      {
+        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+        children: [
+          ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
+          { type: 'menu', items: [
+            { label: 'View', event: 'VIEW', icon: 'eye' },
+            { label: 'Edit', event: 'EDIT', icon: 'pencil' },
+            { label: 'Delete', event: 'DELETE', icon: 'trash-2' },
+          ] },
+        ],
+      },
+    ],
+  };
+
   const listItemChildren: unknown[] = [
     {
-      type: 'stack', direction: 'horizontal', justify: 'space-between', align: 'center',
-      children: [
-        {
-          type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-          children: [
-            { type: 'icon', name: headerIcon, size: 'sm' },
-            { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
-          ],
-        },
-        ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
-      ],
+      type: 'swipeable-row',
+      leftAction: { label: 'Edit', event: 'EDIT', variant: 'primary' },
+      rightAction: { label: 'Delete', event: 'DELETE', variant: 'destructive' },
+      children: [itemContent],
     },
   ];
   if (listFields.length > 2) {
@@ -196,14 +261,20 @@ function buildTrait(c: BrowseConfig): Trait {
               children: [
                 { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: headerChildren },
                 { type: 'divider' },
+                // Stats bar (dashboard-style summary above the list)
+                ...(c.statsBar.length > 0 ? [{
+                  type: 'simple-grid', columns: Math.min(c.statsBar.length, 4),
+                  children: c.statsBar,
+                }, { type: 'divider' }] : []),
+                // Pull-to-refresh wrapper around data display
                 {
-                  type: 'data-grid', entity: entityName,
-                  emptyIcon: 'inbox', emptyTitle, emptyDescription,
-                  ...(c.itemActions.length > 0 ? { itemActions: c.itemActions } : {}),
-                  // hover lift: cards rise on hover for interactive feel
-                  className: 'transition-shadow hover:shadow-md cursor-pointer',
-                  renderItem: ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }],
+                  type: 'pull-to-refresh', onRefresh: 'INIT',
+                  children: [
+                    buildDisplayPattern(c, entityName, emptyTitle, emptyDescription, listItemChildren),
+                  ],
                 },
+                // Floating action button for quick create
+                { type: 'floating-action-button', icon: 'plus', event: c.headerActions[0]?.event ?? 'INIT', label: 'Create' },
               ],
             }],
           ],

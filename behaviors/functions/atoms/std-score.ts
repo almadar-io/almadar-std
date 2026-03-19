@@ -114,6 +114,7 @@ function buildTrait(c: ScoreConfig): Trait {
       },
       { type: 'animated-counter', value: ef('total'), prefix: 'Score: ', duration: 300 },
       { type: 'trend-indicator', value: ef('points'), showValue: true },
+      { type: 'spacer', size: 'md' },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
         children: [
@@ -165,12 +166,18 @@ function buildTrait(c: ScoreConfig): Trait {
             ['render-ui', 'main', scoreView],
           ],
         },
-        // COMBO: idle -> idle (self-loop)
+        // COMBO: idle -> idle (self-loop with confetti celebration)
         {
           from: 'idle', to: 'idle', event: 'COMBO',
           effects: [
             ['set', '@entity.multiplier', '@payload.multiplier'],
-            ['render-ui', 'main', scoreView],
+            ['render-ui', 'main', {
+              type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+              children: [
+                { type: 'confetti-effect', trigger: true },
+                ...scoreView.children,
+              ],
+            }],
           ],
         },
         // RESET: idle -> idle (self-loop)

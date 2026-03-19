@@ -24,6 +24,7 @@ import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDetail } from '../molecules/std-detail.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { healthcarePatientView, healthcareAppointmentView, healthcarePrescriptionView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -45,25 +46,25 @@ export interface StdHealthcareParams {
 const DEFAULT_PATIENT_FIELDS: EntityField[] = [
   { name: 'firstName', type: 'string', required: true },
   { name: 'lastName', type: 'string', required: true },
-  { name: 'dateOfBirth', type: 'string', required: true },
+  { name: 'dateOfBirth', type: 'date', required: true },
   { name: 'phone', type: 'string' },
   { name: 'insuranceId', type: 'string' },
-  { name: 'status', type: 'string', default: 'active' },
+  { name: 'status', type: 'string', default: 'active', values: ['active', 'inactive', 'discharged'] },
 ];
 
 const DEFAULT_APPOINTMENT_FIELDS: EntityField[] = [
   { name: 'patientName', type: 'string', required: true },
   { name: 'doctorName', type: 'string', required: true },
-  { name: 'date', type: 'string', required: true },
+  { name: 'date', type: 'date', required: true },
   { name: 'time', type: 'string', required: true },
   { name: 'reason', type: 'string' },
-  { name: 'status', type: 'string', default: 'scheduled' },
+  { name: 'status', type: 'string', default: 'scheduled', values: ['scheduled', 'confirmed', 'completed', 'cancelled'] },
 ];
 
 const DEFAULT_INTAKE_FORM_FIELDS: EntityField[] = [
   { name: 'firstName', type: 'string', required: true },
   { name: 'lastName', type: 'string', required: true },
-  { name: 'dateOfBirth', type: 'string', required: true },
+  { name: 'dateOfBirth', type: 'date', required: true },
   { name: 'allergies', type: 'string' },
   { name: 'medications', type: 'string' },
   { name: 'emergencyContact', type: 'string' },
@@ -77,8 +78,8 @@ const DEFAULT_PRESCRIPTION_FIELDS: EntityField[] = [
   { name: 'frequency', type: 'string', required: true },
   { name: 'patientName', type: 'string', required: true },
   { name: 'prescribedBy', type: 'string' },
-  { name: 'startDate', type: 'string' },
-  { name: 'endDate', type: 'string' },
+  { name: 'startDate', type: 'date' },
+  { name: 'endDate', type: 'date' },
 ];
 
 const DEFAULT_DASHBOARD_FIELDS: EntityField[] = [
@@ -104,9 +105,12 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalSchema {
     fields: patientFields,
     pageTitle: 'Patients',
     headerIcon: 'users',
+    emptyTitle: 'No patients registered',
+    emptyDescription: 'Register a patient to get started.',
     pageName: 'PatientsPage',
     pagePath: '/patients',
     isInitial: true,
+    ...healthcarePatientView(),
   });
 
   const appointments = stdList({
@@ -114,8 +118,11 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalSchema {
     fields: appointmentFields,
     pageTitle: 'Appointments',
     headerIcon: 'calendar',
+    emptyTitle: 'No appointments scheduled',
+    emptyDescription: 'Schedule an appointment to get started.',
     pageName: 'AppointmentsPage',
     pagePath: '/appointments',
+    ...healthcareAppointmentView(),
   });
 
   const intake = stdWizard({
@@ -140,8 +147,11 @@ export function stdHealthcare(params: StdHealthcareParams): OrbitalSchema {
     fields: prescriptionFields,
     pageTitle: 'Prescriptions',
     headerIcon: 'file-text',
+    emptyTitle: 'No prescriptions yet',
+    emptyDescription: 'Prescriptions will appear here after appointments.',
     pageName: 'PrescriptionsPage',
     pagePath: '/prescriptions',
+    ...healthcarePrescriptionView(),
   });
 
   const dashboard = stdDisplay({

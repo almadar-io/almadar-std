@@ -20,6 +20,7 @@ import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { projectTaskView, projectSprintView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -40,18 +41,18 @@ const DEFAULT_TASK_FIELDS: EntityField[] = [
   { name: 'title', type: 'string', required: true },
   { name: 'description', type: 'string' },
   { name: 'assignee', type: 'string' },
-  { name: 'priority', type: 'string', default: 'medium' },
-  { name: 'status', type: 'string', default: 'todo' },
+  { name: 'priority', type: 'string', default: 'medium', values: ['low', 'medium', 'high', 'critical'] },
+  { name: 'status', type: 'string', default: 'todo', values: ['todo', 'in-progress', 'review', 'done'] },
   { name: 'storyPoints', type: 'number', default: 0 },
-  { name: 'dueDate', type: 'string' },
+  { name: 'dueDate', type: 'date' },
 ];
 
 const DEFAULT_SPRINT_FIELDS: EntityField[] = [
   { name: 'name', type: 'string', required: true },
-  { name: 'startDate', type: 'string', required: true },
-  { name: 'endDate', type: 'string', required: true },
+  { name: 'startDate', type: 'date', required: true },
+  { name: 'endDate', type: 'date', required: true },
   { name: 'goal', type: 'string' },
-  { name: 'status', type: 'string', default: 'planning' },
+  { name: 'status', type: 'string', default: 'planning', values: ['planning', 'active', 'completed'] },
   { name: 'taskCount', type: 'number', default: 0 },
 ];
 
@@ -77,9 +78,12 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalSchem
     fields: taskFields,
     pageTitle: 'Tasks',
     headerIcon: 'check-square',
+    emptyTitle: 'No tasks yet',
+    emptyDescription: 'Create tasks to plan your sprint.',
     pageName: 'TasksPage',
     pagePath: '/tasks',
     isInitial: true,
+    ...projectTaskView(),
   });
 
   const sprints = stdList({
@@ -87,8 +91,11 @@ export function stdProjectManager(params: StdProjectManagerParams): OrbitalSchem
     fields: sprintFields,
     pageTitle: 'Sprints',
     headerIcon: 'zap',
+    emptyTitle: 'No sprints yet',
+    emptyDescription: 'Create a sprint to organize your work.',
     pageName: 'SprintsPage',
     pagePath: '/sprints',
+    ...projectSprintView(),
   });
 
   const burndown = stdDisplay({

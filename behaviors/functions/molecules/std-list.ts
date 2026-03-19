@@ -43,6 +43,13 @@ export interface StdListParams {
   pageName?: string;
   pagePath?: string;
   isInitial?: boolean;
+
+  // Display customization (organisms override for domain-specific layouts)
+  displayPattern?: string;
+  customRenderItem?: unknown;
+  displayColumns?: unknown[];
+  statsBar?: unknown[];
+  displayProps?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -193,6 +200,11 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     pageTitle: c.pageTitle,
     emptyTitle: c.emptyTitle,
     emptyDescription: c.emptyDescription,
+    displayPattern: params.displayPattern,
+    customRenderItem: params.customRenderItem,
+    displayColumns: params.displayColumns,
+    statsBar: params.statsBar,
+    displayProps: params.displayProps,
     headerActions: [{ label: c.createButtonLabel, event: 'CREATE', variant: 'primary', icon: 'plus' }],
     itemActions: [
       { label: 'View', event: 'VIEW' },

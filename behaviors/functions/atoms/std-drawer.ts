@@ -128,6 +128,26 @@ function buildTrait(c: DrawerConfig): Trait {
     ],
   };
 
+  // Side-panel alternative view
+  const sidePanelView = {
+    type: 'side-panel',
+    title: drawerTitle,
+    isOpen: true,
+    position: 'right',
+    children: [
+      {
+        type: 'stack', direction: 'vertical', gap: 'md',
+        children: nonIdFields.map(field => ({
+          type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
+          children: [
+            { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
+            { type: 'typography', variant: 'body', content: ef(field.name) },
+          ],
+        })),
+      },
+    ],
+  };
+
   // Use drawer molecule with accordion for grouped field sections
   const openView = {
     type: 'drawer',
@@ -196,7 +216,10 @@ function buildTrait(c: DrawerConfig): Trait {
           from: 'closed', to: 'open', event: 'OPEN',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'drawer', openView],
+            ['render-ui', 'drawer', {
+              type: 'stack', direction: 'vertical', gap: 'none',
+              children: [openView, sidePanelView],
+            }],
           ],
         },
         {

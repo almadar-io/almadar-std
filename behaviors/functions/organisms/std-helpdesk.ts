@@ -20,6 +20,7 @@ import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdMessaging } from '../molecules/std-messaging.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { helpdeskTicketView, helpdeskResponseView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -39,8 +40,8 @@ export interface StdHelpdeskParams {
 const DEFAULT_TICKET_FIELDS: EntityField[] = [
   { name: 'subject', type: 'string', default: '' },
   { name: 'description', type: 'string', default: '' },
-  { name: 'priority', type: 'string', default: 'medium' },
-  { name: 'status', type: 'string', default: 'open' },
+  { name: 'priority', type: 'string', default: 'medium', values: ['low', 'medium', 'high', 'critical'] },
+  { name: 'status', type: 'string', default: 'open', values: ['open', 'in-progress', 'resolved', 'closed'] },
   { name: 'assignee', type: 'string', default: '' },
 ];
 
@@ -48,7 +49,7 @@ const DEFAULT_RESPONSE_FIELDS: EntityField[] = [
   { name: 'ticketId', type: 'string', default: '' },
   { name: 'body', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
-  { name: 'createdAt', type: 'string', default: '' },
+  { name: 'createdAt', type: 'date', default: '' },
 ];
 
 const DEFAULT_METRICS_FIELDS: EntityField[] = [
@@ -74,9 +75,12 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalSchema {
     headerIcon: 'inbox',
     createButtonLabel: 'New Ticket',
     createFormTitle: 'Create Ticket',
+    emptyTitle: 'No tickets filed',
+    emptyDescription: 'Your support queue is clear.',
     pageName: 'TicketsPage',
     pagePath: '/tickets',
     isInitial: true,
+    ...helpdeskTicketView(),
   });
 
   const responseOrbital = stdMessaging({
@@ -88,6 +92,7 @@ export function stdHelpdesk(params: StdHelpdeskParams): OrbitalSchema {
     composerTitle: 'New Response',
     pageName: 'ResponsesPage',
     pagePath: '/responses',
+    ...helpdeskResponseView(),
   });
 
   const metricsOrbital = stdDisplay({

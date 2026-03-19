@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdCircuitBreaker } from '../atoms/std-circuit-breaker.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { apiRouteView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -34,7 +35,7 @@ export interface StdApiGatewayParams {
 
 const defaultRouteFields: EntityField[] = [
   { name: 'path', type: 'string', required: true },
-  { name: 'method', type: 'string', required: true },
+  { name: 'method', type: 'string', required: true, values: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] },
   { name: 'backend', type: 'string', required: true },
   { name: 'rateLimit', type: 'number' },
 ];
@@ -67,6 +68,9 @@ export function stdApiGateway(params: StdApiGatewayParams): OrbitalSchema {
     fields: routeFields,
     headerIcon: 'git-branch',
     pageTitle: 'Routes',
+    emptyTitle: 'No routes configured',
+    emptyDescription: 'Add API routes to your gateway.',
+    ...apiRouteView(),
   });
 
   const backendOrbital = stdCircuitBreaker({

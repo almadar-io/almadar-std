@@ -21,7 +21,12 @@
           {
             "name": "status",
             "type": "string",
-            "required": true
+            "required": true,
+            "values": [
+              "healthy",
+              "degraded",
+              "down"
+            ]
           },
           {
             "name": "url",
@@ -29,7 +34,7 @@
           },
           {
             "name": "lastChecked",
-            "type": "string"
+            "type": "date"
           },
           {
             "name": "failureCount",
@@ -1057,72 +1062,182 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Alerts"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "alert-triangle",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Alerts",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Alerts",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Severity"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "severity"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Message"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "message"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Source"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "source"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -1130,91 +1245,34 @@
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Message"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "message"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Source"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "source"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -1236,72 +1294,182 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Alerts"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "alert-triangle",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Alerts",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Alerts",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Severity"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "severity"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Message"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "message"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Source"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "source"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -1309,91 +1477,34 @@
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Message"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "message"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Source"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "source"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -1415,72 +1526,182 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Alerts"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "alert-triangle",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Alerts",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Alerts",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Severity"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "severity"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Message"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "message"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Source"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "source"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -1488,91 +1709,34 @@
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Message"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "message"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Source"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "source"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -1594,72 +1758,182 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Alerts"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "alert-triangle",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Alerts",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Alerts",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Severity"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "severity"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Message"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "message"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Source"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "source"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -1667,91 +1941,34 @@
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Message"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "message"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Source"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "source"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -1773,72 +1990,182 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Alerts"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "alert-triangle",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Alerts",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Alerts",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Severity"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "severity"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "severity"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Message"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "message"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Source"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "source"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -1846,91 +2173,34 @@
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Message"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "message"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Source"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "source"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -1970,7 +2240,14 @@
           {
             "name": "level",
             "type": "string",
-            "required": true
+            "required": true,
+            "values": [
+              "debug",
+              "info",
+              "warn",
+              "error",
+              "fatal"
+            ]
           },
           {
             "name": "message",
@@ -1979,7 +2256,7 @@
           },
           {
             "name": "timestamp",
-            "type": "string"
+            "type": "date"
           },
           {
             "name": "service",
@@ -2151,74 +2428,60 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "LogEntry",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No logentrys yet",
-                          "emptyDescription": "Create your first logentry to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-list",
+                              "entity": "LogEntry",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No log entries",
+                              "emptyDescription": "Logs will appear here when services report activity.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "file-text",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.level"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.message"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.timestamp"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "message",
+                                  "variant": "h4",
+                                  "icon": "file-text"
+                                },
+                                {
+                                  "name": "level",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "service",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "timestamp",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "variant": "compact",
+                              "gap": "sm"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2388,74 +2651,60 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "LogEntry",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No logentrys yet",
-                          "emptyDescription": "Create your first logentry to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-list",
+                              "entity": "LogEntry",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No log entries",
+                              "emptyDescription": "Logs will appear here when services report activity.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "file-text",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.level"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.message"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.timestamp"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "message",
+                                  "variant": "h4",
+                                  "icon": "file-text"
+                                },
+                                {
+                                  "name": "level",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "service",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "timestamp",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "variant": "compact",
+                              "gap": "sm"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2532,74 +2781,60 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "LogEntry",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No logentrys yet",
-                          "emptyDescription": "Create your first logentry to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-list",
+                              "entity": "LogEntry",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No log entries",
+                              "emptyDescription": "Logs will appear here when services report activity.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "file-text",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.level"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.message"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.timestamp"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "message",
+                                  "variant": "h4",
+                                  "icon": "file-text"
+                                },
+                                {
+                                  "name": "level",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "service",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "timestamp",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "variant": "compact",
+                              "gap": "sm"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2672,74 +2907,60 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "LogEntry",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No logentrys yet",
-                          "emptyDescription": "Create your first logentry to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-list",
+                              "entity": "LogEntry",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No log entries",
+                              "emptyDescription": "Logs will appear here when services report activity.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "file-text",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.level"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.message"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.timestamp"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "message",
+                                  "variant": "h4",
+                                  "icon": "file-text"
+                                },
+                                {
+                                  "name": "level",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "service",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "timestamp",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "variant": "compact",
+                              "gap": "sm"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2820,39 +3041,50 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "plus-circle",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Create LogEntry",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Create LogEntry",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "LogEntry",
+                              "mode": "create",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "level",
+                                "message",
+                                "timestamp",
+                                "service"
+                              ]
                             }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "LogEntry",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "level",
-                            "message",
-                            "timestamp",
-                            "service"
                           ]
                         }
                       ]
@@ -2984,41 +3216,52 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "edit",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "edit",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Edit LogEntry",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Edit LogEntry",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "LogEntry",
+                              "mode": "edit",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "level",
+                                "message",
+                                "timestamp",
+                                "service"
+                              ],
+                              "entityId": "@entity.id"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "LogEntry",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "level",
-                            "message",
-                            "timestamp",
-                            "service"
-                          ],
-                          "entityId": "@entity.id"
                         }
                       ]
                     }
@@ -3133,118 +3376,129 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.level"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
+                          "type": "overlay",
+                          "isVisible": true
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
+                          "direction": "vertical",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Level"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "eye",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "content": "@entity.level"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.level"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Message"
+                              "type": "divider"
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.message"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Timestamp"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Level"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.level"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.timestamp"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Service"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Message"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.message"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.service"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Edit",
-                              "event": "EDIT",
-                              "variant": "primary",
-                              "icon": "edit"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Timestamp"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.timestamp"
+                                }
+                              ]
                             },
                             {
-                              "type": "button",
-                              "label": "Close",
-                              "event": "CLOSE",
-                              "variant": "ghost"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Service"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.service"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "end",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Edit",
+                                  "event": "EDIT",
+                                  "variant": "primary",
+                                  "icon": "edit"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Close",
+                                  "event": "CLOSE",
+                                  "variant": "ghost"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -3371,72 +3625,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Metrics"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "activity",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Metrics",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Metrics",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Name"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "name"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "name"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Trend"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "trend"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -3444,74 +3791,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Trend"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "trend"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3533,72 +3840,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Metrics"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "activity",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Metrics",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Metrics",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Name"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "name"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "name"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Trend"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "trend"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -3606,74 +4006,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Trend"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "trend"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3695,72 +4055,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Metrics"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "activity",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Metrics",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Metrics",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Name"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "name"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "name"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Trend"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "trend"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -3768,74 +4221,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Trend"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "trend"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3857,72 +4270,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Metrics"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "activity",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Metrics",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Metrics",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Name"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "name"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "name"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Trend"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "trend"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -3930,74 +4436,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Trend"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "trend"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -4019,72 +4485,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Metrics"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "activity",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Metrics",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Metrics",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Name"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "name"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "name"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Trend"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "trend"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -4092,74 +4651,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Trend"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "trend"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }

@@ -23,6 +23,7 @@ import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdCart } from '../molecules/std-cart.js';
 import { stdWizard } from '../atoms/std-wizard.js';
+import { ecommerceProductView, ecommerceOrderView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -61,7 +62,7 @@ const DEFAULT_ORDER_FIELDS: EntityField[] = [
   { name: 'shippingAddress', type: 'string', required: true },
   { name: 'paymentMethod', type: 'string', required: true },
   { name: 'orderTotal', type: 'number' },
-  { name: 'status', type: 'string', default: 'pending' },
+  { name: 'status', type: 'string', default: 'pending', values: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] },
 ];
 
 // ============================================================================
@@ -78,9 +79,12 @@ export function stdEcommerce(params: StdEcommerceParams): OrbitalSchema {
     fields: productFields,
     pageTitle: 'Products',
     headerIcon: 'package',
+    emptyTitle: 'No products yet',
+    emptyDescription: 'Add products to build your catalog.',
     pageName: 'ProductsPage',
     pagePath: '/products',
     isInitial: true,
+    ...ecommerceProductView(),
   });
 
   const cart = stdCart({
@@ -114,8 +118,11 @@ export function stdEcommerce(params: StdEcommerceParams): OrbitalSchema {
     fields: orderFields,
     pageTitle: 'Order History',
     headerIcon: 'clipboard-list',
+    emptyTitle: 'No orders yet',
+    emptyDescription: 'Orders will appear here as customers complete checkout.',
     pageName: 'OrdersPage',
     pagePath: '/orders',
+    ...ecommerceOrderView(),
   });
 
   return compose(

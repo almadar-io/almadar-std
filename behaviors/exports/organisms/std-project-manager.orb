@@ -30,12 +30,24 @@
           {
             "name": "priority",
             "type": "string",
-            "default": "medium"
+            "default": "medium",
+            "values": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
           },
           {
             "name": "status",
             "type": "string",
-            "default": "todo"
+            "default": "todo",
+            "values": [
+              "todo",
+              "in-progress",
+              "review",
+              "done"
+            ]
           },
           {
             "name": "storyPoints",
@@ -44,7 +56,7 @@
           },
           {
             "name": "dueDate",
-            "type": "string"
+            "type": "date"
           }
         ]
       },
@@ -217,74 +229,89 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Task",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tasks yet",
-                          "emptyDescription": "Create your first task to get started.",
-                          "itemActions": [
+                          "type": "simple-grid",
+                          "columns": 1,
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "check-square",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.assignee"
-                                }
-                              ]
+                              "type": "stat-display",
+                              "label": "Total Tasks",
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ],
+                              "icon": "check-square"
                             }
                           ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
+                            {
+                              "type": "data-grid",
+                              "entity": "Task",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tasks yet",
+                              "emptyDescription": "Create tasks to plan your sprint.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "title",
+                                  "variant": "h3",
+                                  "icon": "check-square"
+                                },
+                                {
+                                  "name": "priority",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "assignee",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "storyPoints",
+                                  "label": "Points",
+                                  "variant": "body",
+                                  "format": "number"
+                                },
+                                {
+                                  "name": "dueDate",
+                                  "label": "Due",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -454,74 +481,89 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Task",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tasks yet",
-                          "emptyDescription": "Create your first task to get started.",
-                          "itemActions": [
+                          "type": "simple-grid",
+                          "columns": 1,
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "check-square",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.assignee"
-                                }
-                              ]
+                              "type": "stat-display",
+                              "label": "Total Tasks",
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ],
+                              "icon": "check-square"
                             }
                           ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
+                            {
+                              "type": "data-grid",
+                              "entity": "Task",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tasks yet",
+                              "emptyDescription": "Create tasks to plan your sprint.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "title",
+                                  "variant": "h3",
+                                  "icon": "check-square"
+                                },
+                                {
+                                  "name": "priority",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "assignee",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "storyPoints",
+                                  "label": "Points",
+                                  "variant": "body",
+                                  "format": "number"
+                                },
+                                {
+                                  "name": "dueDate",
+                                  "label": "Due",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -598,74 +640,89 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Task",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tasks yet",
-                          "emptyDescription": "Create your first task to get started.",
-                          "itemActions": [
+                          "type": "simple-grid",
+                          "columns": 1,
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "check-square",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.assignee"
-                                }
-                              ]
+                              "type": "stat-display",
+                              "label": "Total Tasks",
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ],
+                              "icon": "check-square"
                             }
                           ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
+                            {
+                              "type": "data-grid",
+                              "entity": "Task",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tasks yet",
+                              "emptyDescription": "Create tasks to plan your sprint.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "title",
+                                  "variant": "h3",
+                                  "icon": "check-square"
+                                },
+                                {
+                                  "name": "priority",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "assignee",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "storyPoints",
+                                  "label": "Points",
+                                  "variant": "body",
+                                  "format": "number"
+                                },
+                                {
+                                  "name": "dueDate",
+                                  "label": "Due",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -738,74 +795,89 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Task",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tasks yet",
-                          "emptyDescription": "Create your first task to get started.",
-                          "itemActions": [
+                          "type": "simple-grid",
+                          "columns": 1,
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "check-square",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.title"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.description"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.assignee"
-                                }
-                              ]
+                              "type": "stat-display",
+                              "label": "Total Tasks",
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ],
+                              "icon": "check-square"
                             }
                           ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
+                            {
+                              "type": "data-grid",
+                              "entity": "Task",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tasks yet",
+                              "emptyDescription": "Create tasks to plan your sprint.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW"
+                                },
+                                {
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "title",
+                                  "variant": "h3",
+                                  "icon": "check-square"
+                                },
+                                {
+                                  "name": "priority",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "assignee",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "storyPoints",
+                                  "label": "Points",
+                                  "variant": "body",
+                                  "format": "number"
+                                },
+                                {
+                                  "name": "dueDate",
+                                  "label": "Due",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -886,42 +958,53 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "plus-circle",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Create Task",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Create Task",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Task",
+                              "mode": "create",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "title",
+                                "description",
+                                "assignee",
+                                "priority",
+                                "status",
+                                "storyPoints",
+                                "dueDate"
+                              ]
                             }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "Task",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "title",
-                            "description",
-                            "assignee",
-                            "priority",
-                            "status",
-                            "storyPoints",
-                            "dueDate"
                           ]
                         }
                       ]
@@ -1053,44 +1136,55 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "edit",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "edit",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Edit Task",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Edit Task",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Task",
+                              "mode": "edit",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "title",
+                                "description",
+                                "assignee",
+                                "priority",
+                                "status",
+                                "storyPoints",
+                                "dueDate"
+                              ],
+                              "entityId": "@entity.id"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "Task",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "title",
-                            "description",
-                            "assignee",
-                            "priority",
-                            "status",
-                            "storyPoints",
-                            "dueDate"
-                          ],
-                          "entityId": "@entity.id"
                         }
                       ]
                     }
@@ -1205,169 +1299,180 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.title"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
+                          "type": "overlay",
+                          "isVisible": true
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
+                          "direction": "vertical",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Title"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "eye",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "content": "@entity.title"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.title"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Description"
+                              "type": "divider"
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.description"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Assignee"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Title"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.title"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.assignee"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Priority"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Description"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.description"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.priority"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Status"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Assignee"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.assignee"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.status"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "StoryPoints"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Priority"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.priority"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.storyPoints"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "DueDate"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Status"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.status"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.dueDate"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Edit",
-                              "event": "EDIT",
-                              "variant": "primary",
-                              "icon": "edit"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "StoryPoints"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.storyPoints"
+                                }
+                              ]
                             },
                             {
-                              "type": "button",
-                              "label": "Close",
-                              "event": "CLOSE",
-                              "variant": "ghost"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "DueDate"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.dueDate"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "end",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Edit",
+                                  "event": "EDIT",
+                                  "variant": "primary",
+                                  "icon": "edit"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Close",
+                                  "event": "CLOSE",
+                                  "variant": "ghost"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -1433,12 +1538,12 @@
           },
           {
             "name": "startDate",
-            "type": "string",
+            "type": "date",
             "required": true
           },
           {
             "name": "endDate",
-            "type": "string",
+            "type": "date",
             "required": true
           },
           {
@@ -1448,7 +1553,12 @@
           {
             "name": "status",
             "type": "string",
-            "default": "planning"
+            "default": "planning",
+            "values": [
+              "planning",
+              "active",
+              "completed"
+            ]
           },
           {
             "name": "taskCount",
@@ -1621,74 +1731,73 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Sprint",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No sprints yet",
-                          "emptyDescription": "Create your first sprint to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Sprint",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No sprints yet",
+                              "emptyDescription": "Create a sprint to organize your work.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "zap",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.startDate"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.endDate"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "goal",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "startDate",
+                                  "label": "Start",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "endDate",
+                                  "label": "End",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "taskCount",
+                                  "label": "Tasks",
+                                  "variant": "body",
+                                  "format": "number"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -1858,74 +1967,73 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Sprint",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No sprints yet",
-                          "emptyDescription": "Create your first sprint to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Sprint",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No sprints yet",
+                              "emptyDescription": "Create a sprint to organize your work.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "zap",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.startDate"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.endDate"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "goal",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "startDate",
+                                  "label": "Start",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "endDate",
+                                  "label": "End",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "taskCount",
+                                  "label": "Tasks",
+                                  "variant": "body",
+                                  "format": "number"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2002,74 +2110,73 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Sprint",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No sprints yet",
-                          "emptyDescription": "Create your first sprint to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Sprint",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No sprints yet",
+                              "emptyDescription": "Create a sprint to organize your work.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "zap",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.startDate"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.endDate"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "goal",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "startDate",
+                                  "label": "Start",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "endDate",
+                                  "label": "End",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "taskCount",
+                                  "label": "Tasks",
+                                  "variant": "body",
+                                  "format": "number"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2142,74 +2249,73 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Sprint",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No sprints yet",
-                          "emptyDescription": "Create your first sprint to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Sprint",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No sprints yet",
+                              "emptyDescription": "Create a sprint to organize your work.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "zap",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.startDate"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.endDate"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "goal",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "startDate",
+                                  "label": "Start",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "endDate",
+                                  "label": "End",
+                                  "variant": "caption",
+                                  "format": "date"
+                                },
+                                {
+                                  "name": "taskCount",
+                                  "label": "Tasks",
+                                  "variant": "body",
+                                  "format": "number"
+                                }
+                              ],
+                              "cols": 2,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -2314,41 +2420,52 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "plus-circle",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Create Sprint",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Create Sprint",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Sprint",
+                              "mode": "create",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "name",
+                                "startDate",
+                                "endDate",
+                                "goal",
+                                "status",
+                                "taskCount"
+                              ]
                             }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "Sprint",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "name",
-                            "startDate",
-                            "endDate",
-                            "goal",
-                            "status",
-                            "taskCount"
                           ]
                         }
                       ]
@@ -2480,43 +2597,54 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "edit",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "edit",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Edit Sprint",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Edit Sprint",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Sprint",
+                              "mode": "edit",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "name",
+                                "startDate",
+                                "endDate",
+                                "goal",
+                                "status",
+                                "taskCount"
+                              ],
+                              "entityId": "@entity.id"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "Sprint",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "name",
-                            "startDate",
-                            "endDate",
-                            "goal",
-                            "status",
-                            "taskCount"
-                          ],
-                          "entityId": "@entity.id"
                         }
                       ]
                     }
@@ -2631,152 +2759,163 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.name"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
+                          "type": "overlay",
+                          "isVisible": true
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
+                          "direction": "vertical",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Name"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "eye",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "content": "@entity.name"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.name"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "StartDate"
+                              "type": "divider"
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.startDate"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "EndDate"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.name"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.endDate"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Goal"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "StartDate"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.startDate"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.goal"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Status"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "EndDate"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.endDate"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.status"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "TaskCount"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Goal"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.goal"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.taskCount"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Edit",
-                              "event": "EDIT",
-                              "variant": "primary",
-                              "icon": "edit"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Status"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.status"
+                                }
+                              ]
                             },
                             {
-                              "type": "button",
-                              "label": "Close",
-                              "event": "CLOSE",
-                              "variant": "ghost"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "TaskCount"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.taskCount"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "end",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Edit",
+                                  "event": "EDIT",
+                                  "variant": "primary",
+                                  "icon": "edit"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Close",
+                                  "event": "CLOSE",
+                                  "variant": "ghost"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -2910,108 +3049,161 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
+                              "type": "breadcrumb",
+                              "items": [
                                 {
-                                  "type": "icon",
-                                  "name": "trending-down",
-                                  "size": "lg"
+                                  "label": "Home",
+                                  "href": "/"
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Burndown Chart",
-                                  "variant": "h2"
+                                  "label": "Burndown Chart"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 5,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "TotalPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "totalPoints"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "trending-down",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Burndown Chart",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "CompletedPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "completedPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "box",
+                              "padding": "md",
+                              "children": [
+                                {
+                                  "type": "simple-grid",
+                                  "columns": 5,
+                                  "children": [
+                                    {
+                                      "type": "stat-display",
+                                      "label": "TotalPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "totalPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "CompletedPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "completedPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "RemainingPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "remainingPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "Velocity",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "velocity"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "DaysRemaining",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "daysRemaining"
+                                      ]
+                                    }
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "RemainingPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remainingPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
+                                {
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Velocity",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "velocity"
-                              ]
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "DaysRemaining",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "daysRemaining"
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3033,108 +3225,161 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
+                              "type": "breadcrumb",
+                              "items": [
                                 {
-                                  "type": "icon",
-                                  "name": "trending-down",
-                                  "size": "lg"
+                                  "label": "Home",
+                                  "href": "/"
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Burndown Chart",
-                                  "variant": "h2"
+                                  "label": "Burndown Chart"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 5,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "TotalPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "totalPoints"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "trending-down",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Burndown Chart",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "CompletedPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "completedPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "box",
+                              "padding": "md",
+                              "children": [
+                                {
+                                  "type": "simple-grid",
+                                  "columns": 5,
+                                  "children": [
+                                    {
+                                      "type": "stat-display",
+                                      "label": "TotalPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "totalPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "CompletedPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "completedPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "RemainingPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "remainingPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "Velocity",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "velocity"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "DaysRemaining",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "daysRemaining"
+                                      ]
+                                    }
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "RemainingPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remainingPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
+                                {
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Velocity",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "velocity"
-                              ]
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "DaysRemaining",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "daysRemaining"
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3156,108 +3401,161 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
+                              "type": "breadcrumb",
+                              "items": [
                                 {
-                                  "type": "icon",
-                                  "name": "trending-down",
-                                  "size": "lg"
+                                  "label": "Home",
+                                  "href": "/"
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Burndown Chart",
-                                  "variant": "h2"
+                                  "label": "Burndown Chart"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 5,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "TotalPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "totalPoints"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "trending-down",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Burndown Chart",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "CompletedPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "completedPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "box",
+                              "padding": "md",
+                              "children": [
+                                {
+                                  "type": "simple-grid",
+                                  "columns": 5,
+                                  "children": [
+                                    {
+                                      "type": "stat-display",
+                                      "label": "TotalPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "totalPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "CompletedPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "completedPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "RemainingPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "remainingPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "Velocity",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "velocity"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "DaysRemaining",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "daysRemaining"
+                                      ]
+                                    }
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "RemainingPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remainingPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
+                                {
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Velocity",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "velocity"
-                              ]
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "DaysRemaining",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "daysRemaining"
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3279,108 +3577,161 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
+                              "type": "breadcrumb",
+                              "items": [
                                 {
-                                  "type": "icon",
-                                  "name": "trending-down",
-                                  "size": "lg"
+                                  "label": "Home",
+                                  "href": "/"
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Burndown Chart",
-                                  "variant": "h2"
+                                  "label": "Burndown Chart"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 5,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "TotalPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "totalPoints"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "trending-down",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Burndown Chart",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "CompletedPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "completedPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "box",
+                              "padding": "md",
+                              "children": [
+                                {
+                                  "type": "simple-grid",
+                                  "columns": 5,
+                                  "children": [
+                                    {
+                                      "type": "stat-display",
+                                      "label": "TotalPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "totalPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "CompletedPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "completedPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "RemainingPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "remainingPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "Velocity",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "velocity"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "DaysRemaining",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "daysRemaining"
+                                      ]
+                                    }
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "RemainingPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remainingPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
+                                {
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Velocity",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "velocity"
-                              ]
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "DaysRemaining",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "daysRemaining"
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -3402,108 +3753,161 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
+                              "type": "breadcrumb",
+                              "items": [
                                 {
-                                  "type": "icon",
-                                  "name": "trending-down",
-                                  "size": "lg"
+                                  "label": "Home",
+                                  "href": "/"
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Burndown Chart",
-                                  "variant": "h2"
+                                  "label": "Burndown Chart"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 5,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "TotalPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "totalPoints"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "trending-down",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Burndown Chart",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "CompletedPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "completedPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "box",
+                              "padding": "md",
+                              "children": [
+                                {
+                                  "type": "simple-grid",
+                                  "columns": 5,
+                                  "children": [
+                                    {
+                                      "type": "stat-display",
+                                      "label": "TotalPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "totalPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "CompletedPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "completedPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "RemainingPoints",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "remainingPoints"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "Velocity",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "velocity"
+                                      ]
+                                    },
+                                    {
+                                      "type": "stat-display",
+                                      "label": "DaysRemaining",
+                                      "value": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "daysRemaining"
+                                      ]
+                                    }
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "RemainingPoints",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remainingPoints"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
+                                {
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
+                                }
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Velocity",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "velocity"
-                              ]
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "DaysRemaining",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "daysRemaining"
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }

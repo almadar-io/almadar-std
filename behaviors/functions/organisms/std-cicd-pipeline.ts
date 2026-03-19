@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdAsync } from '../atoms/std-async.js';
+import { cicdBuildView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -34,7 +35,7 @@ export interface StdCicdPipelineParams {
 
 const defaultBuildFields: EntityField[] = [
   { name: 'branch', type: 'string', required: true },
-  { name: 'status', type: 'string', required: true },
+  { name: 'status', type: 'string', required: true, values: ['pending', 'running', 'success', 'failed'] },
   { name: 'commit', type: 'string' },
   { name: 'triggeredBy', type: 'string' },
 ];
@@ -49,8 +50,8 @@ const defaultStageFields: EntityField[] = [
 const defaultDeploymentFields: EntityField[] = [
   { name: 'environment', type: 'string', required: true },
   { name: 'version', type: 'string', required: true },
-  { name: 'status', type: 'string' },
-  { name: 'deployedAt', type: 'string' },
+  { name: 'status', type: 'string', values: ['pending', 'deploying', 'success', 'failed', 'rolled-back'] },
+  { name: 'deployedAt', type: 'date' },
 ];
 
 // ============================================================================
@@ -67,6 +68,9 @@ export function stdCicdPipeline(params: StdCicdPipelineParams): OrbitalSchema {
     fields: buildFields,
     headerIcon: 'package',
     pageTitle: 'Builds',
+    emptyTitle: 'No builds yet',
+    emptyDescription: 'Trigger a build to get started.',
+    ...cicdBuildView(),
   });
 
   const stageOrbital = stdDisplay({

@@ -18,6 +18,7 @@ import { compose } from '@almadar/core/builders';
 import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdDetail } from '../molecules/std-detail.js';
 import { stdMessaging } from '../molecules/std-messaging.js';
+import { socialPostView, socialCommentView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -37,7 +38,7 @@ const DEFAULT_POST_FIELDS: EntityField[] = [
   { name: 'title', type: 'string', default: '' },
   { name: 'content', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
-  { name: 'createdAt', type: 'string', default: '' },
+  { name: 'createdAt', type: 'date', default: '' },
   { name: 'likes', type: 'number', default: 0 },
 ];
 
@@ -45,7 +46,7 @@ const DEFAULT_COMMENT_FIELDS: EntityField[] = [
   { name: 'body', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
   { name: 'postId', type: 'string', default: '' },
-  { name: 'createdAt', type: 'string', default: '' },
+  { name: 'createdAt', type: 'date', default: '' },
 ];
 
 // ============================================================================
@@ -63,9 +64,12 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalSchema {
     headerIcon: 'rss',
     createButtonLabel: 'New Post',
     createFormTitle: 'Create Post',
+    emptyTitle: 'No posts yet',
+    emptyDescription: 'Share your first post.',
     pageName: 'FeedPage',
     pagePath: '/feed',
     isInitial: true,
+    ...socialPostView(),
   });
 
   const commentOrbital = stdMessaging({
@@ -77,6 +81,7 @@ export function stdSocialFeed(params: StdSocialFeedParams): OrbitalSchema {
     composerTitle: 'New Comment',
     pageName: 'MessagesPage',
     pagePath: '/messages',
+    ...socialCommentView(),
   });
 
   const pages: ComposePage[] = [

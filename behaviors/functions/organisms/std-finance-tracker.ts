@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdDetail } from '../molecules/std-detail.js';
+import { financeTransactionView, financeReportView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -36,7 +37,7 @@ const defaultTransactionFields: EntityField[] = [
   { name: 'description', type: 'string', required: true },
   { name: 'amount', type: 'number', required: true },
   { name: 'category', type: 'string' },
-  { name: 'date', type: 'string' },
+  { name: 'date', type: 'date' },
 ];
 
 const defaultFinanceSummaryFields: EntityField[] = [
@@ -50,7 +51,7 @@ const defaultFinanceReportFields: EntityField[] = [
   { name: 'title', type: 'string', required: true },
   { name: 'period', type: 'string', required: true },
   { name: 'total', type: 'number' },
-  { name: 'generatedAt', type: 'string' },
+  { name: 'generatedAt', type: 'date' },
 ];
 
 // ============================================================================
@@ -67,6 +68,9 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalSchem
     fields: transactionFields,
     headerIcon: 'credit-card',
     pageTitle: 'Transactions',
+    emptyTitle: 'No transactions yet',
+    emptyDescription: 'Record your first transaction.',
+    ...financeTransactionView(),
   });
 
   const summaryOrbital = stdDisplay({
@@ -81,6 +85,9 @@ export function stdFinanceTracker(params: StdFinanceTrackerParams): OrbitalSchem
     fields: financeReportFields,
     headerIcon: 'file-text',
     pageTitle: 'Reports',
+    emptyTitle: 'No reports yet',
+    emptyDescription: 'Generate a report to analyze your finances.',
+    ...financeReportView(),
   });
 
   const pages: ComposePage[] = [

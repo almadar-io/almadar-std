@@ -22,6 +22,7 @@ import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { bookingProviderView, bookingAppointmentView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -60,9 +61,9 @@ const DEFAULT_BOOKING_FIELDS: EntityField[] = [
 const DEFAULT_APPOINTMENT_FIELDS: EntityField[] = [
   { name: 'providerName', type: 'string', required: true },
   { name: 'customerName', type: 'string', required: true },
-  { name: 'date', type: 'string', required: true },
+  { name: 'date', type: 'date', required: true },
   { name: 'time', type: 'string', required: true },
-  { name: 'status', type: 'string', default: 'confirmed' },
+  { name: 'status', type: 'string', default: 'confirmed', values: ['confirmed', 'pending', 'cancelled', 'completed'] },
   { name: 'notes', type: 'string' },
 ];
 
@@ -88,9 +89,12 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalSchema 
     fields: providerFields,
     pageTitle: 'Providers',
     headerIcon: 'briefcase',
+    emptyTitle: 'No providers listed',
+    emptyDescription: 'Add service providers to enable bookings.',
     pageName: 'ProvidersPage',
     pagePath: '/providers',
     isInitial: true,
+    ...bookingProviderView(),
   });
 
   const booking = stdWizard({
@@ -115,8 +119,11 @@ export function stdBookingSystem(params: StdBookingSystemParams): OrbitalSchema 
     fields: appointmentFields,
     pageTitle: 'Appointments',
     headerIcon: 'clock',
+    emptyTitle: 'No appointments',
+    emptyDescription: 'Book an appointment to get started.',
     pageName: 'AppointmentsPage',
     pagePath: '/appointments',
+    ...bookingAppointmentView(),
   });
 
   const schedule = stdDisplay({

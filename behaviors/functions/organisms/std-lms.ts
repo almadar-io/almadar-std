@@ -20,6 +20,7 @@ import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdWizard } from '../atoms/std-wizard.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { lmsCourseView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -41,15 +42,15 @@ const DEFAULT_COURSE_FIELDS: EntityField[] = [
   { name: 'description', type: 'string', default: '' },
   { name: 'instructor', type: 'string', default: '' },
   { name: 'duration', type: 'string', default: '' },
-  { name: 'level', type: 'string', default: 'Beginner' },
+  { name: 'level', type: 'string', default: 'Beginner', values: ['Beginner', 'Intermediate', 'Advanced'] },
 ];
 
 const DEFAULT_ENROLLMENT_FIELDS: EntityField[] = [
   { name: 'studentName', type: 'string', default: '' },
   { name: 'email', type: 'string', default: '' },
   { name: 'courseId', type: 'string', default: '' },
-  { name: 'enrolledAt', type: 'string', default: '' },
-  { name: 'status', type: 'string', default: 'pending' },
+  { name: 'enrolledAt', type: 'date', default: '' },
+  { name: 'status', type: 'string', default: 'pending', values: ['pending', 'active', 'completed', 'dropped'] },
 ];
 
 const DEFAULT_PROGRESS_FIELDS: EntityField[] = [
@@ -57,7 +58,7 @@ const DEFAULT_PROGRESS_FIELDS: EntityField[] = [
   { name: 'lessonsCompleted', type: 'number', default: 0 },
   { name: 'totalLessons', type: 'number', default: 0 },
   { name: 'percentComplete', type: 'number', default: 0 },
-  { name: 'lastActivity', type: 'string', default: '' },
+  { name: 'lastActivity', type: 'date', default: '' },
 ];
 
 // ============================================================================
@@ -75,9 +76,12 @@ export function stdLms(params: StdLmsParams): OrbitalSchema {
     headerIcon: 'book-open',
     createButtonLabel: 'Add Course',
     createFormTitle: 'New Course',
+    emptyTitle: 'No courses yet',
+    emptyDescription: 'Create a course to start teaching.',
     pageName: 'CoursesPage',
     pagePath: '/courses',
     isInitial: true,
+    ...lmsCourseView(),
   });
 
   const enrollmentOrbital = stdWizard({

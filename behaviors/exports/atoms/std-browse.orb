@@ -101,59 +101,113 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "BrowseItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No browseitems yet",
-                          "emptyDescription": "Create your first browseitem to get started.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "BrowseItem",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No browseitems yet",
+                              "emptyDescription": "Create your first browseitem to get started.",
+                              "renderItem": [
+                                "fn",
+                                "item",
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
+                                  "direction": "vertical",
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
+                                      "type": "swipeable-row",
+                                      "leftAction": {
+                                        "label": "Edit",
+                                        "event": "EDIT",
+                                        "variant": "primary"
+                                      },
+                                      "rightAction": {
+                                        "label": "Delete",
+                                        "event": "DELETE",
+                                        "variant": "destructive"
+                                      },
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "list",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
+                                          "type": "stack",
+                                          "direction": "horizontal",
+                                          "justify": "space-between",
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "type": "stack",
+                                              "direction": "horizontal",
+                                              "gap": "sm",
+                                              "align": "center",
+                                              "children": [
+                                                {
+                                                  "type": "avatar",
+                                                  "name": "@item.name",
+                                                  "size": "sm"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "h4",
+                                                  "content": "@item.name"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "stack",
+                                              "direction": "horizontal",
+                                              "gap": "sm",
+                                              "align": "center",
+                                              "children": [
+                                                {
+                                                  "type": "badge",
+                                                  "label": "@item.description"
+                                                },
+                                                {
+                                                  "type": "menu",
+                                                  "items": [
+                                                    {
+                                                      "label": "View",
+                                                      "event": "VIEW",
+                                                      "icon": "eye"
+                                                    },
+                                                    {
+                                                      "label": "Edit",
+                                                      "event": "EDIT",
+                                                      "icon": "pencil"
+                                                    },
+                                                    {
+                                                      "label": "Delete",
+                                                      "event": "DELETE",
+                                                      "icon": "trash-2"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
                                     {
-                                      "type": "badge",
-                                      "label": "@item.description"
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.status"
                                     }
                                   ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.status"
                                 }
                               ]
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "INIT",
+                          "label": "Create"
                         }
                       ]
                     }

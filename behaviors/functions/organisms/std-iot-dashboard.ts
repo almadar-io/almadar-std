@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdList } from '../molecules/std-list.js';
 import { stdCircuitBreaker } from '../atoms/std-circuit-breaker.js';
+import { iotDeviceView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -42,8 +43,8 @@ const defaultSensorReadingFields: EntityField[] = [
 const defaultDeviceFields: EntityField[] = [
   { name: 'name', type: 'string', required: true },
   { name: 'type', type: 'string', required: true },
-  { name: 'status', type: 'string', default: 'offline' },
-  { name: 'lastSeen', type: 'string' },
+  { name: 'status', type: 'string', default: 'offline', values: ['online', 'offline', 'maintenance'] },
+  { name: 'lastSeen', type: 'date' },
 ];
 
 const defaultDeviceAlertFields: EntityField[] = [
@@ -74,6 +75,9 @@ export function stdIotDashboard(params: StdIotDashboardParams): OrbitalSchema {
     fields: deviceFields,
     headerIcon: 'cpu',
     pageTitle: 'Devices',
+    emptyTitle: 'No devices registered',
+    emptyDescription: 'Connect a device to start monitoring.',
+    ...iotDeviceView(),
   });
 
   const alertOrbital = stdCircuitBreaker({

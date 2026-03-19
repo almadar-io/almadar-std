@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdList } from '../molecules/std-list.js';
 import { stdAsync } from '../atoms/std-async.js';
+import { tradingOrderView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -41,7 +42,7 @@ const defaultPortfolioFields: EntityField[] = [
 
 const defaultTradeOrderFields: EntityField[] = [
   { name: 'symbol', type: 'string', required: true },
-  { name: 'side', type: 'string', required: true },
+  { name: 'side', type: 'string', required: true, values: ['buy', 'sell'] },
   { name: 'quantity', type: 'number', required: true },
   { name: 'price', type: 'number' },
 ];
@@ -74,6 +75,9 @@ export function stdTradingDashboard(params: StdTradingDashboardParams): OrbitalS
     fields: tradeOrderFields,
     headerIcon: 'shopping-cart',
     pageTitle: 'Trade Orders',
+    emptyTitle: 'No orders yet',
+    emptyDescription: 'Place your first trade.',
+    ...tradingOrderView(),
   });
 
   const marketOrbital = stdAsync({

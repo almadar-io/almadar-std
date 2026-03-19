@@ -145,7 +145,10 @@ function buildStepUI(c: WizardConfig, stepIndex: number): Record<string, unknown
       { type: 'wizard-progress', steps: c.wizardProgressSteps, currentStep: stepIndex },
       { type: 'divider' },
       { type: 'typography', content: step.name, variant: 'h3' },
-      { type: 'form-section', entity: c.entityName, mode: 'create', submitEvent: 'NEXT', cancelEvent: isFirst ? 'INIT' : 'PREV', fields: step.fields },
+      { type: 'container', maxWidth: 'lg', children: [
+        { type: 'form-section', entity: c.entityName, mode: 'create', submitEvent: 'NEXT', cancelEvent: isFirst ? 'INIT' : 'PREV', fields: step.fields },
+        { type: 'repeatable-form-section', entity: c.entityName, fields: step.fields, addLabel: 'Add Another', removeLabel: 'Remove' },
+      ] },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
         children: navButtons,

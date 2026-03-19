@@ -21,6 +21,7 @@ import type { ComposeConnection, ComposePage } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdMessaging } from '../molecules/std-messaging.js';
+import { crmContactView, crmDealView, crmNoteView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -43,15 +44,15 @@ const DEFAULT_CONTACT_FIELDS: EntityField[] = [
   { name: 'company', type: 'string', default: '' },
   { name: 'email', type: 'string', default: '' },
   { name: 'phone', type: 'string', default: '' },
-  { name: 'status', type: 'string', default: 'lead' },
+  { name: 'status', type: 'string', default: 'lead', values: ['lead', 'prospect', 'customer', 'inactive'] },
 ];
 
 const DEFAULT_DEAL_FIELDS: EntityField[] = [
   { name: 'title', type: 'string', default: '' },
   { name: 'contactId', type: 'string', default: '' },
   { name: 'value', type: 'number', default: 0 },
-  { name: 'stage', type: 'string', default: 'prospecting' },
-  { name: 'closedAt', type: 'string', default: '' },
+  { name: 'stage', type: 'string', default: 'prospecting', values: ['prospecting', 'qualification', 'proposal', 'negotiation', 'closed-won', 'closed-lost'] },
+  { name: 'closedAt', type: 'date', default: '' },
 ];
 
 const DEFAULT_PIPELINE_FIELDS: EntityField[] = [
@@ -66,7 +67,7 @@ const DEFAULT_NOTE_FIELDS: EntityField[] = [
   { name: 'subject', type: 'string', default: '' },
   { name: 'body', type: 'string', default: '' },
   { name: 'author', type: 'string', default: '' },
-  { name: 'createdAt', type: 'string', default: '' },
+  { name: 'createdAt', type: 'date', default: '' },
 ];
 
 // ============================================================================
@@ -76,6 +77,7 @@ const DEFAULT_NOTE_FIELDS: EntityField[] = [
 export function stdCrm(params: StdCrmParams): OrbitalSchema {
   const appName = params.appName ?? 'CRM';
 
+  const contactView = crmContactView();
   const contactOrbital = stdList({
     entityName: 'Contact',
     fields: params.contactFields ?? DEFAULT_CONTACT_FIELDS,
@@ -84,11 +86,15 @@ export function stdCrm(params: StdCrmParams): OrbitalSchema {
     headerIcon: 'users',
     createButtonLabel: 'Add Contact',
     createFormTitle: 'New Contact',
+    emptyTitle: 'No contacts yet',
+    emptyDescription: 'Add your first contact to start building your CRM.',
     pageName: 'ContactsPage',
     pagePath: '/contacts',
     isInitial: true,
+    ...contactView,
   });
 
+  const dealView = crmDealView();
   const dealOrbital = stdList({
     entityName: 'Deal',
     fields: params.dealFields ?? DEFAULT_DEAL_FIELDS,
@@ -97,8 +103,11 @@ export function stdCrm(params: StdCrmParams): OrbitalSchema {
     headerIcon: 'briefcase',
     createButtonLabel: 'New Deal',
     createFormTitle: 'Create Deal',
+    emptyTitle: 'No deals yet',
+    emptyDescription: 'Create a deal to track your sales pipeline.',
     pageName: 'DealsPage',
     pagePath: '/deals',
+    ...dealView,
   });
 
   const pipelineOrbital = stdDisplay({
@@ -112,6 +121,7 @@ export function stdCrm(params: StdCrmParams): OrbitalSchema {
     pagePath: '/pipeline',
   });
 
+  const noteView = crmNoteView();
   const noteOrbital = stdMessaging({
     entityName: 'Note',
     fields: params.noteFields ?? DEFAULT_NOTE_FIELDS,
@@ -121,6 +131,7 @@ export function stdCrm(params: StdCrmParams): OrbitalSchema {
     composerTitle: 'New Note',
     pageName: 'NotesPage',
     pagePath: '/notes',
+    ...noteView,
   });
 
   const pages: ComposePage[] = [

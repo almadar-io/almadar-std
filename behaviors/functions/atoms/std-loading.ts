@@ -98,27 +98,31 @@ function buildTrait(c: LoadingConfig): Trait {
   const { entityName, headerIcon, title } = c;
 
   const idleView = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'play-circle', size: 'lg' },
-          { type: 'typography', content: title, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'typography', variant: 'body', color: 'muted',
-        content: `Ready to load ${title.toLowerCase()}. Click Start to begin.` },
-      { type: 'button', label: 'Start', event: 'START', variant: 'primary', icon: 'play' },
-    ],
+    type: 'center',
+    children: [{
+      type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+      children: [
+        {
+          type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+          children: [
+            { type: 'icon', name: 'play-circle', size: 'lg' },
+            { type: 'typography', content: title, variant: 'h2' },
+          ],
+        },
+        { type: 'divider' },
+        { type: 'typography', variant: 'body', color: 'muted',
+          content: `Ready to load ${title.toLowerCase()}. Click Start to begin.` },
+        { type: 'button', label: 'Start', event: 'START', variant: 'primary', icon: 'play' },
+      ],
+    }],
   };
 
-  // Loading view: loading-state molecule + progress bar with percentage
+  // Loading view: loading-state + spinner + progress bar
   const loadingView = {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
       { type: 'loading-state', title: 'Loading', message: `Loading ${title.toLowerCase()}...` },
+      { type: 'spinner', size: 'lg' },
       { type: 'progress-bar', value: 50, showPercentage: true },
       { type: 'skeleton', variant: 'text' },
     ],
@@ -141,16 +145,21 @@ function buildTrait(c: LoadingConfig): Trait {
     ],
   };
 
-  // Error view: error-state molecule with retry support
+  // Error view: error-boundary wrapping error-state with retry support
   const errorView = {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
+    type: 'error-boundary',
     children: [
-      { type: 'error-state', title: 'Error', message: 'Something went wrong. Please try again.', onRetry: 'START' },
       {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
+        type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
         children: [
-          { type: 'button', label: 'Retry', event: 'START', variant: 'primary', icon: 'rotate-ccw' },
-          { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost' },
+          { type: 'error-state', title: 'Error', message: 'Something went wrong. Please try again.', onRetry: 'START' },
+          {
+            type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
+            children: [
+              { type: 'button', label: 'Retry', event: 'START', variant: 'primary', icon: 'rotate-ccw' },
+              { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost' },
+            ],
+          },
         ],
       },
     ],

@@ -158,6 +158,13 @@ function buildTrait(c: SortConfig): Trait {
       { type: 'divider' },
       sortedView,
       dataGrid,
+      { type: 'sortable-list', entity: entityName, onReorder: 'SORT', renderItem: ['fn', 'item', {
+        type: 'stack', direction: 'horizontal', gap: 'md', align: 'center',
+        children: [
+          { type: 'icon', name: 'grip-vertical', size: 'sm' },
+          { type: 'typography', variant: 'body', content: `@item.${displayField}` },
+        ],
+      }] },
     ],
   };
 

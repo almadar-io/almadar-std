@@ -109,7 +109,7 @@ function buildTrait(c: SearchConfig): Trait {
     ],
   };
 
-  // Reusable results view
+  // Reusable results view with popover for result details
   const resultsView = {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -128,16 +128,21 @@ function buildTrait(c: SearchConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'data-grid', entity: entityName,
-        emptyIcon: searchIcon,
-        emptyTitle: 'No results found',
-        emptyDescription: 'Try a different search term.',
-        renderItem: ['fn', 'item', {
-          type: 'stack', direction: 'vertical', gap: 'sm',
-          children: [
-            { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
-          ],
-        }],
+        type: 'popover', position: 'bottom', trigger: 'click',
+        children: [
+          {
+            type: 'data-grid', entity: entityName,
+            emptyIcon: searchIcon,
+            emptyTitle: 'No results found',
+            emptyDescription: 'Try a different search term.',
+            renderItem: ['fn', 'item', {
+              type: 'stack', direction: 'vertical', gap: 'sm',
+              children: [
+                { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
+              ],
+            }],
+          },
+        ],
       },
     ],
   };

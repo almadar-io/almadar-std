@@ -107,18 +107,28 @@ function buildTrait(c: DisplayConfig): Trait {
   });
 
   const mainView = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
-        { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-          { type: 'icon', name: headerIcon, size: 'lg' },
-          { type: 'typography', content: pageTitle, variant: 'h2' },
+    type: 'scaled-diagram',
+    children: [{
+      type: 'stack', direction: 'vertical', gap: 'lg',
+      children: [
+        { type: 'breadcrumb', items: [{ label: 'Home', href: '/' }, { label: pageTitle }] },
+        { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
+          { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+            { type: 'icon', name: headerIcon, size: 'lg' },
+            { type: 'typography', content: pageTitle, variant: 'h2' },
+          ] },
+          { type: 'button', label: refreshButtonLabel, event: 'REFRESH', variant: 'secondary', icon: 'refresh-cw' },
         ] },
-        { type: 'button', label: refreshButtonLabel, event: 'REFRESH', variant: 'secondary', icon: 'refresh-cw' },
-      ] },
-      { type: 'divider' },
-      { type: 'simple-grid', columns, children: cardChildren },
-    ],
+        { type: 'divider' },
+        { type: 'box', padding: 'md', children: [
+          { type: 'simple-grid', columns, children: cardChildren },
+        ] },
+        { type: 'divider' },
+        { type: 'line-chart', data: [], xKey: 'date', yKey: 'value', title: 'Trend' },
+        { type: 'chart-legend', items: [{ label: 'Current', color: 'primary' }, { label: 'Previous', color: 'muted' }] },
+        { type: 'graph-view', nodes: [], edges: [], width: 400, height: 200 },
+      ],
+    }],
   };
 
   return {

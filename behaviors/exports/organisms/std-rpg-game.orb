@@ -1213,70 +1213,124 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "RpgItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No items yet",
-                          "emptyDescription": "Add your first item to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "Use",
-                              "event": "USE_ITEM"
-                            },
-                            {
-                              "label": "Drop",
-                              "event": "DROP",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "RpgItem",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No items yet",
+                              "emptyDescription": "Add your first item to get started.",
+                              "itemActions": [
+                                {
+                                  "label": "Use",
+                                  "event": "USE_ITEM"
+                                },
+                                {
+                                  "label": "Drop",
+                                  "event": "DROP",
+                                  "variant": "danger"
+                                }
+                              ],
+                              "renderItem": [
+                                "fn",
+                                "item",
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
+                                  "direction": "vertical",
+                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
+                                      "type": "swipeable-row",
+                                      "leftAction": {
+                                        "label": "Edit",
+                                        "event": "EDIT",
+                                        "variant": "primary"
+                                      },
+                                      "rightAction": {
+                                        "label": "Delete",
+                                        "event": "DELETE",
+                                        "variant": "destructive"
+                                      },
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "briefcase",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
+                                          "type": "stack",
+                                          "direction": "horizontal",
+                                          "justify": "space-between",
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "type": "stack",
+                                              "direction": "horizontal",
+                                              "gap": "sm",
+                                              "align": "center",
+                                              "children": [
+                                                {
+                                                  "type": "avatar",
+                                                  "name": "@item.name",
+                                                  "size": "sm"
+                                                },
+                                                {
+                                                  "type": "typography",
+                                                  "variant": "h4",
+                                                  "content": "@item.name"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "stack",
+                                              "direction": "horizontal",
+                                              "gap": "sm",
+                                              "align": "center",
+                                              "children": [
+                                                {
+                                                  "type": "badge",
+                                                  "label": "@item.type"
+                                                },
+                                                {
+                                                  "type": "menu",
+                                                  "items": [
+                                                    {
+                                                      "label": "View",
+                                                      "event": "VIEW",
+                                                      "icon": "eye"
+                                                    },
+                                                    {
+                                                      "label": "Edit",
+                                                      "event": "EDIT",
+                                                      "icon": "pencil"
+                                                    },
+                                                    {
+                                                      "label": "Delete",
+                                                      "event": "DELETE",
+                                                      "icon": "trash-2"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
                                         }
                                       ]
                                     },
                                     {
-                                      "type": "badge",
-                                      "label": "@item.type"
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.quantity"
                                     }
                                   ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.quantity"
                                 }
                               ]
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "ADD_ITEM",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -1390,40 +1444,51 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "plus-circle",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Add RpgItem",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Add RpgItem",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "RpgItem",
+                              "mode": "create",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "name",
+                                "type",
+                                "quantity",
+                                "rarity",
+                                "pendingId"
+                              ]
                             }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "RpgItem",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "name",
-                            "type",
-                            "quantity",
-                            "rarity",
-                            "pendingId"
                           ]
                         }
                       ]
@@ -1555,53 +1620,64 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
-                      "align": "center",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "zap",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "zap",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Use RpgItem",
+                                  "variant": "h3"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
                             },
                             {
                               "type": "typography",
-                              "content": "Use RpgItem",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.name",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CLOSE",
-                              "variant": "ghost"
+                              "content": "@entity.name",
+                              "variant": "body"
                             },
                             {
-                              "type": "button",
-                              "label": "Confirm Use",
-                              "event": "SAVE",
-                              "variant": "primary",
-                              "icon": "check"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "center",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Cancel",
+                                  "event": "CLOSE",
+                                  "variant": "ghost"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Confirm Use",
+                                  "event": "SAVE",
+                                  "variant": "primary",
+                                  "icon": "check"
+                                }
+                              ]
                             }
                           ]
                         }

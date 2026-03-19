@@ -20,6 +20,7 @@ import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdDetail } from '../molecules/std-detail.js';
+import { cmsArticleView, cmsCategoryView, cmsMediaView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -41,8 +42,8 @@ const DEFAULT_ARTICLE_FIELDS: EntityField[] = [
   { name: 'slug', type: 'string', required: true },
   { name: 'content', type: 'string' },
   { name: 'author', type: 'string' },
-  { name: 'status', type: 'string', default: 'draft' },
-  { name: 'publishedAt', type: 'string' },
+  { name: 'status', type: 'string', default: 'draft', values: ['draft', 'review', 'published', 'archived'] },
+  { name: 'publishedAt', type: 'date' },
 ];
 
 const DEFAULT_MEDIA_ASSET_FIELDS: EntityField[] = [
@@ -51,7 +52,7 @@ const DEFAULT_MEDIA_ASSET_FIELDS: EntityField[] = [
   { name: 'fileSize', type: 'number' },
   { name: 'url', type: 'string' },
   { name: 'altText', type: 'string' },
-  { name: 'uploadedAt', type: 'string' },
+  { name: 'uploadedAt', type: 'date' },
 ];
 
 const DEFAULT_CATEGORY_FIELDS: EntityField[] = [
@@ -76,9 +77,12 @@ export function stdCms(params: StdCmsParams): OrbitalSchema {
     fields: articleFields,
     pageTitle: 'Articles',
     headerIcon: 'file-text',
+    emptyTitle: 'No articles yet',
+    emptyDescription: 'Write your first article.',
     pageName: 'ArticlesPage',
     pagePath: '/articles',
     isInitial: true,
+    ...cmsArticleView(),
   });
 
   const media = stdDetail({
@@ -86,8 +90,11 @@ export function stdCms(params: StdCmsParams): OrbitalSchema {
     fields: mediaAssetFields,
     pageTitle: 'Media Library',
     headerIcon: 'image',
+    emptyTitle: 'No media assets',
+    emptyDescription: 'Upload media to build your library.',
     pageName: 'MediaPage',
     pagePath: '/media',
+    ...cmsMediaView(),
   });
 
   const categories = stdList({
@@ -95,8 +102,11 @@ export function stdCms(params: StdCmsParams): OrbitalSchema {
     fields: categoryFields,
     pageTitle: 'Categories',
     headerIcon: 'folder',
+    emptyTitle: 'No categories yet',
+    emptyDescription: 'Create categories to organize your content.',
     pageName: 'CategoriesPage',
     pagePath: '/categories',
+    ...cmsCategoryView(),
   });
 
   return compose(

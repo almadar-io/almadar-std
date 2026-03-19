@@ -83,72 +83,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Sensor Readings"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "thermometer",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "thermometer",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Sensor Readings",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Sensor Readings",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "SensorId"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "SensorId"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "sensorId"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "sensorId"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -156,74 +249,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -245,72 +298,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Sensor Readings"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "thermometer",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "thermometer",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Sensor Readings",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Sensor Readings",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "SensorId"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "SensorId"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "sensorId"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "sensorId"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -318,74 +464,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -407,72 +513,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Sensor Readings"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "thermometer",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "thermometer",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Sensor Readings",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Sensor Readings",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "SensorId"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "SensorId"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "sensorId"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "sensorId"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -480,74 +679,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -569,72 +728,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Sensor Readings"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "thermometer",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "thermometer",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Sensor Readings",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Sensor Readings",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "SensorId"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "SensorId"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "sensorId"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "sensorId"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -642,74 +894,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -731,72 +943,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "scaled-diagram",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
+                            {
+                              "type": "breadcrumb",
+                              "items": [
+                                {
+                                  "label": "Home",
+                                  "href": "/"
+                                },
+                                {
+                                  "label": "Sensor Readings"
+                                }
+                              ]
+                            },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "md",
+                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "thermometer",
-                                  "size": "lg"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "thermometer",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Sensor Readings",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "content": "Sensor Readings",
-                                  "variant": "h2"
+                                  "type": "button",
+                                  "label": "Refresh",
+                                  "event": "REFRESH",
+                                  "variant": "secondary",
+                                  "icon": "refresh-cw"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Refresh",
-                              "event": "REFRESH",
-                              "variant": "secondary",
-                              "icon": "refresh-cw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
+                              "type": "divider"
+                            },
                             {
-                              "type": "card",
+                              "type": "box",
+                              "padding": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "simple-grid",
+                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "SensorId"
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "SensorId"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "sensorId"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
+                                      "type": "stat-display",
+                                      "label": "Value",
+                                      "value": [
                                         "object/get",
                                         [
                                           "array/first",
                                           "@entity"
                                         ],
-                                        "sensorId"
+                                        "value"
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Unit"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "unit"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "card",
+                                      "children": [
+                                        {
+                                          "type": "stack",
+                                          "direction": "vertical",
+                                          "gap": "sm",
+                                          "children": [
+                                            {
+                                              "type": "typography",
+                                              "variant": "caption",
+                                              "content": "Timestamp"
+                                            },
+                                            {
+                                              "type": "typography",
+                                              "variant": "h3",
+                                              "content": [
+                                                "object/get",
+                                                [
+                                                  "array/first",
+                                                  "@entity"
+                                                ],
+                                                "timestamp"
+                                              ]
+                                            }
+                                          ]
+                                        }
                                       ]
                                     }
                                   ]
@@ -804,74 +1109,34 @@
                               ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Value",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "value"
-                              ]
+                              "type": "divider"
                             },
                             {
-                              "type": "card",
-                              "children": [
+                              "type": "line-chart",
+                              "data": [],
+                              "xKey": "date",
+                              "yKey": "value",
+                              "title": "Trend"
+                            },
+                            {
+                              "type": "chart-legend",
+                              "items": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Unit"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "unit"
-                                      ]
-                                    }
-                                  ]
+                                  "label": "Current",
+                                  "color": "primary"
+                                },
+                                {
+                                  "label": "Previous",
+                                  "color": "muted"
                                 }
                               ]
                             },
                             {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Timestamp"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "h3",
-                                      "content": [
-                                        "object/get",
-                                        [
-                                          "array/first",
-                                          "@entity"
-                                        ],
-                                        "timestamp"
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
+                              "type": "graph-view",
+                              "nodes": [],
+                              "edges": [],
+                              "width": 400,
+                              "height": 200
                             }
                           ]
                         }
@@ -922,11 +1187,16 @@
           {
             "name": "status",
             "type": "string",
-            "default": "offline"
+            "default": "offline",
+            "values": [
+              "online",
+              "offline",
+              "maintenance"
+            ]
           },
           {
             "name": "lastSeen",
-            "type": "string"
+            "type": "date"
           }
         ]
       },
@@ -1094,74 +1364,61 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Device",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No devices yet",
-                          "emptyDescription": "Create your first device to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Device",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No devices registered",
+                              "emptyDescription": "Connect a device to start monitoring.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "cpu",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.type"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.status"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "cpu"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "type",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "lastSeen",
+                                  "label": "Last Seen",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 3,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -1331,74 +1588,61 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Device",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No devices yet",
-                          "emptyDescription": "Create your first device to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Device",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No devices registered",
+                              "emptyDescription": "Connect a device to start monitoring.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "cpu",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.type"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.status"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "cpu"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "type",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "lastSeen",
+                                  "label": "Last Seen",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 3,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -1475,74 +1719,61 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Device",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No devices yet",
-                          "emptyDescription": "Create your first device to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Device",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No devices registered",
+                              "emptyDescription": "Connect a device to start monitoring.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "cpu",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.type"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.status"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "cpu"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "type",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "lastSeen",
+                                  "label": "Last Seen",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 3,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -1615,74 +1846,61 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "Device",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No devices yet",
-                          "emptyDescription": "Create your first device to get started.",
-                          "itemActions": [
+                          "type": "pull-to-refresh",
+                          "onRefresh": "INIT",
+                          "children": [
                             {
-                              "label": "View",
-                              "event": "VIEW"
-                            },
-                            {
-                              "label": "Edit",
-                              "event": "EDIT"
-                            },
-                            {
-                              "label": "Delete",
-                              "event": "DELETE",
-                              "variant": "danger"
-                            }
-                          ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
+                              "type": "data-grid",
+                              "entity": "Device",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No devices registered",
+                              "emptyDescription": "Connect a device to start monitoring.",
+                              "itemActions": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "cpu",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.type"
-                                    }
-                                  ]
+                                  "label": "View",
+                                  "event": "VIEW"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.status"
+                                  "label": "Edit",
+                                  "event": "EDIT"
+                                },
+                                {
+                                  "label": "Delete",
+                                  "event": "DELETE",
+                                  "variant": "danger"
                                 }
-                              ]
+                              ],
+                              "columns": [
+                                {
+                                  "name": "name",
+                                  "variant": "h3",
+                                  "icon": "cpu"
+                                },
+                                {
+                                  "name": "status",
+                                  "variant": "badge"
+                                },
+                                {
+                                  "name": "type",
+                                  "variant": "body"
+                                },
+                                {
+                                  "name": "lastSeen",
+                                  "label": "Last Seen",
+                                  "variant": "caption",
+                                  "format": "date"
+                                }
+                              ],
+                              "cols": 3,
+                              "gap": "md"
                             }
                           ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "CREATE",
+                          "label": "Create"
                         }
                       ]
                     }
@@ -1763,39 +1981,50 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "plus-circle",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "plus-circle",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Create Device",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Create Device",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Device",
+                              "mode": "create",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "name",
+                                "type",
+                                "status",
+                                "lastSeen"
+                              ]
                             }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "Device",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "name",
-                            "type",
-                            "status",
-                            "lastSeen"
                           ]
                         }
                       ]
@@ -1927,41 +2156,52 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
+                          "type": "overlay",
+                          "isVisible": true
+                        },
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "edit",
-                              "size": "md"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "edit",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Edit Device",
+                                  "variant": "h3"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "Edit Device",
-                              "variant": "h3"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Device",
+                              "mode": "edit",
+                              "submitEvent": "SAVE",
+                              "cancelEvent": "CLOSE",
+                              "fields": [
+                                "name",
+                                "type",
+                                "status",
+                                "lastSeen"
+                              ],
+                              "entityId": "@entity.id"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "Device",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "name",
-                            "type",
-                            "status",
-                            "lastSeen"
-                          ],
-                          "entityId": "@entity.id"
                         }
                       ]
                     }
@@ -2076,118 +2316,129 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "gap": "none",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "eye",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.name"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
+                          "type": "overlay",
+                          "isVisible": true
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
+                          "direction": "vertical",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Name"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "eye",
+                                  "size": "md"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "h3",
+                                  "content": "@entity.name"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.name"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Type"
+                              "type": "divider"
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.type"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "Status"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Name"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.name"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.status"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "caption",
-                              "content": "LastSeen"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Type"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.type"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.lastSeen"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Edit",
-                              "event": "EDIT",
-                              "variant": "primary",
-                              "icon": "edit"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "Status"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.status"
+                                }
+                              ]
                             },
                             {
-                              "type": "button",
-                              "label": "Close",
-                              "event": "CLOSE",
-                              "variant": "ghost"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "caption",
+                                  "content": "LastSeen"
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@entity.lastSeen"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "end",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Edit",
+                                  "event": "EDIT",
+                                  "variant": "primary",
+                                  "icon": "edit"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Close",
+                                  "event": "CLOSE",
+                                  "variant": "ghost"
+                                }
+                              ]
                             }
                           ]
                         }

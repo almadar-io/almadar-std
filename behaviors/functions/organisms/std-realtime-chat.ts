@@ -17,6 +17,7 @@ import { compose } from '@almadar/core/builders';
 import { stdMessaging } from '../molecules/std-messaging.js';
 import { stdList } from '../molecules/std-list.js';
 import { stdDisplay } from '../atoms/std-display.js';
+import { chatChannelView, chatMessageView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -36,7 +37,7 @@ const defaultChatMessageFields: EntityField[] = [
   { name: 'sender', type: 'string', required: true },
   { name: 'content', type: 'string', required: true },
   { name: 'channel', type: 'string' },
-  { name: 'timestamp', type: 'string' },
+  { name: 'timestamp', type: 'date' },
 ];
 
 const defaultChannelFields: EntityField[] = [
@@ -48,8 +49,8 @@ const defaultChannelFields: EntityField[] = [
 
 const defaultOnlineUserFields: EntityField[] = [
   { name: 'username', type: 'string', required: true },
-  { name: 'status', type: 'string', default: 'online' },
-  { name: 'lastActive', type: 'string' },
+  { name: 'status', type: 'string', default: 'online', values: ['online', 'away', 'busy', 'offline'] },
+  { name: 'lastActive', type: 'date' },
   { name: 'avatar', type: 'string' },
 ];
 
@@ -67,6 +68,7 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalSchema {
     fields: chatMessageFields,
     headerIcon: 'message-circle',
     pageTitle: 'Chat',
+    ...chatMessageView(),
   });
 
   const channelOrbital = stdList({
@@ -74,6 +76,9 @@ export function stdRealtimeChat(params: StdRealtimeChatParams): OrbitalSchema {
     fields: channelFields,
     headerIcon: 'hash',
     pageTitle: 'Channels',
+    emptyTitle: 'No channels yet',
+    emptyDescription: 'Create a channel to start conversations.',
+    ...chatChannelView(),
   });
 
   const onlineOrbital = stdDisplay({

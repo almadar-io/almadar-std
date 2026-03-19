@@ -130,6 +130,7 @@ function buildTrait(c: PaginationConfig): Trait {
         onPageChange: 'PAGE',
         showPageSize: false,
       },
+      { type: 'infinite-scroll-sentinel', onIntersect: 'PAGE', threshold: 0.8 },
     ],
   };
 

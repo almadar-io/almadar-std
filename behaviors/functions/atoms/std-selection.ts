@@ -164,10 +164,11 @@ function buildTrait(c: SelectionConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'center',
-        children: [
-          { type: 'button', label: 'Confirm', event: 'CONFIRM_SELECTION', actionPayload: { id: '@payload.id' }, variant: 'primary', icon: 'check' },
-          { type: 'button', label: 'Deselect', event: 'DESELECT', variant: 'ghost', icon: 'x' },
+        type: 'form-actions',
+        primary: { label: 'Confirm', event: 'CONFIRM_SELECTION', actionType: 'submit' },
+        secondary: [
+          { label: 'Select All', event: 'SELECT' },
+          { label: 'Deselect All', event: 'DESELECT' },
         ],
       },
     ],

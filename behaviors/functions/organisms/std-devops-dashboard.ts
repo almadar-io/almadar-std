@@ -18,6 +18,7 @@ import { compose } from '@almadar/core/builders';
 import { stdCircuitBreaker } from '../atoms/std-circuit-breaker.js';
 import { stdDisplay } from '../atoms/std-display.js';
 import { stdList } from '../molecules/std-list.js';
+import { devopsLogView } from '../views/domain-views.js';
 
 // ============================================================================
 // Params
@@ -36,9 +37,9 @@ export interface StdDevopsDashboardParams {
 
 const defaultServiceNodeFields: EntityField[] = [
   { name: 'name', type: 'string', required: true },
-  { name: 'status', type: 'string', required: true },
+  { name: 'status', type: 'string', required: true, values: ['healthy', 'degraded', 'down'] },
   { name: 'url', type: 'string' },
-  { name: 'lastChecked', type: 'string' },
+  { name: 'lastChecked', type: 'date' },
 ];
 
 const defaultAlertMetricFields: EntityField[] = [
@@ -49,9 +50,9 @@ const defaultAlertMetricFields: EntityField[] = [
 ];
 
 const defaultLogEntryFields: EntityField[] = [
-  { name: 'level', type: 'string', required: true },
+  { name: 'level', type: 'string', required: true, values: ['debug', 'info', 'warn', 'error', 'fatal'] },
   { name: 'message', type: 'string', required: true },
-  { name: 'timestamp', type: 'string' },
+  { name: 'timestamp', type: 'date' },
   { name: 'service', type: 'string' },
 ];
 
@@ -90,6 +91,9 @@ export function stdDevopsDashboard(params: StdDevopsDashboardParams): OrbitalSch
     fields: logEntryFields,
     headerIcon: 'file-text',
     pageTitle: 'Logs',
+    emptyTitle: 'No log entries',
+    emptyDescription: 'Logs will appear here when services report activity.',
+    ...devopsLogView(),
   });
 
   const systemMetricOrbital = stdDisplay({
