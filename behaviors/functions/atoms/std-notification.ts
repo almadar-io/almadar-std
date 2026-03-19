@@ -31,6 +31,10 @@ export interface StdNotificationParams {
   /** Page title */
   pageTitle?: string;
 
+  // Standalone mode
+  /** When true (default), renders empty state with Test button to main. When false, only renders on SHOW/HIDE. */
+  standalone?: boolean;
+
   // Page
   /** Page name (defaults to "{Entity}NotificationPage") */
   pageName?: string;
@@ -52,6 +56,7 @@ interface NotificationConfig {
   pluralName: string;
   headerIcon: string;
   pageTitle: string;
+  standalone: boolean;
   pageName: string;
   pagePath: string;
   isInitial: boolean;
@@ -78,6 +83,7 @@ function resolve(params: StdNotificationParams): NotificationConfig {
     pluralName: p,
     headerIcon: params.headerIcon ?? 'bell',
     pageTitle: params.pageTitle ?? 'Notifications',
+    standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}NotificationPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/notifications`,
     isInitial: params.isInitial ?? false,
@@ -89,7 +95,10 @@ function resolve(params: StdNotificationParams): NotificationConfig {
 // ============================================================================
 
 function buildEntity(c: NotificationConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  const instances = [
+    { id: 'notif-1', name: 'System Update', description: 'New version available', status: 'active', createdAt: '2026-03-19', message: 'System update completed successfully.', notificationType: 'success' },
+  ];
+  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, instances });
 }
 
 /** S-expression: get field from first entity in collection */
@@ -111,6 +120,8 @@ function buildTrait(c: NotificationConfig): Trait {
       },
       { type: 'divider' },
       { type: 'empty-state', icon: 'bell-off', title: 'No notifications', description: 'New notifications will appear here.' },
+      { type: 'button', label: 'Test Notification', event: 'SHOW', variant: 'secondary', icon: 'bell',
+        actionPayload: { message: 'This is a test notification', notificationType: 'info' } },
     ],
   };
 
@@ -137,19 +148,6 @@ function buildTrait(c: NotificationConfig): Trait {
         variant: ef('notificationType'),
         message: ef('message'),
       },
-      {
-        type: 'toast-slot',
-        variant: 'info',
-        message: ef('message'),
-        dismissible: true,
-        dismissEvent: 'HIDE',
-      },
-      {
-        type: 'violation-alert',
-        severity: 'warning',
-        rule: 'Notification Policy',
-        message: ef('message'),
-      },
     ],
   };
 
@@ -171,12 +169,12 @@ function buildTrait(c: NotificationConfig): Trait {
         { key: 'HIDE', name: 'Hide Notification' },
       ],
       transitions: [
-        // INIT: hidden -> hidden (render empty state)
+        // INIT: hidden -> hidden (fetch entity + render empty state in standalone mode)
         {
           from: 'hidden', to: 'hidden', event: 'INIT',
-          effects: [
-            ['render-ui', 'main', hiddenView],
-          ],
+          effects: c.standalone
+            ? [['fetch', entityName], ['render-ui', 'main', hiddenView]]
+            : [['fetch', entityName]],
         },
         // SHOW: hidden -> visible (render notification)
         {
@@ -199,10 +197,9 @@ function buildTrait(c: NotificationConfig): Trait {
         // HIDE: visible -> hidden (clear notification)
         {
           from: 'visible', to: 'hidden', event: 'HIDE',
-          effects: [
-            ['set', '@entity.message', ''],
-            ['render-ui', 'main', hiddenView],
-          ],
+          effects: c.standalone
+            ? [['set', '@entity.message', ''], ['render-ui', 'main', hiddenView]]
+            : [['set', '@entity.message', '']],
         },
       ],
     },

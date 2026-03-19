@@ -106,11 +106,22 @@ function buildTrait(c: CalendarConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'calendar-grid', month: 3, year: 2026, entity: entityName,
-        renderDay: ['fn', 'item', {
-          type: 'day-cell', date: `@item.${displayField}`, events: [],
-          onSelect: 'SELECT_DAY',
-        }],
+        type: 'calendar-grid', month: 3, year: 2026,
+      },
+      { type: 'divider' },
+      { type: 'typography', variant: 'h4', content: 'Upcoming Events' },
+      {
+        type: 'data-list', entity: entityName,
+        emptyIcon: 'calendar',
+        emptyTitle: 'No events',
+        emptyDescription: 'No events scheduled.',
+        columns: [
+          { name: displayField, label: 'Event', variant: 'h4', icon: 'calendar' },
+          { name: 'time', label: 'Time', variant: 'badge' },
+          { name: 'date', label: 'Date', variant: 'caption', format: 'date' },
+          { name: 'status', label: 'Status', variant: 'badge' },
+        ],
+        itemActions: [{ label: 'View', event: 'SELECT_DAY', icon: 'eye' }],
       },
     ],
   };
@@ -132,15 +143,18 @@ function buildTrait(c: CalendarConfig): Trait {
         ],
       },
       { type: 'divider' },
+      { type: 'typography', variant: 'h4', content: 'Events for Selected Day' },
       {
-        type: 'data-list', entity: entityName,
+        type: 'data-grid', entity: entityName,
         emptyIcon: 'calendar',
         emptyTitle: 'No events today',
         emptyDescription: 'Select a time slot to add an event.',
-        renderItem: ['fn', 'item', {
-          type: 'time-slot-cell', startTime: `@item.time`, duration: 60,
-          label: `@item.${displayField}`, onSelect: 'SELECT_SLOT',
-        }],
+        columns: [
+          { name: displayField, label: 'Event', variant: 'h4', icon: 'clock' },
+          { name: 'time', label: 'Time', variant: 'badge' },
+          { name: 'status', label: 'Status', variant: 'badge' },
+        ],
+        itemActions: [{ label: 'Select', event: 'SELECT_SLOT', icon: 'check' }],
       },
     ],
   };

@@ -113,13 +113,7 @@ function buildTrait(c: FormAdvancedConfig): Trait {
           else if (f.name === 'notes') fieldDef.type = 'textarea';
           return fieldDef;
         }) },
-      {
-        type: 'flex', direction: 'row', gap: 'sm', justify: 'end',
-        children: [
-          { type: 'button', label: 'Cancel', event: 'INIT', variant: 'ghost' },
-          { type: 'button', label: 'Submit', event: 'SUBMIT', variant: 'primary', icon: 'check' },
-        ],
-      },
+      // Note: form-section already renders Save/Cancel buttons via submitEvent/cancelEvent
     ],
   };
 

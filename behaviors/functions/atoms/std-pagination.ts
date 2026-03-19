@@ -114,14 +114,11 @@ function buildTrait(c: PaginationConfig): Trait {
         emptyIcon: 'inbox',
         emptyTitle: `No ${pluralName.toLowerCase()} yet`,
         emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
-        className: 'transition-shadow hover:shadow-md cursor-pointer',
-        renderItem: ['fn', 'item', {
-          type: 'stack', direction: 'vertical', gap: 'sm',
-          children: [
-            { type: 'typography', variant: 'h4', content: '@item.name' },
-            { type: 'typography', variant: 'caption', color: 'muted', content: '@item.id' },
-          ],
-        }],
+        columns: [
+          { name: 'name', label: 'Name', variant: 'h4' },
+          { name: 'description', label: 'Description', variant: 'caption' },
+          { name: 'status', label: 'Status', variant: 'badge' },
+        ],
       },
       {
         type: 'pagination',
@@ -182,14 +179,11 @@ function buildTrait(c: PaginationConfig): Trait {
                   emptyIcon: 'inbox',
                   emptyTitle: `No ${pluralName.toLowerCase()} yet`,
                   emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
-                  className: 'transition-shadow hover:shadow-md cursor-pointer',
-                  renderItem: ['fn', 'item', {
-                    type: 'stack', direction: 'vertical', gap: 'sm',
-                    children: [
-                      { type: 'typography', variant: 'h4', content: '@item.name' },
-                      { type: 'typography', variant: 'caption', color: 'muted', content: '@item.id' },
-                    ],
-                  }],
+                  columns: [
+                    { name: 'name', label: 'Name', variant: 'h4' },
+                    { name: 'description', label: 'Description', variant: 'caption' },
+                    { name: 'status', label: 'Status', variant: 'badge' },
+                  ],
                 },
                 {
                   type: 'pagination',

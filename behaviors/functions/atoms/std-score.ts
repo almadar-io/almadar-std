@@ -92,7 +92,10 @@ function resolve(params: StdScoreParams): ScoreConfig {
 // ============================================================================
 
 function buildEntity(c: ScoreConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  const instances = [
+    { id: 'score-1', name: 'Player 1', description: 'Current session', status: 'active', createdAt: '2026-03-19', total: 1250, combo: 3, points: 150, multiplier: 2 },
+  ];
+  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence, instances });
 }
 
 /** S-expression: get field from first entity in collection */
@@ -143,10 +146,11 @@ function buildTrait(c: ScoreConfig): Trait {
         { key: 'COMBO', name: 'Combo', payload: [{ name: 'multiplier', type: 'number', required: true }] },
       ],
       transitions: [
-        // INIT: idle -> idle
+        // INIT: idle -> idle (fetch entity to load seed data)
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
+            ['fetch', entityName],
             ['render-ui', 'main', scoreView],
           ],
         },

@@ -128,7 +128,7 @@ function resolve(params: StdBrowseParams): BrowseConfig {
  * When displayColumns is provided, uses DataGrid/DataList built-in field rendering
  * (proper card styling, grid layout, format support). Otherwise uses renderItem.
  */
-function buildDisplayPattern(c: BrowseConfig, entityName: string, emptyTitle: string, emptyDescription: string, listItemChildren: unknown[]): unknown {
+function buildDisplayPattern(c: BrowseConfig, entityName: string, emptyTitle: string, emptyDescription: string, defaultColumns: unknown[], listItemChildren: unknown[]): unknown {
   const base: Record<string, unknown> = {
     type: c.displayPattern, entity: entityName,
     emptyIcon: 'inbox', emptyTitle, emptyDescription,
@@ -142,8 +142,8 @@ function buildDisplayPattern(c: BrowseConfig, entityName: string, emptyTitle: st
     // Custom renderItem template from organism
     base.renderItem = ['fn', 'item', c.customRenderItem];
   } else {
-    // Default renderItem: icon+title+badge
-    base.renderItem = ['fn', 'item', { type: 'stack', direction: 'vertical', gap: 'sm', children: listItemChildren }];
+    // Use DataGrid built-in columns for proper badge colors, formatting, card styling
+    base.columns = defaultColumns;
   }
 
   return { ...base, ...c.displayProps };
@@ -156,37 +156,27 @@ function buildEntity(c: BrowseConfig): Entity {
 function buildTrait(c: BrowseConfig): Trait {
   const { entityName, listFields, headerIcon, pageTitle, emptyTitle, emptyDescription } = c;
 
-  // List item template — avatar + title + badge + menu, wrapped in swipeable-row
-  const itemContent: unknown = {
-    type: 'stack', direction: 'horizontal', justify: 'space-between', align: 'center',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'avatar', name: `@item.${listFields[0] ?? 'id'}`, size: 'sm' },
-          { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
-          { type: 'menu', items: [
-            { label: 'View', event: 'VIEW', icon: 'eye' },
-            { label: 'Edit', event: 'EDIT', icon: 'pencil' },
-            { label: 'Delete', event: 'DELETE', icon: 'trash-2' },
-          ] },
-        ],
-      },
-    ],
-  };
+  // Default columns for DataGrid built-in card rendering (proper badge colors, formatting)
+  const defaultColumns = [
+    { name: listFields[0] ?? 'name', label: listFields[0]?.charAt(0).toUpperCase() + (listFields[0]?.slice(1) ?? ''), variant: 'h4', icon: headerIcon },
+    ...(listFields.length > 1 ? [{ name: listFields[1], label: listFields[1].charAt(0).toUpperCase() + listFields[1].slice(1), variant: 'badge' as const }] : []),
+    ...(listFields.length > 2 ? [{ name: listFields[2], label: listFields[2].charAt(0).toUpperCase() + listFields[2].slice(1), variant: 'caption' as const }] : []),
+  ];
 
+  // Legacy renderItem for backward compatibility when customRenderItem is used
   const listItemChildren: unknown[] = [
     {
-      type: 'swipeable-row',
-      leftAction: { label: 'Edit', event: 'EDIT', variant: 'primary' },
-      rightAction: { label: 'Delete', event: 'DELETE', variant: 'destructive' },
-      children: [itemContent],
+      type: 'stack', direction: 'horizontal', justify: 'space-between', align: 'center',
+      children: [
+        {
+          type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
+          children: [
+            { type: 'icon', name: headerIcon, size: 'sm' },
+            { type: 'typography', variant: 'h4', content: `@item.${listFields[0] ?? 'id'}` },
+          ],
+        },
+        ...(listFields.length > 1 ? [{ type: 'badge', label: `@item.${listFields[1]}` }] : []),
+      ],
     },
   ];
   if (listFields.length > 2) {
@@ -270,7 +260,7 @@ function buildTrait(c: BrowseConfig): Trait {
                 {
                   type: 'pull-to-refresh', onRefresh: 'INIT',
                   children: [
-                    buildDisplayPattern(c, entityName, emptyTitle, emptyDescription, listItemChildren),
+                    buildDisplayPattern(c, entityName, emptyTitle, emptyDescription, defaultColumns, listItemChildren),
                   ],
                 },
                 // Floating action button for quick create

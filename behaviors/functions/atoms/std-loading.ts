@@ -31,6 +31,10 @@ export interface StdLoadingParams {
   /** Title text (defaults to entity name) */
   title?: string;
 
+  // Standalone mode
+  /** When true (default), renders idle state with Start button to main. When false, only renders loading/success/error states. */
+  standalone?: boolean;
+
   // Page
   /** Page name (defaults to "{Entity}LoadingPage") */
   pageName?: string;
@@ -53,6 +57,7 @@ interface LoadingConfig {
   pluralName: string;
   headerIcon: string;
   title: string;
+  standalone: boolean;
   pageName: string;
   pagePath: string;
   isInitial: boolean;
@@ -80,6 +85,7 @@ function resolve(params: StdLoadingParams): LoadingConfig {
     pluralName: p,
     headerIcon: params.headerIcon ?? 'loader',
     title: params.title ?? entityName,
+    standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}LoadingPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/loading`,
     isInitial: params.isInitial ?? false,
@@ -186,10 +192,9 @@ function buildTrait(c: LoadingConfig): Trait {
       transitions: [
         {
           from: 'idle', to: 'idle', event: 'INIT',
-          effects: [
-            ['set', '@entity.loadingStatus', 'idle'],
-            ['render-ui', 'main', idleView],
-          ],
+          effects: c.standalone
+            ? [['set', '@entity.loadingStatus', 'idle'], ['render-ui', 'main', idleView]]
+            : [['set', '@entity.loadingStatus', 'idle']],
         },
         {
           from: 'idle', to: 'loading', event: 'START',

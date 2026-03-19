@@ -148,7 +148,7 @@ function buildTrait(c: ThemeConfig): Trait {
         { key: 'SELECT', name: 'Select Theme', payload: [{ name: 'theme', type: 'string', required: true }] },
       ],
       transitions: [
-        { from: 'idle', to: 'idle', event: 'INIT', effects: [['render-ui', 'main', mainView]] },
+        { from: 'idle', to: 'idle', event: 'INIT', effects: [['fetch', entityName], ['render-ui', 'main', mainView]] },
         { from: 'idle', to: 'idle', event: 'TOGGLE', effects: [['render-ui', 'main', mainView]] },
         { from: 'idle', to: 'idle', event: 'SELECT', effects: [['set', '@entity.colorScheme', '@payload.theme'], ['render-ui', 'main', mainView]] },
       ],

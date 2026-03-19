@@ -32,6 +32,10 @@ export interface StdDrawerParams {
   /** Header icon (Lucide name) */
   headerIcon?: string;
 
+  // Standalone mode
+  /** When true (default), renders main view with Open button. When false, only renders to drawer slot. */
+  standalone?: boolean;
+
   // Page
   /** Page name (defaults to "{Entity}DrawerPage") */
   pageName?: string;
@@ -55,6 +59,7 @@ interface DrawerConfig {
   pluralName: string;
   drawerTitle: string;
   headerIcon: string;
+  standalone: boolean;
   pageName: string;
   pagePath: string;
   isInitial: boolean;
@@ -76,6 +81,7 @@ function resolve(params: StdDrawerParams): DrawerConfig {
     pluralName: p,
     drawerTitle: params.drawerTitle ?? 'Details',
     headerIcon: params.headerIcon ?? 'panel-right',
+    standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}DrawerPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/drawer`,
     isInitial: params.isInitial ?? false,
@@ -148,7 +154,7 @@ function buildTrait(c: DrawerConfig): Trait {
     ],
   };
 
-  // Use drawer molecule with accordion for grouped field sections
+  // Drawer with field details and close button
   const openView = {
     type: 'drawer',
     title: drawerTitle,
@@ -157,27 +163,13 @@ function buildTrait(c: DrawerConfig): Trait {
       {
         type: 'stack', direction: 'vertical', gap: 'md',
         children: [
-          {
-            type: 'accordion',
-            items: [
-              {
-                id: 'details',
-                title: 'Details',
-                content: {
-                  type: 'stack', direction: 'vertical', gap: 'sm',
-                  children: nonIdFields.map(field => ({
-                    type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
-                    children: [
-                      { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-                      { type: 'typography', variant: 'body', content: ef(field.name) },
-                    ],
-                  })),
-                },
-              },
+          ...nonIdFields.map(field => ({
+            type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
+            children: [
+              { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
+              { type: 'typography', variant: 'body', content: ef(field.name) },
             ],
-            defaultOpen: [0],
-            multiple: true,
-          },
+          })),
           { type: 'divider' },
           {
             type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end',
@@ -207,10 +199,9 @@ function buildTrait(c: DrawerConfig): Trait {
       transitions: [
         {
           from: 'closed', to: 'closed', event: 'INIT',
-          effects: [
-            ['fetch', entityName],
-            ['render-ui', 'main', closedView],
-          ],
+          effects: c.standalone
+            ? [['fetch', entityName], ['render-ui', 'main', closedView]]
+            : [['fetch', entityName]],
         },
         {
           from: 'closed', to: 'open', event: 'OPEN',
@@ -224,11 +215,9 @@ function buildTrait(c: DrawerConfig): Trait {
         },
         {
           from: 'open', to: 'closed', event: 'CLOSE',
-          effects: [
-            ['render-ui', 'drawer', null],
-            ['fetch', entityName],
-            ['render-ui', 'main', closedView],
-          ],
+          effects: c.standalone
+            ? [['render-ui', 'drawer', null], ['fetch', entityName], ['render-ui', 'main', closedView]]
+            : [['render-ui', 'drawer', null], ['fetch', entityName]],
         },
       ],
     },

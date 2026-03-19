@@ -124,9 +124,19 @@ function buildTrait(c: DisplayConfig): Trait {
           { type: 'simple-grid', columns, children: cardChildren },
         ] },
         { type: 'divider' },
-        { type: 'line-chart', data: [], xKey: 'date', yKey: 'value', title: 'Trend' },
+        { type: 'line-chart', data: [
+          { date: 'Jan', value: 12 }, { date: 'Feb', value: 19 }, { date: 'Mar', value: 15 },
+          { date: 'Apr', value: 25 }, { date: 'May', value: 22 }, { date: 'Jun', value: 30 },
+        ], xKey: 'date', yKey: 'value', title: 'Trend' },
         { type: 'chart-legend', items: [{ label: 'Current', color: 'primary' }, { label: 'Previous', color: 'muted' }] },
-        { type: 'graph-view', nodes: [], edges: [], width: 400, height: 200 },
+        { type: 'graph-view', nodes: [
+          { id: 'a', label: 'Start', x: 50, y: 100 },
+          { id: 'b', label: 'Process', x: 200, y: 50 },
+          { id: 'c', label: 'End', x: 350, y: 100 },
+        ], edges: [
+          { from: 'a', to: 'b' },
+          { from: 'b', to: 'c' },
+        ], width: 400, height: 200 },
       ],
     }],
   };

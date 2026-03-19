@@ -119,13 +119,11 @@ function buildTrait(c: SortConfig): Trait {
     emptyIcon: 'inbox',
     emptyTitle: `No ${pluralName.toLowerCase()} yet`,
     emptyDescription: `Add ${pluralName.toLowerCase()} to see them here.`,
-    className: 'transition-shadow hover:shadow-md cursor-pointer',
-    renderItem: ['fn', 'item', { type: 'stack', direction: 'horizontal', gap: 'md', align: 'center', justify: 'space-between', children: [
-      { type: 'typography', variant: 'h4', content: `@item.${displayField}` },
-      ...(sortableFields[1]
-        ? [{ type: 'typography', variant: 'caption', color: 'muted', content: `@item.${sortableFields[1]}` }]
-        : []),
-    ] }],
+    columns: [
+      { name: displayField, label: displayField.charAt(0).toUpperCase() + displayField.slice(1), variant: 'h4' },
+      ...(sortableFields[1] ? [{ name: sortableFields[1], label: sortableFields[1].charAt(0).toUpperCase() + sortableFields[1].slice(1), variant: 'caption' }] : []),
+      ...(c.fields.some(f => f.name === 'status') ? [{ name: 'status', label: 'Status', variant: 'badge' }] : []),
+    ],
   };
 
   const mainView = {
