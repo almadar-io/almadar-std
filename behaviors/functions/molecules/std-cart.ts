@@ -153,9 +153,9 @@ function buildCartTrait(c: CartConfig): Trait {
             {
               type: 'simple-grid', columns: 3,
               children: [
-                { type: 'stats-display', label: 'Items', value: ['array/length', '@entity'], icon: 'package' },
-                { type: 'stats-display', label: 'Subtotal', value: ['array/length', '@entity'], icon: 'dollar-sign' },
-                { type: 'stats-display', label: 'Total', value: ['array/length', '@entity'], icon: 'receipt' },
+                { type: 'stat-display', label: 'Items', value: ['array/len', '@entity'], icon: 'package' },
+                { type: 'stat-display', label: 'Subtotal', value: ['array/len', '@entity'], icon: 'dollar-sign' },
+                { type: 'stat-display', label: 'Total', value: ['array/len', '@entity'], icon: 'receipt' },
               ],
             },
             { type: 'divider' },

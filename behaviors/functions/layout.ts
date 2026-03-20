@@ -38,8 +38,9 @@ export function wrapInDashboardLayout(
 
   for (const orbital of schema.orbitals) {
     if (!orbital.traits) continue;
-    for (const trait of orbital.traits) {
-      const sm = trait.stateMachine;
+    for (const traitRef of orbital.traits) {
+      if (typeof traitRef === 'string' || !('stateMachine' in traitRef)) continue;
+      const sm = traitRef.stateMachine;
       if (!sm || !('transitions' in sm)) continue;
       const transitions = sm.transitions as Array<{
         effects: unknown[];
@@ -87,8 +88,9 @@ export function wrapInGameShell(
 
   for (const orbital of schema.orbitals) {
     if (!orbital.traits) continue;
-    for (const trait of orbital.traits) {
-      const sm = trait.stateMachine;
+    for (const traitRef of orbital.traits) {
+      if (typeof traitRef === 'string' || !('stateMachine' in traitRef)) continue;
+      const sm = traitRef.stateMachine;
       if (!sm || !('transitions' in sm)) continue;
       const transitions = sm.transitions as Array<{
         effects: unknown[];

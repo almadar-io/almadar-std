@@ -175,16 +175,10 @@ function buildTrait(c: ModalConfig): Trait {
           }]]
         : [['fetch', c.entityName]],
     },
-    // OPEN: closed → open (overlay behind modal content)
+    // OPEN: closed → open (Modal component in CompiledPortal provides backdrop)
     {
       from: 'closed', to: 'open', event: c.openEvent,
-      effects: [...c.openEffects, ['render-ui', 'modal', {
-        type: 'stack', direction: 'vertical', gap: 'none',
-        children: [
-          { type: 'overlay', isVisible: true },
-          c.openContent,
-        ],
-      }]],
+      effects: [...c.openEffects, ['render-ui', 'modal', c.openContent]],
     },
     // CLOSE: open → closed (re-render main to avoid stale content)
     { from: 'open', to: 'closed', event: c.closeEvent, effects: [
