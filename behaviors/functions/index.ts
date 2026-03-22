@@ -144,6 +144,9 @@ export { stdRealtimeChat, type StdRealtimeChatParams } from './organisms/std-rea
 export { stdFinanceTracker, type StdFinanceTrackerParams } from './organisms/std-finance-tracker.js';
 export { stdTradingDashboard, type StdTradingDashboardParams } from './organisms/std-trading-dashboard.js';
 
+// OS Triggers
+export { stdValidateOnSave, type StdValidateOnSaveParams } from './atoms/std-validate-on-save.js';
+
 // ============================================================================
 // Composition (re-export from core)
 // ============================================================================

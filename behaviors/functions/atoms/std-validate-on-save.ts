@@ -75,9 +75,32 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'OS_FILE_MODIFIED', name: 'File Modified' },
-        { key: 'VALIDATION_PASSED', name: 'Validation Passed' },
-        { key: 'VALIDATION_FAILED', name: 'Validation Failed' },
+        {
+          key: 'OS_FILE_MODIFIED',
+          name: 'File Modified',
+          payload: [
+            { name: 'path', type: 'string' },
+            { name: 'name', type: 'string' },
+            { name: 'dir', type: 'string' },
+            { name: 'ext', type: 'string' },
+            { name: 'timestamp', type: 'number' },
+          ],
+        },
+        {
+          key: 'VALIDATION_PASSED',
+          name: 'Validation Passed',
+          payload: [
+            { name: 'warnings', type: 'array' },
+          ],
+        },
+        {
+          key: 'VALIDATION_FAILED',
+          name: 'Validation Failed',
+          payload: [
+            { name: 'errors', type: 'array' },
+            { name: 'warnings', type: 'array' },
+          ],
+        },
       ],
       transitions: [
         // INIT: register file watcher

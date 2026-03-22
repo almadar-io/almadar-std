@@ -1,0 +1,306 @@
+{
+  "name": "ValidateOnSave",
+  "orbitals": [
+    {
+      "name": "ValidateOnSave",
+      "entity": {
+        "name": "ValidateOnSave",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "path",
+            "type": "string"
+          },
+          {
+            "name": "valid",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "errors",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "warnings",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "timestamp",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "OrbFileWatcher",
+          "linkedEntity": "ValidateOnSave",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "OS_FILE_MODIFIED",
+              "scope": "external",
+              "guard": [
+                "str/endsWith",
+                "@payload.path",
+                ".orb"
+              ]
+            }
+          ],
+          "emits": [
+            {
+              "event": "AGENT_INTERRUPT",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "validating"
+              },
+              {
+                "name": "valid"
+              },
+              {
+                "name": "invalid"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "OS_FILE_MODIFIED",
+                "name": "File Modified",
+                "payload": [
+                  {
+                    "name": "path",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "dir",
+                    "type": "string"
+                  },
+                  {
+                    "name": "ext",
+                    "type": "string"
+                  },
+                  {
+                    "name": "timestamp",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "VALIDATION_PASSED",
+                "name": "Validation Passed",
+                "payload": [
+                  {
+                    "name": "warnings",
+                    "type": "array"
+                  }
+                ]
+              },
+              {
+                "key": "VALIDATION_FAILED",
+                "name": "Validation Failed",
+                "payload": [
+                  {
+                    "name": "errors",
+                    "type": "array"
+                  },
+                  {
+                    "name": "warnings",
+                    "type": "array"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "event": "INIT",
+                "to": "idle",
+                "effects": [
+                  [
+                    "os/watch-files",
+                    "**/*.orb"
+                  ],
+                  [
+                    "os/debounce",
+                    500,
+                    "OS_FILE_MODIFIED"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "event": "OS_FILE_MODIFIED",
+                "to": "validating",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.path",
+                    "@payload.path"
+                  ],
+                  [
+                    "set",
+                    "@entity.timestamp",
+                    "@now"
+                  ],
+                  [
+                    "call-service",
+                    "orbital-cli",
+                    "validate",
+                    {
+                      "path": "@payload.path",
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "validating",
+                "event": "VALIDATION_PASSED",
+                "to": "valid",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.valid",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.errors",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.warnings",
+                    "@payload.warnings"
+                  ],
+                  [
+                    "emit",
+                    "AGENT_INTERRUPT",
+                    {
+                      "type": "validation",
+                      "status": "passed",
+                      "path": "@entity.path",
+                      "blocking": false
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "validating",
+                "event": "VALIDATION_FAILED",
+                "to": "invalid",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.valid",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.errors",
+                    "@payload.errors"
+                  ],
+                  [
+                    "set",
+                    "@entity.warnings",
+                    "@payload.warnings"
+                  ],
+                  [
+                    "emit",
+                    "AGENT_INTERRUPT",
+                    {
+                      "type": "validation",
+                      "status": "failed",
+                      "path": "@entity.path",
+                      "errors": "@payload.errors",
+                      "blocking": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "valid",
+                "event": "OS_FILE_MODIFIED",
+                "to": "validating",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.path",
+                    "@payload.path"
+                  ],
+                  [
+                    "set",
+                    "@entity.timestamp",
+                    "@now"
+                  ],
+                  [
+                    "call-service",
+                    "orbital-cli",
+                    "validate",
+                    {
+                      "path": "@payload.path",
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "invalid",
+                "event": "OS_FILE_MODIFIED",
+                "to": "validating",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.path",
+                    "@payload.path"
+                  ],
+                  [
+                    "set",
+                    "@entity.timestamp",
+                    "@now"
+                  ],
+                  [
+                    "call-service",
+                    "orbital-cli",
+                    "validate",
+                    {
+                      "path": "@payload.path",
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": []
+    }
+  ],
+  "description": "OS trigger that watches .orb files and validates them on save. Emits AGENT_INTERRUPT with validation results to interrupt autonomous agents with ground truth."
+}
