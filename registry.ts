@@ -23,6 +23,7 @@ import { NN_OPERATORS } from './modules/nn.js';
 import { TENSOR_OPERATORS } from './modules/tensor.js';
 import { TRAIN_OPERATORS } from './modules/train.js';
 import { PROB_OPERATORS } from './modules/prob.js';
+import { OS_OPERATORS } from './modules/os.js';
 
 // ============================================================================
 // Combined Registry
@@ -44,12 +45,13 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...TENSOR_OPERATORS,
   ...TRAIN_OPERATORS,
   ...PROB_OPERATORS,
+  ...OS_OPERATORS,
 };
 
 /**
  * Module-specific operator registries.
  */
-export const STD_OPERATORS_BY_MODULE: Record<StdModule, Record<string, StdOperatorMeta>> = {
+export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorMeta>> = {
   math: MATH_OPERATORS,
   str: STR_OPERATORS,
   array: ARRAY_OPERATORS,
@@ -62,6 +64,7 @@ export const STD_OPERATORS_BY_MODULE: Record<StdModule, Record<string, StdOperat
   tensor: TENSOR_OPERATORS,
   train: TRAIN_OPERATORS,
   prob: PROB_OPERATORS,
+  os: OS_OPERATORS,
 };
 
 // ============================================================================

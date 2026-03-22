@@ -22,3 +22,6 @@ export { TRAIN_OPERATORS, getTrainOperators } from './train.js';
 
 // Probabilistic programming module
 export { PROB_OPERATORS, getProbOperators } from './prob.js';
+
+// OS triggers module
+export { OS_OPERATORS } from './os.js';
