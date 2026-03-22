@@ -2,6 +2,7 @@
  * std-validate-on-save
  *
  * OS trigger that watches .orb files and validates them on save.
+ * Shows a status dashboard with validation results.
  * Emits AGENT_INTERRUPT with validation results to interrupt
  * autonomous agents with ground truth.
  *
@@ -19,9 +20,12 @@ import { makeEntity, makePage, makeOrbital, ensureIdField } from '@almadar/core/
 
 export interface StdValidateOnSaveParams {
   entityName?: string;
+  fields?: EntityField[];
   glob?: string;
   debounceMs?: number;
   blocking?: boolean;
+  pageName?: string;
+  pagePath?: string;
 }
 
 // ============================================================================
@@ -34,6 +38,8 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
     glob = '**/*.orb',
     debounceMs = 500,
     blocking = true,
+    pageName = 'ValidatorPage',
+    pagePath = '/validator',
   } = params;
 
   // Entity
@@ -43,6 +49,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
     { name: 'errors', type: 'array' as const, default: [] },
     { name: 'warnings', type: 'array' as const, default: [] },
     { name: 'timestamp', type: 'number' as const, default: 0 },
+    { name: 'status', type: 'string' as const, default: 'idle' },
   ]);
 
   const entity: Entity = makeEntity({
@@ -50,6 +57,23 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
     persistence: 'runtime',
     fields,
   });
+
+  // Header with refresh button (for valid/invalid states)
+  const headerWithRefresh = (subtitle: string) => ['render-ui', 'main', {
+    type: 'page-header',
+    title: 'Orb File Validator',
+    subtitle,
+    actions: [
+      { event: 'REFRESH', label: 'Validate Now', variant: 'primary' },
+    ],
+  }];
+
+  // Header without refresh (for idle/validating states)
+  const headerPlain = (subtitle: string) => ['render-ui', 'main', {
+    type: 'page-header',
+    title: 'Orb File Validator',
+    subtitle,
+  }];
 
   // Trait
   const trait: Trait = {
@@ -64,7 +88,17 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
       },
     ],
     emits: [
-      { event: 'AGENT_INTERRUPT', scope: 'external' },
+      {
+        event: 'AGENT_INTERRUPT',
+        scope: 'external',
+        payload: [
+          { name: 'type', type: 'string' },
+          { name: 'status', type: 'string' },
+          { name: 'path', type: 'string' },
+          { name: 'errors', type: 'array' },
+          { name: 'blocking', type: 'boolean' },
+        ],
+      },
     ],
     stateMachine: {
       states: [
@@ -86,6 +120,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
             { name: 'timestamp', type: 'number' },
           ],
         },
+        { key: 'REFRESH', name: 'Validate Now' },
         {
           key: 'VALIDATION_PASSED',
           name: 'Validation Passed',
@@ -103,7 +138,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
         },
       ],
       transitions: [
-        // INIT: register file watcher
+        // INIT: register file watcher + show idle UI
         {
           from: 'idle',
           event: 'INIT',
@@ -111,9 +146,16 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
           effects: [
             ['os/watch-files', glob],
             ['os/debounce', debounceMs, 'OS_FILE_MODIFIED'],
+            ['set', '@entity.status', 'idle'],
+            headerPlain(`Watching ${glob} for changes`),
+            ['render-ui', 'center', {
+              type: 'empty-state',
+              title: 'Waiting for file changes',
+              description: `Watching ${glob}. Save an .orb file to trigger validation.`,
+            }],
           ],
         },
-        // File modified: start validation
+        // File modified from idle: start validation
         {
           from: 'idle',
           event: 'OS_FILE_MODIFIED',
@@ -121,6 +163,12 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
           effects: [
             ['set', '@entity.path', '@payload.path'],
             ['set', '@entity.timestamp', '@now'],
+            ['set', '@entity.status', 'validating'],
+            headerPlain('Validating...'),
+            ['render-ui', 'center', {
+              type: 'loading-state',
+              title: 'Running orbital validate...',
+            }],
             ['call-service', 'orbital-cli', 'validate', {
               path: '@payload.path',
               onSuccess: 'VALIDATION_PASSED',
@@ -128,7 +176,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
             }],
           ],
         },
-        // Validation passed
+        // Validation passed: show success
         {
           from: 'validating',
           event: 'VALIDATION_PASSED',
@@ -137,6 +185,14 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
             ['set', '@entity.valid', true],
             ['set', '@entity.errors', []],
             ['set', '@entity.warnings', '@payload.warnings'],
+            ['set', '@entity.status', 'valid'],
+            headerWithRefresh('Validation passed'),
+            ['render-ui', 'center', {
+              type: 'entity-detail',
+              entity: entityName,
+              fields: ['path', 'valid', 'status', 'timestamp'],
+            }],
+            ['notify', 'success', 'Schema is valid'],
             ['emit', 'AGENT_INTERRUPT', {
               type: 'validation',
               status: 'passed',
@@ -145,7 +201,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
             }],
           ],
         },
-        // Validation failed
+        // Validation failed: show errors
         {
           from: 'validating',
           event: 'VALIDATION_FAILED',
@@ -154,6 +210,14 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
             ['set', '@entity.valid', false],
             ['set', '@entity.errors', '@payload.errors'],
             ['set', '@entity.warnings', '@payload.warnings'],
+            ['set', '@entity.status', 'invalid'],
+            headerWithRefresh('Validation failed'),
+            ['render-ui', 'center', {
+              type: 'entity-detail',
+              entity: entityName,
+              fields: ['path', 'valid', 'errors', 'warnings', 'status'],
+            }],
+            ['notify', 'error', 'Schema has errors'],
             ['emit', 'AGENT_INTERRUPT', {
               type: 'validation',
               status: 'failed',
@@ -171,6 +235,12 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
           effects: [
             ['set', '@entity.path', '@payload.path'],
             ['set', '@entity.timestamp', '@now'],
+            ['set', '@entity.status', 'validating'],
+            headerPlain('Re-validating...'),
+            ['render-ui', 'center', {
+              type: 'loading-state',
+              title: 'Running orbital validate...',
+            }],
             ['call-service', 'orbital-cli', 'validate', {
               path: '@payload.path',
               onSuccess: 'VALIDATION_PASSED',
@@ -186,8 +256,51 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
           effects: [
             ['set', '@entity.path', '@payload.path'],
             ['set', '@entity.timestamp', '@now'],
+            ['set', '@entity.status', 'validating'],
+            headerPlain('Re-validating...'),
+            ['render-ui', 'center', {
+              type: 'loading-state',
+              title: 'Running orbital validate...',
+            }],
             ['call-service', 'orbital-cli', 'validate', {
               path: '@payload.path',
+              onSuccess: 'VALIDATION_PASSED',
+              onError: 'VALIDATION_FAILED',
+            }],
+          ],
+        },
+        // Manual refresh from any state that has data
+        {
+          from: 'valid',
+          event: 'REFRESH',
+          to: 'validating',
+          effects: [
+            ['set', '@entity.status', 'validating'],
+            headerPlain('Re-validating...'),
+            ['render-ui', 'center', {
+              type: 'loading-state',
+              title: 'Running orbital validate...',
+            }],
+            ['call-service', 'orbital-cli', 'validate', {
+              path: '@entity.path',
+              onSuccess: 'VALIDATION_PASSED',
+              onError: 'VALIDATION_FAILED',
+            }],
+          ],
+        },
+        {
+          from: 'invalid',
+          event: 'REFRESH',
+          to: 'validating',
+          effects: [
+            ['set', '@entity.status', 'validating'],
+            headerPlain('Re-validating...'),
+            ['render-ui', 'center', {
+              type: 'loading-state',
+              title: 'Running orbital validate...',
+            }],
+            ['call-service', 'orbital-cli', 'validate', {
+              path: '@entity.path',
               onSuccess: 'VALIDATION_PASSED',
               onError: 'VALIDATION_FAILED',
             }],
@@ -197,8 +310,14 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
     },
   } as unknown as Trait;
 
-  // No pages needed - this is a headless trigger
-  const pages: Page[] = [];
+  // Page: status dashboard
+  const pages: Page[] = [
+    makePage({
+      name: pageName,
+      path: pagePath,
+      traitName: 'OrbFileWatcher',
+    }),
+  ];
 
   return makeOrbital('ValidateOnSave', entity, [trait], pages);
 }

@@ -35,6 +35,11 @@
             "name": "timestamp",
             "type": "number",
             "default": 0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
           }
         ]
       },
@@ -57,7 +62,29 @@
           "emits": [
             {
               "event": "AGENT_INTERRUPT",
-              "scope": "external"
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "type",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "path",
+                  "type": "string"
+                },
+                {
+                  "name": "errors",
+                  "type": "array"
+                },
+                {
+                  "name": "blocking",
+                  "type": "boolean"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -108,6 +135,10 @@
                 ]
               },
               {
+                "key": "REFRESH",
+                "name": "Validate Now"
+              },
+              {
                 "key": "VALIDATION_PASSED",
                 "name": "Validation Passed",
                 "payload": [
@@ -130,6 +161,10 @@
                     "type": "array"
                   }
                 ]
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "NAVIGATE"
               }
             ],
             "transitions": [
@@ -146,6 +181,29 @@
                     "os/debounce",
                     500,
                     "OS_FILE_MODIFIED"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Watching **/*.orb for changes"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "empty-state",
+                      "title": "Waiting for file changes",
+                      "description": "Watching **/*.orb. Save an .orb file to trigger validation."
+                    }
                   ]
                 ]
               },
@@ -163,6 +221,28 @@
                     "set",
                     "@entity.timestamp",
                     "@now"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Validating..."
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
+                    }
                   ],
                   [
                     "call-service",
@@ -197,6 +277,46 @@
                     "@payload.warnings"
                   ],
                   [
+                    "set",
+                    "@entity.status",
+                    "valid"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Validation passed",
+                      "actions": [
+                        {
+                          "event": "REFRESH",
+                          "label": "Validate Now",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "entity-detail",
+                      "entity": "ValidateOnSave",
+                      "fields": [
+                        "path",
+                        "valid",
+                        "status",
+                        "timestamp"
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "success",
+                    "Schema is valid"
+                  ],
+                  [
                     "emit",
                     "AGENT_INTERRUPT",
                     {
@@ -229,6 +349,47 @@
                     "@payload.warnings"
                   ],
                   [
+                    "set",
+                    "@entity.status",
+                    "invalid"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Validation failed",
+                      "actions": [
+                        {
+                          "event": "REFRESH",
+                          "label": "Validate Now",
+                          "variant": "primary"
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "entity-detail",
+                      "entity": "ValidateOnSave",
+                      "fields": [
+                        "path",
+                        "valid",
+                        "errors",
+                        "warnings",
+                        "status"
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "error",
+                    "Schema has errors"
+                  ],
+                  [
                     "emit",
                     "AGENT_INTERRUPT",
                     {
@@ -255,6 +416,28 @@
                     "set",
                     "@entity.timestamp",
                     "@now"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Re-validating..."
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
+                    }
                   ],
                   [
                     "call-service",
@@ -284,6 +467,28 @@
                     "@now"
                   ],
                   [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Re-validating..."
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
+                    }
+                  ],
+                  [
                     "call-service",
                     "orbital-cli",
                     "validate",
@@ -294,13 +499,125 @@
                     }
                   ]
                 ]
+              },
+              {
+                "from": "valid",
+                "event": "REFRESH",
+                "to": "validating",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Re-validating..."
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "orbital-cli",
+                    "validate",
+                    {
+                      "path": "@entity.path",
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "invalid",
+                "event": "REFRESH",
+                "to": "validating",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "page-header",
+                      "title": "Orb File Validator",
+                      "subtitle": "Re-validating..."
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "type": "loading-state",
+                      "title": "Running orbital validate..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "orbital-cli",
+                    "validate",
+                    {
+                      "path": "@entity.path",
+                      "onSuccess": "VALIDATION_PASSED",
+                      "onError": "VALIDATION_FAILED"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "validating",
+                "to": "validating",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "valid",
+                "to": "valid",
+                "event": "NAVIGATE",
+                "effects": []
+              },
+              {
+                "from": "invalid",
+                "to": "invalid",
+                "event": "NAVIGATE",
+                "effects": []
               }
             ]
           }
         }
       ],
-      "pages": []
+      "pages": [
+        {
+          "name": "ValidatorPage",
+          "path": "/validator",
+          "traits": [
+            {
+              "ref": "OrbFileWatcher"
+            }
+          ]
+        }
+      ]
     }
   ],
-  "description": "OS trigger that watches .orb files and validates them on save. Emits AGENT_INTERRUPT with validation results to interrupt autonomous agents with ground truth."
+  "description": "OS trigger that watches .orb files and validates them on save. Shows a status dashboard with validation results. Emits AGENT_INTERRUPT with validation results to interrupt autonomous agents with ground truth."
 }
