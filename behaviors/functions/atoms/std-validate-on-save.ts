@@ -177,13 +177,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
   // No pages needed - this is a headless trigger
   const pages: Page[] = [];
 
-  return makeOrbital({
-    name: 'ValidateOnSave',
-    entity,
-    traits: [trait],
-    pages,
-    emits: ['AGENT_INTERRUPT'],
-  });
+  return makeOrbital('ValidateOnSave', entity, [trait], pages);
 }
 
 export default stdValidateOnSave;

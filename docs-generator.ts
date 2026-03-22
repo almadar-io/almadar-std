@@ -94,6 +94,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Distribution sampling, Bayesian inference via rejection sampling, and statistical summaries.',
         icon: '🎲',
     },
+    os: {
+        name: 'OS Triggers',
+        displayName: 'Operating System Events',
+        description: 'Watch file system, processes, ports, signals, and environment for OS-level triggers.',
+        icon: '🖥️',
+    },
 };
 
 /**
