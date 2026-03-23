@@ -164,11 +164,11 @@ function buildTrait(c: SelectionConfig): Trait {
       },
       { type: 'divider' },
       {
-        type: 'button-group', variant: 'outline',
-        buttons: [
-          { label: 'Select All', event: 'SELECT', icon: 'check-square' },
-          { label: 'Deselect All', event: 'DESELECT', icon: 'square' },
-          { label: 'Confirm', event: 'CONFIRM_SELECTION', icon: 'check' },
+        type: 'stack', direction: 'horizontal', gap: 'sm',
+        children: [
+          { type: 'button', label: 'Select All', action: 'SELECT', icon: 'check-square', variant: 'secondary' },
+          { type: 'button', label: 'Deselect All', action: 'DESELECT', icon: 'square', variant: 'secondary' },
+          { type: 'button', label: 'Confirm', action: 'CONFIRM_SELECTION', icon: 'check', variant: 'primary' },
         ],
       },
     ],

@@ -143,9 +143,9 @@ function buildTrait(c: QuizConfig): Trait {
             type: 'stack', direction: 'horizontal', gap: 'xs', align: 'center',
             children: [
               { type: 'typography', variant: 'caption', color: 'muted', content: 'Question' },
-              { type: 'typography', variant: 'caption', content: ['+', ef('currentIndex'), 1] },
+              { type: 'typography', variant: 'caption', content: ['+', ['or', ef('currentIndex'), 0], 1] },
               { type: 'typography', variant: 'caption', color: 'muted', content: 'of' },
-              { type: 'typography', variant: 'caption', content: ef('totalQuestions') },
+              { type: 'typography', variant: 'caption', content: ['or', ef('totalQuestions'), 0] },
             ],
           },
         ],
