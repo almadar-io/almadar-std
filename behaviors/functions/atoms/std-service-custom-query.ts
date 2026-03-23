@@ -128,7 +128,7 @@ function buildTrait(c: CustomQueryConfig): Trait {
     {
       type: 'textarea',
       field: 'requestBody',
-      placeholder: '{"key":"value"}',
+      placeholder: 'JSON request body',
       bind: '@entity.requestBody',
     },
     { type: 'button', label: 'Send Request', event: 'CALL_API', variant: 'primary', icon: 'send' },
