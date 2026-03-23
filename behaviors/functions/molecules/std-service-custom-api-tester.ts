@@ -129,7 +129,7 @@ function buildTrait(c: ApiTesterConfig): Trait {
     {
       type: 'textarea',
       field: 'requestBody',
-      placeholder: '{"key":"value"}',
+      placeholder: 'Request body (JSON)',
       bind: '@entity.requestBody',
     },
     { type: 'divider' },
