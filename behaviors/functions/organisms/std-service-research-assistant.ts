@@ -94,10 +94,10 @@ export function stdServiceResearchAssistant(params: StdServiceResearchAssistantP
   // Custom services must be declared at schema level.
   if (schema.orbitals) {
     for (const orbital of schema.orbitals) {
-      delete (orbital as Record<string, unknown>).services;
+      delete (orbital as unknown as Record<string, unknown>).services;
     }
   }
-  (schema as Record<string, unknown>).services = [
+  (schema as unknown as Record<string, unknown>).services = [
     { name: 'custom-bearer-api', type: 'rest', baseUrl: 'https://api.knowledge-base.example.com', auth: { type: 'bearer', secretEnv: 'CUSTOM_BEARER_TOKEN' } },
   ];
 

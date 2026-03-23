@@ -18,7 +18,7 @@
 import type { OrbitalSchema } from '@almadar/core/types';
 import type { EntityField } from '@almadar/core/types';
 import { compose } from '@almadar/core/builders';
-import type { ComposePage } from '@almadar/core/builders';
+import type { ComposePage, ComposeConnection } from '@almadar/core/builders';
 import { stdList } from '../molecules/std-list.js';
 import { stdServiceOauth } from '../atoms/std-service-oauth.js';
 import { stdServicePaymentFlow } from '../molecules/std-service-payment-flow.js';
@@ -104,7 +104,7 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams = {}):
     { name: 'OrdersPage', path: '/orders', traits: ['OrderBrowse', 'OrderCreate', 'OrderEdit', 'OrderView', 'OrderDelete'] },
   ];
 
-  const connections = [
+  const connections: ComposeConnection[] = [
     { from: 'ProductBrowse', event: { event: 'CHECKOUT', payload: [{ name: 'id', type: 'string', required: true }] }, to: 'OrderPaymentPayment' },
   ];
 
@@ -120,7 +120,7 @@ export function stdServiceMarketplace(params: StdServiceMarketplaceParams = {}):
   // Only custom services (not in the registry) should be declared on orbitals.
   if (schema.orbitals) {
     for (const orbital of schema.orbitals) {
-      const o = orbital as Record<string, unknown>;
+      const o = orbital as unknown as Record<string, unknown>;
       const services = (o.services ?? []) as Array<{ name: string }>;
       o.services = services.filter(s => s.name.startsWith('custom-'));
     }
