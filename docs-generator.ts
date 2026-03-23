@@ -100,6 +100,24 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Watch file system, processes, ports, signals, and environment for OS-level triggers.',
         icon: '🖥️',
     },
+    graph: {
+        name: 'Graph',
+        displayName: 'Graph Operations',
+        description: 'Graph construction, traversal, and algorithms for nodes and edges.',
+        icon: '🕸️',
+    },
+    contract: {
+        name: 'Contract',
+        displayName: 'Contract Verification',
+        description: 'Pre/post-condition assertions and invariant checking for runtime contracts.',
+        icon: '📜',
+    },
+    data: {
+        name: 'Data',
+        displayName: 'Data Pipeline',
+        description: 'Data loading, batching, shuffling, and preprocessing for ML pipelines.',
+        icon: '📦',
+    },
 };
 
 /**
