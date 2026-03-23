@@ -17,7 +17,7 @@ import type { StdOperatorMeta } from '../types.js';
 export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   'nn/sequential': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 1,
     maxArity: null,
     description: 'Create a sequential neural network from layers',
@@ -30,7 +30,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/linear': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 2,
     maxArity: 2,
     description: 'Fully connected linear layer (output = input * weights + bias)',
@@ -44,7 +44,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/relu': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 0,
     maxArity: 0,
     description: 'ReLU activation function: max(0, x)',
@@ -55,7 +55,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/tanh': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 0,
     maxArity: 0,
     description: 'Tanh activation function: (e^x - e^-x) / (e^x + e^-x)',
@@ -66,7 +66,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/sigmoid': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 0,
     maxArity: 0,
     description: 'Sigmoid activation function: 1 / (1 + e^-x)',
@@ -77,7 +77,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/softmax': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 0,
     maxArity: 1,
     description: 'Softmax activation function (normalizes to probability distribution)',
@@ -90,7 +90,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/dropout': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 0,
     maxArity: 1,
     description: 'Dropout layer for regularization (randomly zeros elements during training)',
@@ -103,7 +103,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/batchnorm': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 1,
     maxArity: 1,
     description: 'Batch normalization layer',
@@ -116,7 +116,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/layernorm': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 1,
     maxArity: 1,
     description: 'Layer normalization',
@@ -129,7 +129,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/forward': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Execute forward pass through network',
@@ -143,7 +143,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/getWeights': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 1,
     maxArity: 1,
     description: 'Get network weights as a flat tensor',
@@ -156,7 +156,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/setWeights': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 2,
     maxArity: 2,
     description: 'Set network weights from a flat tensor',
@@ -170,7 +170,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/paramCount': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 1,
     maxArity: 1,
     description: 'Get total number of trainable parameters',
@@ -183,7 +183,7 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'nn/clone': {
     module: 'nn',
-    category: 'std-nn',
+    category: 'ml-arch',
     minArity: 1,
     maxArity: 1,
     description: 'Create a deep copy of the network with same weights',

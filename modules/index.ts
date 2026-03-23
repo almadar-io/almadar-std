@@ -20,6 +20,15 @@ export { NN_OPERATORS, getNnOperators } from './nn.js';
 export { TENSOR_OPERATORS, getTensorOperators } from './tensor.js';
 export { TRAIN_OPERATORS, getTrainOperators } from './train.js';
 
+// Graph operations module
+export { GRAPH_OPERATORS, getGraphOperators } from './graph.js';
+
+// Contract validation module
+export { CONTRACT_OPERATORS, getContractOperators } from './contract.js';
+
+// Data preprocessing module
+export { DATA_OPERATORS, getDataOperators } from './data.js';
+
 // Probabilistic programming module
 export { PROB_OPERATORS, getProbOperators } from './prob.js';
 

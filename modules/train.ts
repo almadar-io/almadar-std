@@ -21,7 +21,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/loop': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 3,
     maxArity: 3,
     description: 'Execute training loop with constraints',
@@ -36,7 +36,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/step': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 4,
     maxArity: 4,
     description: 'Execute single training step (forward, loss, backward, update)',
@@ -57,7 +57,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/validate': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Validate model on test cases, returns pass/fail metrics',
@@ -71,7 +71,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/checkRegression': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 3,
     maxArity: 3,
     description: 'Check if new model regresses on required invariants',
@@ -91,7 +91,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/checkConstraints': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Check if network weights satisfy all constraints',
@@ -105,7 +105,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/checkWeightMagnitude': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Check if all weights are within magnitude limit',
@@ -119,7 +119,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/checkForbiddenOutputs': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 3,
     maxArity: 3,
     description: 'Check if model produces outputs in forbidden regions',
@@ -139,7 +139,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/clipGradients': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Clip gradients to max norm (modifies in place)',
@@ -153,7 +153,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/getGradientNorm': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 1,
     maxArity: 1,
     description: 'Get current gradient norm',
@@ -171,7 +171,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/clipWeights': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Clip weights to max magnitude (modifies in place)',
@@ -185,7 +185,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/getMaxWeightMagnitude': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 1,
     maxArity: 1,
     description: 'Get maximum weight magnitude in network',
@@ -203,7 +203,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/mse': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Mean squared error loss',
@@ -217,7 +217,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/crossEntropy': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Cross-entropy loss for classification',
@@ -231,7 +231,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/huber': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 3,
     description: 'Huber loss (smooth L1, robust to outliers)',
@@ -251,7 +251,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/sgd': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 3,
     description: 'Stochastic gradient descent optimizer step',
@@ -266,7 +266,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/adam': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 4,
     description: 'Adam optimizer step',
@@ -287,7 +287,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'train/sampleBatch': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Sample random batch from experience buffer',
@@ -301,7 +301,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/computeReturns': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 2,
     maxArity: 2,
     description: 'Compute discounted returns from rewards',
@@ -315,7 +315,7 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'train/computeAdvantages': {
     module: 'train',
-    category: 'std-train',
+    category: 'ml-effect',
     minArity: 3,
     maxArity: 3,
     description: 'Compute GAE advantages for policy gradient',

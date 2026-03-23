@@ -34,6 +34,12 @@ export const OPERATOR_CATEGORIES = [
   'std-train',
   'std-prob',
   'std-os',
+  'ml-arch',
+  'ml-effect',
+  'ml-tensor',
+  'ml-graph',
+  'ml-contract',
+  'ml-data',
 ] as const;
 
 export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];
@@ -84,6 +90,9 @@ export const STD_MODULES = [
   'train',
   'prob',
   'os',
+  'graph',
+  'contract',
+  'data',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];
@@ -106,6 +115,12 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-train',
   'std-prob',
   'std-os',
+  'ml-arch',
+  'ml-effect',
+  'ml-tensor',
+  'ml-graph',
+  'ml-contract',
+  'ml-data',
 ] as const;
 
 export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];

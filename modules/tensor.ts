@@ -21,7 +21,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'tensor/from': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Create tensor from array',
@@ -34,7 +34,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/zeros': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Create tensor filled with zeros',
@@ -47,7 +47,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/ones': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Create tensor filled with ones',
@@ -60,7 +60,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/rand': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Create tensor with random values in [0, 1)',
@@ -73,7 +73,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/randn': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Create tensor with random values from standard normal distribution',
@@ -91,7 +91,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'tensor/shape': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Get tensor shape as array',
@@ -104,7 +104,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/get': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Get element at index',
@@ -118,7 +118,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/slice': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 3,
     maxArity: 3,
     description: 'Get slice of tensor',
@@ -133,7 +133,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/reshape': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Reshape tensor to new shape (total elements must match)',
@@ -147,7 +147,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/flatten': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Flatten tensor to 1D',
@@ -165,7 +165,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'tensor/add': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Element-wise addition',
@@ -179,7 +179,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/sub': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Element-wise subtraction',
@@ -193,7 +193,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/mul': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Element-wise multiplication',
@@ -207,7 +207,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/div': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Element-wise division',
@@ -221,7 +221,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/matmul': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Matrix multiplication',
@@ -235,7 +235,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/dot': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Dot product of two 1D tensors',
@@ -254,7 +254,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'tensor/sum': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 2,
     description: 'Sum of tensor elements',
@@ -268,7 +268,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/mean': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 2,
     description: 'Mean of tensor elements',
@@ -282,7 +282,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/max': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 2,
     description: 'Maximum value in tensor',
@@ -296,7 +296,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/min': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 2,
     description: 'Minimum value in tensor',
@@ -310,7 +310,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/argmax': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 2,
     description: 'Index of maximum value',
@@ -324,7 +324,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/norm': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 2,
     description: 'L2 norm of tensor',
@@ -343,7 +343,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'tensor/allInRange': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Check if all elements are within range [min, max]',
@@ -357,7 +357,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/outOfRangeIndices': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Get indices of elements outside range',
@@ -371,7 +371,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/clamp': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 3,
     maxArity: 3,
     description: 'Clamp all elements to range [min, max]',
@@ -386,7 +386,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/clampPerDim': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Clamp each dimension to its specified range',
@@ -400,7 +400,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/outOfRangeDims': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 2,
     maxArity: 2,
     description: 'Get dimensions that exceed their specified ranges',
@@ -419,7 +419,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
 
   'tensor/toArray': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Convert tensor to nested array',
@@ -432,7 +432,7 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
   },
   'tensor/toList': {
     module: 'tensor',
-    category: 'std-tensor',
+    category: 'ml-tensor',
     minArity: 1,
     maxArity: 1,
     description: 'Convert 1D tensor to flat array',
