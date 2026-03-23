@@ -1,0 +1,696 @@
+{
+  "name": "ServiceYoutubeOrbital",
+  "orbitals": [
+    {
+      "name": "ServiceYoutubeOrbital",
+      "entity": {
+        "name": "ServiceYoutube",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "selectedVideoId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "videoTitle",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "videoDescription",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "searchStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ServiceYoutubeYoutube",
+          "linkedEntity": "ServiceYoutube",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "searching"
+              },
+              {
+                "name": "results"
+              },
+              {
+                "name": "viewingDetail"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search Videos"
+              },
+              {
+                "key": "SEARCH_COMPLETE",
+                "name": "Search Complete",
+                "payload": [
+                  {
+                    "name": "results",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "SELECT_VIDEO",
+                "name": "Select Video",
+                "payload": [
+                  {
+                    "name": "videoId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "VIDEO_LOADED",
+                "name": "Video Loaded",
+                "payload": [
+                  {
+                    "name": "title",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "description",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "BACK",
+                "name": "Back to Results"
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ServiceYoutube"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "video",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "YouTube Search",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Search",
+                          "bind": "@entity.query",
+                          "placeholder": "Search YouTube videos..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Search",
+                          "event": "SEARCH",
+                          "variant": "primary",
+                          "icon": "search"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "searching",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Searching...",
+                      "message": "Searching YouTube for videos..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "youtube",
+                    "search",
+                    {
+                      "query": "@entity.query",
+                      "maxResults": 10,
+                      "type": "video"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "searching",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Searching...",
+                      "message": "Searching YouTube for videos..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "youtube",
+                    "search",
+                    {
+                      "query": "@entity.query",
+                      "maxResults": 10,
+                      "type": "video"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "searching",
+                "to": "results",
+                "event": "SEARCH_COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.searchStatus",
+                    "complete"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "video",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Search Results",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Select a video to view details.",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "New Search",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Search Again",
+                              "event": "SEARCH",
+                              "variant": "outline",
+                              "icon": "search"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "viewingDetail",
+                "event": "SELECT_VIDEO",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedVideoId",
+                    "@payload.videoId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Loading video...",
+                      "message": "Fetching video details..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "youtube",
+                    "getVideo",
+                    {
+                      "videoId": "@payload.videoId"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewingDetail",
+                "to": "viewingDetail",
+                "event": "VIDEO_LOADED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.videoTitle",
+                    "@payload.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.videoDescription",
+                    "@payload.description"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "video",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "@entity.videoTitle",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@entity.videoDescription",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Back to Results",
+                          "event": "BACK",
+                          "variant": "ghost",
+                          "icon": "arrow-left"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "viewingDetail",
+                "to": "results",
+                "event": "BACK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "video",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Search Results",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Select a video to view details.",
+                          "variant": "body"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "New Search",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Search Again",
+                              "event": "SEARCH",
+                              "variant": "outline",
+                              "icon": "search"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "searching",
+                "to": "error",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.searchStatus",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "error-state",
+                          "title": "Search Failed",
+                          "message": "@entity.error",
+                          "onRetry": "SEARCH"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Retry",
+                              "event": "SEARCH",
+                              "variant": "primary",
+                              "icon": "refresh-cw"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.searchStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "video",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "YouTube Search",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Search",
+                          "bind": "@entity.query",
+                          "placeholder": "Search YouTube videos..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Search",
+                          "event": "SEARCH",
+                          "variant": "primary",
+                          "icon": "search"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.searchStatus",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "video",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "YouTube Search",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Search",
+                          "bind": "@entity.query",
+                          "placeholder": "Search YouTube videos..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Search",
+                          "event": "SEARCH",
+                          "variant": "primary",
+                          "icon": "search"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ServiceYoutubePage",
+          "path": "/serviceyoutubes",
+          "traits": [
+            {
+              "ref": "ServiceYoutubeYoutube"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "YouTube service integration behavior: search videos, view video details. Wraps the `youtube` service integration with search and getVideo operations. Pure function: params in, OrbitalDefinition out."
+}

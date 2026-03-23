@@ -1,0 +1,671 @@
+{
+  "name": "ServiceLlmOrbital",
+  "orbitals": [
+    {
+      "name": "ServiceLlmOrbital",
+      "entity": {
+        "name": "ServiceLlm",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "inputText",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": "generate"
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "llmStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ServiceLlmLlm",
+          "linkedEntity": "ServiceLlm",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "processing"
+              },
+              {
+                "name": "complete"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Generate"
+              },
+              {
+                "key": "CLASSIFY",
+                "name": "Classify"
+              },
+              {
+                "key": "SUMMARIZE",
+                "name": "Summarize"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ServiceLlm"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceLlm LLM",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Input Text",
+                          "bind": "@entity.inputText",
+                          "placeholder": "Enter text for LLM processing..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Generate",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Classify",
+                              "event": "CLASSIFY",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Summarize",
+                              "event": "SUMMARIZE",
+                              "variant": "secondary",
+                              "icon": "align-left"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "processing",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.action",
+                    "generate"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Processing...",
+                      "message": "Running servicellm LLM task..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "llm",
+                    "generate",
+                    {
+                      "userPrompt": "@entity.inputText"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "processing",
+                "event": "CLASSIFY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.action",
+                    "classify"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Processing...",
+                      "message": "Running servicellm LLM task..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "llm",
+                    "classify",
+                    {
+                      "text": "@entity.inputText",
+                      "categories": [
+                        "positive",
+                        "negative",
+                        "neutral"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "processing",
+                "event": "SUMMARIZE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.action",
+                    "summarize"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Processing...",
+                      "message": "Running servicellm LLM task..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "llm",
+                    "summarize",
+                    {
+                      "text": "@entity.inputText"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "processing",
+                "to": "complete",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.llmStatus",
+                    "complete"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "LLM task complete"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.result"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start Over",
+                          "event": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "processing",
+                "to": "error",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.llmStatus",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "error-state",
+                          "title": "LLM Failed",
+                          "message": "@entity.error",
+                          "onRetry": "RETRY"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Retry",
+                              "event": "RETRY",
+                              "variant": "primary",
+                              "icon": "refresh-cw"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RETRY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.llmStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceLlm LLM",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Input Text",
+                          "bind": "@entity.inputText",
+                          "placeholder": "Enter text for LLM processing..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Generate",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Classify",
+                              "event": "CLASSIFY",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Summarize",
+                              "event": "SUMMARIZE",
+                              "variant": "secondary",
+                              "icon": "align-left"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.llmStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceLlm LLM",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Input Text",
+                          "bind": "@entity.inputText",
+                          "placeholder": "Enter text for LLM processing..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Generate",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Classify",
+                              "event": "CLASSIFY",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Summarize",
+                              "event": "SUMMARIZE",
+                              "variant": "secondary",
+                              "icon": "align-left"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.llmStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceLlm LLM",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Input Text",
+                          "bind": "@entity.inputText",
+                          "placeholder": "Enter text for LLM processing..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Generate",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Classify",
+                              "event": "CLASSIFY",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Summarize",
+                              "event": "SUMMARIZE",
+                              "variant": "secondary",
+                              "icon": "align-left"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ServiceLlmPage",
+          "path": "/servicellms",
+          "traits": [
+            {
+              "ref": "ServiceLlmLlm"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "LLM service integration behavior: generate, classify, summarize text. Wraps the `llm` integration with 4 actions via separate action events. Pure function: params in, OrbitalDefinition out."
+}

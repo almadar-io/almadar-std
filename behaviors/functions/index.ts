@@ -107,6 +107,16 @@ export { stdSimulatorGame, stdSimulatorGameEntity, stdSimulatorGameTrait, stdSim
 export { stdEventHandlerGame, stdEventHandlerGameEntity, stdEventHandlerGameTrait, stdEventHandlerGamePage, type StdEventHandlerGameParams } from './molecules/std-event-handler-game.js';
 
 // ============================================================================
+// Molecules: Service compositions
+// ============================================================================
+
+export { stdServicePaymentFlow, stdServicePaymentFlowEntity, stdServicePaymentFlowPage, type StdServicePaymentFlowParams } from './molecules/std-service-payment-flow.js';
+export { stdServiceNotificationHub, stdServiceNotificationHubEntity, stdServiceNotificationHubTrait, stdServiceNotificationHubPage, type StdServiceNotificationHubParams } from './molecules/std-service-notification-hub.js';
+export { stdServiceContentPipeline, stdServiceContentPipelineEntity, stdServiceContentPipelineTrait, stdServiceContentPipelinePage, type StdServiceContentPipelineParams } from './molecules/std-service-content-pipeline.js';
+export { stdServiceDevopsToolkit, stdServiceDevopsToolkitEntity, stdServiceDevopsToolkitPage, type StdServiceDevopsToolkitParams } from './molecules/std-service-devops-toolkit.js';
+export { stdServiceCustomApiTester, stdServiceCustomApiTesterEntity, stdServiceCustomApiTesterTrait, stdServiceCustomApiTesterPage, type StdServiceCustomApiTesterParams } from './molecules/std-service-custom-api-tester.js';
+
+// ============================================================================
 // Organisms (compose molecules via compose)
 // ============================================================================
 
@@ -138,6 +148,10 @@ export { stdCodingAcademy, type StdCodingAcademyParams } from './organisms/std-c
 export { stdStemLab, type StdStemLabParams } from './organisms/std-stem-lab.js';
 export { stdLogicTraining, type StdLogicTrainingParams } from './organisms/std-logic-training.js';
 
+// Service applications
+export { stdServiceMarketplace, type StdServiceMarketplaceParams } from './organisms/std-service-marketplace.js';
+export { stdServiceResearchAssistant, type StdServiceResearchAssistantParams } from './organisms/std-service-research-assistant.js';
+
 // IoT + Finance
 export { stdIotDashboard, type StdIotDashboardParams } from './organisms/std-iot-dashboard.js';
 export { stdRealtimeChat, type StdRealtimeChatParams } from './organisms/std-realtime-chat.js';
@@ -146,6 +160,24 @@ export { stdTradingDashboard, type StdTradingDashboardParams } from './organisms
 
 // OS Triggers
 export { stdValidateOnSave, type StdValidateOnSaveParams } from './atoms/std-validate-on-save.js';
+
+// ============================================================================
+// Atoms: Service integrations
+// ============================================================================
+
+export { stdServiceEmail, stdServiceEmailEntity, stdServiceEmailTrait, stdServiceEmailPage, type StdServiceEmailParams } from './atoms/std-service-email.js';
+export { stdServiceStripe, stdServiceStripeEntity, stdServiceStripeTrait, stdServiceStripePage, type StdServiceStripeParams } from './atoms/std-service-stripe.js';
+export { stdServiceTwilio, stdServiceTwilioEntity, stdServiceTwilioTrait, stdServiceTwilioPage, type StdServiceTwilioParams } from './atoms/std-service-twilio.js';
+export { stdServiceGithub, stdServiceGithubEntity, stdServiceGithubTrait, stdServiceGithubPage, type StdServiceGithubParams } from './atoms/std-service-github.js';
+export { stdServiceYoutube, stdServiceYoutubeEntity, stdServiceYoutubeTrait, stdServiceYoutubePage, type StdServiceYoutubeParams } from './atoms/std-service-youtube.js';
+export { stdServiceLlm, stdServiceLlmEntity, stdServiceLlmTrait, stdServiceLlmPage, type StdServiceLlmParams } from './atoms/std-service-llm.js';
+export { stdServiceRedis, stdServiceRedisEntity, stdServiceRedisTrait, stdServiceRedisPage, type StdServiceRedisParams } from './atoms/std-service-redis.js';
+export { stdServiceStorage, stdServiceStorageEntity, stdServiceStorageTrait, stdServiceStoragePage, type StdServiceStorageParams } from './atoms/std-service-storage.js';
+export { stdServiceOauth, stdServiceOauthEntity, stdServiceOauthTrait, stdServiceOauthPage, type StdServiceOauthParams } from './atoms/std-service-oauth.js';
+export { stdServiceCustomHeader, stdServiceCustomHeaderEntity, stdServiceCustomHeaderTrait, stdServiceCustomHeaderPage, type StdServiceCustomHeaderParams } from './atoms/std-service-custom-header.js';
+export { stdServiceCustomBearer, stdServiceCustomBearerEntity, stdServiceCustomBearerTrait, stdServiceCustomBearerPage, type StdServiceCustomBearerParams } from './atoms/std-service-custom-bearer.js';
+export { stdServiceCustomQuery, stdServiceCustomQueryEntity, stdServiceCustomQueryTrait, stdServiceCustomQueryPage, type StdServiceCustomQueryParams } from './atoms/std-service-custom-query.js';
+export { stdServiceCustomNoauth, stdServiceCustomNoauthEntity, stdServiceCustomNoauthTrait, stdServiceCustomNoauthPage, type StdServiceCustomNoauthParams } from './atoms/std-service-custom-noauth.js';
 
 // ============================================================================
 // Composition (re-export from core)

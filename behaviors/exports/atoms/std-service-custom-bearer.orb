@@ -1,0 +1,557 @@
+{
+  "name": "ServiceCustomBearerOrbital",
+  "services": [
+    {
+      "name": "custom-bearer-api",
+      "type": "rest",
+      "baseUrl": "https://api.example.com/v2",
+      "auth": {
+        "type": "bearer",
+        "secretEnv": "CUSTOM_BEARER_TOKEN"
+      }
+    }
+  ],
+  "orbitals": [
+    {
+      "name": "ServiceCustomBearerOrbital",
+      "entity": {
+        "name": "ServiceCustomBearer",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "endpoint",
+            "type": "string"
+          },
+          {
+            "name": "method",
+            "type": "string",
+            "default": "GET"
+          },
+          {
+            "name": "requestBody",
+            "type": "string"
+          },
+          {
+            "name": "responseData",
+            "type": "string"
+          },
+          {
+            "name": "statusCode",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "callStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ServiceCustomBearerCustomBearer",
+          "linkedEntity": "ServiceCustomBearer",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "calling"
+              },
+              {
+                "name": "complete"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CALL_API",
+                "name": "Call API"
+              },
+              {
+                "key": "API_RESPONSE",
+                "name": "API Response",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "statusCode",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ServiceCustomBearer"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "shield",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Bearer API Tester",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "input",
+                          "field": "endpoint",
+                          "placeholder": "/users",
+                          "bind": "@entity.endpoint"
+                        },
+                        {
+                          "type": "select",
+                          "field": "method",
+                          "bind": "@entity.method",
+                          "options": [
+                            {
+                              "label": "GET",
+                              "value": "GET"
+                            },
+                            {
+                              "label": "POST",
+                              "value": "POST"
+                            },
+                            {
+                              "label": "PUT",
+                              "value": "PUT"
+                            },
+                            {
+                              "label": "DELETE",
+                              "value": "DELETE"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "textarea",
+                          "field": "requestBody",
+                          "placeholder": "{\"key\":\"value\"}",
+                          "bind": "@entity.requestBody"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send Request",
+                          "event": "CALL_API",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "calling",
+                "event": "CALL_API",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Calling API...",
+                      "message": "Sending request to servicecustombearer endpoint..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "custom-bearer-api",
+                    "execute",
+                    {
+                      "endpoint": "@entity.endpoint",
+                      "method": "@entity.method",
+                      "body": "@entity.requestBody"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "calling",
+                "to": "complete",
+                "event": "API_RESPONSE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.responseData",
+                    "@payload.data"
+                  ],
+                  [
+                    "set",
+                    "@entity.statusCode",
+                    "@payload.statusCode"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Response",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "badge",
+                          "content": "@entity.statusCode",
+                          "variant": "info"
+                        },
+                        {
+                          "type": "code",
+                          "content": "@entity.responseData",
+                          "language": "json"
+                        },
+                        {
+                          "type": "button",
+                          "label": "New Request",
+                          "event": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "calling",
+                "to": "error",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "error-state",
+                      "title": "Request Failed",
+                      "message": "@entity.error",
+                      "onRetry": "RETRY"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RETRY",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "shield",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Bearer API Tester",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "input",
+                          "field": "endpoint",
+                          "placeholder": "/users",
+                          "bind": "@entity.endpoint"
+                        },
+                        {
+                          "type": "select",
+                          "field": "method",
+                          "bind": "@entity.method",
+                          "options": [
+                            {
+                              "label": "GET",
+                              "value": "GET"
+                            },
+                            {
+                              "label": "POST",
+                              "value": "POST"
+                            },
+                            {
+                              "label": "PUT",
+                              "value": "PUT"
+                            },
+                            {
+                              "label": "DELETE",
+                              "value": "DELETE"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "textarea",
+                          "field": "requestBody",
+                          "placeholder": "{\"key\":\"value\"}",
+                          "bind": "@entity.requestBody"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send Request",
+                          "event": "CALL_API",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "complete",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "shield",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Bearer API Tester",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "input",
+                          "field": "endpoint",
+                          "placeholder": "/users",
+                          "bind": "@entity.endpoint"
+                        },
+                        {
+                          "type": "select",
+                          "field": "method",
+                          "bind": "@entity.method",
+                          "options": [
+                            {
+                              "label": "GET",
+                              "value": "GET"
+                            },
+                            {
+                              "label": "POST",
+                              "value": "POST"
+                            },
+                            {
+                              "label": "PUT",
+                              "value": "PUT"
+                            },
+                            {
+                              "label": "DELETE",
+                              "value": "DELETE"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "textarea",
+                          "field": "requestBody",
+                          "placeholder": "{\"key\":\"value\"}",
+                          "bind": "@entity.requestBody"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send Request",
+                          "event": "CALL_API",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "shield",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Bearer API Tester",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "input",
+                          "field": "endpoint",
+                          "placeholder": "/users",
+                          "bind": "@entity.endpoint"
+                        },
+                        {
+                          "type": "select",
+                          "field": "method",
+                          "bind": "@entity.method",
+                          "options": [
+                            {
+                              "label": "GET",
+                              "value": "GET"
+                            },
+                            {
+                              "label": "POST",
+                              "value": "POST"
+                            },
+                            {
+                              "label": "PUT",
+                              "value": "PUT"
+                            },
+                            {
+                              "label": "DELETE",
+                              "value": "DELETE"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "textarea",
+                          "field": "requestBody",
+                          "placeholder": "{\"key\":\"value\"}",
+                          "bind": "@entity.requestBody"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send Request",
+                          "event": "CALL_API",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ServiceCustomBearerPage",
+          "path": "/servicecustombearers",
+          "traits": [
+            {
+              "ref": "ServiceCustomBearerCustomBearer"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Custom REST API behavior with Bearer token authentication. Tests the schema-level service declaration pattern with bearer auth. Pure function: params in, OrbitalDefinition out."
+}
