@@ -106,6 +106,14 @@ export { stdNegotiatorGame, stdNegotiatorGameEntity, stdNegotiatorGameTrait, std
 export { stdSimulatorGame, stdSimulatorGameEntity, stdSimulatorGameTrait, stdSimulatorGamePage, type StdSimulatorGameParams } from './molecules/std-simulator-game.js';
 export { stdEventHandlerGame, stdEventHandlerGameEntity, stdEventHandlerGameTrait, stdEventHandlerGamePage, type StdEventHandlerGameParams } from './molecules/std-event-handler-game.js';
 
+// Molecules: ML pipelines
+export { stdClassifier, stdClassifierEntity, stdClassifierTrait, stdClassifierPage, type StdClassifierParams } from './molecules/std-classifier.js';
+export { stdTrainer, stdTrainerEntity, stdTrainerTrait, stdTrainerPage, type StdTrainerParams } from './molecules/std-trainer.js';
+export { stdRlAgent, stdRlAgentEntity, stdRlAgentTrait, stdRlAgentPage, type StdRlAgentParams } from './molecules/std-rl-agent.js';
+export { stdGraphClassifier, stdGraphClassifierEntity, stdGraphClassifierTrait, stdGraphClassifierPage, type StdGraphClassifierParams } from './molecules/std-graph-classifier.js';
+export { stdTextClassifier, stdTextClassifierEntity, stdTextClassifierTrait, stdTextClassifierPage, type StdTextClassifierParams } from './molecules/std-text-classifier.js';
+export { stdAutoregressive, stdAutoregressiveEntity, stdAutoregressiveTrait, stdAutoregressivePage, type StdAutoregressiveParams } from './molecules/std-autoregressive.js';
+
 // ============================================================================
 // Molecules: Service compositions
 // ============================================================================
