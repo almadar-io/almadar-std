@@ -178,7 +178,7 @@ function buildTrait(c: ForwardConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: [outputEvent],
+    emits: [{ event: outputEvent, scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'ready', isInitial: true },

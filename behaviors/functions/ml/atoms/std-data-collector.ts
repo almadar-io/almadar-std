@@ -120,7 +120,7 @@ function buildTrait(c: DataCollectorConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: [readyEvent],
+    emits: [{ event: readyEvent, scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'collecting', isInitial: true },

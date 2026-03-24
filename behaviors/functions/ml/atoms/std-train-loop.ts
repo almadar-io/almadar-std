@@ -183,7 +183,7 @@ function buildTrait(c: TrainLoopConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: [doneEvent],
+    emits: [{ event: doneEvent, scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },

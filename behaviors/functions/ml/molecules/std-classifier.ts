@@ -187,7 +187,7 @@ function buildTrait(c: ClassifierConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: [resultEvent],
+    emits: [{ event: resultEvent, scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'ready', isInitial: true },

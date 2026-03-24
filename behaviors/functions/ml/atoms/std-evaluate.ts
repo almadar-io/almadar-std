@@ -150,7 +150,7 @@ function buildTrait(c: EvaluateConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: [doneEvent],
+    emits: [{ event: doneEvent, scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'ready', isInitial: true },
