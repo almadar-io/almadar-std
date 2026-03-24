@@ -138,7 +138,7 @@ function buildTokenizerTrait(c: TextClassifierConfig): Trait {
     name: c.tokenizerTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['TOKENS_READY'],
+    emits: [{ event: 'TOKENS_READY', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -176,7 +176,7 @@ function buildTokenizerTrait(c: TextClassifierConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 function buildTextClassifyTrait(c: TextClassifierConfig): Trait {
@@ -223,7 +223,7 @@ function buildTextClassifyTrait(c: TextClassifierConfig): Trait {
     name: c.classifyTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['CLASSIFIED'],
+    emits: [{ event: 'CLASSIFIED', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'waiting', isInitial: true },
@@ -260,7 +260,7 @@ function buildTextClassifyTrait(c: TextClassifierConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 // ============================================================================

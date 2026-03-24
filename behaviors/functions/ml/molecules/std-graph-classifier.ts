@@ -135,7 +135,7 @@ function buildGraphBuilderTrait(c: GraphClassifierConfig): Trait {
     name: c.graphTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['GRAPH_READY'],
+    emits: [{ event: 'GRAPH_READY', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -174,7 +174,7 @@ function buildGraphBuilderTrait(c: GraphClassifierConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 function buildGnnClassifyTrait(c: GraphClassifierConfig): Trait {
@@ -220,7 +220,7 @@ function buildGnnClassifyTrait(c: GraphClassifierConfig): Trait {
     name: c.classifyTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['CLASSIFIED'],
+    emits: [{ event: 'CLASSIFIED', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'waiting', isInitial: true },
@@ -257,7 +257,7 @@ function buildGnnClassifyTrait(c: GraphClassifierConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 // ============================================================================

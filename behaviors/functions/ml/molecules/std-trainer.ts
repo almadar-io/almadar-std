@@ -143,7 +143,7 @@ function buildTrainLoopTrait(c: TrainerConfig): Trait {
     name: c.trainTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['TRAINING_DONE'],
+    emits: [{ event: 'TRAINING_DONE', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -192,7 +192,7 @@ function buildTrainLoopTrait(c: TrainerConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 function buildEvaluateTrait(c: TrainerConfig): Trait {
@@ -235,7 +235,7 @@ function buildEvaluateTrait(c: TrainerConfig): Trait {
     name: c.evalTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['EVAL_DONE'],
+    emits: [{ event: 'EVAL_DONE', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'waiting', isInitial: true },
@@ -270,7 +270,7 @@ function buildEvaluateTrait(c: TrainerConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 function buildCheckpointTrait(c: TrainerConfig): Trait {
@@ -311,7 +311,7 @@ function buildCheckpointTrait(c: TrainerConfig): Trait {
     name: c.checkpointTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['MODEL_SAVED'],
+    emits: [{ event: 'MODEL_SAVED', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -347,7 +347,7 @@ function buildCheckpointTrait(c: TrainerConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 // ============================================================================

@@ -150,7 +150,7 @@ function buildPolicyTrait(c: RlAgentConfig): Trait {
     name: c.policyTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['ACTION'],
+    emits: [{ event: 'ACTION', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -188,7 +188,7 @@ function buildPolicyTrait(c: RlAgentConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 function buildCollectorTrait(c: RlAgentConfig): Trait {
@@ -219,7 +219,7 @@ function buildCollectorTrait(c: RlAgentConfig): Trait {
     name: c.collectorTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['BUFFER_READY'],
+    emits: [{ event: 'BUFFER_READY', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'collecting', isInitial: true },
@@ -254,7 +254,7 @@ function buildCollectorTrait(c: RlAgentConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 function buildTrainTrait(c: RlAgentConfig): Trait {
@@ -289,7 +289,7 @@ function buildTrainTrait(c: RlAgentConfig): Trait {
     name: c.trainTraitName,
     linkedEntity: entityName,
     category: 'interaction',
-    emits: ['POLICY_UPDATED'],
+    emits: [{ event: 'POLICY_UPDATED', scope: 'external' as const }],
     stateMachine: {
       states: [
         { name: 'waiting', isInitial: true },
@@ -325,7 +325,7 @@ function buildTrainTrait(c: RlAgentConfig): Trait {
         },
       ],
     },
-  } as Trait;
+  } as unknown as Trait;
 }
 
 // ============================================================================
