@@ -59,7 +59,7 @@ function resolve(params: StdSpriteParams): SpriteConfig {
     { name: 'x', type: 'number', default: 0 },
     { name: 'y', type: 'number', default: 0 },
     { name: 'frame', type: 'number', default: 0 },
-    { name: 'spritesheet', type: 'string', default: '' },
+    { name: 'spritesheet', type: 'string', default: 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png' },
   ];
   const userFieldNames = new Set(baseFields.map(f => f.name));
   const fields = [...baseFields, ...domainFields.filter(f => !userFieldNames.has(f.name))];
@@ -89,14 +89,51 @@ function buildTrait(c: SpriteConfig): Trait {
   const { entityName, frameWidth, frameHeight, scale } = c;
 
   const spriteView = {
-    type: 'sprite',
-    spritesheet: `@${entityName}.spritesheet`,
-    frameWidth,
-    frameHeight,
-    frame: `@${entityName}.frame`,
-    x: `@${entityName}.x`,
-    y: `@${entityName}.y`,
-    scale,
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'md',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'sm',
+        align: 'center',
+        children: [
+          { type: 'icon', name: 'image', size: 'lg' },
+          { type: 'typography', content: `${entityName} Sprite`, variant: 'h2' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'box',
+        className: 'relative bg-gray-900 rounded-lg overflow-hidden',
+        style: { width: `${frameWidth * scale * 4}px`, height: `${frameHeight * scale * 4}px`, margin: '0 auto' },
+        children: [
+          {
+            type: 'sprite',
+            spritesheet: `@${entityName}.spritesheet`,
+            frameWidth,
+            frameHeight,
+            frame: `@${entityName}.frame`,
+            x: frameWidth * scale,
+            y: frameHeight * scale,
+            scale,
+          },
+        ],
+      },
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'md',
+        justify: 'center',
+        children: [
+          { type: 'typography', content: `Frame: `, variant: 'caption', color: 'muted' },
+          { type: 'badge', content: `@${entityName}.frame`, variant: 'default' },
+          { type: 'typography', content: `Position: `, variant: 'caption', color: 'muted' },
+          { type: 'badge', content: ['concat', `@${entityName}.x`, ',', `@${entityName}.y`], variant: 'default' },
+        ],
+      },
+    ],
   };
 
   return {

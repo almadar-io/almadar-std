@@ -70,12 +70,73 @@ function buildEntity(c: GameAudioConfig): Entity {
 function buildTrait(c: GameAudioConfig): Trait {
   const { entityName, initialMuted } = c;
 
+  const audioControls = {
+    type: 'stack',
+    direction: 'vertical',
+    gap: 'lg',
+    className: 'max-w-md mx-auto',
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 'sm',
+        align: 'center',
+        children: [
+          { type: 'icon', name: 'volume-2', size: 'lg' },
+          { type: 'typography', content: 'Audio Controls', variant: 'h2' },
+        ],
+      },
+      { type: 'divider' },
+      {
+        type: 'card',
+        children: [
+          {
+            type: 'stack', direction: 'vertical', gap: 'md',
+            children: [
+              { type: 'typography', content: initialMuted ? 'Audio Muted' : 'Audio Active', variant: 'h4' },
+              { type: 'typography', content: 'Toggle mute to control game audio playback.', variant: 'body', color: 'muted' },
+              {
+                type: 'stack', direction: 'horizontal', gap: 'sm',
+                children: [
+                  { type: 'button', label: 'Toggle Mute', icon: initialMuted ? 'volume-x' : 'volume-2', event: 'TOGGLE_MUTE', variant: 'primary' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: 'card',
+        children: [
+          {
+            type: 'stack', direction: 'vertical', gap: 'sm',
+            children: [
+              { type: 'typography', content: 'Sound Effects', variant: 'h4' },
+              {
+                type: 'stack', direction: 'horizontal', gap: 'sm',
+                children: [
+                  { type: 'button', label: 'Play Click', icon: 'play', variant: 'outline' },
+                  { type: 'button', label: 'Play Confirm', icon: 'play', variant: 'outline' },
+                  { type: 'button', label: 'Play Drop', icon: 'play', variant: 'outline' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
   const audioView = {
     type: 'game-audio-provider',
-    manifest: {},
-    baseUrl: '',
+    manifest: {
+      click: 'https://almadar-kflow-assets.web.app/shared/audio/sfx/close_001.ogg',
+      confirm: 'https://almadar-kflow-assets.web.app/shared/audio/sfx/confirmation_001.ogg',
+      drop: 'https://almadar-kflow-assets.web.app/shared/audio/sfx/drop_001.ogg',
+    },
+    baseUrl: 'https://almadar-kflow-assets.web.app/shared/audio',
     initialMuted,
-    children: [],
+    children: [audioControls],
   };
 
   return {
