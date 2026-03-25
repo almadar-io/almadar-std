@@ -76,7 +76,24 @@ function resolve(params: StdCombatLogParams): CombatLogConfig {
 // ============================================================================
 
 function buildEntity(c: CombatLogConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  const fields = [
+    ...c.fields.filter(f => !['type', 'message', 'timestamp', 'actorName', 'targetName', 'value', 'turn'].includes(f.name)),
+    { name: 'type', type: 'string' as const, default: 'attack', values: ['attack', 'defend', 'heal', 'move', 'special', 'death', 'spawn'] },
+    { name: 'message', type: 'string' as const },
+    { name: 'timestamp', type: 'number' as const, default: 0 },
+    { name: 'actorName', type: 'string' as const },
+    { name: 'targetName', type: 'string' as const },
+    { name: 'value', type: 'number' as const, default: 0 },
+    { name: 'turn', type: 'number' as const, default: 1 },
+  ];
+  const instances = [
+    { id: 'cl-1', name: 'Attack log', description: 'Warrior attacks Goblin', status: 'active', createdAt: '2026-01-01', type: 'attack', message: 'Warrior strikes Goblin for 25 damage', timestamp: 1000, actorName: 'Warrior', targetName: 'Goblin', value: 25, turn: 1 },
+    { id: 'cl-2', name: 'Defend log', description: 'Paladin raises shield', status: 'active', createdAt: '2026-01-01', type: 'defend', message: 'Paladin raises shield, blocking 15 damage', timestamp: 2000, actorName: 'Paladin', targetName: 'Paladin', value: 15, turn: 1 },
+    { id: 'cl-3', name: 'Heal log', description: 'Cleric heals Warrior', status: 'active', createdAt: '2026-01-01', type: 'heal', message: 'Cleric heals Warrior for 30 HP', timestamp: 3000, actorName: 'Cleric', targetName: 'Warrior', value: 30, turn: 2 },
+    { id: 'cl-4', name: 'Special log', description: 'Mage casts fireball', status: 'active', createdAt: '2026-01-01', type: 'special', message: 'Mage casts Fireball dealing 40 AoE damage', timestamp: 4000, actorName: 'Mage', targetName: 'Goblin', value: 40, turn: 2 },
+    { id: 'cl-5', name: 'Move log', description: 'Rogue moves to flank', status: 'active', createdAt: '2026-01-01', type: 'move', message: 'Rogue moves to flanking position', timestamp: 5000, actorName: 'Rogue', value: 0, turn: 3 },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, instances });
 }
 
 function buildTrait(c: CombatLogConfig): Trait {

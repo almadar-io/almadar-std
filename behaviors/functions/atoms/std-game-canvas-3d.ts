@@ -80,7 +80,26 @@ function resolve(params: StdGameCanvas3dParams): GameCanvas3dConfig {
 // ============================================================================
 
 function buildEntity(c: GameCanvas3dConfig): Entity {
-  return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
+  const fields = [
+    ...c.fields.filter(f => !['tiles', 'units', 'features'].includes(f.name)),
+    { name: 'tiles', type: 'array' as const, default: [] },
+    { name: 'units', type: 'array' as const, default: [] },
+    { name: 'features', type: 'array' as const, default: [] },
+  ];
+  const instances = [
+    {
+      id: 'scene-1', name: 'Battle Arena', description: 'A 3D battle arena', status: 'active', createdAt: '2026-01-01',
+      tiles: [
+        { x: 0, y: 0, z: 0, type: 'grass' },
+        { x: 1, y: 0, z: 0, type: 'grass' },
+        { x: 0, y: 0, z: 1, type: 'stone' },
+        { x: 1, y: 0, z: 1, type: 'water' },
+      ],
+      units: [],
+      features: [],
+    },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, instances });
 }
 
 function buildTrait(c: GameCanvas3dConfig): Trait {
@@ -88,9 +107,9 @@ function buildTrait(c: GameCanvas3dConfig): Trait {
 
   const canvasView = {
     type: 'game-canvas3-d',
-    tiles: `@${entityName}`,
-    units: `@${entityName}`,
-    features: `@${entityName}`,
+    tiles: ['object/get', ['array/first', `@${entityName}`], 'tiles'],
+    units: ['object/get', ['array/first', `@${entityName}`], 'units'],
+    features: ['object/get', ['array/first', `@${entityName}`], 'features'],
     orientation,
     cameraMode,
     showGrid,

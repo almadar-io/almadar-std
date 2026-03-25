@@ -89,7 +89,10 @@ function buildEntity(c: CircuitBreakerConfig): Entity {
     { name: 'successCount', type: 'number' as const, default: 0 },
     { name: 'threshold', type: 'number' as const, default: 5 },
   ];
-  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection });
+  const instances = [
+    { id: 'sn-1', name: 'ServiceNode', description: 'Primary API gateway', status: 'active', createdAt: '2026-01-10', failureCount: 783, successCount: 603, threshold: 5 },
+  ];
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, collection: c.collection, instances });
 }
 
 // Helper: read a field from the first entity in the collection

@@ -1,0 +1,419 @@
+{
+  "name": "AutoregressiveOrbital",
+  "orbitals": [
+    {
+      "name": "AutoregressiveOrbital",
+      "entity": {
+        "name": "Autoregressive",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "generatedTokens",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastToken",
+            "type": "number",
+            "default": -1
+          },
+          {
+            "name": "genStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AutoregressiveAutoregressive",
+          "linkedEntity": "Autoregressive",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "GENERATION_COMPLETE",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "generating"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Generate"
+              },
+              {
+                "key": "TOKEN_READY",
+                "name": "Token Ready"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.genStatus",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.generatedTokens",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-square",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Autoregressive Generator",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.genStatus"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted",
+                          "content": "Vocab: undefined | Max length: undefined"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.generatedTokens"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Generate",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "generating",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.genStatus",
+                    "generating"
+                  ],
+                  [
+                    "set",
+                    "@entity.generatedTokens",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0
+                  ],
+                  [
+                    "forward",
+                    "primary",
+                    {
+                      "input": "@entity.generatedTokens",
+                      "output-contract": {
+                        "type": "tensor",
+                        "shape": [
+                          null
+                        ],
+                        "dtype": "float32",
+                        "activation": "softmax"
+                      },
+                      "on-complete": "TOKEN_READY"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Generating",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": "@entity.tokenCount"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.generatedTokens"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Tokens: @entity.tokenCount"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "generating",
+                "event": "TOKEN_READY",
+                "guard": [
+                  "not",
+                  [
+                    "or",
+                    [
+                      "eq",
+                      "@payload.token",
+                      null
+                    ],
+                    [
+                      "gte",
+                      "@entity.tokenCount",
+                      null
+                    ]
+                  ]
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lastToken",
+                    "@payload.token"
+                  ],
+                  [
+                    "set",
+                    "@entity.generatedTokens",
+                    [
+                      "string/concat",
+                      "@entity.generatedTokens",
+                      "@payload.decoded"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    [
+                      "math/add",
+                      "@entity.tokenCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "forward",
+                    "primary",
+                    {
+                      "input": "@entity.generatedTokens",
+                      "output-contract": {
+                        "type": "tensor",
+                        "shape": [
+                          null
+                        ],
+                        "dtype": "float32",
+                        "activation": "softmax"
+                      },
+                      "on-complete": "TOKEN_READY"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Generating",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "progress-bar",
+                          "value": "@entity.tokenCount"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.generatedTokens"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Tokens: @entity.tokenCount"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "sm"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "idle",
+                "event": "TOKEN_READY",
+                "guard": [
+                  "or",
+                  [
+                    "eq",
+                    "@payload.token",
+                    null
+                  ],
+                  [
+                    "gte",
+                    "@entity.tokenCount",
+                    null
+                  ]
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.genStatus",
+                    "complete"
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    [
+                      "math/add",
+                      "@entity.tokenCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "GENERATION_COMPLETE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Generation Complete",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.generatedTokens"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Total tokens: @entity.tokenCount"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Generate Again",
+                          "event": "GENERATE",
+                          "variant": "outline",
+                          "icon": "refresh-cw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AutoregressiveGeneratePage",
+          "path": "/autoregressives/generate",
+          "traits": [
+            {
+              "ref": "AutoregressiveAutoregressive"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
