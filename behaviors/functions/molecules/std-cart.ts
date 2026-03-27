@@ -127,7 +127,7 @@ function buildCartTrait(c: CartConfig): Trait {
     name: `${entityName}CartBrowse`,
     linkedEntity: entityName,
     category: 'interaction',
-    listens: [{ event: 'CONFIRM_REMOVE', triggers: 'CONFIRM_REMOVE' }],
+    listens: [{ event: 'CONFIRM_REMOVE', triggers: 'RELOAD_AFTER_REMOVE' }],
     stateMachine: {
       states: [
         { name: 'browsing', isInitial: true },
@@ -139,6 +139,7 @@ function buildCartTrait(c: CartConfig): Trait {
         { key: 'SAVE', name: 'Save', payload: [{ name: 'data', type: 'object', required: true }] },
         { key: 'REQUEST_REMOVE', name: 'Request Remove', payload: [{ name: 'id', type: 'string', required: true }] },
         { key: 'CONFIRM_REMOVE', name: 'Confirm Remove', payload: [{ name: 'data', type: 'object', required: true }] },
+        { key: 'RELOAD_AFTER_REMOVE', name: 'Reload After Remove' },
         { key: 'PROCEED_CHECKOUT', name: 'Proceed to Checkout' },
         { key: 'BACK_TO_CART', name: 'Back to Cart' },
         { key: 'CONFIRM_ORDER', name: 'Confirm Order' },
@@ -165,8 +166,8 @@ function buildCartTrait(c: CartConfig): Trait {
         ] },
         // SAVE: accept event (data refresh handled by implicit DATA_CHANGED listener)
         { from: 'browsing', to: 'browsing', event: 'SAVE', effects: [] },
-        // CONFIRM_REMOVE: accept event (data refresh handled by implicit DATA_CHANGED listener)
-        { from: 'browsing', to: 'browsing', event: 'CONFIRM_REMOVE', effects: [] },
+        // RELOAD_AFTER_REMOVE: re-fetch after deletion (triggered by CONFIRM_REMOVE listener)
+        { from: 'browsing', to: 'browsing', event: 'RELOAD_AFTER_REMOVE', effects: [['fetch', entityName]] },
         // PROCEED_CHECKOUT
         { from: 'browsing', to: 'checkout', event: 'PROCEED_CHECKOUT', effects: [
           ['fetch', entityName],
