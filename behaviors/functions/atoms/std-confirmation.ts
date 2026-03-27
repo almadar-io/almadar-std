@@ -172,7 +172,7 @@ function buildTrait(c: ConfirmationConfig): Trait {
   // Effects to dismiss modal and refresh main view
   const dismissAndRefresh: unknown[] = [
     ['render-ui', 'modal', null],
-    ...(c.standalone ? [['fetch', entityName], ['render-ui', 'main', idleMainView]] : [['fetch', entityName]]),
+    ...(c.standalone ? [['ref', entityName], ['render-ui', 'main', idleMainView]] : [['ref', entityName]]),
   ];
 
   return {
@@ -196,8 +196,8 @@ function buildTrait(c: ConfirmationConfig): Trait {
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: c.standalone
-            ? [['fetch', entityName], ['render-ui', 'main', idleMainView]]
-            : [['fetch', entityName]],
+            ? [['ref', entityName], ['render-ui', 'main', idleMainView]]
+            : [['ref', entityName]],
         },
         {
           from: 'idle', to: 'confirming', event: c.requestEvent,

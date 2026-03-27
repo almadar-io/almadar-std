@@ -127,7 +127,6 @@ function buildCartTrait(c: CartConfig): Trait {
     name: `${entityName}CartBrowse`,
     linkedEntity: entityName,
     category: 'interaction',
-    listens: [{ event: 'CONFIRM_REMOVE', triggers: 'RELOAD_AFTER_REMOVE' }],
     stateMachine: {
       states: [
         { name: 'browsing', isInitial: true },
@@ -136,10 +135,7 @@ function buildCartTrait(c: CartConfig): Trait {
       events: [
         { key: 'INIT', name: 'Initialize' },
         { key: 'ADD_ITEM', name: 'Add Item' },
-        { key: 'SAVE', name: 'Save', payload: [{ name: 'data', type: 'object', required: true }] },
         { key: 'REQUEST_REMOVE', name: 'Request Remove', payload: [{ name: 'id', type: 'string', required: true }] },
-        { key: 'CONFIRM_REMOVE', name: 'Confirm Remove', payload: [{ name: 'data', type: 'object', required: true }] },
-        { key: 'RELOAD_AFTER_REMOVE', name: 'Reload After Remove' },
         { key: 'PROCEED_CHECKOUT', name: 'Proceed to Checkout' },
         { key: 'BACK_TO_CART', name: 'Back to Cart' },
         { key: 'CONFIRM_ORDER', name: 'Confirm Order' },
@@ -147,7 +143,7 @@ function buildCartTrait(c: CartConfig): Trait {
       transitions: [
         // browsing + INIT (data-grid handles empty vs populated automatically)
         { from: 'browsing', to: 'browsing', event: 'INIT', effects: [
-          ['fetch', entityName],
+          ['ref', entityName],
           ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
             headerBar, { type: 'divider' },
             // Order summary stats
@@ -164,13 +160,9 @@ function buildCartTrait(c: CartConfig): Trait {
             { type: 'button', label: checkoutButtonLabel, event: 'PROCEED_CHECKOUT', variant: 'primary', icon: 'arrow-right' },
           ] }],
         ] },
-        // SAVE: accept event (data refresh handled by implicit DATA_CHANGED listener)
-        { from: 'browsing', to: 'browsing', event: 'SAVE', effects: [] },
-        // RELOAD_AFTER_REMOVE: re-fetch after deletion (triggered by CONFIRM_REMOVE listener)
-        { from: 'browsing', to: 'browsing', event: 'RELOAD_AFTER_REMOVE', effects: [['fetch', entityName]] },
         // PROCEED_CHECKOUT
         { from: 'browsing', to: 'checkout', event: 'PROCEED_CHECKOUT', effects: [
-          ['fetch', entityName],
+          ['ref', entityName],
           ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', children: [
             { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
               { type: 'icon', name: 'clipboard', size: 'lg' },
@@ -185,10 +177,10 @@ function buildCartTrait(c: CartConfig): Trait {
           ] }],
         ] },
         // BACK_TO_CART
-        { from: 'checkout', to: 'browsing', event: 'BACK_TO_CART', effects: [['fetch', entityName]] },
+        { from: 'checkout', to: 'browsing', event: 'BACK_TO_CART', effects: [['ref', entityName]] },
         // CONFIRM_ORDER
         { from: 'checkout', to: 'browsing', event: 'CONFIRM_ORDER', effects: [
-          ['fetch', entityName],
+          ['ref', entityName],
           ['render-ui', 'main', { type: 'stack', direction: 'vertical', gap: 'lg', align: 'center', children: [
             { type: 'icon', name: 'check-circle', size: 'lg' },
             { type: 'typography', content: 'Order Confirmed', variant: 'h2' },
@@ -269,7 +261,6 @@ export function stdCart(params: StdCartParams): OrbitalDefinition {
     requestEvent: 'REQUEST_REMOVE',
     confirmEvent: 'CONFIRM_REMOVE',
     confirmEffects: [['persist', 'delete', entityName, '@payload.id']],
-    emitOnConfirm: 'CONFIRM_REMOVE',
   }));
 
   // CONFIRM_REMOVE effects reference @payload.id, so declare the payload on the event

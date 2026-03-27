@@ -278,7 +278,7 @@ function buildTrait(c: BrowseConfig): Trait {
         {
           from: 'browsing', to: 'browsing', event: 'INIT',
           effects: [
-            ['fetch', entityName],
+            ['ref', entityName],
             ['render-ui', 'main', {
               type: 'stack', direction: 'vertical', gap: 'lg', className: 'max-w-5xl mx-auto w-full',
               children: [
@@ -300,7 +300,7 @@ function buildTrait(c: BrowseConfig): Trait {
         // Refresh self-loops: when modal atoms fire SAVE etc., re-fetch data
         ...c.refreshEvents.map(evt => ({
           from: 'browsing', to: 'browsing', event: evt,
-          effects: [['fetch', entityName]],
+          effects: [['ref', entityName]],
         })),
       ],
     },

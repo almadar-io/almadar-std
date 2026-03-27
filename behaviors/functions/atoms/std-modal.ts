@@ -159,7 +159,7 @@ function buildTrait(c: ModalConfig): Trait {
     {
       from: 'closed', to: 'closed', event: 'INIT',
       effects: c.standalone
-        ? [['fetch', c.entityName], ['render-ui', 'main', {
+        ? [['ref', c.entityName], ['render-ui', 'main', {
             type: 'stack', direction: 'vertical', gap: 'lg',
             children: [
               { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
@@ -173,7 +173,7 @@ function buildTrait(c: ModalConfig): Trait {
               { type: 'empty-state', icon: c.headerIcon, title: 'Nothing open', description: 'Click Open to view details in a modal overlay.' },
             ],
           }]]
-        : [['fetch', c.entityName]],
+        : [['ref', c.entityName]],
     },
     // OPEN: closed → open (Modal component in CompiledPortal provides backdrop)
     {
@@ -184,7 +184,7 @@ function buildTrait(c: ModalConfig): Trait {
     { from: 'open', to: 'closed', event: c.closeEvent, effects: [
       ['render-ui', 'modal', null],
       ['notify', 'Cancelled', 'info'],
-      ...(c.standalone ? [['fetch', c.entityName], ['render-ui', 'main', {
+      ...(c.standalone ? [['ref', c.entityName], ['render-ui', 'main', {
         type: 'stack', direction: 'vertical', gap: 'lg',
         children: [
           { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
