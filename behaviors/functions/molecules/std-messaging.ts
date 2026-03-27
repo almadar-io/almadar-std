@@ -211,7 +211,7 @@ export function stdMessaging(params: StdMessagingParams): OrbitalDefinition {
     openEvent: 'COMPOSE',
     closeEvent: 'CLOSE',
     saveEvent: 'SEND',
-    saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
     emitOnSave: 'SEND',
   }));
 

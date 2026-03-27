@@ -168,7 +168,7 @@ export function stdDetail(params: StdDetailParams): OrbitalDefinition {
     closeEvent: 'CLOSE',
     openEffects: [['fetch', entityName]],
     saveEvent: 'SAVE',
-    saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
     emitOnSave: 'SAVE',
   }));
 

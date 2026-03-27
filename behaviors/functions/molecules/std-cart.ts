@@ -163,10 +163,10 @@ function buildCartTrait(c: CartConfig): Trait {
             { type: 'button', label: checkoutButtonLabel, event: 'PROCEED_CHECKOUT', variant: 'primary', icon: 'arrow-right' },
           ] }],
         ] },
-        // SAVE: re-fetch after modal adds an item (shared event bus)
-        { from: 'browsing', to: 'browsing', event: 'SAVE', effects: [['fetch', entityName]] },
-        // CONFIRM_REMOVE: re-fetch after confirmation trait deletes item
-        { from: 'browsing', to: 'browsing', event: 'CONFIRM_REMOVE', effects: [['fetch', entityName]] },
+        // SAVE: accept event (data refresh handled by implicit DATA_CHANGED listener)
+        { from: 'browsing', to: 'browsing', event: 'SAVE', effects: [] },
+        // CONFIRM_REMOVE: accept event (data refresh handled by implicit DATA_CHANGED listener)
+        { from: 'browsing', to: 'browsing', event: 'CONFIRM_REMOVE', effects: [] },
         // PROCEED_CHECKOUT
         { from: 'browsing', to: 'checkout', event: 'PROCEED_CHECKOUT', effects: [
           ['fetch', entityName],
@@ -254,7 +254,7 @@ export function stdCart(params: StdCartParams): OrbitalDefinition {
     closeEvent: 'CLOSE',
     openEffects: [['fetch', entityName]],
     saveEvent: 'SAVE',
-    saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
   }));
 
   // Remove confirmation (stdConfirmation atom)
@@ -267,7 +267,7 @@ export function stdCart(params: StdCartParams): OrbitalDefinition {
     headerIcon: 'trash-2',
     requestEvent: 'REQUEST_REMOVE',
     confirmEvent: 'CONFIRM_REMOVE',
-    confirmEffects: [['persist', 'delete', entityName, '@payload.id'], ['fetch', entityName]],
+    confirmEffects: [['persist', 'delete', entityName, '@payload.id']],
     emitOnConfirm: 'CONFIRM_REMOVE',
   }));
 

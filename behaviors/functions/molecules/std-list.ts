@@ -225,7 +225,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     closeEvent: 'CLOSE',
     openEffects: [['fetch', entityName]],
     saveEvent: 'SAVE',
-    saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
     emitOnSave: CREATED,
   }));
 
@@ -240,7 +240,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     closeEvent: 'CLOSE',
     openEffects: [['fetch', entityName, '@payload.id']],
     saveEvent: 'SAVE',
-    saveEffects: [['persist', 'update', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'update', entityName, '@payload.data']],
     emitOnSave: UPDATED,
   }));
 
@@ -297,7 +297,6 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     { from: 'deleting', to: 'browsing', event: 'CONFIRM_DELETE', effects: [
       ['persist', 'delete', entityName, '@entity.id'],
       ['render-ui', 'modal', null],
-      ['fetch', entityName],
       ['render-ui', 'main', browseMainView],
     ] },
     // CANCEL/CLOSE from deleting (dismiss modal, re-render main)

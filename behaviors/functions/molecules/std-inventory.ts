@@ -197,7 +197,7 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     closeEvent: 'CLOSE',
     openEffects: [['fetch', entityName]],
     saveEvent: 'SAVE',
-    saveEffects: [['persist', 'create', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
     emitOnSave: 'ITEM_ADDED',
   }));
 
@@ -212,7 +212,7 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     closeEvent: 'CLOSE',
     openEffects: [['fetch', entityName, '@payload.id']],
     saveEvent: 'SAVE',
-    saveEffects: [['persist', 'update', entityName, '@payload.data'], ['fetch', entityName]],
+    saveEffects: [['persist', 'update', entityName, '@payload.data']],
     emitOnSave: 'ITEM_USED',
   }));
 
@@ -225,7 +225,7 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     headerIcon: 'trash-2',
     requestEvent: 'DROP',
     confirmEvent: 'CONFIRM_DROP',
-    confirmEffects: [['persist', 'delete', entityName, '@payload.id'], ['fetch', entityName]],
+    confirmEffects: [['persist', 'delete', entityName, '@payload.id']],
     emitOnConfirm: 'CONFIRM_DROP',
   }));
 
