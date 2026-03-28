@@ -260,18 +260,8 @@ export function stdCart(params: StdCartParams): OrbitalDefinition {
     headerIcon: 'trash-2',
     requestEvent: 'REQUEST_REMOVE',
     confirmEvent: 'CONFIRM_REMOVE',
-    confirmEffects: [['persist', 'delete', entityName, '@payload.id']],
+    confirmEffects: [['persist', 'delete', entityName, '@entity.pendingId']],
   }));
-
-  // CONFIRM_REMOVE effects reference @payload.id, so declare the payload on the event
-  const removeSm = removeTrait.stateMachine;
-  if (removeSm && 'events' in removeSm) {
-    const events = removeSm.events as Array<{ key: string; payload?: unknown[] }>;
-    const confirmEvt = events.find(e => e.key === 'CONFIRM_REMOVE');
-    if (confirmEvt && !confirmEvt.payload) {
-      confirmEvt.payload = [{ name: 'id', type: 'string', required: true }];
-    }
-  }
 
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
 
