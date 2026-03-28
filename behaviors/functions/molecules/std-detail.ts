@@ -202,7 +202,7 @@ export function stdDetail(params: StdDetailParams): OrbitalDefinition {
     openEvent: 'VIEW',
     openPayload: [{ name: 'id', type: 'string', required: true }],
     closeEvent: 'CLOSE',
-    openEffects: [['fetch', entityName, '@payload.id']],
+    openEffects: [['fetch', entityName, { id: '@payload.id' }]],
   }));
 
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });

@@ -210,7 +210,7 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     openEvent: 'USE_ITEM',
     openPayload: [{ name: 'id', type: 'string', required: true }],
     closeEvent: 'CLOSE',
-    openEffects: [['fetch', entityName, '@payload.id']],
+    openEffects: [['fetch', entityName, { id: '@payload.id' }]],
     saveEvent: 'SAVE',
     saveEffects: [['persist', 'update', entityName, '@payload.data']],
     emitOnSave: 'ITEM_USED',

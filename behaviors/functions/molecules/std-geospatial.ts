@@ -189,7 +189,7 @@ export function stdGeospatial(params: StdGeospatialParams): OrbitalDefinition {
     openEvent: 'SELECT',
     openPayload: [{ name: 'id', type: 'string', required: true }],
     closeEvent: 'CLOSE',
-    openEffects: [['fetch', entityName, '@payload.id']],
+    openEffects: [['fetch', entityName, { id: '@payload.id' }]],
     saveEvent: 'CONFIRM_SELECT',
     saveEffects: [],
   }));

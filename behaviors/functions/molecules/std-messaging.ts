@@ -224,7 +224,7 @@ export function stdMessaging(params: StdMessagingParams): OrbitalDefinition {
     openEvent: 'VIEW',
     openPayload: [{ name: 'id', type: 'string', required: true }],
     closeEvent: 'CLOSE',
-    openEffects: [['fetch', entityName, '@payload.id']],
+    openEffects: [['fetch', entityName, { id: '@payload.id' }]],
   }));
 
   // 2. Shared entity

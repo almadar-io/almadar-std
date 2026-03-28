@@ -238,7 +238,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     openEvent: 'EDIT',
     openPayload: [{ name: 'id', type: 'string', required: true }],
     closeEvent: 'CLOSE',
-    openEffects: [['fetch', entityName, '@payload.id']],
+    openEffects: [['fetch', entityName, { id: '@payload.id' }]],
     saveEvent: 'SAVE',
     saveEffects: [['persist', 'update', entityName, '@payload.data']],
     emitOnSave: UPDATED,
@@ -253,7 +253,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     openEvent: 'VIEW',
     openPayload: [{ name: 'id', type: 'string', required: true }],
     closeEvent: 'CLOSE',
-    openEffects: [['fetch', entityName, '@payload.id']],
+    openEffects: [['fetch', entityName, { id: '@payload.id' }]],
   }));
 
   // Delete: inline in browse trait (single-trait so entity context carries across DELETE → CONFIRM_DELETE)
@@ -276,7 +276,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   sm.transitions.push(
     // DELETE: browsing → deleting (fetch entity by ID, show confirmation modal)
     { from: 'browsing', to: 'deleting', event: 'DELETE', effects: [
-      ['fetch', entityName, '@payload.id'],
+      ['fetch', entityName, { id: '@payload.id' }],
       ['render-ui', 'modal', {
         type: 'stack', direction: 'vertical', gap: 'md',
         children: [

@@ -203,7 +203,7 @@ function buildTrait(c: ConfirmationConfig): Trait {
           from: 'idle', to: 'confirming', event: c.requestEvent,
           effects: [
             ['set', '@entity.pendingId', '@payload.id'],
-            ['fetch', entityName, '@payload.id'],
+            ['fetch', entityName, { id: '@payload.id' }],
             ['render-ui', 'modal', confirmModalView],
           ],
         },

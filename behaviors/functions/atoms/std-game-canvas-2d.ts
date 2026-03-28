@@ -1,7 +1,7 @@
 /**
  * std-game-canvas-2d
  *
- * 2D game canvas atom using the `game-canvas2-d` pattern.
+ * 2D game canvas atom using the `game-canvas-2d` pattern.
  * Provides a render loop with configurable FPS, width, and height.
  * Handles init, start, stop, and per-frame tick events.
  *
@@ -79,7 +79,7 @@ function buildTrait(c: GameCanvas2dConfig): Trait {
   const { width, height, fps } = c;
 
   const canvasConfig = {
-    type: 'game-canvas2-d',
+    type: 'game-canvas-2d',
     width,
     height,
     fps,

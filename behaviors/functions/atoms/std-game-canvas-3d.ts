@@ -1,7 +1,7 @@
 /**
  * std-game-canvas-3d
  *
- * 3D game canvas atom using the `game-canvas3-d` pattern.
+ * 3D game canvas atom using the `game-canvas-3d` pattern.
  * Renders tiles, units, and features in a 3D scene with configurable
  * orientation, camera mode, grid, shadows, and background color.
  *
@@ -106,7 +106,7 @@ function buildTrait(c: GameCanvas3dConfig): Trait {
   const { entityName, orientation, cameraMode, showGrid, shadows, backgroundColor } = c;
 
   const canvasView = {
-    type: 'game-canvas3-d',
+    type: 'game-canvas-3d',
     tiles: ['object/get', ['array/first', `@${entityName}`], 'tiles'],
     units: ['object/get', ['array/first', `@${entityName}`], 'units'],
     features: ['object/get', ['array/first', `@${entityName}`], 'features'],

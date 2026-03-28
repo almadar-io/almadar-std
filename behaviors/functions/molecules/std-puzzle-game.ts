@@ -123,7 +123,7 @@ function buildPuzzleFlowTrait(c: PuzzleGameConfig): Trait {
 
   // playing state: game-canvas-2d for puzzle rendering
   const playingUI = {
-    type: 'game-canvas2-d',
+    type: 'game-canvas-2d',
     width,
     height,
     fps: 60,
