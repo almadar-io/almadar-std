@@ -163,11 +163,14 @@ function buildStepUI(c: WizardConfig, stepIndex: number): Record<string, unknown
 }
 
 function buildReviewUI(c: WizardConfig): Record<string, unknown> {
-  const reviewDetailChildren: unknown[] = c.nonIdFields.map(field => ({
+  // Review shows the current entity's details as label/value pairs.
+  // Uses @entity.field bindings (single entity from useEntityById) instead of
+  // data-list iteration which would show the entire collection.
+  const reviewRows: unknown[] = c.nonIdFields.map(field => ({
     type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between',
     children: [
-      { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1) },
-      { type: 'typography', variant: 'body', content: `@item.${field.name}` },
+      { type: 'typography', variant: 'caption', content: field.name.charAt(0).toUpperCase() + field.name.slice(1).replace(/([A-Z])/g, ' $1') },
+      { type: 'typography', variant: 'body', content: `@entity.${field.name}` },
     ],
   }));
 
@@ -185,11 +188,8 @@ function buildReviewUI(c: WizardConfig): Record<string, unknown> {
       { type: 'wizard-progress', steps: c.wizardProgressSteps, currentStep: c.totalSteps },
       { type: 'divider' },
       {
-        type: 'data-list', entity: c.entityName,
-        renderItem: ['fn', 'item', {
-          type: 'stack', direction: 'vertical', gap: 'sm',
-          children: reviewDetailChildren,
-        }],
+        type: 'stack', direction: 'vertical', gap: 'sm', entity: c.entityName,
+        children: reviewRows,
       },
       {
         type: 'wizard-navigation',

@@ -96,7 +96,7 @@ function resolve(params: StdListParams): ListConfig {
     createButtonLabel: params.createButtonLabel ?? `Create ${entityName}`,
     createFormTitle: params.createFormTitle ?? `Create ${entityName}`,
     editFormTitle: params.editFormTitle ?? `Edit ${entityName}`,
-    deleteMessage: params.deleteMessage ?? `Are you sure you want to delete this ${entityName.toLowerCase()}?`,
+    deleteMessage: params.deleteMessage ?? `This action cannot be undone.`,
     emptyTitle: params.emptyTitle ?? `No ${p.toLowerCase()} yet`,
     emptyDescription: params.emptyDescription ?? `Create your first ${entityName.toLowerCase()} to get started.`,
     headerIcon: params.headerIcon ?? 'list',
@@ -260,6 +260,11 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   // Add deleting state + transitions directly to the browse trait's state machine
   const sm = browseTrait.stateMachine as { states: unknown[]; events: unknown[]; transitions: unknown[] };
   sm.states.push({ name: 'deleting' });
+  // Ensure DELETE event has payload schema with 'row' field (used in delete confirmation)
+  const deleteEvent = (sm.events as Array<{key: string; payload?: unknown[]}>).find(e => e.key === 'DELETE');
+  if (deleteEvent && !deleteEvent.payload) {
+    deleteEvent.payload = [{ name: 'id', type: 'string' }, { name: 'row', type: 'object' }];
+  }
   // DELETE already exists from itemActions. Only add events that aren't already there.
   const existingKeys = new Set((sm.events as Array<{key: string}>).map(e => e.key));
   if (!existingKeys.has('CONFIRM_DELETE')) sm.events.push({ key: 'CONFIRM_DELETE', name: 'Confirm Delete' });
@@ -285,6 +290,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
             { type: 'typography', content: `Delete ${entityName}`, variant: 'h3' },
           ] },
           { type: 'divider' },
+          { type: 'typography', content: `@entity.${c.nonIdFields[0]?.name ?? 'name'}`, variant: 'h4' },
           { type: 'typography', content: c.deleteMessage, variant: 'body' },
           { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
             { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'ghost' },

@@ -256,7 +256,7 @@ function buildTrait(c: BrowseConfig): Trait {
         return { key: e, name: e, payload: [{ name: 'data', type: 'object', required: true }] };
       }
       return needsId
-        ? { key: e, name: e, payload: [{ name: 'id', type: 'string', required: true }] }
+        ? { key: e, name: e, payload: [{ name: 'id', type: 'string', required: true }, { name: 'row', type: 'object' }] }
         : { key: e, name: e };
     }),
   ];
