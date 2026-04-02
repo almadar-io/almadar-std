@@ -53,5 +53,16 @@ export {
   getBehavior,
 } from './exports-reader.js';
 
+// Behavior registry query helpers
+export {
+  type RegistryEntry,
+  type BehaviorSummary,
+  getBehaviorRegistry,
+  getBehaviorsByDomain,
+  getBehaviorsByOperations,
+  searchBehaviors,
+  getBehaviorSummary,
+} from './query.js';
+
 // All behavior functions (atoms, molecules, organisms)
 export * from './functions/index.js';

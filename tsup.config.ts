@@ -9,6 +9,7 @@ export default defineConfig({
     'behaviors/index.ts',
     'behaviors/types.ts',
     'behaviors/exports-reader.ts',
+    'behaviors/query.ts',
     'behaviors/functions/index.ts',
   ],
   format: ['esm'],
@@ -19,10 +20,10 @@ export default defineConfig({
   treeshake: true,
   onSuccess: async () => {
     // Copy golden .orb files so exports-reader.ts can find them at runtime.
-    // The standalone entry point (dist/behaviors/exports-reader.js) resolves
-    // __dirname to dist/behaviors/, so it needs dist/behaviors/exports/.
-    // The bundled index.js resolves __dirname to dist/, so it needs dist/exports/.
     cpSync('behaviors/exports', 'dist/behaviors/exports', { recursive: true });
     cpSync('behaviors/exports', 'dist/exports', { recursive: true });
+    // Copy behaviors-registry.json so query.ts can find it at runtime.
+    cpSync('behaviors/behaviors-registry.json', 'dist/behaviors/behaviors-registry.json');
+    cpSync('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
   },
 });

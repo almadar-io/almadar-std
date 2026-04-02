@@ -95,6 +95,14 @@ export {
   getBehaviorsByLevel,
   loadGoldenOrb,
   hasGoldenOrb,
+  // Query helpers
+  type RegistryEntry,
+  type BehaviorSummary,
+  getBehaviorRegistry,
+  getBehaviorsByDomain,
+  getBehaviorsByOperations,
+  searchBehaviors,
+  getBehaviorSummary,
 } from './behaviors/index.js';
 
 // All behavior functions
