@@ -1,110 +1,89 @@
 /**
  * Exports Reader
  *
- * Provides programmatic access to the golden .orb files in behaviors/exports/.
- * Other packages import these functions instead of reading the filesystem directly.
- *
- * Directory structure mirrors functions/:
- *   exports/atoms/*.orb
- *   exports/molecules/*.orb
- *   exports/organisms/*.orb
+ * Provides programmatic access to golden behaviors.
+ * Uses behavior functions from ./functions/ instead of reading .orb files from disk.
+ * This makes the package work in bundled environments (no filesystem access for package data).
  *
  * @packageDocumentation
  */
 
-import { readdirSync, readFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import * as behaviorFns from './functions/index.js';
 import type { BehaviorSchema } from './types.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const EXPORTS_DIR = resolve(__dirname, 'exports');
-const LEVEL_DIRS = ['atoms', 'molecules', 'organisms'] as const;
-
-export type BehaviorLevel = typeof LEVEL_DIRS[number];
-
-/** Read all .orb files from a single directory. */
-function readOrbDir(dir: string): Array<{ name: string; path: string }> {
-  try {
-    return readdirSync(dir)
-      .filter((f: string) => f.endsWith('.orb'))
-      .map((f: string) => ({ name: f.replace('.orb', ''), path: resolve(dir, f) }));
-  } catch {
-    return [];
-  }
-}
-
-/** Read all .orb entries across atoms/molecules/organisms. */
-function readAllOrbEntries(): Array<{ name: string; path: string; level: BehaviorLevel }> {
-  const entries: Array<{ name: string; path: string; level: BehaviorLevel }> = [];
-  for (const level of LEVEL_DIRS) {
-    for (const entry of readOrbDir(resolve(EXPORTS_DIR, level))) {
-      entries.push({ ...entry, level });
-    }
-  }
-  return entries;
-}
+export type BehaviorLevel = 'atoms' | 'molecules' | 'organisms';
 
 /**
- * List all available golden behavior names (without .orb extension).
+ * Convert function name (stdCart) to behavior name (std-cart).
+ * Returns null for non-behavior exports (types, helpers, entity/trait/page variants).
  */
+function fnNameToBehaviorName(fnName: string): string | null {
+  if (fnName.includes('Entity') || fnName.includes('Trait') || fnName.includes('Page')) return null;
+  if (['connect', 'compose', 'pipe', 'makeEntity', 'makePage', 'makeOrbital', 'mergeOrbitals', 'wire', 'extractTrait', 'ensureIdField', 'plural'].includes(fnName)) return null;
+
+  const withDashes = fnName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  if (!withDashes.startsWith('std-')) return null;
+  return withDashes;
+}
+
+interface BehaviorEntry {
+  name: string;
+  fn: (params: { entityName: string }) => unknown;
+}
+
+let cachedEntries: BehaviorEntry[] | null = null;
+
+function getEntries(): BehaviorEntry[] {
+  if (cachedEntries) return cachedEntries;
+
+  cachedEntries = [];
+  const fns = behaviorFns as Record<string, unknown>;
+
+  for (const [fnName, fn] of Object.entries(fns)) {
+    if (typeof fn !== 'function') continue;
+    const behaviorName = fnNameToBehaviorName(fnName);
+    if (!behaviorName) continue;
+    cachedEntries.push({ name: behaviorName, fn: fn as (params: { entityName: string }) => unknown });
+  }
+
+  return cachedEntries;
+}
+
+function callBehavior(entry: BehaviorEntry): BehaviorSchema {
+  const result = entry.fn({ entityName: entry.name.replace(/^std-/, '') });
+  const schema = result as BehaviorSchema;
+  schema.name = entry.name;
+  return schema;
+}
+
 export function getAllBehaviorNames(): string[] {
-  return readAllOrbEntries().map(e => e.name);
+  return getEntries().map(e => e.name);
 }
 
-/**
- * Load all golden .orb files as BehaviorSchema objects.
- * Sets `.name` to the behavior identifier (e.g., "std-list") from the filename,
- * overriding the orbital name inside the .orb file.
- */
 export function getAllBehaviors(): BehaviorSchema[] {
-  return readAllOrbEntries().map(e => {
-    const schema = JSON.parse(readFileSync(e.path, 'utf-8')) as BehaviorSchema;
-    schema.name = e.name;
-    return schema;
-  });
+  return getEntries().map(e => callBehavior(e));
 }
 
-/**
- * Load all golden .orb files for a specific level (atoms, molecules, organisms).
- */
 export function getBehaviorsByLevel(level: BehaviorLevel): BehaviorSchema[] {
-  return readOrbDir(resolve(EXPORTS_DIR, level)).map(e =>
-    JSON.parse(readFileSync(e.path, 'utf-8')) as BehaviorSchema
-  );
+  // Level is encoded in the behavior name pattern via the registry
+  // For now, return all and let the caller filter via the registry
+  return getAllBehaviors();
 }
 
-/**
- * Load a single golden .orb file by behavior name.
- * Searches across all levels. Returns null if not found.
- */
 export function loadGoldenOrb(behaviorName: string): BehaviorSchema | null {
-  for (const level of LEVEL_DIRS) {
-    const orbPath = resolve(EXPORTS_DIR, level, `${behaviorName}.orb`);
-    if (existsSync(orbPath)) {
-      try {
-        return JSON.parse(readFileSync(orbPath, 'utf-8')) as BehaviorSchema;
-      } catch {
-        return null;
-      }
-    }
+  const entry = getEntries().find(e => e.name === behaviorName);
+  if (!entry) return null;
+  try {
+    return callBehavior(entry);
+  } catch {
+    return null;
   }
-  return null;
 }
 
-/**
- * Check if a golden .orb file exists for the given behavior name.
- */
 export function hasGoldenOrb(behaviorName: string): boolean {
-  return LEVEL_DIRS.some(level =>
-    existsSync(resolve(EXPORTS_DIR, level, `${behaviorName}.orb`))
-  );
+  return getEntries().some(e => e.name === behaviorName);
 }
 
-/**
- * Get a single behavior by name.
- * Alias for loadGoldenOrb for compatibility.
- */
 export function getBehavior(behaviorName: string): BehaviorSchema | null {
   return loadGoldenOrb(behaviorName);
 }

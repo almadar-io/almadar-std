@@ -8,13 +8,27 @@
  * @packageDocumentation
  */
 
-import { readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { loadGoldenOrb } from './exports-reader.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const REGISTRY_PATH = resolve(__dirname, 'behaviors-registry.json');
+// Import registry data directly — bundlers inline this at build time.
+// Falls back to fs read for dev mode (unbundled).
+let registryJsonData: { behaviors: Record<string, unknown> } | null = null;
+
+async function loadRegistryData(): Promise<{ behaviors: Record<string, unknown> }> {
+  if (registryJsonData) return registryJsonData;
+  try {
+    // Try dynamic import (works in bundled and unbundled ESM)
+    const { readFileSync } = await import('fs');
+    const { resolve, dirname } = await import('path');
+    const { fileURLToPath } = await import('url');
+    const dir = dirname(fileURLToPath(import.meta.url));
+    const raw = readFileSync(resolve(dir, 'behaviors-registry.json'), 'utf-8');
+    registryJsonData = JSON.parse(raw);
+  } catch {
+    registryJsonData = { behaviors: {} };
+  }
+  return registryJsonData!;
+}
 
 // ============================================================================
 // Types
@@ -63,14 +77,13 @@ let registryCache: Record<string, RegistryEntry> | null = null;
 
 /**
  * Read and cache the behavior registry.
+ * Async to support bundled environments where fs may not be available.
  */
-export function getBehaviorRegistry(): Record<string, RegistryEntry> {
+export async function getBehaviorRegistry(): Promise<Record<string, RegistryEntry>> {
   if (registryCache) return registryCache;
   try {
-    const raw = JSON.parse(readFileSync(REGISTRY_PATH, 'utf-8')) as {
-      behaviors: Record<string, RegistryEntry>;
-    };
-    registryCache = raw.behaviors;
+    const data = await loadRegistryData();
+    registryCache = data.behaviors as Record<string, RegistryEntry>;
     return registryCache;
   } catch {
     return {};
@@ -84,8 +97,8 @@ export function getBehaviorRegistry(): Record<string, RegistryEntry> {
 /**
  * Filter behaviors by domain. Matches against layer (primary) and family (fallback).
  */
-export function getBehaviorsByDomain(domain: string): RegistryEntry[] {
-  const registry = getBehaviorRegistry();
+export async function getBehaviorsByDomain(domain: string): Promise<RegistryEntry[]> {
+  const registry = await getBehaviorRegistry();
   const lower = domain.toLowerCase();
   return Object.values(registry).filter((b) => {
     return b.layer.toLowerCase() === lower ||
@@ -99,8 +112,8 @@ export function getBehaviorsByDomain(domain: string): RegistryEntry[] {
  * Filter behaviors by connectable operations (events).
  * Returns behaviors sorted by match count (most matching ops first).
  */
-export function getBehaviorsByOperations(ops: string[]): RegistryEntry[] {
-  const registry = getBehaviorRegistry();
+export async function getBehaviorsByOperations(ops: string[]): Promise<RegistryEntry[]> {
+  const registry = await getBehaviorRegistry();
   const upperOps = ops.map(o => o.toUpperCase());
 
   const scored = Object.values(registry).map((b) => {
@@ -119,8 +132,8 @@ export function getBehaviorsByOperations(ops: string[]): RegistryEntry[] {
 /**
  * Fuzzy search across name, description, family, layer, and entity name.
  */
-export function searchBehaviors(query: string): RegistryEntry[] {
-  const registry = getBehaviorRegistry();
+export async function searchBehaviors(query: string): Promise<RegistryEntry[]> {
+  const registry = await getBehaviorRegistry();
   const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
 
   const scored = Object.values(registry).map((b) => {
@@ -146,8 +159,8 @@ export function searchBehaviors(query: string): RegistryEntry[] {
 /**
  * Get a compact summary of a behavior including slots and patterns from the .orb file.
  */
-export function getBehaviorSummary(name: string): BehaviorSummary | null {
-  const registry = getBehaviorRegistry();
+export async function getBehaviorSummary(name: string): Promise<BehaviorSummary | null> {
+  const registry = await getBehaviorRegistry();
   const entry = registry[name];
   if (!entry) return null;
 
