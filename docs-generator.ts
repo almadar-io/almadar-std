@@ -118,6 +118,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Data loading, batching, shuffling, and preprocessing for ML pipelines.',
         icon: '📦',
     },
+    agent: {
+        name: 'Agent',
+        displayName: 'Agent Intelligence',
+        description: 'Agent memory management, LLM access, tool invocation, context management, and session control.',
+        icon: '🤖',
+    },
 };
 
 /**

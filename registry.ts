@@ -24,6 +24,7 @@ import { TENSOR_OPERATORS } from './modules/tensor.js';
 import { TRAIN_OPERATORS } from './modules/train.js';
 import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
+import { AGENT_OPERATORS } from './modules/agent.js';
 
 // ============================================================================
 // Combined Registry
@@ -46,6 +47,7 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...TRAIN_OPERATORS,
   ...PROB_OPERATORS,
   ...OS_OPERATORS,
+  ...AGENT_OPERATORS,
 };
 
 /**
@@ -65,6 +67,7 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   train: TRAIN_OPERATORS,
   prob: PROB_OPERATORS,
   os: OS_OPERATORS,
+  agent: AGENT_OPERATORS,
 };
 
 // ============================================================================
