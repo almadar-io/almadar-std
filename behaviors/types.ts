@@ -48,27 +48,20 @@ export type {
 };
 
 // ============================================================================
-// Behavior-local types (permissive wrappers for schema authoring)
+// Behavior-local type aliases (use core types directly)
 // ============================================================================
 
 /**
- * Behavior schemas use raw UI tree objects in render-ui effects (e.g. { type: 'stack', ... })
- * rather than strict AnyPatternConfig. Schema correctness is validated by `orbital validate`.
+ * @deprecated Use `Effect` from `@almadar/core` directly.
+ * Kept for backward compatibility only.
  */
-export type BehaviorEffect = Effect | ['render-ui', string, Record<string, unknown>] | ['render-ui', string, Record<string, unknown>, Record<string, unknown>] | ['render-ui', string, null];
+export type BehaviorEffect = Effect;
 
 /**
- * Behavior schemas may include a `theme` property and use raw UI trees in effects.
- * This type provides basic shape checking while deferring strict validation to `orbital validate`.
+ * @deprecated Use `OrbitalSchema` from `@almadar/core` directly.
+ * Kept for backward compatibility only.
  */
-export interface BehaviorSchema {
-  name: string;
-  description?: string;
-  theme?: Record<string, unknown>;
-  entities?: Record<string, unknown>[];
-  orbitals?: Record<string, unknown>[];
-  [key: string]: unknown;
-}
+export type BehaviorSchema = OrbitalSchema;
 
 // ============================================================================
 // Legacy Type Aliases (for backward compatibility only)
