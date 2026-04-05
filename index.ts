@@ -72,8 +72,6 @@ export {
   // Types
   type BehaviorTrait,
   type BehaviorMetadata,
-  type BehaviorSchema,
-  type BehaviorEffect,
   type ItemAction,
   type Trait,
   type StateMachine,

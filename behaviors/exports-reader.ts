@@ -9,7 +9,7 @@
  */
 
 import * as behaviorFns from './functions/index.js';
-import type { BehaviorSchema } from './types.js';
+import type { OrbitalSchema } from '@almadar/core/types';
 
 export type BehaviorLevel = 'atoms' | 'molecules' | 'organisms';
 
@@ -49,9 +49,9 @@ function getEntries(): BehaviorEntry[] {
   return cachedEntries;
 }
 
-function callBehavior(entry: BehaviorEntry): BehaviorSchema {
+function callBehavior(entry: BehaviorEntry): OrbitalSchema {
   const result = entry.fn({ entityName: entry.name.replace(/^std-/, '') });
-  const schema = result as BehaviorSchema;
+  const schema = result as OrbitalSchema;
   schema.name = entry.name;
   return schema;
 }
@@ -60,17 +60,17 @@ export function getAllBehaviorNames(): string[] {
   return getEntries().map(e => e.name);
 }
 
-export function getAllBehaviors(): BehaviorSchema[] {
+export function getAllBehaviors(): OrbitalSchema[] {
   return getEntries().map(e => callBehavior(e));
 }
 
-export function getBehaviorsByLevel(level: BehaviorLevel): BehaviorSchema[] {
+export function getBehaviorsByLevel(level: BehaviorLevel): OrbitalSchema[] {
   // Level is encoded in the behavior name pattern via the registry
   // For now, return all and let the caller filter via the registry
   return getAllBehaviors();
 }
 
-export function loadGoldenOrb(behaviorName: string): BehaviorSchema | null {
+export function loadGoldenOrb(behaviorName: string): OrbitalSchema | null {
   const entry = getEntries().find(e => e.name === behaviorName);
   if (!entry) return null;
   try {
@@ -84,6 +84,6 @@ export function hasGoldenOrb(behaviorName: string): boolean {
   return getEntries().some(e => e.name === behaviorName);
 }
 
-export function getBehavior(behaviorName: string): BehaviorSchema | null {
+export function getBehavior(behaviorName: string): OrbitalSchema | null {
   return loadGoldenOrb(behaviorName);
 }

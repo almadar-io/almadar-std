@@ -16,8 +16,6 @@
 export type {
   BehaviorTrait,
   BehaviorMetadata,
-  BehaviorSchema,
-  BehaviorEffect,
   ItemAction,
   Effect,
   Expression,

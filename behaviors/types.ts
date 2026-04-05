@@ -9,7 +9,6 @@
 
 import type {
   SExpr,
-  RequiredField,
   Effect,
   Expression,
   Trait,
@@ -22,7 +21,6 @@ import type {
   TraitTick,
   TraitDataEntity,
   TraitEntityField,
-  TraitEventListener,
   OrbitalSchema,
   Orbital,
   Entity,
@@ -46,22 +44,6 @@ export type {
   Orbital,
   Entity,
 };
-
-// ============================================================================
-// Behavior-local type aliases (use core types directly)
-// ============================================================================
-
-/**
- * @deprecated Use `Effect` from `@almadar/core` directly.
- * Kept for backward compatibility only.
- */
-export type BehaviorEffect = Effect;
-
-/**
- * @deprecated Use `OrbitalSchema` from `@almadar/core` directly.
- * Kept for backward compatibility only.
- */
-export type BehaviorSchema = OrbitalSchema;
 
 // ============================================================================
 // Legacy Type Aliases (for backward compatibility only)
