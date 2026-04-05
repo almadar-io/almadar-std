@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -93,7 +93,7 @@ function buildEntity(c: CombatLogConfig): Entity {
     { id: 'cl-4', name: 'Special log', description: 'Mage casts fireball', status: 'active', createdAt: '2026-01-01', type: 'special', message: 'Mage casts Fireball dealing 40 AoE damage', timestamp: 4000, actorName: 'Mage', targetName: 'Goblin', value: 40, turn: 2 },
     { id: 'cl-5', name: 'Move log', description: 'Rogue moves to flank', status: 'active', createdAt: '2026-01-01', type: 'move', message: 'Rogue moves to flanking position', timestamp: 5000, actorName: 'Rogue', value: 0, turn: 3 },
   ];
-  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, instances });
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, instances: instances as unknown as EntityRow[] });
 }
 
 function buildTrait(c: CombatLogConfig): Trait {

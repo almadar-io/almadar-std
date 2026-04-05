@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -104,7 +104,7 @@ function buildEntity(c: PlatformerConfig): Entity {
         { x: 1700, y: 150, width: 140, height: 20 },
       ],
       player: { x: 50, y: 300, width: 30, height: 30, vx: 0, vy: 0 },
-    }],
+    } as unknown as EntityRow],
   });
 }
 

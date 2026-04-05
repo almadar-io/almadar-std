@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -81,7 +81,7 @@ function buildEntity(c: InventoryPanelConfig): Entity {
         { id: 'item-4', name: 'Gold Ring', quantity: 1, rarity: 'epic' },
         { id: 'item-5', name: 'Dragon Scale', quantity: 1, rarity: 'epic' },
       ],
-    }],
+    } as unknown as EntityRow],
   });
 }
 

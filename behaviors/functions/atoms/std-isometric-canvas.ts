@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -114,7 +114,7 @@ function buildEntity(c: IsometricConfig): Entity {
       tiles: generateTiles(c.boardWidth, c.boardHeight),
       units: [],
       features: [],
-    }],
+    } as unknown as EntityRow],
   });
 }
 

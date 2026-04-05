@@ -10,7 +10,7 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
 import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
@@ -99,7 +99,7 @@ function buildEntity(c: GameCanvas3dConfig): Entity {
       features: [],
     },
   ];
-  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, instances });
+  return makeEntity({ name: c.entityName, fields, persistence: c.persistence, instances: instances as unknown as EntityRow[] });
 }
 
 function buildTrait(c: GameCanvas3dConfig): Trait {
