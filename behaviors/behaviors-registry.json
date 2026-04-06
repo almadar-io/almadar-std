@@ -1,18 +1,2178 @@
 {
-  "$generated": "2026-03-30T04:17:38.479Z",
+  "$generated": "2026-04-06T10:04:56.623Z",
   "$source": "tools/behavior-registry-sync",
-  "totalBehaviors": 116,
-  "atoms": 66,
-  "molecules": 23,
-  "organisms": 27,
+  "totalBehaviors": 139,
+  "atoms": 79,
+  "molecules": 28,
+  "organisms": 32,
   "layers": {
+    "UI Patterns": 66,
     "Infrastructure": 4,
-    "UI Patterns": 43,
     "Game": 34,
     "Services": 21,
     "Domain": 14
   },
   "behaviors": {
+    "std-agent-activity-log": {
+      "name": "std-agent-activity-log",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Chronological action log atom for tracking agent operations. Provides a timeline view of agent actions with status indicators, duration tracking, and clear functionality. Listens for LOG_ENTRY events from sibling traits.",
+      "statePattern": "logging",
+      "complexity": {
+        "states": 1,
+        "events": 3,
+        "transitions": 3
+      },
+      "defaultEntity": {
+        "name": "AgentActivityLog",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Activity Log",
+        "entitySingular": "AgentActivityLog",
+        "entityPlural": "AgentActivityLogs"
+      },
+      "defaultIcons": [
+        "activity"
+      ],
+      "composableWith": [
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-collision",
+        "std-combat-log",
+        "std-rate-limiter",
+        "std-search",
+        "std-selection",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-undo",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "LOG_ENTRY",
+        "CLEAR"
+      ],
+      "eventPayloads": {
+        "LOG_ENTRY": [
+          {
+            "name": "action",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-chat-thread": {
+      "name": "std-agent-chat-thread",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Chat message thread atom for agent conversations. Displays a chronological list of messages (user, assistant, tool) with compose/send flow. Emits configurable send event for orchestrating traits to handle the actual agent call.",
+      "statePattern": "composing, idle",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 5
+      },
+      "defaultEntity": {
+        "name": "AgentChatThread",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "default": "user"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentChatThread Thread",
+        "entitySingular": "AgentChatThread",
+        "entityPlural": "AgentChatThreads",
+        "createButton": "New Message"
+      },
+      "defaultIcons": [
+        "message-circle"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-collision",
+        "std-combat-log",
+        "std-messaging",
+        "std-rate-limiter",
+        "std-realtime-chat",
+        "std-search",
+        "std-selection",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-undo",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "COMPOSE",
+        "SEND",
+        "CLEAR"
+      ],
+      "eventPayloads": {
+        "SEND": [
+          {
+            "name": "content",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-classifier": {
+      "name": "std-agent-classifier",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Classification flow atom for agent-powered text classification. Composes UI atoms (stdModal for input form, stdNotification for result badge) with an agent trait that uses agent/generate with a classification prompt.",
+      "statePattern": "closed, open",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 4
+      },
+      "defaultEntity": {
+        "name": "AgentClassifier",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentClassifier",
+        "entitySingular": "AgentClassifier",
+        "entityPlural": "AgentClassifiers"
+      },
+      "defaultIcons": [
+        "tag"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-api-gateway",
+        "std-arcade-game",
+        "std-async",
+        "std-booking-system",
+        "std-cache-aside",
+        "std-cicd-pipeline",
+        "std-circuit-breaker",
+        "std-cms",
+        "std-confirmation",
+        "std-crm",
+        "std-detail",
+        "std-drawer",
+        "std-ecommerce",
+        "std-finance-tracker",
+        "std-gallery",
+        "std-gameflow",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
+        "std-list",
+        "std-lms",
+        "std-modal",
+        "std-movement",
+        "std-platformer-app",
+        "std-platformer-game",
+        "std-project-manager",
+        "std-puzzle-app",
+        "std-puzzle-game",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rpg-game",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-social-feed",
+        "std-strategy-game",
+        "std-turn-based-battle",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "CLASSIFY",
+        "CLOSE",
+        "SAVE"
+      ],
+      "eventPayloads": {
+        "SAVE": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-completion": {
+      "name": "std-agent-completion",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Completion flow atom for agent text generation. Composes UI atoms (stdModal for prompt input, stdNotification for feedback) with an agent trait that handles agent/generate and retry logic.",
+      "statePattern": "closed, open",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 4
+      },
+      "defaultEntity": {
+        "name": "AgentCompletion",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentCompletion",
+        "entitySingular": "AgentCompletion",
+        "entityPlural": "AgentCompletions"
+      },
+      "defaultIcons": [
+        "sparkles"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-api-gateway",
+        "std-arcade-game",
+        "std-async",
+        "std-autoregressive",
+        "std-booking-system",
+        "std-cache-aside",
+        "std-cicd-pipeline",
+        "std-circuit-breaker",
+        "std-cms",
+        "std-confirmation",
+        "std-crm",
+        "std-detail",
+        "std-drawer",
+        "std-ecommerce",
+        "std-finance-tracker",
+        "std-gallery",
+        "std-gameflow",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
+        "std-list",
+        "std-lms",
+        "std-modal",
+        "std-movement",
+        "std-platformer-app",
+        "std-platformer-game",
+        "std-project-manager",
+        "std-puzzle-app",
+        "std-puzzle-game",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rpg-game",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-social-feed",
+        "std-strategy-game",
+        "std-turn-based-battle",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "GENERATE",
+        "CLOSE",
+        "SAVE"
+      ],
+      "eventPayloads": {
+        "SAVE": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-context-window": {
+      "name": "std-agent-context-window",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Context window management atom for agent token tracking. Composes UI atoms (stdAgentTokenGauge for visual display, stdNotification for threshold alerts) with an agent trait that handles agent/compact, agent/token-count, and agent/context-usage.",
+      "statePattern": "critical, normal, warning",
+      "complexity": {
+        "states": 3,
+        "events": 4,
+        "transitions": 16
+      },
+      "defaultEntity": {
+        "name": "AgentContextWindow",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "maxTokens",
+            "type": "number",
+            "default": 200000
+          },
+          {
+            "name": "usage",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastCompactedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "current",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "default": 200000
+          },
+          {
+            "name": "threshold",
+            "type": "number",
+            "default": 0.85
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Token Usage",
+        "entitySingular": "AgentContextWindow",
+        "entityPlural": "AgentContextWindows"
+      },
+      "defaultIcons": [
+        "gauge"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "UPDATE",
+        "COMPACT",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "UPDATE": [
+          {
+            "name": "current",
+            "type": "number",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-conversation": {
+      "name": "std-agent-conversation",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Conversation flow atom for multi-turn agent interactions. Composes stdAgentChatThread (message display and compose) with an agent trait that handles agent/generate for AI replies and TOKEN_UPDATE emitting.",
+      "statePattern": "composing, idle",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 5
+      },
+      "defaultEntity": {
+        "name": "AgentConversation",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "messages",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "turnCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "default": "user"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentConversation Thread",
+        "entitySingular": "AgentConversation",
+        "entityPlural": "AgentConversations",
+        "createButton": "New Message"
+      },
+      "defaultIcons": [
+        "message-circle"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-collision",
+        "std-combat-log",
+        "std-messaging",
+        "std-rate-limiter",
+        "std-realtime-chat",
+        "std-search",
+        "std-selection",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-undo",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "COMPOSE",
+        "SEND",
+        "CLEAR"
+      ],
+      "eventPayloads": {
+        "SEND": [
+          {
+            "name": "content",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-memory": {
+      "name": "std-agent-memory",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Memory lifecycle atom for agent memory operations. Composes UI atoms (stdBrowse for memory table, stdModal for memorize form) with an agent trait that handles agent/memorize, agent/recall, agent/pin, agent/forget, agent/reinforce, and agent/decay operators.",
+      "statePattern": "browsing",
+      "complexity": {
+        "states": 1,
+        "events": 12,
+        "transitions": 6
+      },
+      "defaultEntity": {
+        "name": "AgentMemory",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "general"
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": "session"
+          },
+          {
+            "name": "lastAccessedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentMemory Manager",
+        "entitySingular": "AgentMemory",
+        "entityPlural": "AgentMemorys"
+      },
+      "defaultIcons": [
+        "brain"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-rate-limiter",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "MEMORIZE",
+        "RECALL",
+        "DECAY",
+        "PIN",
+        "REINFORCE",
+        "FORGET",
+        "MEMORIZED",
+        "PINNED",
+        "FORGOT",
+        "REINFORCED",
+        "DECAYED"
+      ],
+      "eventPayloads": {
+        "PIN": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
+          }
+        ],
+        "REINFORCE": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
+          }
+        ],
+        "FORGET": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
+          }
+        ],
+        "MEMORIZED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "PINNED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "FORGOT": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "REINFORCED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "DECAYED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-provider": {
+      "name": "std-agent-provider",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Provider routing atom for agent model/provider switching. Composes UI atoms (stdModal for switch form, stdNotification for confirmation) with an agent trait that handles agent/switch-provider, agent/provider, and agent/model operators.",
+      "statePattern": "closed, open",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 4
+      },
+      "defaultEntity": {
+        "name": "AgentProvider",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "currentProvider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "currentModel",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "fallbackProvider",
+            "type": "string",
+            "default": "openai"
+          },
+          {
+            "name": "requestCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Switch Provider",
+        "entitySingular": "AgentProvider",
+        "entityPlural": "AgentProviders"
+      },
+      "defaultIcons": [
+        "repeat"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-api-gateway",
+        "std-arcade-game",
+        "std-async",
+        "std-booking-system",
+        "std-cache-aside",
+        "std-cicd-pipeline",
+        "std-circuit-breaker",
+        "std-cms",
+        "std-confirmation",
+        "std-crm",
+        "std-detail",
+        "std-drawer",
+        "std-ecommerce",
+        "std-finance-tracker",
+        "std-gallery",
+        "std-gameflow",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
+        "std-list",
+        "std-lms",
+        "std-modal",
+        "std-movement",
+        "std-platformer-app",
+        "std-platformer-game",
+        "std-project-manager",
+        "std-puzzle-app",
+        "std-puzzle-game",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rpg-game",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-social-feed",
+        "std-strategy-game",
+        "std-turn-based-battle",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "SWITCH",
+        "CLOSE",
+        "SAVE"
+      ],
+      "eventPayloads": {
+        "SAVE": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-search": {
+      "name": "std-agent-search",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Code search flow atom for agent-powered codebase searching. Composes stdBrowse (results table) with an agent trait that handles agent/search-code.",
+      "statePattern": "browsing",
+      "complexity": {
+        "states": 1,
+        "events": 5,
+        "transitions": 2
+      },
+      "defaultEntity": {
+        "name": "AgentSearch",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "results",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resultCount",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentSearch",
+        "entitySingular": "AgentSearch",
+        "entityPlural": "AgentSearchs"
+      },
+      "defaultIcons": [
+        "search"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-api-gateway",
+        "std-async",
+        "std-booking-system",
+        "std-cache-aside",
+        "std-cicd-pipeline",
+        "std-circuit-breaker",
+        "std-cms",
+        "std-collision",
+        "std-combat-log",
+        "std-crm",
+        "std-detail",
+        "std-ecommerce",
+        "std-finance-tracker",
+        "std-gallery",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
+        "std-list",
+        "std-lms",
+        "std-messaging",
+        "std-project-manager",
+        "std-rate-limiter",
+        "std-realtime-chat",
+        "std-search",
+        "std-selection",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-social-feed",
+        "std-undo",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "SEARCH",
+        "CLEAR",
+        "VIEW",
+        "SEARCHED"
+      ],
+      "eventPayloads": {
+        "VIEW": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
+          }
+        ],
+        "SEARCHED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-session": {
+      "name": "std-agent-session",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Session lifecycle atom for agent session management. Composes UI atoms (stdBrowse for session list, stdModal for fork label form) with an agent trait that handles agent/fork, agent/label, and agent/session-id.",
+      "statePattern": "browsing",
+      "complexity": {
+        "states": 1,
+        "events": 8,
+        "transitions": 4
+      },
+      "defaultEntity": {
+        "name": "AgentSession",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "sessionId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "parentId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentSession Manager",
+        "entitySingular": "AgentSession",
+        "entityPlural": "AgentSessions"
+      },
+      "defaultIcons": [
+        "terminal"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-api-gateway",
+        "std-async",
+        "std-booking-system",
+        "std-cache-aside",
+        "std-cicd-pipeline",
+        "std-circuit-breaker",
+        "std-cms",
+        "std-crm",
+        "std-detail",
+        "std-ecommerce",
+        "std-finance-tracker",
+        "std-gallery",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
+        "std-list",
+        "std-lms",
+        "std-messaging",
+        "std-project-manager",
+        "std-rate-limiter",
+        "std-realtime-chat",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-social-feed",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "FORK",
+        "LABEL",
+        "END",
+        "VIEW",
+        "FORKED",
+        "LABELED",
+        "ENDED"
+      ],
+      "eventPayloads": {
+        "VIEW": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
+          }
+        ],
+        "FORKED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "LABELED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "ENDED": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-step-progress": {
+      "name": "std-agent-step-progress",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Pipeline/workflow step indicator atom. Tracks progress through a series of named steps with start/advance/complete/fail lifecycle. Listens for ADVANCE, COMPLETE, FAIL so orchestrating traits can drive the progress externally.",
+      "statePattern": "completed, failed, idle, in_progress",
+      "complexity": {
+        "states": 4,
+        "events": 6,
+        "transitions": 9
+      },
+      "defaultEntity": {
+        "name": "AgentStepProgress",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": "Initialize,Process,Validate,Complete"
+          },
+          {
+            "name": "currentStep",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "default": 4
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "AgentStepProgress",
+        "entitySingular": "AgentStepProgress",
+        "entityPlural": "AgentStepProgresss"
+      },
+      "defaultIcons": [
+        "list-ordered"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-arcade-game",
+        "std-async",
+        "std-builder-game",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-classifier-game",
+        "std-coding-academy",
+        "std-combat",
+        "std-debugger-game",
+        "std-devops-dashboard",
+        "std-dialogue-box",
+        "std-event-handler-game",
+        "std-form-advanced",
+        "std-game-canvas2d",
+        "std-game-menu",
+        "std-gameflow",
+        "std-loading",
+        "std-logic-training",
+        "std-negotiator-game",
+        "std-physics2d",
+        "std-platformer-app",
+        "std-platformer-canvas",
+        "std-platformer-game",
+        "std-puzzle-app",
+        "std-puzzle-game",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-rpg-game",
+        "std-score",
+        "std-score-board",
+        "std-sequencer-game",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-simulator-game",
+        "std-stem-lab",
+        "std-strategy-game",
+        "std-text-effects",
+        "std-timer",
+        "std-turn-based-battle",
+        "std-upload",
+        "std-validate-on-save",
+        "std-wizard"
+      ],
+      "connectableEvents": [
+        "START",
+        "ADVANCE",
+        "COMPLETE",
+        "FAIL",
+        "RESET"
+      ],
+      "eventPayloads": {}
+    },
+    "std-agent-token-gauge": {
+      "name": "std-agent-token-gauge",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Token usage display atom with threshold-based state transitions. Shows current token count, usage percentage, and progress bar. Transitions from normal -> warning -> critical based on configurable thresholds. Provides compact and reset actions.",
+      "statePattern": "critical, normal, warning",
+      "complexity": {
+        "states": 3,
+        "events": 4,
+        "transitions": 16
+      },
+      "defaultEntity": {
+        "name": "AgentTokenGauge",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "current",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "default": 180000
+          },
+          {
+            "name": "threshold",
+            "type": "number",
+            "default": 0.85
+          },
+          {
+            "name": "lastCompactedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Token Usage",
+        "entitySingular": "AgentTokenGauge",
+        "entityPlural": "AgentTokenGauges"
+      },
+      "defaultIcons": [
+        "gauge"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "UPDATE",
+        "COMPACT",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "UPDATE": [
+          {
+            "name": "current",
+            "type": "number",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-tool-call": {
+      "name": "std-agent-tool-call",
+      "level": "atom",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Tool execution atom for agent tool invocation. Composes UI atoms (stdModal for invoke form, stdAgentActivityLog for call history) with an agent trait that handles agent/invoke and TOOL_STARTED/TOOL_COMPLETED emits.",
+      "statePattern": "closed, open",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 4
+      },
+      "defaultEntity": {
+        "name": "AgentToolCall",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "args",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Invoke Tool",
+        "entitySingular": "AgentToolCall",
+        "entityPlural": "AgentToolCalls"
+      },
+      "defaultIcons": [
+        "wrench"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-api-gateway",
+        "std-arcade-game",
+        "std-async",
+        "std-booking-system",
+        "std-cache-aside",
+        "std-cicd-pipeline",
+        "std-circuit-breaker",
+        "std-cms",
+        "std-confirmation",
+        "std-crm",
+        "std-detail",
+        "std-drawer",
+        "std-ecommerce",
+        "std-finance-tracker",
+        "std-gallery",
+        "std-gameflow",
+        "std-healthcare",
+        "std-helpdesk",
+        "std-hr-portal",
+        "std-list",
+        "std-lms",
+        "std-modal",
+        "std-movement",
+        "std-platformer-app",
+        "std-platformer-game",
+        "std-project-manager",
+        "std-puzzle-app",
+        "std-puzzle-game",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rpg-game",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-social-feed",
+        "std-strategy-game",
+        "std-turn-based-battle",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "INVOKE",
+        "CLOSE",
+        "SAVE"
+      ],
+      "eventPayloads": {
+        "SAVE": [
+          {
+            "name": "data",
+            "type": "object",
+            "required": true
+          }
+        ]
+      }
+    },
     "std-async": {
       "name": "std-async",
       "level": "atom",
@@ -62,6 +2222,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-autoregressive",
@@ -258,6 +2441,8 @@
         "message-square"
       ],
       "composableWith": [
+        "std-agent-completion",
+        "std-agent-rag",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -426,6 +2611,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -734,6 +2942,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -925,6 +3156,11 @@
         "crosshair"
       ],
       "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -1027,6 +3263,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -1140,6 +3381,18 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -1277,6 +3530,10 @@
         "shield-check"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -1402,6 +3659,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -1593,6 +3851,10 @@
         "panel-right"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -1891,6 +4153,12 @@
         "image"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -2097,6 +4365,7 @@
         "monitor"
       ],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -2403,6 +4672,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -2627,6 +4897,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -3087,6 +5362,18 @@
         "play-circle"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -3206,6 +5493,10 @@
         "layout-panel-top"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -3323,6 +5614,10 @@
         "move"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -3755,6 +6050,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -3861,6 +6157,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -3960,6 +6257,22 @@
         "flag"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -4126,6 +6439,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -4306,6 +6642,18 @@
         "star"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -4428,6 +6776,18 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -4577,6 +6937,18 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -4692,6 +7064,11 @@
         "search"
       ],
       "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -4784,6 +7161,11 @@
         "check-square"
       ],
       "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -4920,6 +7302,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -5114,6 +7519,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -5308,6 +7736,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -5502,6 +7953,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -5694,6 +8168,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -5893,6 +8390,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -6082,6 +8602,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -6281,6 +8824,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -6493,6 +9059,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -6681,6 +9270,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -6871,6 +9483,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -7062,6 +9697,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -7251,6 +9909,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -7426,6 +10107,18 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -7857,6 +10550,18 @@
         "type"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -8059,6 +10764,18 @@
         "clock"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -8192,6 +10909,11 @@
         "history"
       ],
       "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -8301,6 +11023,18 @@
         "upload"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-async",
         "std-builder-game",
         "std-cache-aside",
@@ -8428,6 +11162,29 @@
       "defaultIcons": [],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -8605,6 +11362,7 @@
         "clipboard"
       ],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -8679,6 +11437,1347 @@
         ]
       }
     },
+    "std-agent-fix-loop": {
+      "name": "std-agent-fix-loop",
+      "level": "molecule",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Composes agent atoms + UI atoms into an iterative validation-fix loop with step progress tracking and an errors browse list. Validates a target, generates a fix via LLM, applies it via tool invocation, then re-validates. Composed atoms: - stdAgentToolCall (validate): run validation tool - stdAgentToolCall (fix): apply generated fix - stdAgentCompletion: generate fix via LLM - stdAgentStepProgress: visual step indicator - stdBrowse: browsable errors list",
+      "statePattern": "applying, failed, fixing, idle, succeeded, validating",
+      "complexity": {
+        "states": 6,
+        "events": 9,
+        "transitions": 11
+      },
+      "defaultEntity": {
+        "name": "AgentFixLoop",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "validationErrors",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "fixAttempts",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "maxAttempts",
+            "type": "number",
+            "default": 5
+          },
+          {
+            "name": "currentFix",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "errorCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStep",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "default": 4
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": "Validate,Analyze,Fix,Re-validate"
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "args",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Validation-Fix Loop",
+        "entitySingular": "AgentFixLoop",
+        "entityPlural": "AgentFixLoops"
+      },
+      "defaultIcons": [
+        "wrench"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "FIX",
+        "VALIDATION_PASSED",
+        "VALIDATION_ERRORS",
+        "FIX_GENERATED",
+        "FIX_APPLIED",
+        "EXCEEDED_ATTEMPTS",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "VALIDATION_ERRORS": [
+          {
+            "name": "errors",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "FIX_GENERATED": [
+          {
+            "name": "fix",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "EXCEEDED_ATTEMPTS": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-learner": {
+      "name": "std-agent-learner",
+      "level": "molecule",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Composes agent atoms + UI atoms into an outcome learning pipeline with an activity log for learning history and a browse list for records. Listens for task success/failure events, memorizes outcomes, reinforces memories for successes, applies decay for failures, and adjusts provider routing based on accumulated results. Composed atoms: - stdAgentMemory: memorize outcomes, reinforce/decay based on results - stdAgentCompletion: analyze outcome impact via LLM - stdAgentProvider: adjust provider routing based on success patterns - stdAgentActivityLog: chronological learning timeline - stdBrowse: browsable records list",
+      "statePattern": "analyzing, idle, recording",
+      "complexity": {
+        "states": 3,
+        "events": 7,
+        "transitions": 8
+      },
+      "defaultEntity": {
+        "name": "AgentLearner",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "outcome",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "impact",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "isSuccess",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "consecutiveFailures",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalSuccesses",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalFailures",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "currentProvider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "currentModel",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "fallbackProvider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "requestCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Outcome Learner",
+        "entitySingular": "AgentLearner",
+        "entityPlural": "AgentLearners"
+      },
+      "defaultIcons": [
+        "graduation-cap",
+        "check-circle",
+        "x-circle",
+        "cpu"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "TASK_SUCCEEDED",
+        "TASK_FAILED",
+        "RECORDED",
+        "ANALYSIS_DONE",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "TASK_SUCCEEDED": [
+          {
+            "name": "outcome",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "TASK_FAILED": [
+          {
+            "name": "outcome",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "RECORDED": [
+          {
+            "name": "memoryId",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "ANALYSIS_DONE": [
+          {
+            "name": "impact",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-planner": {
+      "name": "std-agent-planner",
+      "level": "molecule",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Composes agent atoms + UI atoms into a task planning pipeline with a modal for task input and an activity log for plan history. Classifies the incoming task, recalls relevant memories for context, then generates a step-by-step execution plan with confidence scoring. Composed atoms: - stdAgentClassifier: categorize the task type - stdAgentCompletion: generate the step-by-step plan via LLM - stdAgentMemory: recall relevant past patterns and plans - stdModal: task input form overlay - stdAgentActivityLog: plan history timeline",
+      "statePattern": "classifying, idle, planning, ready, recalling",
+      "complexity": {
+        "states": 5,
+        "events": 7,
+        "transitions": 9
+      },
+      "defaultEntity": {
+        "name": "AgentPlanner",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "relevantMemories",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Task Planner",
+        "entitySingular": "AgentPlanner",
+        "entityPlural": "AgentPlanners"
+      },
+      "defaultIcons": [
+        "map"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "PLAN",
+        "CLASSIFIED",
+        "MEMORIES_LOADED",
+        "PLAN_GENERATED",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "CLASSIFIED": [
+          {
+            "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "MEMORIES_LOADED": [
+          {
+            "name": "memories",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "PLAN_GENERATED": [
+          {
+            "name": "steps",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-rag": {
+      "name": "std-agent-rag",
+      "level": "molecule",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Composes agent atoms + UI atoms into a RAG pipeline with tabbed views. Retrieves relevant memories and code snippets, injects them as context, then generates a response with the augmented prompt. Composed atoms: - stdAgentMemory: recall memories by semantic query - stdAgentSearch: search code repositories for relevant snippets - stdAgentCompletion: generate response with augmented context - stdTabs: tabbed view for Query / Sources / Response Cross-trait events: - GENERATE (RagOrchestrator -> MemoryLifecycle): trigger recall - RETRIEVAL_DONE (RagOrchestrator -> SearchLifecycle): trigger search after recall - GENERATION_DONE (RagOrchestrator -> CompletionFlow): trigger completion",
+      "statePattern": "completed, generating, idle, retrieving",
+      "complexity": {
+        "states": 4,
+        "events": 6,
+        "transitions": 7
+      },
+      "defaultEntity": {
+        "name": "AgentRag",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "context",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryHits",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "searchHits",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resultCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "results",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "RAG Pipeline",
+        "entitySingular": "AgentRag",
+        "entityPlural": "AgentRags"
+      },
+      "defaultIcons": [
+        "brain"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-autoregressive",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "GENERATE",
+        "RETRIEVAL_DONE",
+        "GENERATION_DONE",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "RETRIEVAL_DONE": [
+          {
+            "name": "context",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "memoryHits",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "searchHits",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "GENERATION_DONE": [
+          {
+            "name": "response",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-tool-loop": {
+      "name": "std-agent-tool-loop",
+      "level": "molecule",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Composes agent atoms + UI atoms into an iterative tool-use loop with step progress tracking and activity logging. The agent generates a plan, invokes tools to execute steps, checks results, and either loops or finishes. Composed atoms: - stdAgentCompletion: LLM plan generation and result checking - stdAgentToolCall: tool invocation with argument passing - stdAgentContextWindow: context window monitoring and compaction - stdAgentStepProgress: visual pipeline step indicator - stdAgentActivityLog: chronological action timeline",
+      "statePattern": "checking, completed, executing, failed, idle, planning",
+      "complexity": {
+        "states": 6,
+        "events": 9,
+        "transitions": 11
+      },
+      "defaultEntity": {
+        "name": "AgentToolLoop",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active"
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "plan",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "iterations",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "maxIterations",
+            "type": "number",
+            "default": 10
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentTool",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lastToolResult",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentStep",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "default": 4
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": "Plan,Execute,Check,Complete"
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "args",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "maxTokens",
+            "type": "number",
+            "default": 200000
+          },
+          {
+            "name": "usage",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "current",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "default": 200000
+          },
+          {
+            "name": "threshold",
+            "type": "number",
+            "default": 0.85
+          },
+          {
+            "name": "lastCompactedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Tool Execution Loop",
+        "entitySingular": "AgentToolLoop",
+        "entityPlural": "AgentToolLoops"
+      },
+      "defaultIcons": [
+        "repeat"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "EXECUTE",
+        "PLAN_GENERATED",
+        "TOOL_RESULT",
+        "CHECK_PASSED",
+        "CHECK_NEEDS_MORE",
+        "MAX_ITERATIONS",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "PLAN_GENERATED": [
+          {
+            "name": "plan",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "toolArgs",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "TOOL_RESULT": [
+          {
+            "name": "output",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "CHECK_PASSED": [
+          {
+            "name": "result",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "CHECK_NEEDS_MORE": [
+          {
+            "name": "toolName",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "toolArgs",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "MAX_ITERATIONS": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
     "std-builder-game": {
       "name": "std-builder-game",
       "level": "molecule",
@@ -8735,6 +12834,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-cache-aside",
@@ -8948,6 +13048,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -9059,6 +13160,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -9163,6 +13265,12 @@
         "file-text"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-async",
         "std-booking-system",
@@ -9218,6 +13326,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "SAVE": [
@@ -9285,6 +13397,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -9418,6 +13531,18 @@
         "file-text"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-async",
         "std-cache-aside",
         "std-circuit-breaker",
@@ -9560,6 +13685,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "CONFIRMED": [
@@ -9674,6 +13803,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DROP": [
@@ -9681,6 +13814,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "ITEM_ADDED": [
@@ -9755,6 +13892,12 @@
         "list"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -9829,6 +13972,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -9836,6 +13983,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -9843,6 +13994,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "LIST_ITEM_CREATED": [
@@ -9909,6 +14064,11 @@
         "message-circle"
       ],
       "composableWith": [
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
+        "std-agent-session",
         "std-api-gateway",
         "std-async",
         "std-booking-system",
@@ -9963,6 +14123,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "SEND": [
@@ -10030,6 +14194,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -10151,6 +14316,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -10306,6 +14476,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -10596,6 +14771,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -10730,6 +14906,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -10951,6 +15150,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -11183,6 +15405,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -11362,6 +15607,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -11559,6 +15827,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -11730,6 +16021,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -11841,6 +16133,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -11917,6 +16214,968 @@
       ],
       "eventPayloads": {}
     },
+    "std-agent-assistant": {
+      "name": "std-agent-assistant",
+      "level": "organism",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Full chat assistant organism. Composes molecule + atoms into a multi-turn conversational agent with memory persistence, context compaction, provider switching, tabbed views, and a memory sidebar drawer. Composed from: - stdAgentConversation: multi-turn chat with generate + context tracking - stdAgentMemory: memory lifecycle (memorize, recall, pin, forget, reinforce, decay) - stdAgentContextWindow: token monitoring and auto-compaction - stdAgentProvider: provider switching based on task complexity - stdTabs: Chat / Memory / Settings tab navigation - stdDrawer: memory sidebar for quick recall Cross-trait events: - MEMORIZE_RESPONSE (Conversation -> Memory): auto-memorize important responses - PROVIDER_CHANGED (Provider -> Conversation): notify conversation of provider switch Pages: /chat (initial), /memory, /settings",
+      "statePattern": "composing, idle",
+      "complexity": {
+        "states": 2,
+        "events": 4,
+        "transitions": 5
+      },
+      "defaultEntity": {
+        "name": "Assistant",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "messages",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "currentMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "contextUsage",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "default"
+          },
+          {
+            "name": "sessionId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "turnCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "default": "user"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Assistant Thread",
+        "entitySingular": "Assistant",
+        "entityPlural": "Assistants",
+        "createButton": "New Message"
+      },
+      "defaultIcons": [
+        "message-circle"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-collision",
+        "std-combat-log",
+        "std-messaging",
+        "std-rate-limiter",
+        "std-realtime-chat",
+        "std-search",
+        "std-selection",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-undo",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "COMPOSE",
+        "SEND",
+        "CLEAR"
+      ],
+      "eventPayloads": {
+        "SEND": [
+          {
+            "name": "content",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-builder": {
+      "name": "std-agent-builder",
+      "level": "organism",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Schema builder agent organism. Full build cycle that plans, generates, validates, and fixes .orb programs. Composes planner + tool-loop + fix-loop molecules with session management and tabbed views. Composed from: - stdAgentPlanner (molecule): task planning with classification and memory - stdAgentToolLoop (molecule): iterative tool execution - stdAgentFixLoop (molecule): validation-fix cycle - stdAgentSession: session forking and checkpointing - stdTabs: Plan / Build / Validate / Fix tab navigation - stdAgentStepProgress: overall build pipeline progress indicator Cross-trait events: - PLAN_READY (Planner -> ToolLoop): plan complete, begin building - TOOL_LOOP_DONE (ToolLoop -> FixLoop): schema generated, validate it - FIX_SUCCEEDED (FixLoop -> Memory): record successful fix pattern Pages: /plan (initial), /build, /validate, /fix",
+      "statePattern": "classifying, idle, planning, ready, recalling",
+      "complexity": {
+        "states": 5,
+        "events": 7,
+        "transitions": 9
+      },
+      "defaultEntity": {
+        "name": "BuildPlan",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "relevantMemories",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Task Planner",
+        "entitySingular": "BuildPlan",
+        "entityPlural": "BuildPlans"
+      },
+      "defaultIcons": [
+        "map"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "PLAN",
+        "CLASSIFIED",
+        "MEMORIES_LOADED",
+        "PLAN_GENERATED",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "CLASSIFIED": [
+          {
+            "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "MEMORIES_LOADED": [
+          {
+            "name": "memories",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "PLAN_GENERATED": [
+          {
+            "name": "steps",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-pipeline": {
+      "name": "std-agent-pipeline",
+      "level": "organism",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Multi-step pipeline organism. Composes planner + tool-loop molecules with session management, step progress tracking, and a session tree drawer. Composed from: - stdAgentPlanner (molecule): breaks goal into ordered steps - stdAgentToolLoop (molecule): executes steps with tool invocations - stdAgentSession: forks sessions at checkpoints, supports rollback - stdAgentStepProgress: visual pipeline step indicator - stdDrawer: session tree sidebar for navigating branches Cross-trait events: - PIPELINE_PLANNED (Planner -> ToolLoop): plan ready, start execution - STEP_COMPLETE (ToolLoop -> Session): checkpoint after each step - PIPELINE_FINISHED (ToolLoop -> Memory): pipeline done, archive results Pages: /pipeline (initial), /execution, /logs",
+      "statePattern": "classifying, idle, planning, ready, recalling",
+      "complexity": {
+        "states": 5,
+        "events": 7,
+        "transitions": 9
+      },
+      "defaultEntity": {
+        "name": "PipelinePlan",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "relevantMemories",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Task Planner",
+        "entitySingular": "PipelinePlan",
+        "entityPlural": "PipelinePlans"
+      },
+      "defaultIcons": [
+        "map"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "PLAN",
+        "CLASSIFIED",
+        "MEMORIES_LOADED",
+        "PLAN_GENERATED",
+        "FAILED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "CLASSIFIED": [
+          {
+            "name": "category",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "MEMORIES_LOADED": [
+          {
+            "name": "memories",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "count",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "PLAN_GENERATED": [
+          {
+            "name": "steps",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "FAILED": [
+          {
+            "name": "error",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-reviewer": {
+      "name": "std-agent-reviewer",
+      "level": "organism",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Schema/code reviewer organism. Composes RAG molecule + classifier atom to classify input, search for relevant patterns, recall best practices, and generate structured review output with tabbed views and an issues browse. Composed from: - stdAgentRag (molecule): retrieval-augmented generation pipeline - stdAgentClassifier: classifies input type (schema, component, trait, etc.) - stdAgentCompletion: generates review with scoring - stdTabs: Input / Analysis / Review tab navigation - stdBrowse: browsable issues list Cross-trait events: - CLASSIFIED (Classifier -> Reviewer): input classified, begin review - REVIEW_COMPLETE (Reviewer -> Memory): reinforce recalled best practices Pages: /review (initial), /analysis, /issues",
+      "statePattern": "analyzing, completed, idle, reviewing",
+      "complexity": {
+        "states": 4,
+        "events": 5,
+        "transitions": 5
+      },
+      "defaultEntity": {
+        "name": "Review",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "target",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "issues",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "suggestions",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "reviewStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Code Review",
+        "entitySingular": "Review",
+        "entityPlural": "Reviews"
+      },
+      "defaultIcons": [
+        "file-search"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "SUBMIT_REVIEW",
+        "PATTERNS_FOUND",
+        "REVIEW_GENERATED",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "SUBMIT_REVIEW": [
+          {
+            "name": "target",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
+    "std-agent-tutor": {
+      "name": "std-agent-tutor",
+      "level": "organism",
+      "family": "agent",
+      "layer": "UI Patterns",
+      "description": "Teaching assistant organism. Composes conversation + memory + classifier atoms with tabbed views and a concept browse list. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength. Composed from: - stdAgentConversation: multi-turn teaching interaction - stdAgentMemory: tracks concept strength per student topic - stdAgentClassifier: classifies student level - stdTabs: Teach / Quiz / Progress tab navigation - stdBrowse: browsable concepts list with strength tracking Cross-trait events: - ASSESSMENT_DONE (Teaching -> Quiz): student assessed, generate quiz - QUIZ_GRADED (Quiz -> Memory): reinforce or decay concept based on answer Pages: /teach (initial), /quiz, /concepts",
+      "statePattern": "assessing, idle, teaching",
+      "complexity": {
+        "states": 3,
+        "events": 6,
+        "transitions": 6
+      },
+      "defaultEntity": {
+        "name": "TutorSession",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "topic",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "studentLevel",
+            "type": "string",
+            "default": "unknown"
+          },
+          {
+            "name": "explanation",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "questionsAsked",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "correctAnswers",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "sessionStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "defaultLabels": {
+        "title": "Tutor",
+        "entitySingular": "TutorSession",
+        "entityPlural": "TutorSessions"
+      },
+      "defaultIcons": [
+        "graduation-cap"
+      ],
+      "composableWith": [
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-async",
+        "std-cache-aside",
+        "std-circuit-breaker",
+        "std-combat",
+        "std-devops-dashboard",
+        "std-form-advanced",
+        "std-loading",
+        "std-quest",
+        "std-rate-limiter",
+        "std-rating",
+        "std-score",
+        "std-score-board",
+        "std-service-content-pipeline",
+        "std-service-custom-api-tester",
+        "std-service-custom-bearer",
+        "std-service-custom-header",
+        "std-service-custom-noauth",
+        "std-service-custom-query",
+        "std-service-devops-toolkit",
+        "std-service-email",
+        "std-service-github",
+        "std-service-llm",
+        "std-service-marketplace",
+        "std-service-notification-hub",
+        "std-service-oauth",
+        "std-service-payment-flow",
+        "std-service-redis",
+        "std-service-research-assistant",
+        "std-service-storage",
+        "std-service-stripe",
+        "std-service-twilio",
+        "std-service-youtube",
+        "std-simulation-canvas",
+        "std-text-effects",
+        "std-timer",
+        "std-upload",
+        "std-validate-on-save"
+      ],
+      "connectableEvents": [
+        "START_SESSION",
+        "ASSESSMENT_COMPLETE",
+        "EXPLAIN_MORE",
+        "START_QUIZ",
+        "RESET"
+      ],
+      "eventPayloads": {
+        "START_SESSION": [
+          {
+            "name": "topic",
+            "type": "string",
+            "required": true
+          }
+        ]
+      }
+    },
     "std-api-gateway": {
       "name": "std-api-gateway",
       "level": "organism",
@@ -11969,6 +17228,12 @@
         "git-branch"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-arcade-game",
         "std-async",
         "std-booking-system",
@@ -12044,6 +17309,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -12051,6 +17320,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -12058,6 +17331,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "ROUTE_CREATED": [
@@ -12126,6 +17403,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-async",
         "std-booking-system",
@@ -12262,6 +17544,12 @@
         "briefcase"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -12336,6 +17624,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -12343,6 +17635,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -12350,6 +17646,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "PROVIDER_CREATED": [
@@ -12419,6 +17719,12 @@
         "package"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -12494,6 +17800,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -12501,6 +17811,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -12508,6 +17822,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "BUILD_CREATED": [
@@ -12586,6 +17904,12 @@
         "file-text"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -12660,6 +17984,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -12667,6 +17995,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -12674,6 +18006,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "ARTICLE_CREATED": [
@@ -12747,6 +18083,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -12870,6 +18207,12 @@
         "users"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -12944,6 +18287,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -12951,6 +18298,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -12958,6 +18309,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "CONTACT_CREATED": [
@@ -13041,6 +18396,18 @@
         "server"
       ],
       "composableWith": [
+        "std-agent-builder",
+        "std-agent-context-window",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-cache-aside",
@@ -13148,6 +18515,12 @@
         "package"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -13318,6 +18691,12 @@
         "credit-card"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -13393,6 +18772,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -13400,6 +18783,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -13407,6 +18794,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "TRANSACTION_CREATED": [
@@ -13486,6 +18877,12 @@
         "users"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -13560,6 +18957,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -13567,6 +18968,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -13574,6 +18979,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "PATIENT_CREATED": [
@@ -13650,6 +19059,12 @@
         "inbox"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -13724,6 +19139,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -13731,6 +19150,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -13738,6 +19161,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "TICKET_CREATED": [
@@ -13814,6 +19241,12 @@
         "users"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -13888,6 +19321,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -13895,6 +19332,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -13902,6 +19343,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EMPLOYEE_CREATED": [
@@ -14066,6 +19511,12 @@
         "book-open"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -14140,6 +19591,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -14147,6 +19602,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -14154,6 +19613,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "COURSE_CREATED": [
@@ -14226,6 +19689,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -14351,6 +19815,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -14495,6 +19964,12 @@
         "check-square"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -14569,6 +20044,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -14576,6 +20055,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -14583,6 +20066,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "TASK_CREATED": [
@@ -14666,6 +20153,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -14793,6 +20285,11 @@
         "message-circle"
       ],
       "composableWith": [
+        "std-agent-assistant",
+        "std-agent-chat-thread",
+        "std-agent-conversation",
+        "std-agent-search",
+        "std-agent-session",
         "std-api-gateway",
         "std-async",
         "std-booking-system",
@@ -14847,6 +20344,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "SEND": [
@@ -14907,6 +20408,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -15040,6 +20546,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
@@ -15148,6 +20677,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "EDIT": [
@@ -15155,6 +20688,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "DELETE": [
@@ -15162,6 +20699,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "PRODUCT_CREATED": [
@@ -15243,6 +20784,29 @@
       ],
       "composableWith": [
         "os-trigger-simulation",
+        "std-agent-activity-log",
+        "std-agent-assistant",
+        "std-agent-builder",
+        "std-agent-chat-thread",
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-context-window",
+        "std-agent-conversation",
+        "std-agent-fix-loop",
+        "std-agent-learner",
+        "std-agent-memory",
+        "std-agent-pipeline",
+        "std-agent-planner",
+        "std-agent-provider",
+        "std-agent-rag",
+        "std-agent-reviewer",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-step-progress",
+        "std-agent-token-gauge",
+        "std-agent-tool-call",
+        "std-agent-tool-loop",
+        "std-agent-tutor",
         "std-api-gateway",
         "std-async",
         "std-autoregressive",
@@ -15437,6 +21001,12 @@
         "rss"
       ],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-search",
+        "std-agent-session",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-async",
         "std-booking-system",
@@ -15492,6 +21062,10 @@
             "name": "id",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "row",
+            "type": "object"
           }
         ],
         "SAVE": [
@@ -15557,6 +21131,7 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-step-progress",
         "std-arcade-game",
         "std-async",
         "std-builder-game",
@@ -15672,6 +21247,11 @@
       },
       "defaultIcons": [],
       "composableWith": [
+        "std-agent-classifier",
+        "std-agent-completion",
+        "std-agent-provider",
+        "std-agent-step-progress",
+        "std-agent-tool-call",
         "std-api-gateway",
         "std-arcade-game",
         "std-async",
