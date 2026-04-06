@@ -1,0 +1,2303 @@
+{
+  "name": "AI Tutor",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "TutorSessionOrbital",
+      "entity": {
+        "name": "TutorSession",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "topic",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "studentLevel",
+            "type": "string",
+            "default": "unknown"
+          },
+          {
+            "name": "explanation",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "questionsAsked",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "correctAnswers",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "sessionStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TeachingSession",
+          "linkedEntity": "TutorSession",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "ASSESSMENT_DONE",
+              "description": "Student level assessed",
+              "scope": "internal"
+            },
+            {
+              "event": "ASSESSMENT_DONE",
+              "description": "Student assessed, generate quiz",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "assessing"
+              },
+              {
+                "name": "teaching"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START_SESSION",
+                "name": "Start Session",
+                "payload": [
+                  {
+                    "name": "topic",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ASSESSMENT_COMPLETE",
+                "name": "Assessment Complete"
+              },
+              {
+                "key": "EXPLAIN_MORE",
+                "name": "Explain More"
+              },
+              {
+                "key": "START_QUIZ",
+                "name": "Start Quiz"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorSession"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "graduation-cap",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Tutor",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "What topic would you like to learn about? The tutor will assess your level and guide you through it.",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "TutorSession",
+                                      "mode": "edit",
+                                      "submitEvent": "START_SESSION",
+                                      "fields": [
+                                        "topic"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "assessing",
+                "event": "START_SESSION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.topic",
+                    "@payload.topic"
+                  ],
+                  [
+                    "set",
+                    "@entity.sessionStatus",
+                    "assessing"
+                  ],
+                  [
+                    "agent/recall",
+                    "@payload.topic"
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.topic"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Assessing your level...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Recalling prior learning and classifying skill level",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "assessing",
+                "to": "teaching",
+                "event": "ASSESSMENT_COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sessionStatus",
+                    "teaching"
+                  ],
+                  [
+                    "agent/memorize",
+                    "@entity.topic",
+                    "student-level"
+                  ],
+                  [
+                    "emit",
+                    "ASSESSMENT_DONE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "book-open",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Lesson: @entity.topic",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.studentLevel"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.explanation",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Quiz Me",
+                                  "event": "START_QUIZ",
+                                  "variant": "primary",
+                                  "icon": "help-circle"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Explain More",
+                                  "event": "EXPLAIN_MORE",
+                                  "variant": "secondary",
+                                  "icon": "book-open"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Topic",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.questionsAsked"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.correctAnswers"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "teaching",
+                "to": "teaching",
+                "event": "EXPLAIN_MORE",
+                "effects": [
+                  [
+                    "agent/generate",
+                    "@entity.topic"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "book-open",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Lesson: @entity.topic",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.studentLevel"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.explanation",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Quiz Me",
+                                  "event": "START_QUIZ",
+                                  "variant": "primary",
+                                  "icon": "help-circle"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Explain More",
+                                  "event": "EXPLAIN_MORE",
+                                  "variant": "secondary",
+                                  "icon": "book-open"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Topic",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.questionsAsked"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.correctAnswers"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "teaching",
+                "to": "teaching",
+                "event": "START_QUIZ",
+                "effects": [
+                  [
+                    "emit",
+                    "ASSESSMENT_DONE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "book-open",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Lesson: @entity.topic",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.studentLevel"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.explanation",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Quiz Me",
+                                  "event": "START_QUIZ",
+                                  "variant": "primary",
+                                  "icon": "help-circle"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Explain More",
+                                  "event": "EXPLAIN_MORE",
+                                  "variant": "secondary",
+                                  "icon": "book-open"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Topic",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.questionsAsked"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.correctAnswers"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "teaching",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sessionStatus",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.topic",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.explanation",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.questionsAsked",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.correctAnswers",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "graduation-cap",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Tutor",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "What topic would you like to learn about? The tutor will assess your level and guide you through it.",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "TutorSession",
+                                      "mode": "edit",
+                                      "submitEvent": "START_SESSION",
+                                      "fields": [
+                                        "topic"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "TeachPage",
+          "path": "/teach",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "TeachingSession"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "QuizQuestionOrbital",
+      "entity": {
+        "name": "QuizQuestion",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "question",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "options",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "correctAnswer",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "studentAnswer",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "isCorrect",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "feedback",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "quizStatus",
+            "type": "string",
+            "default": "idle"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "QuizEngine",
+          "linkedEntity": "QuizQuestion",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "QUIZ_GRADED",
+              "description": "Answer graded, reinforce or decay concept",
+              "scope": "internal"
+            },
+            {
+              "event": "QUIZ_GRADED",
+              "description": "Reinforce or decay concept based on answer",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "quizzing"
+              },
+              {
+                "name": "reviewing"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE_QUESTION",
+                "name": "Generate Question"
+              },
+              {
+                "key": "QUESTION_READY",
+                "name": "Question Ready"
+              },
+              {
+                "key": "SUBMIT_ANSWER",
+                "name": "Submit Answer",
+                "payload": [
+                  {
+                    "name": "studentAnswer",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "NEXT_QUESTION",
+                "name": "Next Question"
+              },
+              {
+                "key": "BACK_TO_LESSON",
+                "name": "Back to Lesson"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "QuizQuestion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "help-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Quiz",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Waiting for a quiz to start...",
+                              "variant": "body"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "quizzing",
+                "event": "GENERATE_QUESTION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.quizStatus",
+                    "generating"
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.question"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "help-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Quiz Question",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.question",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.options",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "QuizQuestion",
+                                      "mode": "edit",
+                                      "submitEvent": "SUBMIT_ANSWER",
+                                      "fields": [
+                                        "studentAnswer"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "quizzing",
+                "to": "quizzing",
+                "event": "QUESTION_READY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.quizStatus",
+                    "waiting"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "help-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Quiz Question",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.question",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.options",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "QuizQuestion",
+                                      "mode": "edit",
+                                      "submitEvent": "SUBMIT_ANSWER",
+                                      "fields": [
+                                        "studentAnswer"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "quizzing",
+                "to": "reviewing",
+                "event": "SUBMIT_ANSWER",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.studentAnswer",
+                    "@payload.studentAnswer"
+                  ],
+                  [
+                    "set",
+                    "@entity.quizStatus",
+                    "grading"
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.studentAnswer"
+                  ],
+                  [
+                    "emit",
+                    "QUIZ_GRADED"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "check-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Answer Review",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.isCorrect"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.feedback",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Correct answer",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.correctAnswer",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Next Question",
+                                  "event": "NEXT_QUESTION",
+                                  "variant": "primary",
+                                  "icon": "arrow-right"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Back to Lesson",
+                                  "event": "BACK_TO_LESSON",
+                                  "variant": "ghost",
+                                  "icon": "book-open"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "quizzing",
+                "event": "NEXT_QUESTION",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.quizStatus",
+                    "generating"
+                  ],
+                  [
+                    "set",
+                    "@entity.studentAnswer",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.feedback",
+                    ""
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.question"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "help-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Quiz Question",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.question",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.options",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "QuizQuestion",
+                                      "mode": "edit",
+                                      "submitEvent": "SUBMIT_ANSWER",
+                                      "fields": [
+                                        "studentAnswer"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "idle",
+                "event": "BACK_TO_LESSON",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.quizStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "help-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Quiz",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Waiting for a quiz to start...",
+                              "variant": "body"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "ASSESSMENT_DONE",
+              "triggers": "GENERATE_QUESTION",
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "QuizPage",
+          "path": "/quiz",
+          "traits": [
+            {
+              "ref": "QuizEngine"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ConceptOrbital",
+      "entity": {
+        "name": "Concept",
+        "persistence": "persistent",
+        "collection": "concepts",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "general"
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": "session"
+          },
+          {
+            "name": "lastAccessedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ConceptLifecycle",
+          "linkedEntity": "Concept",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "Memorize",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "category",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "RECALL",
+                "name": "Recall",
+                "payload": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PIN",
+                "name": "Pin",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FORGET",
+                "name": "Forget",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCE",
+                "name": "Reinforce",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAY",
+                "name": "Decay"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Concept"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Concept Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "MEMORIZE",
+                "effects": [
+                  [
+                    "agent/memorize",
+                    "@payload.content",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@now"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Concept Active",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.category"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.strength"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "secondary",
+                                  "icon": "pin"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "secondary",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "destructive",
+                                  "icon": "trash"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "RECALL",
+                "effects": [
+                  [
+                    "agent/recall",
+                    "@payload.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Concept Active",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.category"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.strength"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "secondary",
+                                  "icon": "pin"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "secondary",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "destructive",
+                                  "icon": "trash"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "PIN",
+                "guard": [
+                  "not",
+                  [
+                    "agent/is-pinned",
+                    "@payload.id"
+                  ]
+                ],
+                "effects": [
+                  [
+                    "agent/pin",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.pinned",
+                    true
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "FORGET",
+                "effects": [
+                  [
+                    "agent/forget",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Concept Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "REINFORCE",
+                "effects": [
+                  [
+                    "agent/reinforce",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Concept Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "QUIZ_GRADED",
+              "triggers": "REINFORCE",
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "ConceptsPage",
+          "path": "/concepts",
+          "traits": [
+            {
+              "ref": "ConceptLifecycle"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Teaching assistant organism. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength via memory reinforcement. Composed from: - inline TeachingTrait: assessment, teaching, quizzing flow - inline QuizTrait: generates and evaluates quiz questions - stdAgentMemory: tracks concept strength per student topic Cross-trait events: - ASSESSMENT_DONE (Teaching -> Quiz): student assessed, generate quiz - QUIZ_GRADED (Quiz -> Memory): reinforce or decay concept based on answer - CONCEPT_RECALLED (Memory -> Teaching): prior learning loaded for context Pages: /teach (initial), /quiz, /concepts"
+}

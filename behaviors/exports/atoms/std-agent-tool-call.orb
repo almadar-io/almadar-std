@@ -1,0 +1,380 @@
+{
+  "name": "AgentToolCallOrbital",
+  "orbitals": [
+    {
+      "name": "AgentToolCallOrbital",
+      "entity": {
+        "name": "AgentToolCall",
+        "persistence": "persistent",
+        "collection": "agenttoolcalls",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "args",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentToolCallExecutor",
+          "linkedEntity": "AgentToolCall",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "TOOL_STARTED",
+              "scope": "external"
+            },
+            {
+              "event": "TOOL_COMPLETED",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "executing"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "failed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "INVOKE",
+                "name": "Invoke Tool",
+                "payload": [
+                  {
+                    "name": "toolName",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "args",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentToolCall"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "wrench",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentToolCall",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Tool Name",
+                          "bind": "@entity.toolName",
+                          "placeholder": "e.g. read_file"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Arguments",
+                          "bind": "@entity.args",
+                          "placeholder": "Tool arguments (JSON)..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Invoke",
+                          "event": "INVOKE",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "executing",
+                "event": "INVOKE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.toolName",
+                    "@payload.toolName"
+                  ],
+                  [
+                    "set",
+                    "@entity.args",
+                    "@payload.args"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "executing"
+                  ],
+                  [
+                    "emit",
+                    "TOOL_STARTED"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Executing...",
+                      "message": "Running tool..."
+                    }
+                  ],
+                  [
+                    "agent/invoke",
+                    "@payload.toolName",
+                    "@payload.args"
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "executing",
+                "event": "INVOKE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.toolName",
+                    "@payload.toolName"
+                  ],
+                  [
+                    "set",
+                    "@entity.args",
+                    "@payload.args"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "executing"
+                  ],
+                  [
+                    "emit",
+                    "TOOL_STARTED"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Executing...",
+                      "message": "Running tool..."
+                    }
+                  ],
+                  [
+                    "agent/invoke",
+                    "@payload.toolName",
+                    "@payload.args"
+                  ]
+                ]
+              },
+              {
+                "from": "failed",
+                "to": "executing",
+                "event": "INVOKE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.toolName",
+                    "@payload.toolName"
+                  ],
+                  [
+                    "set",
+                    "@entity.args",
+                    "@payload.args"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "executing"
+                  ],
+                  [
+                    "emit",
+                    "TOOL_STARTED"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Executing...",
+                      "message": "Running tool..."
+                    }
+                  ],
+                  [
+                    "agent/invoke",
+                    "@payload.toolName",
+                    "@payload.args"
+                  ]
+                ]
+              },
+              {
+                "from": "executing",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "wrench",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentToolCall",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Tool Name",
+                          "bind": "@entity.toolName",
+                          "placeholder": "e.g. read_file"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Arguments",
+                          "bind": "@entity.args",
+                          "placeholder": "Tool arguments (JSON)..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Invoke",
+                          "event": "INVOKE",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentToolCallPage",
+          "path": "/agenttoolcalls",
+          "traits": [
+            {
+              "ref": "AgentToolCallExecutor"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Tool execution atom for agent tool invocation. Manages the lifecycle of invoking external tools: idle -> executing -> completed/failed. Emits TOOL_STARTED and TOOL_COMPLETED for cross-trait wiring."
+}

@@ -1,0 +1,1143 @@
+{
+  "name": "AgentLearnerOrbital",
+  "orbitals": [
+    {
+      "name": "AgentLearnerOrbital",
+      "entity": {
+        "name": "AgentLearner",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "outcome",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "impact",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "isSuccess",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "consecutiveFailures",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalSuccesses",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalFailures",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentLearnerLearner",
+          "linkedEntity": "AgentLearner",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "TASK_SUCCEEDED",
+              "triggers": "TASK_SUCCEEDED"
+            },
+            {
+              "event": "TASK_FAILED",
+              "triggers": "TASK_FAILED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "recording"
+              },
+              {
+                "name": "analyzing"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TASK_SUCCEEDED",
+                "name": "Task Succeeded",
+                "payload": [
+                  {
+                    "name": "outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TASK_FAILED",
+                "name": "Task Failed",
+                "payload": [
+                  {
+                    "name": "outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RECORDED",
+                "name": "Memory Recorded",
+                "payload": [
+                  {
+                    "name": "memoryId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ANALYSIS_DONE",
+                "name": "Analysis Done",
+                "payload": [
+                  {
+                    "name": "impact",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Processing Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset View"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.provider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Outcome Learner",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.totalSuccesses",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Current Provider",
+                              "value": "@entity.provider",
+                              "icon": "cpu"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Listening for task outcomes...",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.outcome",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Impact Analysis",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.impact",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "recording",
+                "event": "TASK_SUCCEEDED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.outcome",
+                    "@payload.outcome"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.isSuccess",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.consecutiveFailures",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSuccesses",
+                    [
+                      "math/add",
+                      "@entity.totalSuccesses",
+                      1
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "recording"
+                  ],
+                  [
+                    "agent/memorize",
+                    [
+                      "string/concat",
+                      "Success: ",
+                      "@payload.outcome"
+                    ],
+                    "@payload.category"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "save",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Recording outcome...",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.outcome"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "recording",
+                "event": "TASK_FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.outcome",
+                    "@payload.outcome"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.isSuccess",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.consecutiveFailures",
+                    [
+                      "math/add",
+                      "@entity.consecutiveFailures",
+                      1
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.totalFailures",
+                    [
+                      "math/add",
+                      "@entity.totalFailures",
+                      1
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "recording"
+                  ],
+                  [
+                    "agent/memorize",
+                    [
+                      "string/concat",
+                      "Failure: ",
+                      "@payload.outcome"
+                    ],
+                    "@payload.category"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "save",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Recording outcome...",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.outcome"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "recording",
+                "to": "analyzing",
+                "event": "RECORDED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.memoryId",
+                    "@payload.memoryId"
+                  ],
+                  [
+                    "cond",
+                    "@entity.isSuccess",
+                    [
+                      "agent/reinforce",
+                      "@payload.memoryId"
+                    ],
+                    [
+                      "agent/decay"
+                    ]
+                  ],
+                  [
+                    "cond",
+                    [
+                      "math/gte",
+                      "@entity.consecutiveFailures",
+                      3
+                    ],
+                    [
+                      "agent/switch-provider",
+                      "anthropic"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "analyzing"
+                  ],
+                  [
+                    "agent/generate",
+                    [
+                      "string/concat",
+                      "Outcome: ",
+                      "@entity.outcome",
+                      "\n",
+                      "Category: ",
+                      "@entity.category",
+                      "\n",
+                      "Result: ",
+                      [
+                        "cond",
+                        "@entity.isSuccess",
+                        "success",
+                        "failure"
+                      ],
+                      "\n",
+                      "Consecutive failures: ",
+                      [
+                        "string/of",
+                        "@entity.consecutiveFailures"
+                      ],
+                      "\n\n",
+                      "Analyze the impact of this outcome. What should be learned? Keep it to 1-2 sentences."
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "cpu",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Analyzing impact...",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": [
+                                "string/concat",
+                                "Category: ",
+                                "@entity.category"
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": [
+                                "cond",
+                                "@entity.isSuccess",
+                                "Success",
+                                "Failure"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "analyzing",
+                "to": "idle",
+                "event": "ANALYSIS_DONE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.impact",
+                    "@payload.impact"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.provider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Outcome Learner",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.totalSuccesses",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Current Provider",
+                              "value": "@entity.provider",
+                              "icon": "cpu"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Listening for task outcomes...",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.outcome",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Impact Analysis",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.impact",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "recording",
+                "to": "idle",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Outcome Learner",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.totalSuccesses",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Current Provider",
+                              "value": "@entity.provider",
+                              "icon": "cpu"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Listening for task outcomes...",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.outcome",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Impact Analysis",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.impact",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "analyzing",
+                "to": "idle",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Outcome Learner",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.totalSuccesses",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Current Provider",
+                              "value": "@entity.provider",
+                              "icon": "cpu"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Listening for task outcomes...",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.outcome",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Impact Analysis",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.impact",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.provider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Outcome Learner",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 3,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Successes",
+                              "value": "@entity.totalSuccesses",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Failures",
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Current Provider",
+                              "value": "@entity.provider",
+                              "icon": "cpu"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Listening for task outcomes...",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.outcome",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Impact Analysis",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.impact",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentLearnerPage",
+          "path": "/agentlearners",
+          "traits": [
+            {
+              "ref": "AgentLearnerLearner"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Composes memory management, LLM completion, and provider routing into an outcome learning pipeline. Listens for task success/failure events, memorizes outcomes, reinforces memories for successes, applies decay for failures, and adjusts provider routing based on accumulated results. Traits composed (inline, representing atom-level concerns): - LearnerMemory: memorize outcomes, reinforce/decay based on results - LearnerCompletion: analyze outcome impact via LLM - LearnerProvider: adjust provider routing based on success patterns"
+}

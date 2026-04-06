@@ -1,0 +1,1237 @@
+{
+  "name": "AgentToolLoopOrbital",
+  "orbitals": [
+    {
+      "name": "AgentToolLoopOrbital",
+      "entity": {
+        "name": "AgentToolLoop",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "plan",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "iterations",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "maxIterations",
+            "type": "number",
+            "default": 10
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "currentTool",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "lastToolResult",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentToolLoopLoop",
+          "linkedEntity": "AgentToolLoop",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "planning"
+              },
+              {
+                "name": "executing"
+              },
+              {
+                "name": "checking"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "failed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "EXECUTE",
+                "name": "Execute"
+              },
+              {
+                "key": "PLAN_GENERATED",
+                "name": "Plan Generated",
+                "payload": [
+                  {
+                    "name": "plan",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "toolName",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "toolArgs",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TOOL_RESULT",
+                "name": "Tool Result",
+                "payload": [
+                  {
+                    "name": "output",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CHECK_PASSED",
+                "name": "Check Passed",
+                "payload": [
+                  {
+                    "name": "result",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CHECK_NEEDS_MORE",
+                "name": "Check Needs More",
+                "payload": [
+                  {
+                    "name": "toolName",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "toolArgs",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "MAX_ITERATIONS",
+                "name": "Max Iterations Reached",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Tool Execution Loop",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Describe the task to execute with tools",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "form-section",
+                                  "entity": "AgentToolLoop",
+                                  "mode": "edit",
+                                  "submitEvent": "EXECUTE",
+                                  "fields": [
+                                    "task"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "planning",
+                "event": "EXECUTE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "planning"
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    0
+                  ],
+                  [
+                    "agent/generate",
+                    [
+                      "string/concat",
+                      "Task: ",
+                      "@entity.task",
+                      "\n\nAvailable tools: ",
+                      [
+                        "string/join",
+                        [
+                          "agent/tools"
+                        ],
+                        ", "
+                      ],
+                      "\n\nGenerate a step-by-step plan. Return the first tool to call and its arguments."
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "brain",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Planning execution...",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@entity.task",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "planning",
+                "to": "executing",
+                "event": "PLAN_GENERATED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.plan",
+                    "@payload.plan"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentTool",
+                    "@payload.toolName"
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    [
+                      "math/add",
+                      "@entity.iterations",
+                      1
+                    ]
+                  ],
+                  [
+                    "agent/invoke",
+                    "@payload.toolName",
+                    "@payload.toolArgs"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tool",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Executing Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": [
+                                "string/concat",
+                                "Iteration ",
+                                [
+                                  "string/of",
+                                  "@entity.iterations"
+                                ],
+                                "/",
+                                [
+                                  "string/of",
+                                  "@entity.maxIterations"
+                                ]
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Current Tool",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.currentTool",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "type": "spinner",
+                                  "size": "md"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Plan",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.plan",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "executing",
+                "to": "checking",
+                "event": "TOOL_RESULT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lastToolResult",
+                    "@payload.output"
+                  ],
+                  [
+                    "agent/generate",
+                    [
+                      "string/concat",
+                      "Task: ",
+                      "@entity.task",
+                      "\nPlan: ",
+                      "@entity.plan",
+                      "\nTool output: ",
+                      "@payload.output",
+                      "\n\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments."
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "eye",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Checking result...",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "badge",
+                          "label": [
+                            "string/concat",
+                            "Iteration ",
+                            [
+                              "string/of",
+                              "@entity.iterations"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "checking",
+                "to": "completed",
+                "event": "CHECK_PASSED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "@payload.result"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "check-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Loop Complete",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "New Task",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 2,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Iterations",
+                              "value": "@entity.iterations",
+                              "icon": "repeat"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Status",
+                              "value": "@entity.status",
+                              "icon": "check"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Task",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.task",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "divider"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Result",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.result",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "checking",
+                "to": "executing",
+                "event": "CHECK_NEEDS_MORE",
+                "guards": [
+                  [
+                    "math/lt",
+                    "@entity.iterations",
+                    10
+                  ]
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentTool",
+                    "@payload.toolName"
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    [
+                      "math/add",
+                      "@entity.iterations",
+                      1
+                    ]
+                  ],
+                  [
+                    "cond",
+                    [
+                      "math/gte",
+                      [
+                        "agent/context-usage"
+                      ],
+                      0.8
+                    ],
+                    [
+                      "agent/compact",
+                      "hybrid"
+                    ]
+                  ],
+                  [
+                    "agent/invoke",
+                    "@payload.toolName",
+                    "@payload.toolArgs"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tool",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Executing Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "badge",
+                              "label": [
+                                "string/concat",
+                                "Iteration ",
+                                [
+                                  "string/of",
+                                  "@entity.iterations"
+                                ],
+                                "/",
+                                [
+                                  "string/of",
+                                  "@entity.maxIterations"
+                                ]
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Current Tool",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.currentTool",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "type": "spinner",
+                                  "size": "md"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Plan",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "@entity.plan",
+                                  "variant": "body"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "checking",
+                "to": "failed",
+                "event": "MAX_ITERATIONS",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "x-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loop Failed",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 2,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Iterations Used",
+                              "value": "@entity.iterations",
+                              "icon": "repeat"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Max Allowed",
+                              "value": "@entity.maxIterations",
+                              "icon": "shield"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Retry",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "planning",
+                "to": "failed",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "x-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loop Failed",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 2,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Iterations Used",
+                              "value": "@entity.iterations",
+                              "icon": "repeat"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Max Allowed",
+                              "value": "@entity.maxIterations",
+                              "icon": "shield"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Retry",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "executing",
+                "to": "failed",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "x-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Loop Failed",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "columns": 2,
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Iterations Used",
+                              "value": "@entity.iterations",
+                              "icon": "repeat"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Max Allowed",
+                              "value": "@entity.maxIterations",
+                              "icon": "shield"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Retry",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.task",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.currentTool",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.lastToolResult",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Tool Execution Loop",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Describe the task to execute with tools",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "form-section",
+                                  "entity": "AgentToolLoop",
+                                  "mode": "edit",
+                                  "submitEvent": "EXECUTE",
+                                  "fields": [
+                                    "task"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "failed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.task",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.currentTool",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.lastToolResult",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.iterations",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Tool Execution Loop",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Describe the task to execute with tools",
+                                  "variant": "body"
+                                },
+                                {
+                                  "type": "form-section",
+                                  "entity": "AgentToolLoop",
+                                  "mode": "edit",
+                                  "submitEvent": "EXECUTE",
+                                  "fields": [
+                                    "task"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentToolLoopPage",
+          "path": "/agenttoolloops",
+          "traits": [
+            {
+              "ref": "AgentToolLoopLoop"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Composes LLM completion, tool invocation, and context window management into an iterative tool-use loop. The agent generates a plan, invokes tools to execute steps, checks results, and either loops back or finishes. Automatically compacts the context window when usage gets too high. Traits composed (inline, representing atom-level concerns): - ToolLoopCompletion: LLM plan generation and result checking - ToolLoopInvoke: tool invocation with argument passing - ToolLoopContext: context window monitoring and compaction"
+}

@@ -1,0 +1,627 @@
+{
+  "name": "AgentMemoryOrbital",
+  "orbitals": [
+    {
+      "name": "AgentMemoryOrbital",
+      "entity": {
+        "name": "AgentMemory",
+        "persistence": "persistent",
+        "collection": "agentmemorys",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "general"
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": "session"
+          },
+          {
+            "name": "lastAccessedAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentMemoryLifecycle",
+          "linkedEntity": "AgentMemory",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "Memorize",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "category",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "RECALL",
+                "name": "Recall",
+                "payload": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PIN",
+                "name": "Pin",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FORGET",
+                "name": "Forget",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCE",
+                "name": "Reinforce",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAY",
+                "name": "Decay"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentMemory"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentMemory Manager",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Memorize",
+                              "event": "MEMORIZE",
+                              "variant": "primary",
+                              "icon": "plus"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Recall",
+                              "event": "RECALL",
+                              "variant": "secondary",
+                              "icon": "search"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Decay All",
+                              "event": "DECAY",
+                              "variant": "ghost",
+                              "icon": "clock"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "MEMORIZE",
+                "effects": [
+                  [
+                    "agent/memorize",
+                    "@payload.content",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@now"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentMemory Active",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.content"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.category"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.strength"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Pin",
+                              "event": "PIN",
+                              "variant": "secondary",
+                              "icon": "pin"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reinforce",
+                              "event": "REINFORCE",
+                              "variant": "secondary",
+                              "icon": "zap"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Forget",
+                              "event": "FORGET",
+                              "variant": "destructive",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "RECALL",
+                "effects": [
+                  [
+                    "agent/recall",
+                    "@payload.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentMemory Active",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.content"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.category"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.strength"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Pin",
+                              "event": "PIN",
+                              "variant": "secondary",
+                              "icon": "pin"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reinforce",
+                              "event": "REINFORCE",
+                              "variant": "secondary",
+                              "icon": "zap"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Forget",
+                              "event": "FORGET",
+                              "variant": "destructive",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "PIN",
+                "guard": [
+                  "not",
+                  [
+                    "agent/is-pinned",
+                    "@payload.id"
+                  ]
+                ],
+                "effects": [
+                  [
+                    "agent/pin",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.pinned",
+                    true
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "FORGET",
+                "effects": [
+                  [
+                    "agent/forget",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentMemory Manager",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Memorize",
+                              "event": "MEMORIZE",
+                              "variant": "primary",
+                              "icon": "plus"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Recall",
+                              "event": "RECALL",
+                              "variant": "secondary",
+                              "icon": "search"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Decay All",
+                              "event": "DECAY",
+                              "variant": "ghost",
+                              "icon": "clock"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "REINFORCE",
+                "effects": [
+                  [
+                    "agent/reinforce",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentMemory Manager",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Memorize",
+                              "event": "MEMORIZE",
+                              "variant": "primary",
+                              "icon": "plus"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Recall",
+                              "event": "RECALL",
+                              "variant": "secondary",
+                              "icon": "search"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Decay All",
+                              "event": "DECAY",
+                              "variant": "ghost",
+                              "icon": "clock"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentMemoryPage",
+          "path": "/agentmemorys",
+          "traits": [
+            {
+              "ref": "AgentMemoryLifecycle"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Memory lifecycle atom for agent memory operations. Provides memorize, recall, pin, forget, reinforce, and decay using agent/* operators."
+}

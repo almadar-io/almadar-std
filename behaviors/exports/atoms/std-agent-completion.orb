@@ -1,0 +1,469 @@
+{
+  "name": "AgentCompletionOrbital",
+  "orbitals": [
+    {
+      "name": "AgentCompletionOrbital",
+      "entity": {
+        "name": "AgentCompletion",
+        "persistence": "persistent",
+        "collection": "agentcompletions",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentCompletionFlow",
+          "linkedEntity": "AgentCompletion",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "generating"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Generate",
+                "payload": [
+                  {
+                    "name": "prompt",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentCompletion",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Prompt",
+                          "bind": "@entity.prompt",
+                          "placeholder": "Enter your prompt..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Generate",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "sparkles"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "generating",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "generating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Generating...",
+                      "message": "Waiting for AI response..."
+                    }
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.prompt"
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "completed",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.prompt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "Generation complete"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.response"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Reset",
+                          "event": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "generating",
+                "event": "RETRY",
+                "guard": [
+                  "=",
+                  "@entity.status",
+                  "error"
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "generating"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Generating...",
+                      "message": "Waiting for AI response..."
+                    }
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.prompt"
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentCompletion",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Prompt",
+                          "bind": "@entity.prompt",
+                          "placeholder": "Enter your prompt..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Generate",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "sparkles"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentCompletion",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Prompt",
+                          "bind": "@entity.prompt",
+                          "placeholder": "Enter your prompt..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Generate",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "sparkles"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentCompletionPage",
+          "path": "/agentcompletions",
+          "traits": [
+            {
+              "ref": "AgentCompletionFlow"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Completion flow atom for agent text generation. Wraps agent/generate with idle -> generating -> completed -> error lifecycle."
+}

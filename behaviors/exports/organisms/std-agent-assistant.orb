@@ -1,0 +1,2288 @@
+{
+  "name": "Agent Assistant",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "AssistantOrbital",
+      "entity": {
+        "name": "Assistant",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "messages",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "currentMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "contextUsage",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "default"
+          },
+          {
+            "name": "sessionId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AssistantConversation",
+          "linkedEntity": "Assistant",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "MEMORIZE_RESPONSE",
+              "description": "Auto-memorize important responses",
+              "scope": "internal"
+            },
+            {
+              "event": "MEMORIZE_RESPONSE",
+              "description": "Auto-memorize important responses",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "listening"
+              },
+              {
+                "name": "thinking"
+              },
+              {
+                "name": "responding"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEND",
+                "name": "Send Message",
+                "payload": [
+                  {
+                    "name": "currentMessage",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "COMPACT",
+                "name": "Compact Context"
+              },
+              {
+                "key": "SWITCH_PROVIDER",
+                "name": "Switch Provider",
+                "payload": [
+                  {
+                    "name": "provider",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "GENERATION_COMPLETE",
+                "name": "Generation Complete"
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sessionId",
+                    [
+                      "agent/session-id"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.provider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.contextUsage",
+                    [
+                      "agent/context-usage"
+                    ]
+                  ],
+                  [
+                    "fetch",
+                    "Assistant"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Assistant",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.provider"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.sessionId"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Send a message to begin the conversation.",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "Assistant",
+                                      "mode": "edit",
+                                      "submitEvent": "SEND",
+                                      "fields": [
+                                        "currentMessage"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Compact Context",
+                                  "event": "COMPACT",
+                                  "variant": "ghost",
+                                  "icon": "minimize-2"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "listening",
+                "event": "SEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentMessage",
+                    "@payload.currentMessage"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "listening"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mic",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Listening...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "responding",
+                "to": "listening",
+                "event": "SEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentMessage",
+                    "@payload.currentMessage"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "listening"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mic",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Listening...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "listening",
+                "to": "thinking",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "thinking"
+                  ],
+                  [
+                    "set",
+                    "@entity.contextUsage",
+                    [
+                      "agent/context-usage"
+                    ]
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.currentMessage"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Thinking...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Context usage: @entity.contextUsage",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "thinking",
+                "to": "responding",
+                "event": "GENERATION_COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "responding"
+                  ],
+                  [
+                    "set",
+                    "@entity.contextUsage",
+                    [
+                      "agent/context-usage"
+                    ]
+                  ],
+                  [
+                    "agent/memorize",
+                    "@entity.response",
+                    "conversation"
+                  ],
+                  [
+                    "emit",
+                    "MEMORIZE_RESPONSE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Assistant Response",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.response",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.provider"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.contextUsage"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Assistant",
+                              "mode": "edit",
+                              "submitEvent": "SEND",
+                              "fields": [
+                                "currentMessage"
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Compact Context",
+                                  "event": "COMPACT",
+                                  "variant": "ghost",
+                                  "icon": "minimize-2"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Switch Provider",
+                                  "event": "SWITCH_PROVIDER",
+                                  "variant": "ghost",
+                                  "icon": "refresh-cw"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "thinking",
+                "to": "responding",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "responding"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Assistant Response",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.response",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.provider"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.contextUsage"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Assistant",
+                              "mode": "edit",
+                              "submitEvent": "SEND",
+                              "fields": [
+                                "currentMessage"
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Compact Context",
+                                  "event": "COMPACT",
+                                  "variant": "ghost",
+                                  "icon": "minimize-2"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Switch Provider",
+                                  "event": "SWITCH_PROVIDER",
+                                  "variant": "ghost",
+                                  "icon": "refresh-cw"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "responding",
+                "to": "responding",
+                "event": "COMPACT",
+                "effects": [
+                  [
+                    "agent/compact"
+                  ],
+                  [
+                    "set",
+                    "@entity.contextUsage",
+                    [
+                      "agent/context-usage"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Assistant Response",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.response",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.provider"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.contextUsage"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Assistant",
+                              "mode": "edit",
+                              "submitEvent": "SEND",
+                              "fields": [
+                                "currentMessage"
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Compact Context",
+                                  "event": "COMPACT",
+                                  "variant": "ghost",
+                                  "icon": "minimize-2"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Switch Provider",
+                                  "event": "SWITCH_PROVIDER",
+                                  "variant": "ghost",
+                                  "icon": "refresh-cw"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "COMPACT",
+                "effects": [
+                  [
+                    "agent/compact"
+                  ],
+                  [
+                    "set",
+                    "@entity.contextUsage",
+                    [
+                      "agent/context-usage"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Assistant",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.provider"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@entity.sessionId"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Send a message to begin the conversation.",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "Assistant",
+                                      "mode": "edit",
+                                      "submitEvent": "SEND",
+                                      "fields": [
+                                        "currentMessage"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Compact Context",
+                                  "event": "COMPACT",
+                                  "variant": "ghost",
+                                  "icon": "minimize-2"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "responding",
+                "to": "responding",
+                "event": "SWITCH_PROVIDER",
+                "effects": [
+                  [
+                    "agent/switch-provider",
+                    "@payload.provider"
+                  ],
+                  [
+                    "set",
+                    "@entity.provider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "message-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Assistant Response",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.response",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "xs",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.provider"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.contextUsage"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "form-section",
+                              "entity": "Assistant",
+                              "mode": "edit",
+                              "submitEvent": "SEND",
+                              "fields": [
+                                "currentMessage"
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Compact Context",
+                                  "event": "COMPACT",
+                                  "variant": "ghost",
+                                  "icon": "minimize-2"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Switch Provider",
+                                  "event": "SWITCH_PROVIDER",
+                                  "variant": "ghost",
+                                  "icon": "refresh-cw"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "PROVIDER_CHANGED",
+              "triggers": "INIT",
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "ChatPage",
+          "path": "/chat",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "AssistantConversation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MemoryOrbital",
+      "entity": {
+        "name": "Memory",
+        "persistence": "persistent",
+        "collection": "memorys",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "general"
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": "session"
+          },
+          {
+            "name": "lastAccessedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "MemoryLifecycle",
+          "linkedEntity": "Memory",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "Memorize",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "category",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "RECALL",
+                "name": "Recall",
+                "payload": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PIN",
+                "name": "Pin",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FORGET",
+                "name": "Forget",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCE",
+                "name": "Reinforce",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAY",
+                "name": "Decay"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Memory"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Memory Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "MEMORIZE",
+                "effects": [
+                  [
+                    "agent/memorize",
+                    "@payload.content",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@now"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Memory Active",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.category"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.strength"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "secondary",
+                                  "icon": "pin"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "secondary",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "destructive",
+                                  "icon": "trash"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "RECALL",
+                "effects": [
+                  [
+                    "agent/recall",
+                    "@payload.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Memory Active",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.category"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.strength"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "secondary",
+                                  "icon": "pin"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "secondary",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "destructive",
+                                  "icon": "trash"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "PIN",
+                "guard": [
+                  "not",
+                  [
+                    "agent/is-pinned",
+                    "@payload.id"
+                  ]
+                ],
+                "effects": [
+                  [
+                    "agent/pin",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.pinned",
+                    true
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "FORGET",
+                "effects": [
+                  [
+                    "agent/forget",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Memory Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "REINFORCE",
+                "effects": [
+                  [
+                    "agent/reinforce",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Memory Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "MEMORIZE_RESPONSE",
+              "triggers": "MEMORIZE",
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "MemoryPage",
+          "path": "/memory",
+          "traits": [
+            {
+              "ref": "MemoryLifecycle"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ProviderConfigOrbital",
+      "entity": {
+        "name": "ProviderConfig",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "currentProvider",
+            "type": "string",
+            "default": "default"
+          },
+          {
+            "name": "currentModel",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "availableProviders",
+            "type": "string",
+            "default": "default,openai,anthropic"
+          },
+          {
+            "name": "switchReason",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ProviderManager",
+          "linkedEntity": "ProviderConfig",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "PROVIDER_CHANGED",
+              "description": "Provider was switched",
+              "scope": "internal"
+            },
+            {
+              "event": "PROVIDER_CHANGED",
+              "description": "Provider was switched",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SWITCH",
+                "name": "Switch",
+                "payload": [
+                  {
+                    "name": "provider",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentProvider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentModel",
+                    [
+                      "agent/model"
+                    ]
+                  ],
+                  [
+                    "fetch",
+                    "ProviderConfig"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "settings",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Provider Settings",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Current Provider",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.currentProvider",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Model",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.currentModel",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Switch Provider",
+                                  "event": "SWITCH",
+                                  "variant": "primary",
+                                  "icon": "refresh-cw"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SWITCH",
+                "effects": [
+                  [
+                    "agent/switch-provider",
+                    "@payload.provider"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentProvider",
+                    [
+                      "agent/provider"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentModel",
+                    [
+                      "agent/model"
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "PROVIDER_CHANGED"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Assistant",
+                      "navItems": [
+                        {
+                          "label": "Chat",
+                          "href": "/chat",
+                          "icon": "message-circle"
+                        },
+                        {
+                          "label": "Memory",
+                          "href": "/memory",
+                          "icon": "brain"
+                        },
+                        {
+                          "label": "Provider",
+                          "href": "/provider",
+                          "icon": "settings"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "settings",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Provider Settings",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Current Provider",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.currentProvider",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Model",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.currentModel",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Switch Provider",
+                                  "event": "SWITCH",
+                                  "variant": "primary",
+                                  "icon": "refresh-cw"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ProviderPage",
+          "path": "/provider",
+          "traits": [
+            {
+              "ref": "ProviderManager"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Full chat assistant organism. Composes agent atoms into a multi-turn conversational agent with memory persistence, context compaction, and provider switching. Composed from: - stdAgentMemory: memory lifecycle (memorize, recall, pin, forget, reinforce, decay) - inline ConversationTrait: multi-turn chat with generate + context tracking - inline ProviderTrait: provider switching based on task complexity Cross-trait events: - MEMORIZE_RESPONSE (Conversation -> Memory): auto-memorize important responses - PROVIDER_CHANGED (Provider -> Conversation): notify conversation of provider switch Pages: /chat (initial), /memory, /provider"
+}

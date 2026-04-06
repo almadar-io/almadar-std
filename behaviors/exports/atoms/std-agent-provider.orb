@@ -1,0 +1,402 @@
+{
+  "name": "AgentProviderOrbital",
+  "orbitals": [
+    {
+      "name": "AgentProviderOrbital",
+      "entity": {
+        "name": "AgentProvider",
+        "persistence": "persistent",
+        "collection": "agentproviders",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "currentProvider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "currentModel",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "fallbackProvider",
+            "type": "string",
+            "default": "openai"
+          },
+          {
+            "name": "requestCount",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentProviderRouter",
+          "linkedEntity": "AgentProvider",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              },
+              {
+                "name": "switching"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SWITCH",
+                "name": "Switch Provider",
+                "payload": [
+                  {
+                    "name": "provider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "model",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "SWITCH_AUTO",
+                "name": "Auto Switch to Fallback"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentProvider"
+                  ],
+                  [
+                    "agent/provider"
+                  ],
+                  [
+                    "agent/model"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "server",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentProvider (Active)",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "Provider is active and routing requests."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.currentProvider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.currentModel"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.requestCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Switch",
+                              "event": "SWITCH",
+                              "variant": "secondary",
+                              "icon": "repeat"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Auto Switch",
+                              "event": "SWITCH_AUTO",
+                              "variant": "ghost",
+                              "icon": "zap"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "switching",
+                "event": "SWITCH",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Switching...",
+                      "message": "Switching provider..."
+                    }
+                  ],
+                  [
+                    "agent/switch-provider",
+                    "@payload.provider",
+                    "@payload.model"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentProvider",
+                    "@payload.provider"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentModel",
+                    "@payload.model"
+                  ]
+                ]
+              },
+              {
+                "from": "switching",
+                "to": "active",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "agent/provider"
+                  ],
+                  [
+                    "agent/model"
+                  ],
+                  [
+                    "set",
+                    "@entity.requestCount",
+                    [
+                      "+",
+                      "@entity.requestCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "server",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentProvider (Active)",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "Provider is active and routing requests."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.currentProvider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.currentModel"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.requestCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Switch",
+                              "event": "SWITCH",
+                              "variant": "secondary",
+                              "icon": "repeat"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Auto Switch",
+                              "event": "SWITCH_AUTO",
+                              "variant": "ghost",
+                              "icon": "zap"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "switching",
+                "event": "SWITCH_AUTO",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Switching...",
+                      "message": "Switching provider..."
+                    }
+                  ],
+                  [
+                    "agent/switch-provider",
+                    "@entity.fallbackProvider"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentProvider",
+                    "@entity.fallbackProvider"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "switching",
+                "event": "SWITCH",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Switching...",
+                      "message": "Switching provider..."
+                    }
+                  ],
+                  [
+                    "agent/switch-provider",
+                    "@payload.provider",
+                    "@payload.model"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentProvider",
+                    "@payload.provider"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentModel",
+                    "@payload.model"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentProviderPage",
+          "path": "/agentproviders",
+          "traits": [
+            {
+              "ref": "AgentProviderRouter"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Provider routing atom for agent model/provider switching. Manages current provider, model selection, and fallback routing. Uses agent/switch-provider, agent/provider, and agent/model operators."
+}

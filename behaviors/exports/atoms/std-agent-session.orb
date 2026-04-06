@@ -1,0 +1,825 @@
+{
+  "name": "AgentSessionOrbital",
+  "orbitals": [
+    {
+      "name": "AgentSessionOrbital",
+      "entity": {
+        "name": "AgentSession",
+        "persistence": "persistent",
+        "collection": "agentsessions",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "sessionId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "parentId",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentSessionLifecycle",
+          "linkedEntity": "AgentSession",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "active",
+                "isInitial": true
+              },
+              {
+                "name": "forked"
+              },
+              {
+                "name": "ended"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FORK",
+                "name": "Fork Session"
+              },
+              {
+                "key": "LABEL",
+                "name": "Label Session",
+                "payload": [
+                  {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "END",
+                "name": "End Session"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "active",
+                "to": "active",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSession"
+                  ],
+                  [
+                    "agent/session-id"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@now"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "terminal",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active",
+                              "variant": "success"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session ID:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Label:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.label"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Fork",
+                              "event": "FORK",
+                              "variant": "secondary",
+                              "icon": "git-branch"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Label",
+                              "event": "LABEL",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "End",
+                              "event": "END",
+                              "variant": "destructive",
+                              "icon": "square"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "forked",
+                "event": "FORK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.parentId",
+                    "@entity.sessionId"
+                  ],
+                  [
+                    "agent/fork"
+                  ],
+                  [
+                    "agent/session-id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "git-branch",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession (Forked)",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Forked",
+                              "variant": "info"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Parent:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.parentId"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Fork Again",
+                              "event": "FORK",
+                              "variant": "secondary",
+                              "icon": "git-branch"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Label",
+                              "event": "LABEL",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "End",
+                              "event": "END",
+                              "variant": "destructive",
+                              "icon": "square"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "forked",
+                "to": "forked",
+                "event": "FORK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.parentId",
+                    "@entity.sessionId"
+                  ],
+                  [
+                    "agent/fork"
+                  ],
+                  [
+                    "agent/session-id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "git-branch",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession (Forked)",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Forked",
+                              "variant": "info"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Parent:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.parentId"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Fork Again",
+                              "event": "FORK",
+                              "variant": "secondary",
+                              "icon": "git-branch"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Label",
+                              "event": "LABEL",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "End",
+                              "event": "END",
+                              "variant": "destructive",
+                              "icon": "square"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "LABEL",
+                "effects": [
+                  [
+                    "agent/label",
+                    "@payload.label"
+                  ],
+                  [
+                    "set",
+                    "@entity.label",
+                    "@payload.label"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "terminal",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Active",
+                              "variant": "success"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session ID:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Label:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.label"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Fork",
+                              "event": "FORK",
+                              "variant": "secondary",
+                              "icon": "git-branch"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Label",
+                              "event": "LABEL",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "End",
+                              "event": "END",
+                              "variant": "destructive",
+                              "icon": "square"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "forked",
+                "to": "forked",
+                "event": "LABEL",
+                "effects": [
+                  [
+                    "agent/label",
+                    "@payload.label"
+                  ],
+                  [
+                    "set",
+                    "@entity.label",
+                    "@payload.label"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "git-branch",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession (Forked)",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Forked",
+                              "variant": "info"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Parent:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.parentId"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Fork Again",
+                              "event": "FORK",
+                              "variant": "secondary",
+                              "icon": "git-branch"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Label",
+                              "event": "LABEL",
+                              "variant": "secondary",
+                              "icon": "tag"
+                            },
+                            {
+                              "type": "button",
+                              "label": "End",
+                              "event": "END",
+                              "variant": "destructive",
+                              "icon": "square"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "ended",
+                "event": "END",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "ended"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "check-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession (Ended)",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Ended",
+                              "variant": "secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "info",
+                          "message": "Session has ended."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Label:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.label"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "forked",
+                "to": "ended",
+                "event": "END",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "ended"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "check-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSession (Ended)",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Ended",
+                              "variant": "secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "info",
+                          "message": "Session has ended."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Session:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.sessionId"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Label:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.label"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentSessionPage",
+          "path": "/agentsessions",
+          "traits": [
+            {
+              "ref": "AgentSessionLifecycle"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Session lifecycle atom for agent session management. Handles session creation, forking, labeling, and ending. Uses agent/fork, agent/label, and agent/session-id operators."
+}

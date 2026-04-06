@@ -1,0 +1,737 @@
+{
+  "name": "AgentConversationOrbital",
+  "orbitals": [
+    {
+      "name": "AgentConversationOrbital",
+      "entity": {
+        "name": "AgentConversation",
+        "persistence": "persistent",
+        "collection": "agentconversations",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "messages",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "turnCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentConversationFlow",
+          "linkedEntity": "AgentConversation",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "TOKEN_UPDATE",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              },
+              {
+                "name": "paused"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEND_MESSAGE",
+                "name": "Send Message",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PAUSE",
+                "name": "Pause"
+              },
+              {
+                "key": "RESUME",
+                "name": "Resume"
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentConversation"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Start a conversation with the agent."
+                        },
+                        {
+                          "type": "input",
+                          "label": "Message",
+                          "bind": "@entity.lastMessage",
+                          "placeholder": "Type a message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND_MESSAGE",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "SEND_MESSAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    [
+                      "+",
+                      "@entity.turnCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.content"
+                  ],
+                  [
+                    "emit",
+                    "TOKEN_UPDATE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.turnCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.lastMessage"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.tokenCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "input",
+                          "label": "Message",
+                          "bind": "@entity.lastMessage",
+                          "placeholder": "Type a message..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Send",
+                              "event": "SEND_MESSAGE",
+                              "variant": "primary",
+                              "icon": "send"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Pause",
+                              "event": "PAUSE",
+                              "variant": "secondary",
+                              "icon": "pause"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "SEND_MESSAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    [
+                      "+",
+                      "@entity.turnCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.content"
+                  ],
+                  [
+                    "emit",
+                    "TOKEN_UPDATE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.turnCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.lastMessage"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.tokenCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "input",
+                          "label": "Message",
+                          "bind": "@entity.lastMessage",
+                          "placeholder": "Type a message..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Send",
+                              "event": "SEND_MESSAGE",
+                              "variant": "primary",
+                              "icon": "send"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Pause",
+                              "event": "PAUSE",
+                              "variant": "secondary",
+                              "icon": "pause"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "paused",
+                "event": "PAUSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "pause-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation (Paused)",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "info",
+                          "message": "Conversation paused."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Resume",
+                              "event": "RESUME",
+                              "variant": "primary",
+                              "icon": "play"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "active",
+                "event": "RESUME",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.turnCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.lastMessage"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.tokenCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "input",
+                          "label": "Message",
+                          "bind": "@entity.lastMessage",
+                          "placeholder": "Type a message..."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Send",
+                              "event": "SEND_MESSAGE",
+                              "variant": "primary",
+                              "icon": "send"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Pause",
+                              "event": "PAUSE",
+                              "variant": "secondary",
+                              "icon": "pause"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Start a conversation with the agent."
+                        },
+                        {
+                          "type": "input",
+                          "label": "Message",
+                          "bind": "@entity.lastMessage",
+                          "placeholder": "Type a message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND_MESSAGE",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "message-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentConversation",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Start a conversation with the agent."
+                        },
+                        {
+                          "type": "input",
+                          "label": "Message",
+                          "bind": "@entity.lastMessage",
+                          "placeholder": "Type a message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND_MESSAGE",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentConversationPage",
+          "path": "/agentconversations",
+          "traits": [
+            {
+              "ref": "AgentConversationFlow"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Conversation flow atom for multi-turn agent interactions. Manages message history, turn counting, and token tracking using agent/generate for AI replies."
+}

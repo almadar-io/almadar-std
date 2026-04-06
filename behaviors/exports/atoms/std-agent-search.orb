@@ -1,0 +1,418 @@
+{
+  "name": "AgentSearchOrbital",
+  "orbitals": [
+    {
+      "name": "AgentSearchOrbital",
+      "entity": {
+        "name": "AgentSearch",
+        "persistence": "persistent",
+        "collection": "agentsearchs",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "results",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resultCount",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentSearchFlow",
+          "linkedEntity": "AgentSearch",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "searching"
+              },
+              {
+                "name": "results"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payload": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "language",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear Results"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSearch"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSearch",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Search Query",
+                          "bind": "@entity.query",
+                          "placeholder": "Search codebase..."
+                        },
+                        {
+                          "type": "input",
+                          "label": "Language Filter",
+                          "bind": "@entity.language",
+                          "placeholder": "e.g. typescript, rust"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Search",
+                          "event": "SEARCH",
+                          "variant": "primary",
+                          "icon": "search"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "searching",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "set",
+                    "@entity.language",
+                    "@payload.language"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Searching...",
+                      "message": "Searching codebase..."
+                    }
+                  ],
+                  [
+                    "agent/search-code",
+                    "@payload.query",
+                    "@payload.language"
+                  ]
+                ]
+              },
+              {
+                "from": "searching",
+                "to": "results",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSearch",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.resultCount"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Query:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.query"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Language:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.language"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.resultCount"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "New Search",
+                              "event": "SEARCH",
+                              "variant": "primary",
+                              "icon": "search"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "searching",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "set",
+                    "@entity.language",
+                    "@payload.language"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Searching...",
+                      "message": "Searching codebase..."
+                    }
+                  ],
+                  [
+                    "agent/search-code",
+                    "@payload.query",
+                    "@payload.language"
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.results",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.language",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.resultCount",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentSearch",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Search Query",
+                          "bind": "@entity.query",
+                          "placeholder": "Search codebase..."
+                        },
+                        {
+                          "type": "input",
+                          "label": "Language Filter",
+                          "bind": "@entity.language",
+                          "placeholder": "e.g. typescript, rust"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Search",
+                          "event": "SEARCH",
+                          "variant": "primary",
+                          "icon": "search"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentSearchPage",
+          "path": "/agentsearchs",
+          "traits": [
+            {
+              "ref": "AgentSearchFlow"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Code search flow atom for agent-powered codebase searching. Uses agent/search-code to find relevant code across a repository. States: idle -> searching -> results."
+}

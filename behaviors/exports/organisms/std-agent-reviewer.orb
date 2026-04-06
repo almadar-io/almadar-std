@@ -1,0 +1,1743 @@
+{
+  "name": "Code Reviewer",
+  "version": "1.0.0",
+  "orbitals": [
+    {
+      "name": "ReviewOrbital",
+      "entity": {
+        "name": "Review",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "target",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "issues",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "suggestions",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "reviewStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ReviewGenerator",
+          "linkedEntity": "Review",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "REVIEW_COMPLETE",
+              "description": "Review is complete",
+              "scope": "internal"
+            },
+            {
+              "event": "REVIEW_COMPLETE",
+              "description": "Reinforce recalled best practices",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "analyzing"
+              },
+              {
+                "name": "reviewing"
+              },
+              {
+                "name": "completed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SUBMIT_REVIEW",
+                "name": "Submit Review",
+                "payload": [
+                  {
+                    "name": "target",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PATTERNS_FOUND",
+                "name": "Patterns Found"
+              },
+              {
+                "key": "REVIEW_GENERATED",
+                "name": "Review Generated"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Review"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file-search",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Code Review",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "Review",
+                                      "mode": "edit",
+                                      "submitEvent": "SUBMIT_REVIEW",
+                                      "fields": [
+                                        "target"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "analyzing",
+                "event": "SUBMIT_REVIEW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.target",
+                    "@payload.target"
+                  ],
+                  [
+                    "set",
+                    "@entity.reviewStatus",
+                    "analyzing"
+                  ],
+                  [
+                    "agent/recall",
+                    "@payload.target"
+                  ],
+                  [
+                    "agent/search-code",
+                    "@payload.target"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Analyzing input...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Classifying and searching for patterns",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "analyzing",
+                "to": "reviewing",
+                "event": "PATTERNS_FOUND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.reviewStatus",
+                    "reviewing"
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.target"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "cpu",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Generating review...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Category: @entity.category",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reviewing",
+                "to": "completed",
+                "event": "REVIEW_GENERATED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.reviewStatus",
+                    "completed"
+                  ],
+                  [
+                    "agent/memorize",
+                    "@entity.target",
+                    "review-pattern"
+                  ],
+                  [
+                    "emit",
+                    "REVIEW_COMPLETE"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "check-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Review Complete",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.score"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.category"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@entity.reviewStatus"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Issues",
+                                      "variant": "h4"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.issues",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "divider"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Suggestions",
+                                      "variant": "h4"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.suggestions",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "New Review",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.reviewStatus",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.target",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.issues",
+                    "[]"
+                  ],
+                  [
+                    "set",
+                    "@entity.suggestions",
+                    "[]"
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "file-search",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Code Review",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "Review",
+                                      "mode": "edit",
+                                      "submitEvent": "SUBMIT_REVIEW",
+                                      "fields": [
+                                        "target"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "CLASSIFIED",
+              "triggers": "SUBMIT_REVIEW",
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "ReviewPage",
+          "path": "/review",
+          "isInitial": true,
+          "traits": [
+            {
+              "ref": "ReviewGenerator"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AnalysisOrbital",
+      "entity": {
+        "name": "Analysis",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "inputText",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detectedCategory",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "classifyStatus",
+            "type": "string",
+            "default": "idle"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InputClassifier",
+          "linkedEntity": "Analysis",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CLASSIFIED",
+              "description": "Input has been classified",
+              "scope": "internal"
+            },
+            {
+              "event": "CLASSIFIED",
+              "description": "Input classified, begin review",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "classifying"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLASSIFY",
+                "name": "Classify",
+                "payload": [
+                  {
+                    "name": "inputText",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLASSIFICATION_DONE",
+                "name": "Classification Done"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Analysis"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Input Analysis",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Category",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.detectedCategory",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Confidence",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.confidence",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "classifying",
+                "event": "CLASSIFY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.inputText",
+                    "@payload.inputText"
+                  ],
+                  [
+                    "set",
+                    "@entity.classifyStatus",
+                    "classifying"
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.inputText"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Analyzing input...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Classifying and searching for patterns",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "classifying",
+                "to": "idle",
+                "event": "CLASSIFICATION_DONE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.classifyStatus",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "CLASSIFIED"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Input Analysis",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Category",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.detectedCategory",
+                                      "variant": "h3"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Confidence",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.confidence",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AnalysisPage",
+          "path": "/analysis",
+          "traits": [
+            {
+              "ref": "InputClassifier"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PracticeOrbital",
+      "entity": {
+        "name": "Practice",
+        "persistence": "persistent",
+        "collection": "practices",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": "general"
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": "session"
+          },
+          {
+            "name": "lastAccessedAt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "createdAt",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PracticeLifecycle",
+          "linkedEntity": "Practice",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "Memorize",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "category",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "RECALL",
+                "name": "Recall",
+                "payload": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PIN",
+                "name": "Pin",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FORGET",
+                "name": "Forget",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCE",
+                "name": "Reinforce",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAY",
+                "name": "Decay"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Practice"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Practice Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "MEMORIZE",
+                "effects": [
+                  [
+                    "agent/memorize",
+                    "@payload.content",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.category"
+                  ],
+                  [
+                    "set",
+                    "@entity.createdAt",
+                    "@now"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Practice Active",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.category"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.strength"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "secondary",
+                                  "icon": "pin"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "secondary",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "destructive",
+                                  "icon": "trash"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "RECALL",
+                "effects": [
+                  [
+                    "agent/recall",
+                    "@payload.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Practice Active",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "body",
+                              "content": "@entity.content"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.category"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "@entity.strength"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "secondary",
+                                  "icon": "pin"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "secondary",
+                                  "icon": "zap"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "destructive",
+                                  "icon": "trash"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "PIN",
+                "guard": [
+                  "not",
+                  [
+                    "agent/is-pinned",
+                    "@payload.id"
+                  ]
+                ],
+                "effects": [
+                  [
+                    "agent/pin",
+                    "@payload.id"
+                  ],
+                  [
+                    "set",
+                    "@entity.pinned",
+                    true
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "FORGET",
+                "effects": [
+                  [
+                    "agent/forget",
+                    "@payload.id"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Practice Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "REINFORCE",
+                "effects": [
+                  [
+                    "agent/reinforce",
+                    "@payload.id"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Practices",
+                          "href": "/practices",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Practice Manager",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Memorize",
+                                  "event": "MEMORIZE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Recall",
+                                  "event": "RECALL",
+                                  "variant": "secondary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Decay All",
+                                  "event": "DECAY",
+                                  "variant": "ghost",
+                                  "icon": "clock"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "listens": [
+            {
+              "event": "REVIEW_COMPLETE",
+              "triggers": "REINFORCE",
+              "scope": "external"
+            }
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "name": "PracticesPage",
+          "path": "/practices",
+          "traits": [
+            {
+              "ref": "PracticeLifecycle"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Schema/code reviewer organism. Classifies input, searches for relevant patterns via RAG, recalls best practices from memory, and generates structured review output with issues, suggestions, and a score. Composed from: - inline ClassifierTrait: classifies input type (schema, component, trait, etc.) - inline ReviewerTrait: RAG-powered review generation with scoring - stdAgentMemory: best practices recall and reinforcement Cross-trait events: - CLASSIFIED (Classifier -> Reviewer): input classified, begin review - REVIEW_COMPLETE (Reviewer -> Memory): reinforce recalled best practices Pages: /review (initial), /analysis, /practices"
+}

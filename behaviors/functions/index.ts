@@ -166,6 +166,31 @@ export { stdRealtimeChat, type StdRealtimeChatParams } from './organisms/std-rea
 export { stdFinanceTracker, type StdFinanceTrackerParams } from './organisms/std-finance-tracker.js';
 export { stdTradingDashboard, type StdTradingDashboardParams } from './organisms/std-trading-dashboard.js';
 
+// Agent organisms
+export { stdAgentAssistant, type StdAgentAssistantParams } from './organisms/std-agent-assistant.js';
+export { stdAgentBuilder, type StdAgentBuilderParams } from './organisms/std-agent-builder.js';
+export { stdAgentReviewer, type StdAgentReviewerParams } from './organisms/std-agent-reviewer.js';
+export { stdAgentPipeline, type StdAgentPipelineParams } from './organisms/std-agent-pipeline.js';
+export { stdAgentTutor, type StdAgentTutorParams } from './organisms/std-agent-tutor.js';
+
+// Atoms: Agent
+export { stdAgentMemory, stdAgentMemoryEntity, stdAgentMemoryTrait, stdAgentMemoryPage, type StdAgentMemoryParams } from './atoms/std-agent-memory.js';
+export { stdAgentCompletion, stdAgentCompletionEntity, stdAgentCompletionTrait, stdAgentCompletionPage, type StdAgentCompletionParams } from './atoms/std-agent-completion.js';
+export { stdAgentConversation, stdAgentConversationEntity, stdAgentConversationTrait, stdAgentConversationPage, type StdAgentConversationParams } from './atoms/std-agent-conversation.js';
+export { stdAgentToolCall, stdAgentToolCallEntity, stdAgentToolCallTrait, stdAgentToolCallPage, type StdAgentToolCallParams } from './atoms/std-agent-tool-call.js';
+export { stdAgentContextWindow, stdAgentContextWindowEntity, stdAgentContextWindowTrait, stdAgentContextWindowPage, type StdAgentContextWindowParams } from './atoms/std-agent-context-window.js';
+export { stdAgentProvider, stdAgentProviderEntity, stdAgentProviderTrait, stdAgentProviderPage, type StdAgentProviderParams } from './atoms/std-agent-provider.js';
+export { stdAgentSession, stdAgentSessionEntity, stdAgentSessionTrait, stdAgentSessionPage, type StdAgentSessionParams } from './atoms/std-agent-session.js';
+export { stdAgentClassifier, stdAgentClassifierEntity, stdAgentClassifierTrait, stdAgentClassifierPage, type StdAgentClassifierParams } from './atoms/std-agent-classifier.js';
+export { stdAgentSearch, stdAgentSearchEntity, stdAgentSearchTrait, stdAgentSearchPage, type StdAgentSearchParams } from './atoms/std-agent-search.js';
+
+// Molecules: Agent
+export { stdAgentRag, stdAgentRagEntity, stdAgentRagTrait, stdAgentRagPage, type StdAgentRagParams } from './molecules/std-agent-rag.js';
+export { stdAgentToolLoop, stdAgentToolLoopEntity, stdAgentToolLoopTrait, stdAgentToolLoopPage, type StdAgentToolLoopParams } from './molecules/std-agent-tool-loop.js';
+export { stdAgentFixLoop, stdAgentFixLoopEntity, stdAgentFixLoopTrait, stdAgentFixLoopPage, type StdAgentFixLoopParams } from './molecules/std-agent-fix-loop.js';
+export { stdAgentPlanner, stdAgentPlannerEntity, stdAgentPlannerTrait, stdAgentPlannerPage, type StdAgentPlannerParams } from './molecules/std-agent-planner.js';
+export { stdAgentLearner, stdAgentLearnerEntity, stdAgentLearnerTrait, stdAgentLearnerPage, type StdAgentLearnerParams } from './molecules/std-agent-learner.js';
+
 // OS Triggers
 export { stdValidateOnSave, type StdValidateOnSaveParams } from './atoms/std-validate-on-save.js';
 
