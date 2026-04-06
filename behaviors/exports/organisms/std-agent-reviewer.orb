@@ -59,11 +59,23 @@
             {
               "event": "REVIEW_COMPLETE",
               "description": "Review is complete",
-              "scope": "internal"
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "score",
+                  "type": "number"
+                }
+              ]
             },
             {
               "event": "REVIEW_COMPLETE",
-              "description": "Reinforce recalled best practices",
+              "description": "Refresh issues list with review findings",
+              "payload": [
+                {
+                  "name": "score",
+                  "type": "number"
+                }
+              ],
               "scope": "external"
             }
           ],
@@ -140,9 +152,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -246,9 +258,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -316,9 +328,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -391,9 +403,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -548,9 +560,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -638,6 +650,2165 @@
       ]
     },
     {
+      "name": "ReviewRagOrbital",
+      "entity": {
+        "name": "ReviewRag",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "context",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "memoryHits",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "searchHits",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "scope",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "name": "pinned",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resultCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "results",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ReviewRagRag",
+          "linkedEntity": "ReviewRag",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "retrieving"
+              },
+              {
+                "name": "generating"
+              },
+              {
+                "name": "completed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Generate"
+              },
+              {
+                "key": "RETRIEVAL_DONE",
+                "name": "Retrieval Done",
+                "payload": [
+                  {
+                    "name": "context",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "memoryHits",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "searchHits",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "GENERATION_DONE",
+                "name": "Generation Done",
+                "payload": [
+                  {
+                    "name": "response",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "RAG Pipeline",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Enter a query to retrieve context and generate a response",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "ReviewRag",
+                                      "mode": "edit",
+                                      "submitEvent": "GENERATE",
+                                      "fields": [
+                                        "query"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "retrieving",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "retrieving"
+                  ],
+                  [
+                    "agent/recall",
+                    "@entity.query",
+                    5
+                  ],
+                  [
+                    "agent/search-code",
+                    "@entity.query"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "search",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Retrieving context...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "center",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": "Recalling memories"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Searching code"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "retrieving",
+                "to": "generating",
+                "event": "RETRIEVAL_DONE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.context",
+                    "@payload.context"
+                  ],
+                  [
+                    "set",
+                    "@entity.memoryHits",
+                    "@payload.memoryHits"
+                  ],
+                  [
+                    "set",
+                    "@entity.searchHits",
+                    "@payload.searchHits"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "generating"
+                  ],
+                  [
+                    "agent/generate",
+                    [
+                      "str/concat",
+                      "Context:\n",
+                      "@entity.context",
+                      "\n\nQuery: ",
+                      "@entity.query",
+                      "\n\nProvide a comprehensive answer based on the retrieved context."
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "cpu",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Generating response...",
+                              "variant": "h3"
+                            },
+                            {
+                              "type": "spinner",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "center",
+                              "children": [
+                                {
+                                  "type": "badge",
+                                  "label": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "@entity.memoryHits"
+                                    ],
+                                    " memories"
+                                  ]
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": [
+                                    "str/concat",
+                                    [
+                                      "str/concat",
+                                      "@entity.searchHits"
+                                    ],
+                                    " code hits"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "completed",
+                "event": "GENERATION_DONE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.response"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "agent/memorize",
+                    [
+                      "str/concat",
+                      "RAG query: ",
+                      "@entity.query"
+                    ],
+                    "pattern-affinity"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "check-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "RAG Complete",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Query",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "simple-grid",
+                              "columns": 2,
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Memory Hits",
+                                  "value": "@entity.memoryHits",
+                                  "icon": "brain"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Code Hits",
+                                  "value": "@entity.searchHits",
+                                  "icon": "code"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Query",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.query",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "divider"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Response",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.response",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Retrieved Context",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "@entity.context",
+                                      "variant": "body"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "retrieving",
+                "to": "idle",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "RAG Pipeline Error",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "error",
+                              "message": "@entity.error"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Try Again",
+                              "event": "RESET",
+                              "variant": "primary",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "idle",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "RAG Pipeline Error",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "error",
+                              "message": "@entity.error"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Try Again",
+                              "event": "RESET",
+                              "variant": "primary",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.context",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.memoryHits",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.searchHits",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "RAG Pipeline",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "content": "Enter a query to retrieve context and generate a response",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "type": "form-section",
+                                      "entity": "ReviewRag",
+                                      "mode": "edit",
+                                      "submitEvent": "GENERATE",
+                                      "fields": [
+                                        "query"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "RagTabs",
+          "linkedEntity": "ReviewRag",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_TAB",
+                "name": "Select Tab",
+                "payload": [
+                  {
+                    "name": "tab",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "RAG Pipeline",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Query",
+                                  "value": "query"
+                                },
+                                {
+                                  "label": "Sources",
+                                  "value": "sources"
+                                },
+                                {
+                                  "label": "Response",
+                                  "value": "response"
+                                }
+                              ],
+                              "defaultActiveTab": "query",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "ReviewRag",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No reviewrags yet",
+                              "emptyDescription": "Add reviewrags to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.query"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.query"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_TAB",
+                "effects": [
+                  [
+                    "fetch",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "brain",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "RAG Pipeline",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Query",
+                                  "value": "query"
+                                },
+                                {
+                                  "label": "Sources",
+                                  "value": "sources"
+                                },
+                                {
+                                  "label": "Response",
+                                  "value": "response"
+                                }
+                              ],
+                              "defaultActiveTab": "query",
+                              "activeTab": "@payload.tab",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "ReviewRag",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No reviewrags yet",
+                              "emptyDescription": "Add reviewrags to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.query"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.query"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "RagMemoryLifecycle",
+          "linkedEntity": "ReviewRag",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "MEMORIZE"
+              },
+              {
+                "key": "RECALL",
+                "name": "RECALL"
+              },
+              {
+                "key": "DECAY",
+                "name": "DECAY"
+              },
+              {
+                "key": "PIN",
+                "name": "PIN",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCE",
+                "name": "REINFORCE",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "FORGET",
+                "name": "FORGET",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "MEMORIZED",
+                "name": "MEMORIZED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PINNED",
+                "name": "PINNED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FORGOT",
+                "name": "FORGOT",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCED",
+                "name": "REINFORCED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAYED",
+                "name": "DECAYED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "brain",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewRag Manager",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "label": "Memorize",
+                                      "event": "MEMORIZE",
+                                      "variant": "primary",
+                                      "icon": "plus"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "label": "Recall",
+                                      "event": "RECALL",
+                                      "variant": "secondary",
+                                      "icon": "search"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "label": "Decay All",
+                                      "event": "DECAY",
+                                      "variant": "ghost",
+                                      "icon": "clock"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "ReviewRag",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No memories yet",
+                              "emptyDescription": "Create your first memory to get started.",
+                              "itemActions": [
+                                {
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                },
+                                {
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                },
+                                {
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "danger",
+                                  "size": "sm"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "content",
+                                  "label": "Content",
+                                  "variant": "h4",
+                                  "icon": "brain"
+                                },
+                                {
+                                  "name": "category",
+                                  "label": "Category",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
+                                },
+                                {
+                                  "name": "strength",
+                                  "label": "Strength",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MEMORIZED",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PINNED",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "FORGOT",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "REINFORCED",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DECAYED",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "RagSearchLifecycle",
+          "linkedEntity": "ReviewRag",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "SEARCH"
+              },
+              {
+                "key": "CLEAR",
+                "name": "CLEAR"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCHED",
+                "name": "SEARCHED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "search",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewRag",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "label": "Search",
+                                      "event": "SEARCH",
+                                      "variant": "primary",
+                                      "icon": "search"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "label": "Clear",
+                                      "event": "CLEAR",
+                                      "variant": "ghost",
+                                      "icon": "x"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "ReviewRag",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No search results",
+                              "emptyDescription": "Enter a query to search the codebase.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "query",
+                                  "label": "Query",
+                                  "variant": "h4",
+                                  "icon": "search"
+                                },
+                                {
+                                  "name": "language",
+                                  "label": "Language",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
+                                },
+                                {
+                                  "name": "resultCount",
+                                  "label": "Result Count",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "SEARCHED",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "RagCompletionFlow",
+          "linkedEntity": "ReviewRag",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "GENERATED",
+              "scope": "internal"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewRag",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "GENERATE",
+                                  "variant": "primary",
+                                  "icon": "sparkles"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ReviewRag",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "ReviewRag",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "prompt"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewRag",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "GENERATE",
+                                  "variant": "primary",
+                                  "icon": "sparkles"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ReviewRag",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "GENERATED"
+                  ],
+                  [
+                    "ref",
+                    "ReviewRag"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewRag",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "GENERATE",
+                                  "variant": "primary",
+                                  "icon": "sparkles"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "ReviewRag created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "RagPage",
+          "path": "/rag",
+          "traits": [
+            {
+              "ref": "ReviewRagRag"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "AnalysisOrbital",
       "entity": {
         "name": "Analysis",
@@ -649,12 +2820,12 @@
             "required": true
           },
           {
-            "name": "inputText",
+            "name": "input",
             "type": "string",
             "default": ""
           },
           {
-            "name": "detectedCategory",
+            "name": "category",
             "type": "string",
             "default": ""
           },
@@ -664,9 +2835,19 @@
             "default": 0
           },
           {
-            "name": "classifyStatus",
+            "name": "model",
             "type": "string",
-            "default": "idle"
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
           }
         ]
       },
@@ -679,11 +2860,780 @@
             {
               "event": "CLASSIFIED",
               "description": "Input has been classified",
-              "scope": "internal"
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "category",
+                  "type": "string"
+                }
+              ]
             },
             {
               "event": "CLASSIFIED",
               "description": "Input classified, begin review",
+              "payload": [
+                {
+                  "name": "category",
+                  "type": "string"
+                }
+              ],
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLASSIFY",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Analysis"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Analysis",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "CLASSIFY",
+                                  "variant": "primary",
+                                  "icon": "tag"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "CLASSIFY",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "tag",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Analysis",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Categories:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "schema",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "component",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "trait",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "page",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "behavior",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "style",
+                              "variant": "secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Analysis",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "input"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "Analysis"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Analysis",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "CLASSIFY",
+                                  "variant": "primary",
+                                  "icon": "tag"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Analysis",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "CLASSIFIED"
+                  ],
+                  [
+                    "ref",
+                    "Analysis"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Analysis",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "CLASSIFY",
+                                  "variant": "primary",
+                                  "icon": "tag"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "Analysis created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AnalysisNotification",
+          "linkedEntity": "Analysis",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "hidden",
+                "isInitial": true
+              },
+              {
+                "name": "visible"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOW",
+                "name": "Show Notification",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HIDE",
+                "name": "Hide Notification"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "hidden",
+                "to": "hidden",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Analysis"
+                  ]
+                ]
+              },
+              {
+                "from": "hidden",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Analysis Result",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Dismiss",
+                                  "event": "HIDE",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "notificationType"
+                              ],
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ]
+                            },
+                            {
+                              "type": "toast-slot",
+                              "position": "top-right"
+                            },
+                            {
+                              "type": "violation-alert",
+                              "severity": "warning",
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ],
+                              "category": "compliance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Analysis Result",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Dismiss",
+                                  "event": "HIDE",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "notificationType"
+                              ],
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ]
+                            },
+                            {
+                              "type": "toast-slot",
+                              "position": "top-right"
+                            },
+                            {
+                              "type": "violation-alert",
+                              "severity": "warning",
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ],
+                              "category": "compliance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "hidden",
+                "event": "HIDE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AnalysisAgent",
+          "linkedEntity": "Analysis",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SHOW",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "confidence",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "CLASSIFIED",
+              "triggers": "CLASSIFIED",
               "scope": "external"
             }
           ],
@@ -695,6 +3645,9 @@
               },
               {
                 "name": "classifying"
+              },
+              {
+                "name": "classified"
               }
             ],
             "events": [
@@ -703,19 +3656,30 @@
                 "name": "Initialize"
               },
               {
-                "key": "CLASSIFY",
-                "name": "Classify",
+                "key": "DO_CLASSIFY",
+                "name": "Do Classify",
                 "payload": [
                   {
-                    "name": "inputText",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
                   }
                 ]
               },
               {
-                "key": "CLASSIFICATION_DONE",
-                "name": "Classification Done"
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "CLASSIFIED",
+                "name": "Classified",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -746,71 +3710,17 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "tag",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Input Analysis",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "content": "Category",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "@entity.detectedCategory",
-                                      "variant": "h3"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Confidence",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "@entity.confidence",
-                                      "variant": "body"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
+                          "type": "empty-state",
+                          "icon": "tag",
+                          "title": "Classifier",
+                          "description": "Classifier is ready"
                         }
                       ]
                     }
@@ -820,178 +3730,74 @@
               {
                 "from": "idle",
                 "to": "classifying",
-                "event": "CLASSIFY",
+                "event": "DO_CLASSIFY",
                 "effects": [
                   [
-                    "set",
-                    "@entity.inputText",
-                    "@payload.inputText"
-                  ],
-                  [
-                    "set",
-                    "@entity.classifyStatus",
-                    "classifying"
-                  ],
+                    "agent/generate",
+                    [
+                      "str/concat",
+                      "Classify the following text into one of these categories: ",
+                      "schema, component, trait, page, behavior, style",
+                      ". Text: ",
+                      "@entity.input",
+                      ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"
+                    ]
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "classifying",
+                "event": "CLASSIFIED",
+                "effects": [
                   [
                     "agent/generate",
-                    "@payload.inputText"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "label": "Review",
-                          "href": "/review",
-                          "icon": "file-search"
-                        },
-                        {
-                          "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
-                        },
-                        {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "search",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Analyzing input...",
-                              "variant": "h3"
-                            },
-                            {
-                              "type": "spinner",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Classifying and searching for patterns",
-                              "variant": "caption"
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    [
+                      "str/concat",
+                      "Classify the following text into one of these categories: ",
+                      "schema, component, trait, page, behavior, style",
+                      ". Text: ",
+                      "@entity.input",
+                      ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"
+                    ]
                   ]
                 ]
               },
               {
                 "from": "classifying",
-                "to": "idle",
-                "event": "CLASSIFICATION_DONE",
+                "to": "classified",
+                "event": "DO_CLASSIFY",
                 "effects": [
                   [
                     "set",
-                    "@entity.classifyStatus",
-                    "done"
+                    "@entity.category",
+                    "@payload.data.input"
                   ],
                   [
                     "emit",
-                    "CLASSIFIED"
+                    "SHOW"
+                  ]
+                ]
+              },
+              {
+                "from": "classified",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.input",
+                    ""
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "label": "Review",
-                          "href": "/review",
-                          "icon": "file-search"
-                        },
-                        {
-                          "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
-                        },
-                        {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "tag",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Input Analysis",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "md",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "content": "Category",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "@entity.detectedCategory",
-                                      "variant": "h3"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Confidence",
-                                      "variant": "caption"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "@entity.confidence",
-                                      "variant": "body"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "set",
+                    "@entity.category",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.confidence",
+                    0
                   ]
                 ]
               }
@@ -1012,11 +3818,10 @@
       ]
     },
     {
-      "name": "PracticeOrbital",
+      "name": "ReviewCompletionOrbital",
       "entity": {
-        "name": "Practice",
-        "persistence": "persistent",
-        "collection": "practices",
+        "name": "ReviewCompletion",
+        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
@@ -1024,55 +3829,65 @@
             "required": true
           },
           {
-            "name": "content",
+            "name": "prompt",
             "type": "string",
             "default": ""
           },
           {
-            "name": "category",
-            "type": "string",
-            "default": "general"
-          },
-          {
-            "name": "strength",
-            "type": "number",
-            "default": 1
-          },
-          {
-            "name": "pinned",
-            "type": "boolean",
-            "default": false
-          },
-          {
-            "name": "scope",
-            "type": "string",
-            "default": "session"
-          },
-          {
-            "name": "lastAccessedAt",
+            "name": "response",
             "type": "string",
             "default": ""
           },
           {
-            "name": "createdAt",
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
             "type": "string",
             "default": ""
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
           }
         ]
       },
       "traits": [
         {
-          "name": "PracticeLifecycle",
-          "linkedEntity": "Practice",
+          "name": "ReviewCompletionFlow",
+          "linkedEntity": "ReviewCompletion",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "GENERATED"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
-                "name": "idle",
+                "name": "closed",
                 "isInitial": true
               },
               {
-                "name": "active"
+                "name": "open"
               }
             ],
             "events": [
@@ -1081,68 +3896,766 @@
                 "name": "Initialize"
               },
               {
-                "key": "MEMORIZE",
-                "name": "Memorize",
+                "key": "GENERATE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
                 "payload": [
                   {
-                    "name": "content",
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewCompletion",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "GENERATE",
+                                  "variant": "primary",
+                                  "icon": "sparkles"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ReviewCompletion",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "ReviewCompletion",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "prompt"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "ReviewCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewCompletion",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "GENERATE",
+                                  "variant": "primary",
+                                  "icon": "sparkles"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ReviewCompletion",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "GENERATED"
+                  ],
+                  [
+                    "ref",
+                    "ReviewCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewCompletion",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "GENERATE",
+                                  "variant": "primary",
+                                  "icon": "sparkles"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "sparkles",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "ReviewCompletion created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ReviewCompletionNotification",
+          "linkedEntity": "ReviewCompletion",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "hidden",
+                "isInitial": true
+              },
+              {
+                "name": "visible"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOW",
+                "name": "Show Notification",
+                "payload": [
+                  {
+                    "name": "message",
                     "type": "string",
                     "required": true
                   },
                   {
-                    "name": "category",
-                    "type": "string",
-                    "required": false
+                    "name": "notificationType",
+                    "type": "string"
                   }
                 ]
               },
               {
-                "key": "RECALL",
-                "name": "Recall",
+                "key": "HIDE",
+                "name": "Hide Notification"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "hidden",
+                "to": "hidden",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ReviewCompletion"
+                  ]
+                ]
+              },
+              {
+                "from": "hidden",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewCompletion Status",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Dismiss",
+                                  "event": "HIDE",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "notificationType"
+                              ],
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ]
+                            },
+                            {
+                              "type": "toast-slot",
+                              "position": "top-right"
+                            },
+                            {
+                              "type": "violation-alert",
+                              "severity": "warning",
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ],
+                              "category": "compliance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "sparkles",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "ReviewCompletion Status",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Dismiss",
+                                  "event": "HIDE",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "notificationType"
+                              ],
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ]
+                            },
+                            {
+                              "type": "toast-slot",
+                              "position": "top-right"
+                            },
+                            {
+                              "type": "violation-alert",
+                              "severity": "warning",
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ],
+                              "category": "compliance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "hidden",
+                "event": "HIDE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ReviewCompletionAgent",
+          "linkedEntity": "ReviewCompletion",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SHOW",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "response",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "GENERATED",
+              "triggers": "GENERATED",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "generating"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_GENERATE",
+                "name": "Do Generate",
                 "payload": [
                   {
-                    "name": "query",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
                   }
                 ]
               },
               {
-                "key": "PIN",
-                "name": "Pin",
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "GENERATED",
+                "name": "Generated",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
                   }
                 ]
-              },
-              {
-                "key": "FORGET",
-                "name": "Forget",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REINFORCE",
-                "name": "Reinforce",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DECAY",
-                "name": "Decay"
               }
             ],
             "transitions": [
@@ -1153,7 +4666,7 @@
                 "effects": [
                   [
                     "fetch",
-                    "Practice"
+                    "ReviewCompletion"
                   ],
                   [
                     "render-ui",
@@ -1173,67 +4686,17 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Practice Manager",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
-                                }
-                              ]
-                            }
-                          ]
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Completion",
+                          "description": "Completion is ready"
                         }
                       ]
                     }
@@ -1242,279 +4705,246 @@
               },
               {
                 "from": "idle",
-                "to": "active",
-                "event": "MEMORIZE",
+                "to": "generating",
+                "event": "DO_GENERATE",
                 "effects": [
                   [
-                    "agent/memorize",
-                    "@payload.content",
-                    "@payload.category"
-                  ],
-                  [
                     "set",
-                    "@entity.content",
-                    "@payload.content"
+                    "@entity.status",
+                    "generating"
                   ],
                   [
-                    "set",
-                    "@entity.category",
-                    "@payload.category"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@now"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "label": "Review",
-                          "href": "/review",
-                          "icon": "file-search"
-                        },
-                        {
-                          "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
-                        },
-                        {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Practice Active",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.content"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.category"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.strength"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Pin",
-                                  "event": "PIN",
-                                  "variant": "secondary",
-                                  "icon": "pin"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Reinforce",
-                                  "event": "REINFORCE",
-                                  "variant": "secondary",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Forget",
-                                  "event": "FORGET",
-                                  "variant": "destructive",
-                                  "icon": "trash"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "agent/generate",
+                    "@entity.prompt"
                   ]
                 ]
               },
               {
                 "from": "idle",
-                "to": "active",
-                "event": "RECALL",
+                "to": "generating",
+                "event": "GENERATED",
                 "effects": [
                   [
-                    "agent/recall",
-                    "@payload.query"
+                    "set",
+                    "@entity.status",
+                    "generating"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Code Reviewer",
-                      "navItems": [
-                        {
-                          "label": "Review",
-                          "href": "/review",
-                          "icon": "file-search"
-                        },
-                        {
-                          "label": "Analysis",
-                          "href": "/analysis",
-                          "icon": "tag"
-                        },
-                        {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Practice Active",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.content"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.category"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.strength"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Pin",
-                                  "event": "PIN",
-                                  "variant": "secondary",
-                                  "icon": "pin"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Reinforce",
-                                  "event": "REINFORCE",
-                                  "variant": "secondary",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Forget",
-                                  "event": "FORGET",
-                                  "variant": "destructive",
-                                  "icon": "trash"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "agent/generate",
+                    "@entity.prompt"
                   ]
                 ]
               },
               {
-                "from": "active",
-                "to": "active",
-                "event": "PIN",
+                "from": "generating",
+                "to": "completed",
+                "event": "DO_GENERATE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.response",
+                    "@payload.data.prompt"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "emit",
+                    "SHOW"
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "error",
+                "event": "RESET",
                 "guard": [
-                  "not",
-                  [
-                    "agent/is-pinned",
-                    "@payload.id"
-                  ]
+                  "=",
+                  "@entity.status",
+                  "generating"
                 ],
                 "effects": [
                   [
-                    "agent/pin",
-                    "@payload.id"
+                    "set",
+                    "@entity.status",
+                    "error"
                   ],
                   [
                     "set",
-                    "@entity.pinned",
-                    true
+                    "@entity.error",
+                    "Generation was cancelled"
                   ]
                 ]
               },
               {
-                "from": "active",
-                "to": "idle",
-                "event": "FORGET",
+                "from": "error",
+                "to": "generating",
+                "event": "RETRY",
+                "guard": [
+                  "=",
+                  "@entity.status",
+                  "error"
+                ],
                 "effects": [
                   [
-                    "agent/forget",
-                    "@payload.id"
+                    "set",
+                    "@entity.status",
+                    "generating"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ],
+                  [
+                    "agent/generate",
+                    "@entity.prompt"
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.response",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "CompletionPage",
+          "path": "/completion",
+          "traits": [
+            {
+              "ref": "ReviewCompletionFlow"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ReviewNavOrbital",
+      "entity": {
+        "name": "ReviewNav",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "target",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "issues",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "suggestions",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "reviewStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ReviewerTabs",
+          "linkedEntity": "Review",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_TAB",
+                "name": "Select Tab",
+                "payload": [
+                  {
+                    "name": "tab",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Review"
                   ],
                   [
                     "render-ui",
@@ -1534,9 +4964,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -1553,12 +4983,12 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "brain",
+                                  "name": "file-search",
                                   "size": "lg"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Practice Manager",
+                                  "content": "Code Reviewer",
                                   "variant": "h2"
                                 }
                               ]
@@ -1567,30 +4997,54 @@
                               "type": "divider"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
+                              "type": "tabs",
+                              "tabs": [
                                 {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
+                                  "label": "Input",
+                                  "value": "input"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
+                                  "label": "Analysis",
+                                  "value": "analysis"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
+                                  "label": "Review",
+                                  "value": "review"
+                                }
+                              ],
+                              "defaultActiveTab": "input",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "Review",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No reviews yet",
+                              "emptyDescription": "Add reviews to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.target"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.input"
+                                    }
+                                  ]
                                 }
                               ]
                             }
@@ -1602,33 +5056,13 @@
                 ]
               },
               {
-                "from": "active",
-                "to": "active",
-                "event": "REINFORCE",
-                "effects": [
-                  [
-                    "agent/reinforce",
-                    "@payload.id"
-                  ]
-                ]
-              },
-              {
                 "from": "idle",
                 "to": "idle",
-                "event": "DECAY",
+                "event": "SELECT_TAB",
                 "effects": [
                   [
-                    "agent/decay"
-                  ]
-                ]
-              },
-              {
-                "from": "active",
-                "to": "idle",
-                "event": "DECAY",
-                "effects": [
-                  [
-                    "agent/decay"
+                    "fetch",
+                    "Review"
                   ],
                   [
                     "render-ui",
@@ -1648,9 +5082,9 @@
                           "icon": "tag"
                         },
                         {
-                          "label": "Practices",
-                          "href": "/practices",
-                          "icon": "brain"
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
                         }
                       ],
                       "children": [
@@ -1667,12 +5101,12 @@
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "brain",
+                                  "name": "file-search",
                                   "size": "lg"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Practice Manager",
+                                  "content": "Code Reviewer",
                                   "variant": "h2"
                                 }
                               ]
@@ -1681,32 +5115,260 @@
                               "type": "divider"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
+                              "type": "tabs",
+                              "tabs": [
                                 {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
+                                  "label": "Input",
+                                  "value": "input"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
+                                  "label": "Analysis",
+                                  "value": "analysis"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
+                                  "label": "Review",
+                                  "value": "review"
+                                }
+                              ],
+                              "defaultActiveTab": "input",
+                              "activeTab": "@payload.tab",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "Review",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No reviews yet",
+                              "emptyDescription": "Add reviews to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.target"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.input"
+                                    }
+                                  ]
                                 }
                               ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ReviewerNavPage",
+          "path": "/reviewer/nav",
+          "traits": [
+            {
+              "ref": "ReviewerTabs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ReviewIssueOrbital",
+      "entity": {
+        "name": "ReviewIssue",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "severity",
+            "type": "string",
+            "default": "info"
+          },
+          {
+            "name": "line",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "IssuesBrowse",
+          "linkedEntity": "ReviewIssue",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "ReviewIssue"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Code Reviewer",
+                      "navItems": [
+                        {
+                          "label": "Review",
+                          "href": "/review",
+                          "icon": "file-search"
+                        },
+                        {
+                          "label": "Analysis",
+                          "href": "/analysis",
+                          "icon": "tag"
+                        },
+                        {
+                          "label": "Issues",
+                          "href": "/issues",
+                          "icon": "alert-triangle"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "alert-triangle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Issues",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "ReviewIssue",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No issues found",
+                              "emptyDescription": "The review found no issues.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "description",
+                                  "label": "Description",
+                                  "variant": "h4",
+                                  "icon": "alert-triangle"
+                                },
+                                {
+                                  "name": "severity",
+                                  "label": "Severity",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "floating-action-button",
+                              "icon": "plus",
+                              "event": "INIT",
+                              "label": "Create",
+                              "tooltip": "Create"
                             }
                           ]
                         }
@@ -1720,7 +5382,7 @@
           "listens": [
             {
               "event": "REVIEW_COMPLETE",
-              "triggers": "REINFORCE",
+              "triggers": "INIT",
               "scope": "external"
             }
           ]
@@ -1728,16 +5390,16 @@
       ],
       "pages": [
         {
-          "name": "PracticesPage",
-          "path": "/practices",
+          "name": "IssuesPage",
+          "path": "/issues",
           "traits": [
             {
-              "ref": "PracticeLifecycle"
+              "ref": "IssuesBrowse"
             }
           ]
         }
       ]
     }
   ],
-  "description": "Schema/code reviewer organism. Classifies input, searches for relevant patterns via RAG, recalls best practices from memory, and generates structured review output with issues, suggestions, and a score. Composed from: - inline ClassifierTrait: classifies input type (schema, component, trait, etc.) - inline ReviewerTrait: RAG-powered review generation with scoring - stdAgentMemory: best practices recall and reinforcement Cross-trait events: - CLASSIFIED (Classifier -> Reviewer): input classified, begin review - REVIEW_COMPLETE (Reviewer -> Memory): reinforce recalled best practices Pages: /review (initial), /analysis, /practices"
+  "description": "Schema/code reviewer organism. Composes RAG molecule + classifier atom to classify input, search for relevant patterns, recall best practices, and generate structured review output with tabbed views and an issues browse. Composed from: - stdAgentRag (molecule): retrieval-augmented generation pipeline - stdAgentClassifier: classifies input type (schema, component, trait, etc.) - stdAgentCompletion: generates review with scoring - stdTabs: Input / Analysis / Review tab navigation - stdBrowse: browsable issues list Cross-trait events: - CLASSIFIED (Classifier -> Reviewer): input classified, begin review - REVIEW_COMPLETE (Reviewer -> Memory): reinforce recalled best practices Pages: /review (initial), /analysis, /issues"
 }

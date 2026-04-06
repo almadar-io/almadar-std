@@ -1,19 +1,21 @@
 /**
  * std-agent-tutor
  *
- * Teaching assistant organism. Classifies student level, recalls prior
- * learning from memory, generates explanations with context-aware
- * difficulty, and tracks concept strength via memory reinforcement.
+ * Teaching assistant organism. Composes conversation + memory + classifier
+ * atoms with tabbed views and a concept browse list. Classifies student level,
+ * recalls prior learning from memory, generates explanations with
+ * context-aware difficulty, and tracks concept strength.
  *
  * Composed from:
- * - inline TeachingTrait: assessment, teaching, quizzing flow
- * - inline QuizTrait: generates and evaluates quiz questions
+ * - stdAgentConversation: multi-turn teaching interaction
  * - stdAgentMemory: tracks concept strength per student topic
+ * - stdAgentClassifier: classifies student level
+ * - stdTabs: Teach / Quiz / Progress tab navigation
+ * - stdBrowse: browsable concepts list with strength tracking
  *
  * Cross-trait events:
  * - ASSESSMENT_DONE (Teaching -> Quiz): student assessed, generate quiz
  * - QUIZ_GRADED (Quiz -> Memory): reinforce or decay concept based on answer
- * - CONCEPT_RECALLED (Memory -> Teaching): prior learning loaded for context
  *
  * Pages: /teach (initial), /quiz, /concepts
  *
@@ -22,10 +24,14 @@
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, OrbitalDefinition, Entity, Trait, Page, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, makePage, ensureIdField, compose } from '@almadar/core/builders';
+import type { OrbitalSchema, OrbitalDefinition, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makePage, ensureIdField, extractTrait, compose } from '@almadar/core/builders';
 import type { ComposePage, ComposeConnection } from '@almadar/core/builders';
+import { stdAgentConversation } from '../atoms/std-agent-conversation.js';
 import { stdAgentMemory } from '../atoms/std-agent-memory.js';
+import { stdAgentClassifier } from '../atoms/std-agent-classifier.js';
+import { stdTabs } from '../atoms/std-tabs.js';
+import { stdBrowse } from '../atoms/std-browse.js';
 import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
@@ -245,7 +251,7 @@ function buildTeachingTrait(entityName: string): Trait {
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'ASSESSMENT_DONE', description: 'Student level assessed', scope: 'internal' },
+      { event: 'ASSESSMENT_DONE', description: 'Student level assessed', scope: 'internal' as const, payload: [{ name: 'level', type: 'string' }] },
     ],
     stateMachine: {
       states: [
@@ -321,17 +327,13 @@ function buildTeachingTrait(entityName: string): Trait {
   } as Trait;
 }
 
-function buildQuizOrbital(fields: EntityField[]): OrbitalDefinition {
-  const entityName = 'QuizQuestion';
-  const allFields = ensureIdField(fields);
-  const entity = makeEntity({ name: entityName, fields: allFields, persistence: 'runtime' });
-
-  const trait: Trait = {
+function buildQuizTrait(entityName: string): Trait {
+  return {
     name: 'QuizEngine',
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'QUIZ_GRADED', description: 'Answer graded, reinforce or decay concept', scope: 'internal' },
+      { event: 'QUIZ_GRADED', description: 'Answer graded, reinforce or decay concept', scope: 'internal' as const, payload: [{ name: 'correct', type: 'boolean' }] },
     ],
     stateMachine: {
       states: [
@@ -403,9 +405,6 @@ function buildQuizOrbital(fields: EntityField[]): OrbitalDefinition {
       ],
     },
   } as Trait;
-
-  const page = makePage({ name: 'QuizPage', path: '/quiz', traitName: 'QuizEngine' });
-  return makeOrbital('QuizQuestionOrbital', entity, [trait], [page]);
 }
 
 // ============================================================================
@@ -415,17 +414,32 @@ function buildQuizOrbital(fields: EntityField[]): OrbitalDefinition {
 export function stdAgentTutor(params: StdAgentTutorParams = {}): OrbitalSchema {
   const appName = params.appName ?? 'AI Tutor';
 
-  // Teaching session orbital
+  // 1. Teaching session orbital with inline trait
   const sessionFields = ensureIdField(params.sessionFields ?? DEFAULT_SESSION_FIELDS);
   const sessionEntity = makeEntity({ name: 'TutorSession', fields: sessionFields, persistence: 'runtime' });
   const teachingTrait = buildTeachingTrait('TutorSession');
   const teachPage = makePage({ name: 'TeachPage', path: '/teach', traitName: 'TeachingSession', isInitial: true });
   const sessionOrbital = makeOrbital('TutorSessionOrbital', sessionEntity, [teachingTrait], [teachPage]);
 
-  // Quiz orbital
-  const quizOrbital = buildQuizOrbital(params.quizFields ?? DEFAULT_QUIZ_FIELDS);
+  // 2. Quiz orbital with inline trait
+  const quizFields = ensureIdField(params.quizFields ?? DEFAULT_QUIZ_FIELDS);
+  const quizEntity = makeEntity({ name: 'QuizQuestion', fields: quizFields, persistence: 'runtime' });
+  const quizTrait = buildQuizTrait('QuizQuestion');
+  const quizPage = makePage({ name: 'QuizPage', path: '/quiz', traitName: 'QuizEngine' });
+  const quizOrbital = makeOrbital('QuizQuestionOrbital', quizEntity, [quizTrait], [quizPage]);
 
-  // Concept strength tracking from memory atom
+  // 3. Conversation atom for multi-turn dialogue
+  const conversationOrbital = stdAgentConversation({
+    entityName: 'TutorChat',
+    persistence: 'runtime',
+    pageName: 'TeachPage',
+    pagePath: '/teach',
+    isInitial: true,
+  });
+  const convTrait = (conversationOrbital.traits as Trait[])[0];
+  convTrait.name = 'TutorConversation';
+
+  // 4. Memory atom for concept tracking
   const memoryOrbital = stdAgentMemory({
     entityName: 'Concept',
     fields: params.memoryFields,
@@ -434,30 +448,92 @@ export function stdAgentTutor(params: StdAgentTutorParams = {}): OrbitalSchema {
     pagePath: '/concepts',
   });
 
+  // 5. Classifier atom for student level assessment
+  const classifierOrbital = stdAgentClassifier({
+    entityName: 'StudentAssessment',
+    categories: ['beginner', 'intermediate', 'advanced', 'expert'],
+    persistence: 'runtime',
+    pageName: 'AssessmentPage',
+    pagePath: '/assessment',
+  });
+  const clsTrait = (classifierOrbital.traits as Trait[])[0];
+  clsTrait.name = 'LevelClassifier';
+
+  // 6. UI: tabs for Teach / Quiz / Progress navigation
+  const tabsTrait = extractTrait(stdTabs({
+    entityName: 'TutorSession',
+    fields: sessionFields,
+    tabItems: [
+      { label: 'Teach', value: 'teach' },
+      { label: 'Quiz', value: 'quiz' },
+      { label: 'Progress', value: 'progress' },
+    ],
+    headerIcon: 'graduation-cap',
+    pageTitle: 'AI Tutor',
+  }));
+  tabsTrait.name = 'TutorTabs';
+  const tabsEntity = makeEntity({ name: 'TutorNav', fields: sessionFields, persistence: 'runtime' });
+  const tabsOrbital: OrbitalDefinition = makeOrbital('TutorNavOrbital', tabsEntity, [tabsTrait], [
+    makePage({ name: 'TutorNavPage', path: '/tutor/nav', traitName: 'TutorTabs' }),
+  ]);
+
+  // 7. UI: concepts browse list
+  const conceptFields = ensureIdField([
+    { name: 'content', type: 'string', default: '' },
+    { name: 'category', type: 'string', default: '' },
+    { name: 'strength', type: 'number', default: 0 },
+  ]);
+  const conceptsBrowseTrait = extractTrait(stdBrowse({
+    entityName: 'Concept',
+    fields: conceptFields,
+    traitName: 'ConceptsBrowse',
+    listFields: ['content', 'category', 'strength'],
+    headerIcon: 'brain',
+    pageTitle: 'Learned Concepts',
+    emptyTitle: 'No concepts yet',
+    emptyDescription: 'Complete lessons and quizzes to build your concept library.',
+    itemActions: [{ label: 'View', event: 'VIEW' }],
+  }));
+  conceptsBrowseTrait.name = 'ConceptsBrowse';
+  const conceptsEntity = makeEntity({ name: 'ConceptView', fields: conceptFields, persistence: 'persistent' });
+  const conceptsOrbital: OrbitalDefinition = makeOrbital('ConceptViewOrbital', conceptsEntity, [conceptsBrowseTrait], [
+    makePage({ name: 'ConceptsViewPage', path: '/tutor/concepts', traitName: 'ConceptsBrowse' }),
+  ]);
+
   const pages: ComposePage[] = [
     { name: 'TeachPage', path: '/teach', traits: ['TeachingSession'], isInitial: true },
+    { name: 'ChatPage', path: '/chat', traits: ['TutorConversation'] },
+    { name: 'AssessmentPage', path: '/assessment', traits: ['LevelClassifier'] },
+    { name: 'TutorNavPage', path: '/tutor/nav', traits: ['TutorTabs'] },
     { name: 'QuizPage', path: '/quiz', traits: ['QuizEngine'] },
-    { name: 'ConceptsPage', path: '/concepts', traits: ['ConceptLifecycle'] },
+    { name: 'ConceptsPage', path: '/concepts', traits: ['ConceptBrowse', 'ConceptCreate', 'ConceptAgent'] },
+    { name: 'ConceptsViewPage', path: '/tutor/concepts', traits: ['ConceptsBrowse'] },
   ];
 
   const connections: ComposeConnection[] = [
     {
       from: 'TeachingSession',
       to: 'QuizEngine',
-      event: { event: 'ASSESSMENT_DONE', description: 'Student assessed, generate quiz' },
+      event: { event: 'ASSESSMENT_DONE', description: 'Student assessed, generate quiz', payload: [{ name: 'level', type: 'string' }] },
       triggers: 'GENERATE_QUESTION',
     },
     {
       from: 'QuizEngine',
-      to: 'ConceptLifecycle',
-      event: { event: 'QUIZ_GRADED', description: 'Reinforce or decay concept based on answer' },
+      to: 'ConceptAgent',
+      event: { event: 'QUIZ_GRADED', description: 'Reinforce or decay concept based on answer', payload: [{ name: 'correct', type: 'boolean' }] },
       triggers: 'REINFORCE',
     },
   ];
 
-  const schema = compose([sessionOrbital, quizOrbital, memoryOrbital], pages, connections, appName);
+  const schema = compose(
+    [sessionOrbital, quizOrbital, conversationOrbital, memoryOrbital, classifierOrbital, tabsOrbital, conceptsOrbital],
+    pages,
+    connections,
+    appName,
+  );
 
-  return wrapInDashboardLayout(schema, appName, buildNavItems(pages, {
+  const navPages = pages.filter(p => ['/teach', '/quiz', '/concepts'].includes(p.path));
+  return wrapInDashboardLayout(schema, appName, buildNavItems(navPages, {
     teach: 'book-open',
     quiz: 'help-circle',
     concepts: 'brain',

@@ -1,0 +1,559 @@
+{
+  "name": "AgentActivityLogOrbital",
+  "orbitals": [
+    {
+      "name": "AgentActivityLogOrbital",
+      "entity": {
+        "name": "AgentActivityLog",
+        "persistence": "persistent",
+        "collection": "agentactivitylogs",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "detail",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "duration",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentActivityLogLog",
+          "linkedEntity": "AgentActivityLog",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "LOG_ENTRY",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "detail",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "LOG_ENTRY",
+              "triggers": "LOG_ENTRY",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "logging",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "LOG_ENTRY",
+                "name": "Log Entry",
+                "payload": [
+                  {
+                    "name": "action",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "detail",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "status",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear Log"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "logging",
+                "to": "logging",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentActivityLog"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "activity",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Activity Log",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "AgentActivityLog",
+                          "emptyIcon": "activity",
+                          "emptyTitle": "No activity yet",
+                          "emptyDescription": "Agent actions will appear here as they occur.",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.action"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "color": "muted",
+                                  "content": "@item.detail"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.timestamp"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.duration",
+                                      "variant": "outline"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt",
+                            "action",
+                            "detail",
+                            "timestamp",
+                            "duration"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "logging",
+                "to": "logging",
+                "event": "LOG_ENTRY",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentActivityLog",
+                    {
+                      "action": "@payload.action",
+                      "detail": "@payload.detail",
+                      "status": "@payload.status",
+                      "timestamp": "@now"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "AgentActivityLog"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "activity",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Activity Log",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "AgentActivityLog",
+                          "emptyIcon": "activity",
+                          "emptyTitle": "No activity yet",
+                          "emptyDescription": "Agent actions will appear here as they occur.",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.action"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "color": "muted",
+                                  "content": "@item.detail"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.timestamp"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.duration",
+                                      "variant": "outline"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt",
+                            "action",
+                            "detail",
+                            "timestamp",
+                            "duration"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentActivityLog created successfully"
+                  ]
+                ]
+              },
+              {
+                "from": "logging",
+                "to": "logging",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "AgentActivityLog"
+                  ],
+                  [
+                    "fetch",
+                    "AgentActivityLog"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "activity",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Activity Log",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Clear",
+                              "event": "CLEAR",
+                              "variant": "ghost",
+                              "icon": "trash"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "timeline",
+                          "entity": "AgentActivityLog",
+                          "emptyIcon": "activity",
+                          "emptyTitle": "No activity yet",
+                          "emptyDescription": "Agent actions will appear here as they occur.",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.action"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "color": "muted",
+                                  "content": "@item.detail"
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.timestamp"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.duration",
+                                      "variant": "outline"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "fields": [
+                            "name",
+                            "description",
+                            "status",
+                            "createdAt",
+                            "action",
+                            "detail",
+                            "timestamp",
+                            "duration"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentActivityLog deleted successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentActivityLogPage",
+          "path": "/agentactivitylogs",
+          "traits": [
+            {
+              "ref": "AgentActivityLogLog"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "description": "Chronological action log atom for tracking agent operations. Provides a timeline view of agent actions with status indicators, duration tracking, and clear functionality. Listens for LOG_ENTRY events from sibling traits."
+}

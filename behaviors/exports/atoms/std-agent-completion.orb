@@ -58,14 +58,640 @@
             "name": "error",
             "type": "string",
             "default": ""
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
           }
         ]
       },
       "traits": [
         {
-          "name": "AgentCompletionFlow",
+          "name": "AgentCompletionModal",
           "linkedEntity": "AgentCompletion",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "GENERATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentCompletion",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentCompletion",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "AgentCompletion",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "prompt"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "AgentCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentCompletion",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentCompletion",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "GENERATED"
+                  ],
+                  [
+                    "ref",
+                    "AgentCompletion"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentCompletion",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentCompletion created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentCompletionNotification",
+          "linkedEntity": "AgentCompletion",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "hidden",
+                "isInitial": true
+              },
+              {
+                "name": "visible"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOW",
+                "name": "Show Notification",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HIDE",
+                "name": "Hide Notification"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "hidden",
+                "to": "hidden",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentCompletion"
+                  ]
+                ]
+              },
+              {
+                "from": "hidden",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentCompletion Status",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Dismiss",
+                              "event": "HIDE",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ],
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "toast-slot",
+                          "position": "top-right"
+                        },
+                        {
+                          "type": "violation-alert",
+                          "severity": "warning",
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ],
+                          "category": "compliance"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentCompletion Status",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Dismiss",
+                              "event": "HIDE",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ],
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "toast-slot",
+                          "position": "top-right"
+                        },
+                        {
+                          "type": "violation-alert",
+                          "severity": "warning",
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ],
+                          "category": "compliance"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "hidden",
+                "event": "HIDE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentCompletionAgent",
+          "linkedEntity": "AgentCompletion",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SHOW",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "response",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "GENERATED",
+              "triggers": "GENERATED",
+              "scope": "external"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -88,13 +714,13 @@
                 "name": "Initialize"
               },
               {
-                "key": "GENERATE",
-                "name": "Generate",
+                "key": "DO_GENERATE",
+                "name": "Do Generate",
                 "payload": [
                   {
-                    "name": "prompt",
-                    "type": "string",
-                    "required": false
+                    "name": "data",
+                    "type": "object",
+                    "required": true
                   }
                 ]
               },
@@ -105,6 +731,17 @@
               {
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "key": "GENERATED",
+                "name": "Generated",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -121,60 +758,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "sparkles",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AgentCompletion",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "textarea",
-                          "label": "Prompt",
-                          "bind": "@entity.prompt",
-                          "placeholder": "Enter your prompt..."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "badge",
-                              "label": "@entity.provider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.model"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Generate",
-                          "event": "GENERATE",
-                          "variant": "primary",
-                          "icon": "sparkles"
-                        }
-                      ]
+                      "type": "empty-state",
+                      "icon": "sparkles",
+                      "title": "Completion",
+                      "description": "Completion is ready"
                     }
                   ]
                 ]
@@ -182,7 +769,7 @@
               {
                 "from": "idle",
                 "to": "generating",
-                "event": "GENERATE",
+                "event": "DO_GENERATE",
                 "effects": [
                   [
                     "set",
@@ -190,13 +777,20 @@
                     "generating"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Generating...",
-                      "message": "Waiting for AI response..."
-                    }
+                    "agent/generate",
+                    "@entity.prompt"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "generating",
+                "event": "GENERATED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "generating"
                   ],
                   [
                     "agent/generate",
@@ -207,12 +801,12 @@
               {
                 "from": "generating",
                 "to": "completed",
-                "event": "GENERATE",
+                "event": "DO_GENERATE",
                 "effects": [
                   [
                     "set",
                     "@entity.response",
-                    "@payload.prompt"
+                    "@payload.data.prompt"
                   ],
                   [
                     "set",
@@ -220,37 +814,30 @@
                     "completed"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "check-circle",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "success",
-                          "message": "Generation complete"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.response"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
-                        }
-                      ]
-                    }
+                    "emit",
+                    "SHOW"
+                  ]
+                ]
+              },
+              {
+                "from": "generating",
+                "to": "error",
+                "event": "RESET",
+                "guard": [
+                  "=",
+                  "@entity.status",
+                  "generating"
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "error"
+                  ],
+                  [
+                    "set",
+                    "@entity.error",
+                    "Generation was cancelled"
                   ]
                 ]
               },
@@ -273,15 +860,6 @@
                     "set",
                     "@entity.error",
                     ""
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Generating...",
-                      "message": "Waiting for AI response..."
-                    }
                   ],
                   [
                     "agent/generate",
@@ -308,66 +886,6 @@
                     "set",
                     "@entity.prompt",
                     ""
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "sparkles",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AgentCompletion",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "textarea",
-                          "label": "Prompt",
-                          "bind": "@entity.prompt",
-                          "placeholder": "Enter your prompt..."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "badge",
-                              "label": "@entity.provider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.model"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Generate",
-                          "event": "GENERATE",
-                          "variant": "primary",
-                          "icon": "sparkles"
-                        }
-                      ]
-                    }
                   ]
                 ]
               },
@@ -385,66 +903,6 @@
                     "set",
                     "@entity.error",
                     ""
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "sparkles",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AgentCompletion",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "textarea",
-                          "label": "Prompt",
-                          "bind": "@entity.prompt",
-                          "placeholder": "Enter your prompt..."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "badge",
-                              "label": "@entity.provider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.model"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Generate",
-                          "event": "GENERATE",
-                          "variant": "primary",
-                          "icon": "sparkles"
-                        }
-                      ]
-                    }
                   ]
                 ]
               }
@@ -458,12 +916,18 @@
           "path": "/agentcompletions",
           "traits": [
             {
-              "ref": "AgentCompletionFlow"
+              "ref": "AgentCompletionModal"
+            },
+            {
+              "ref": "AgentCompletionNotification"
+            },
+            {
+              "ref": "AgentCompletionAgent"
             }
           ]
         }
       ]
     }
   ],
-  "description": "Completion flow atom for agent text generation. Wraps agent/generate with idle -> generating -> completed -> error lifecycle."
+  "description": "Completion flow atom for agent text generation. Composes UI atoms (stdModal for prompt input, stdNotification for feedback) with an agent trait that handles agent/generate and retry logic."
 }

@@ -2,8 +2,9 @@
  * std-agent-memory
  *
  * Memory lifecycle atom for agent memory operations.
- * Provides memorize, recall, pin, forget, reinforce, and decay
- * using agent/* operators.
+ * Composes UI atoms (stdBrowse for memory table, stdModal for memorize form)
+ * with an agent trait that handles agent/memorize, agent/recall, agent/pin,
+ * agent/forget, agent/reinforce, and agent/decay operators.
  *
  * @level atom
  * @family agent
@@ -11,7 +12,10 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdBrowse } from './std-browse.js';
+import { stdModal } from './std-modal.js';
+
 
 // ============================================================================
 // Params
@@ -40,7 +44,6 @@ interface MemoryConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -72,7 +75,6 @@ function resolve(params: StdAgentMemoryParams): MemoryConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Lifecycle`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -88,65 +90,20 @@ function buildEntity(c: MemoryConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: MemoryConfig): Trait {
+function buildAgentTrait(c: MemoryConfig): Trait {
   const { entityName } = c;
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'brain', size: 'lg' },
-          { type: 'typography', content: `${entityName} Manager`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Memorize', event: 'MEMORIZE', variant: 'primary', icon: 'plus' },
-          { type: 'button', label: 'Recall', event: 'RECALL', variant: 'secondary', icon: 'search' },
-          { type: 'button', label: 'Decay All', event: 'DECAY', variant: 'ghost', icon: 'clock' },
-        ],
-      },
-    ],
-  };
-
-  const activeUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'brain', size: 'lg' },
-          { type: 'typography', content: `${entityName} Active`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'typography', variant: 'body', content: '@entity.content' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'badge', label: '@entity.category' },
-          { type: 'badge', label: '@entity.strength' },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Pin', event: 'PIN', variant: 'secondary', icon: 'pin' },
-          { type: 'button', label: 'Reinforce', event: 'REINFORCE', variant: 'secondary', icon: 'zap' },
-          { type: 'button', label: 'Forget', event: 'FORGET', variant: 'destructive', icon: 'trash' },
-        ],
-      },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'FORGOT', scope: 'external' as const, payload: [{ name: 'id', type: 'string' }] },
+      { event: 'REINFORCED', scope: 'external' as const, payload: [{ name: 'id', type: 'string' }] },
+      { event: 'DECAYED', scope: 'external' as const, payload: [{ name: 'id', type: 'string' }] },
+      { event: 'PINNED', scope: 'external' as const, payload: [{ name: 'id', type: 'string' }] },
+    ],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -154,9 +111,8 @@ function buildTrait(c: MemoryConfig): Trait {
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'MEMORIZE', name: 'Memorize', payload: [
-          { name: 'content', type: 'string', required: true },
-          { name: 'category', type: 'string', required: false },
+        { key: 'DO_MEMORIZE', name: 'Do Memorize', payload: [
+          { name: 'data', type: 'object', required: true },
         ]},
         { key: 'RECALL', name: 'Recall', payload: [
           { name: 'query', type: 'string', required: true },
@@ -171,30 +127,27 @@ function buildTrait(c: MemoryConfig): Trait {
           { name: 'id', type: 'string', required: true },
         ]},
         { key: 'DECAY', name: 'Decay' },
+        { key: 'MEMORIZED', name: 'Memorized', payload: [{ name: 'data', type: 'object', required: true }] },
       ],
       transitions: [
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'main', idleUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'brain', title: 'Memory', description: 'Memory is ready' }],
           ],
         },
         {
-          from: 'idle', to: 'active', event: 'MEMORIZE',
+          from: 'idle', to: 'active', event: 'DO_MEMORIZE',
           effects: [
-            ['agent/memorize', '@payload.content', '@payload.category'],
-            ['set', '@entity.content', '@payload.content'],
-            ['set', '@entity.category', '@payload.category'],
-            ['set', '@entity.createdAt', '@now'],
-            ['render-ui', 'main', activeUI],
+            ['agent/memorize', '@payload.data.content', '@payload.data.category'],
+            ['persist', 'create', entityName, '@payload.data'],
           ],
         },
         {
-          from: 'idle', to: 'active', event: 'RECALL',
+          from: 'active', to: 'active', event: 'RECALL',
           effects: [
             ['agent/recall', '@payload.query'],
-            ['render-ui', 'main', activeUI],
           ],
         },
         {
@@ -203,41 +156,47 @@ function buildTrait(c: MemoryConfig): Trait {
           effects: [
             ['agent/pin', '@payload.id'],
             ['set', '@entity.pinned', true],
+            ['emit', 'PINNED'],
           ],
         },
         {
           from: 'active', to: 'idle', event: 'FORGET',
           effects: [
             ['agent/forget', '@payload.id'],
-            ['render-ui', 'main', idleUI],
+            ['emit', 'FORGOT'],
           ],
         },
         {
           from: 'active', to: 'active', event: 'REINFORCE',
           effects: [
             ['agent/reinforce', '@payload.id'],
+            ['emit', 'REINFORCED'],
           ],
         },
         {
           from: 'idle', to: 'idle', event: 'DECAY',
           effects: [
             ['agent/decay'],
+            ['emit', 'DECAYED'],
           ],
         },
         {
-          from: 'active', to: 'idle', event: 'DECAY',
+          from: 'active', to: 'active', event: 'DECAY',
           effects: [
             ['agent/decay'],
-            ['render-ui', 'main', idleUI],
+            ['emit', 'DECAYED'],
+          ],
+        },
+        // Listen for MEMORIZED from modal to transition to active
+        {
+          from: 'idle', to: 'active', event: 'MEMORIZED',
+          effects: [
+            ['fetch', entityName],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: MemoryConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -249,14 +208,93 @@ export function stdAgentMemoryEntity(params: StdAgentMemoryParams = {}): Entity 
 }
 
 export function stdAgentMemoryTrait(params: StdAgentMemoryParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentMemoryPage(params: StdAgentMemoryParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Browse` },
+      { ref: `${c.entityName}Create` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentMemory(params: StdAgentMemoryParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  const formFields = fields
+    .filter(f => f.name !== 'id')
+    .filter(f => ['content', 'category', 'scope'].includes(f.name))
+    .map(f => f.name);
+
+  // UI trait: browse memories in a data-grid
+  const browseTrait = extractTrait(stdBrowse({
+    entityName, fields,
+    traitName: `${entityName}Browse`,
+    listFields: ['content', 'category', 'strength'],
+    headerIcon: 'brain',
+    pageTitle: `${entityName} Manager`,
+    emptyTitle: 'No memories yet',
+    emptyDescription: 'Create your first memory to get started.',
+    headerActions: [
+      { label: 'Memorize', event: 'MEMORIZE', variant: 'primary', icon: 'plus' },
+      { label: 'Recall', event: 'RECALL', variant: 'secondary', icon: 'search' },
+      { label: 'Decay All', event: 'DECAY', variant: 'ghost', icon: 'clock' },
+    ],
+    itemActions: [
+      { label: 'Pin', event: 'PIN' },
+      { label: 'Reinforce', event: 'REINFORCE' },
+      { label: 'Forget', event: 'FORGET', variant: 'danger' },
+    ],
+    refreshEvents: ['MEMORIZED', 'PINNED', 'FORGOT', 'REINFORCED', 'DECAYED'],
+  }));
+
+  // UI trait: memorize form modal
+  const memorizeContent = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'plus-circle', size: 'md' },
+        { type: 'typography', content: 'Memorize', variant: 'h3' },
+      ] },
+      { type: 'divider' },
+      { type: 'form-section', entity: entityName, mode: 'create', submitEvent: 'SAVE', cancelEvent: 'CLOSE', fields: formFields },
+    ],
+  };
+
+  const createTrait = extractTrait(stdModal({ standalone: false,
+    entityName, fields,
+    traitName: `${entityName}Create`,
+    modalTitle: 'Memorize',
+    headerIcon: 'plus-circle',
+    openContent: memorizeContent,
+    openEvent: 'MEMORIZE',
+    closeEvent: 'CLOSE',
+    saveEvent: 'SAVE',
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
+    emitOnSave: 'MEMORIZED',
+  }));
+
+  // Agent trait: handles agent/* effects
+  const agentTrait = buildAgentTrait(c);
+
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: browseTrait.name },
+      { ref: createTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [browseTrait, createTrait, agentTrait], [page]);
 }

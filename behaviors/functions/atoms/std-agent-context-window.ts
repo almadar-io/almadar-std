@@ -2,8 +2,9 @@
  * std-agent-context-window
  *
  * Context window management atom for agent token tracking.
- * Monitors token usage and auto-compacts when approaching limits.
- * States: normal -> approaching_limit -> at_limit with guards on thresholds.
+ * Composes UI atoms (stdAgentTokenGauge for visual display,
+ * stdNotification for threshold alerts) with an agent trait
+ * that handles agent/compact, agent/token-count, and agent/context-usage.
  *
  * @level atom
  * @family agent
@@ -11,7 +12,9 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentTokenGauge } from './std-agent-token-gauge.js';
+import { stdNotification } from './std-notification.js';
 
 // ============================================================================
 // Params
@@ -42,7 +45,6 @@ interface ContextWindowConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   warningThreshold: number;
   pageName: string;
@@ -59,6 +61,11 @@ function resolve(params: StdAgentContextWindowParams): ContextWindowConfig {
     { name: 'maxTokens', type: 'number', default: 200000 },
     { name: 'usage', type: 'number', default: 0 },
     { name: 'lastCompactedAt', type: 'string', default: '' },
+    { name: 'current', type: 'number', default: 0 },
+    { name: 'max', type: 'number', default: 200000 },
+    { name: 'threshold', type: 'number', default: 0.85 },
+    { name: 'message', type: 'string', default: '' },
+    { name: 'notificationType', type: 'string', default: 'info' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));
@@ -72,7 +79,6 @@ function resolve(params: StdAgentContextWindowParams): ContextWindowConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Manager`,
     pluralName: p,
     warningThreshold: params.warningThreshold ?? 0.85,
     pageName: params.pageName ?? `${entityName}Page`,
@@ -89,77 +95,24 @@ function buildEntity(c: ContextWindowConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: ContextWindowConfig): Trait {
+function buildAgentTrait(c: ContextWindowConfig): Trait {
   const { entityName, warningThreshold } = c;
-
-  const normalUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'layers', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'badge', label: '@entity.tokenCount', variant: 'default' },
-          { type: 'typography', variant: 'caption', content: '/' },
-          { type: 'badge', label: '@entity.maxTokens', variant: 'default' },
-        ],
-      },
-      { type: 'progress-bar', value: '@entity.usage', max: 100 },
-      { type: 'button', label: 'Update Tokens', event: 'UPDATE_TOKENS', variant: 'secondary', icon: 'refresh-cw' },
-    ],
-  };
-
-  const warningUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'alert-triangle', size: 'lg' },
-          { type: 'typography', content: `${entityName} (Warning)`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'alert', variant: 'warning', message: 'Context window approaching limit.' },
-      { type: 'progress-bar', value: '@entity.usage', max: 100 },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Compact', event: 'COMPACT', variant: 'primary', icon: 'minimize-2' },
-          { type: 'button', label: 'Update', event: 'UPDATE_TOKENS', variant: 'secondary', icon: 'refresh-cw' },
-        ],
-      },
-    ],
-  };
-
-  const limitUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'alert-octagon', size: 'lg' },
-          { type: 'typography', content: `${entityName} (At Limit)`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'alert', variant: 'error', message: 'Context window at capacity. Compaction required.' },
-      { type: 'progress-bar', value: 100, max: 100 },
-      { type: 'button', label: 'Compact Now', event: 'COMPACT', variant: 'primary', icon: 'minimize-2' },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'SHOW', scope: 'internal' as const, payload: [
+        { name: 'tokenCount', type: 'number' },
+        { name: 'usage', type: 'number' },
+      ]},
+      { event: 'UPDATE', scope: 'internal' as const, payload: [
+        { name: 'current', type: 'number' },
+        { name: 'max', type: 'number' },
+      ]},
+    ],
     stateMachine: {
       states: [
         { name: 'normal', isInitial: true },
@@ -178,7 +131,7 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['fetch', entityName],
             ['agent/token-count'],
             ['agent/context-usage'],
-            ['render-ui', 'main', normalUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'layers', title: 'Context Window', description: 'Context Window is ready' }],
           ],
         },
         {
@@ -188,7 +141,8 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['agent/token-count'],
             ['agent/context-usage'],
             ['set', '@entity.usage', ['*', ['/', '@entity.tokenCount', '@entity.maxTokens'], 100]],
-            ['render-ui', 'main', normalUI],
+            ['set', '@entity.current', '@entity.tokenCount'],
+            ['emit', 'UPDATE'],
           ],
         },
         {
@@ -201,7 +155,9 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['agent/token-count'],
             ['agent/context-usage'],
             ['set', '@entity.usage', ['*', ['/', '@entity.tokenCount', '@entity.maxTokens'], 100]],
-            ['render-ui', 'main', warningUI],
+            ['set', '@entity.current', '@entity.tokenCount'],
+            ['emit', 'UPDATE'],
+            ['emit', 'SHOW'],
           ],
         },
         {
@@ -211,7 +167,9 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['agent/token-count'],
             ['agent/context-usage'],
             ['set', '@entity.usage', 100],
-            ['render-ui', 'main', limitUI],
+            ['set', '@entity.current', '@entity.tokenCount'],
+            ['emit', 'UPDATE'],
+            ['emit', 'SHOW'],
           ],
         },
         {
@@ -222,7 +180,8 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['agent/context-usage'],
             ['set', '@entity.lastCompactedAt', '@now'],
             ['set', '@entity.usage', ['*', ['/', '@entity.tokenCount', '@entity.maxTokens'], 100]],
-            ['render-ui', 'main', normalUI],
+            ['set', '@entity.current', '@entity.tokenCount'],
+            ['emit', 'UPDATE'],
           ],
         },
         {
@@ -233,7 +192,8 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['agent/context-usage'],
             ['set', '@entity.lastCompactedAt', '@now'],
             ['set', '@entity.usage', ['*', ['/', '@entity.tokenCount', '@entity.maxTokens'], 100]],
-            ['render-ui', 'main', normalUI],
+            ['set', '@entity.current', '@entity.tokenCount'],
+            ['emit', 'UPDATE'],
           ],
         },
         {
@@ -246,16 +206,13 @@ function buildTrait(c: ContextWindowConfig): Trait {
             ['agent/token-count'],
             ['agent/context-usage'],
             ['set', '@entity.usage', ['*', ['/', '@entity.tokenCount', '@entity.maxTokens'], 100]],
-            ['render-ui', 'main', warningUI],
+            ['set', '@entity.current', '@entity.tokenCount'],
+            ['emit', 'UPDATE'],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: ContextWindowConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -267,14 +224,54 @@ export function stdAgentContextWindowEntity(params: StdAgentContextWindowParams 
 }
 
 export function stdAgentContextWindowTrait(params: StdAgentContextWindowParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentContextWindowPage(params: StdAgentContextWindowParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Gauge` },
+      { ref: `${c.entityName}Notification` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentContextWindow(params: StdAgentContextWindowParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // UI trait: token gauge for visual display
+  const gaugeTrait = extractTrait(stdAgentTokenGauge({
+    entityName,
+    fields,
+    threshold: c.warningThreshold,
+    maxTokens: 200000,
+  }));
+
+  // UI trait: notification for threshold alerts
+  const notifTrait = extractTrait(stdNotification({
+    entityName, fields,
+    standalone: false,
+    headerIcon: 'layers',
+    pageTitle: 'Context Window Alert',
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: gaugeTrait.name },
+      { ref: notifTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [gaugeTrait, notifTrait, agentTrait], [page]);
 }

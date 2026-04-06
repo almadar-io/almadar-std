@@ -67,6 +67,56 @@
             "name": "error",
             "type": "string",
             "default": ""
+          },
+          {
+            "name": "currentStep",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "totalSteps",
+            "type": "number",
+            "default": 4
+          },
+          {
+            "name": "steps",
+            "type": "string",
+            "default": "Validate,Analyze,Fix,Re-validate"
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "args",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "prompt",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "response",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "provider",
+            "type": "string",
+            "default": "anthropic"
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
           }
         ]
       },
@@ -77,10 +127,40 @@
           "category": "interaction",
           "emits": [
             {
-              "event": "FIX_SUCCEEDED"
+              "event": "FIX_SUCCEEDED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "target",
+                  "type": "string"
+                }
+              ]
             },
             {
-              "event": "FIX_FAILED"
+              "event": "FIX_FAILED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "target",
+                  "type": "string"
+                },
+                {
+                  "name": "error",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "FIX_SUCCEEDED",
+              "triggers": "INIT",
+              "scope": "external"
+            },
+            {
+              "event": "FIX_FAILED",
+              "triggers": "INIT",
+              "scope": "external"
             }
           ],
           "stateMachine": {
@@ -310,15 +390,15 @@
                             {
                               "type": "badge",
                               "label": [
-                                "string/concat",
+                                "str/concat",
                                 "Attempt ",
                                 [
-                                  "string/of",
+                                  "str/concat",
                                   "@entity.fixAttempts"
                                 ],
                                 "/",
                                 [
-                                  "string/of",
+                                  "str/concat",
                                   "@entity.maxAttempts"
                                 ]
                               ]
@@ -440,7 +520,7 @@
                 "event": "VALIDATION_ERRORS",
                 "guards": [
                   [
-                    "math/lt",
+                    "<",
                     "@entity.fixAttempts",
                     5
                   ]
@@ -460,7 +540,7 @@
                     "set",
                     "@entity.fixAttempts",
                     [
-                      "math/add",
+                      "+",
                       "@entity.fixAttempts",
                       1
                     ]
@@ -473,7 +553,7 @@
                   [
                     "agent/generate",
                     [
-                      "string/concat",
+                      "str/concat",
                       "Target: ",
                       "@entity.target",
                       "\n\nValidation errors:\n",
@@ -517,10 +597,10 @@
                             {
                               "type": "badge",
                               "label": [
-                                "string/concat",
+                                "str/concat",
                                 "Attempt ",
                                 [
-                                  "string/of",
+                                  "str/concat",
                                   "@entity.fixAttempts"
                                 ]
                               ]
@@ -782,15 +862,15 @@
                             {
                               "type": "badge",
                               "label": [
-                                "string/concat",
+                                "str/concat",
                                 "Attempt ",
                                 [
-                                  "string/of",
+                                  "str/concat",
                                   "@entity.fixAttempts"
                                 ],
                                 "/",
                                 [
-                                  "string/of",
+                                  "str/concat",
                                   "@entity.maxAttempts"
                                 ]
                               ]
@@ -1194,6 +1274,1875 @@
               }
             ]
           }
+        },
+        {
+          "name": "FixLoopStepProgress",
+          "linkedEntity": "AgentFixLoop",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "ADVANCE",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "step",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "COMPLETE",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "totalSteps",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "FAIL",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "step",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "in_progress"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "failed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start Pipeline"
+              },
+              {
+                "key": "ADVANCE",
+                "name": "Advance Step"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete Pipeline"
+              },
+              {
+                "key": "FAIL",
+                "name": "Pipeline Failed"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset Pipeline"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-ordered",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Idle",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "in_progress",
+                "event": "START",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "in_progress"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "loader",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "In Progress",
+                              "variant": "warning"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Current Step",
+                              "value": "@entity.currentStep"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Total Steps",
+                              "value": "@entity.totalSteps"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Advance",
+                              "event": "ADVANCE",
+                              "variant": "primary",
+                              "icon": "chevron-right"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "in_progress",
+                "event": "ADVANCE",
+                "guard": [
+                  "<",
+                  "@entity.currentStep",
+                  "@entity.totalSteps"
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    [
+                      "+",
+                      "@entity.currentStep",
+                      1
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "loader",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "In Progress",
+                              "variant": "warning"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Current Step",
+                              "value": "@entity.currentStep"
+                            },
+                            {
+                              "type": "stat-display",
+                              "label": "Total Steps",
+                              "value": "@entity.totalSteps"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Advance",
+                              "event": "ADVANCE",
+                              "variant": "primary",
+                              "icon": "chevron-right"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "completed",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@entity.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "check-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Completed",
+                              "variant": "success"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.totalSteps",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "All steps completed successfully."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Reset",
+                          "event": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "failed",
+                "event": "FAIL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "x-circle",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Failed",
+                              "variant": "destructive"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "Pipeline failed at the current step."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "stat-display",
+                              "label": "Failed At Step",
+                              "value": "@entity.currentStep"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "button",
+                          "label": "Reset",
+                          "event": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-ordered",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Idle",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-ordered",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Idle",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-ordered",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Idle",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "failed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "list-ordered",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "Idle",
+                              "variant": "default"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
+                          "totalSteps": "@entity.totalSteps",
+                          "steps": "@entity.steps"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Start",
+                          "event": "START",
+                          "variant": "primary",
+                          "icon": "play"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "FixLoopErrorsBrowse",
+          "linkedEntity": "AgentFixLoop",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "alert-triangle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Validation Errors",
+                                  "variant": "h2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "AgentFixLoop",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No errors",
+                          "emptyDescription": "All validations passed.",
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "event": "VIEW",
+                              "variant": "ghost",
+                              "size": "sm"
+                            }
+                          ],
+                          "columns": [
+                            {
+                              "name": "target",
+                              "label": "Target",
+                              "variant": "h4",
+                              "icon": "alert-triangle"
+                            },
+                            {
+                              "name": "errorCount",
+                              "label": "Error Count",
+                              "variant": "badge",
+                              "colorMap": {
+                                "active": "success",
+                                "completed": "success",
+                                "done": "success",
+                                "pending": "warning",
+                                "draft": "warning",
+                                "scheduled": "warning",
+                                "inactive": "neutral",
+                                "archived": "neutral",
+                                "disabled": "neutral",
+                                "error": "destructive",
+                                "cancelled": "destructive",
+                                "failed": "destructive"
+                              }
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "caption"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "floating-action-button",
+                          "icon": "plus",
+                          "event": "INIT",
+                          "label": "Create",
+                          "tooltip": "Create"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "FixLoopValidateCall",
+          "linkedEntity": "AgentFixLoop",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "INVOKED",
+              "scope": "internal"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "INVOKE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "wrench",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoke Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "INVOKE",
+                              "variant": "primary",
+                              "icon": "wrench"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "wrench",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "INVOKE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "wrench",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Invoke Tool",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "AgentFixLoop",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "toolName",
+                            "args"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "wrench",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoke Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "INVOKE",
+                              "variant": "primary",
+                              "icon": "wrench"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "wrench",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentFixLoop",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "INVOKED"
+                  ],
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "wrench",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoke Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "INVOKE",
+                              "variant": "primary",
+                              "icon": "wrench"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "wrench",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentFixLoop created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "FixLoopFixCall",
+          "linkedEntity": "AgentFixLoop",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "INVOKED",
+              "scope": "internal"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "INVOKE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "wrench",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoke Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "INVOKE",
+                              "variant": "primary",
+                              "icon": "wrench"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "wrench",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "INVOKE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "wrench",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Invoke Tool",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "AgentFixLoop",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "toolName",
+                            "args"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "wrench",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoke Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "INVOKE",
+                              "variant": "primary",
+                              "icon": "wrench"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "wrench",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentFixLoop",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "INVOKED"
+                  ],
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "wrench",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Invoke Tool",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "INVOKE",
+                              "variant": "primary",
+                              "icon": "wrench"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "wrench",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentFixLoop created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "FixLoopCompletionFlow",
+          "linkedEntity": "AgentFixLoop",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "GENERATED",
+              "scope": "internal"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "GENERATE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentFixLoop",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "GENERATE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "badge",
+                              "label": "@entity.provider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.model"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "AgentFixLoop",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "prompt"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentFixLoop",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentFixLoop",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "GENERATED"
+                  ],
+                  [
+                    "ref",
+                    "AgentFixLoop"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "sparkles",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentFixLoop",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "GENERATE",
+                              "variant": "primary",
+                              "icon": "sparkles"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "sparkles",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentFixLoop created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
         }
       ],
       "pages": [
@@ -1203,11 +3152,26 @@
           "traits": [
             {
               "ref": "AgentFixLoopCycle"
+            },
+            {
+              "ref": "FixLoopStepProgress"
+            },
+            {
+              "ref": "FixLoopErrorsBrowse"
+            },
+            {
+              "ref": "FixLoopValidateCall"
+            },
+            {
+              "ref": "FixLoopFixCall"
+            },
+            {
+              "ref": "FixLoopCompletionFlow"
             }
           ]
         }
       ]
     }
   ],
-  "description": "Composes tool invocation (validate + fix) and LLM completion into an iterative validation-fix loop. Validates a target, and if errors are found, generates a fix via LLM, applies it via tool invocation, then re-validates. Loops up to maxAttempts rounds (default 5). Traits composed (inline, representing atom-level concerns): - FixLoopValidate: tool invocation for running validation - FixLoopFix: LLM completion to generate fixes + tool invocation to apply - FixLoopOrchestrator: state machine orchestrating the validate-fix cycle"
+  "description": "Composes agent atoms + UI atoms into an iterative validation-fix loop with step progress tracking and an errors browse list. Validates a target, generates a fix via LLM, applies it via tool invocation, then re-validates. Composed atoms: - stdAgentToolCall (validate): run validation tool - stdAgentToolCall (fix): apply generated fix - stdAgentCompletion: generate fix via LLM - stdAgentStepProgress: visual step indicator - stdBrowse: browsable errors list"
 }

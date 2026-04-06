@@ -1,30 +1,38 @@
 /**
  * std-agent-assistant
  *
- * Full chat assistant organism. Composes agent atoms into a multi-turn
+ * Full chat assistant organism. Composes molecule + atoms into a multi-turn
  * conversational agent with memory persistence, context compaction,
- * and provider switching.
+ * provider switching, tabbed views, and a memory sidebar drawer.
  *
  * Composed from:
+ * - stdAgentConversation: multi-turn chat with generate + context tracking
  * - stdAgentMemory: memory lifecycle (memorize, recall, pin, forget, reinforce, decay)
- * - inline ConversationTrait: multi-turn chat with generate + context tracking
- * - inline ProviderTrait: provider switching based on task complexity
+ * - stdAgentContextWindow: token monitoring and auto-compaction
+ * - stdAgentProvider: provider switching based on task complexity
+ * - stdTabs: Chat / Memory / Settings tab navigation
+ * - stdDrawer: memory sidebar for quick recall
  *
  * Cross-trait events:
  * - MEMORIZE_RESPONSE (Conversation -> Memory): auto-memorize important responses
  * - PROVIDER_CHANGED (Provider -> Conversation): notify conversation of provider switch
  *
- * Pages: /chat (initial), /memory, /provider
+ * Pages: /chat (initial), /memory, /settings
  *
  * @level organism
  * @family agent
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, OrbitalDefinition, Entity, Trait, Page, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, makePage, ensureIdField, compose } from '@almadar/core/builders';
+import type { OrbitalSchema, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makePage, ensureIdField, extractTrait, compose } from '@almadar/core/builders';
 import type { ComposePage, ComposeConnection } from '@almadar/core/builders';
+import { stdAgentConversation } from '../atoms/std-agent-conversation.js';
 import { stdAgentMemory } from '../atoms/std-agent-memory.js';
+import { stdAgentContextWindow } from '../atoms/std-agent-context-window.js';
+import { stdAgentProvider } from '../atoms/std-agent-provider.js';
+import { stdTabs } from '../atoms/std-tabs.js';
+import { stdDrawer } from '../atoms/std-drawer.js';
 import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
@@ -54,328 +62,6 @@ const DEFAULT_ASSISTANT_FIELDS: EntityField[] = [
   { name: 'error', type: 'string', default: '' },
 ];
 
-const DEFAULT_PROVIDER_FIELDS: EntityField[] = [
-  { name: 'currentProvider', type: 'string', default: 'default' },
-  { name: 'currentModel', type: 'string', default: '' },
-  { name: 'availableProviders', type: 'string', default: 'default,openai,anthropic' },
-  { name: 'switchReason', type: 'string', default: '' },
-];
-
-// ============================================================================
-// UI Builders
-// ============================================================================
-
-function chatIdleUI(entityName: string): unknown {
-  return {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center', justify: 'space-between',
-        children: [
-          {
-            type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-            children: [
-              { type: 'icon', name: 'message-circle', size: 'lg' },
-              { type: 'typography', content: 'Assistant', variant: 'h2' },
-            ],
-          },
-          {
-            type: 'stack', direction: 'horizontal', gap: 'xs',
-            children: [
-              { type: 'badge', label: '@entity.provider' },
-              { type: 'badge', label: '@entity.sessionId' },
-            ],
-          },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'card',
-        children: [{
-          type: 'stack', direction: 'vertical', gap: 'md',
-          children: [
-            { type: 'typography', content: 'Send a message to begin the conversation.', variant: 'body' },
-            { type: 'form-section', entity: entityName, mode: 'edit', submitEvent: 'SEND', fields: ['currentMessage'] },
-          ],
-        }],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Compact Context', event: 'COMPACT', variant: 'ghost', icon: 'minimize-2' },
-        ],
-      },
-    ],
-  };
-}
-
-function chatListeningUI(): unknown {
-  return {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
-    children: [
-      { type: 'icon', name: 'mic', size: 'lg' },
-      { type: 'typography', content: 'Listening...', variant: 'h3' },
-      { type: 'spinner', size: 'lg' },
-    ],
-  };
-}
-
-function chatThinkingUI(): unknown {
-  return {
-    type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
-    children: [
-      { type: 'icon', name: 'brain', size: 'lg' },
-      { type: 'typography', content: 'Thinking...', variant: 'h3' },
-      { type: 'spinner', size: 'lg' },
-      { type: 'typography', content: 'Context usage: @entity.contextUsage', variant: 'caption' },
-    ],
-  };
-}
-
-function chatRespondingUI(entityName: string): unknown {
-  return {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'message-circle', size: 'lg' },
-          { type: 'typography', content: 'Assistant Response', variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'card',
-        children: [{
-          type: 'stack', direction: 'vertical', gap: 'md',
-          children: [
-            { type: 'typography', content: '@entity.response', variant: 'body' },
-            {
-              type: 'stack', direction: 'horizontal', gap: 'xs',
-              children: [
-                { type: 'badge', label: '@entity.provider' },
-                { type: 'badge', label: '@entity.contextUsage' },
-              ],
-            },
-          ],
-        }],
-      },
-      { type: 'form-section', entity: entityName, mode: 'edit', submitEvent: 'SEND', fields: ['currentMessage'] },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Compact Context', event: 'COMPACT', variant: 'ghost', icon: 'minimize-2' },
-          { type: 'button', label: 'Switch Provider', event: 'SWITCH_PROVIDER', variant: 'ghost', icon: 'refresh-cw' },
-        ],
-      },
-    ],
-  };
-}
-
-function providerIdleUI(): unknown {
-  return {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'settings', size: 'lg' },
-          { type: 'typography', content: 'Provider Settings', variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'card',
-        children: [{
-          type: 'stack', direction: 'vertical', gap: 'md',
-          children: [
-            { type: 'typography', content: 'Current Provider', variant: 'caption' },
-            { type: 'typography', content: '@entity.currentProvider', variant: 'h3' },
-            { type: 'typography', content: 'Model', variant: 'caption' },
-            { type: 'typography', content: '@entity.currentModel', variant: 'body' },
-          ],
-        }],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Switch Provider', event: 'SWITCH', variant: 'primary', icon: 'refresh-cw' },
-        ],
-      },
-    ],
-  };
-}
-
-// ============================================================================
-// Trait Builders
-// ============================================================================
-
-function buildConversationTrait(entityName: string): Trait {
-  return {
-    name: 'AssistantConversation',
-    linkedEntity: entityName,
-    category: 'interaction',
-    emits: [
-      { event: 'MEMORIZE_RESPONSE', description: 'Auto-memorize important responses', scope: 'internal' },
-    ],
-    stateMachine: {
-      states: [
-        { name: 'idle', isInitial: true },
-        { name: 'listening' },
-        { name: 'thinking' },
-        { name: 'responding' },
-      ],
-      events: [
-        { key: 'INIT', name: 'Initialize' },
-        {
-          key: 'SEND', name: 'Send Message',
-          payload: [{ name: 'currentMessage', type: 'string', required: true }],
-        },
-        { key: 'COMPACT', name: 'Compact Context' },
-        {
-          key: 'SWITCH_PROVIDER', name: 'Switch Provider',
-          payload: [{ name: 'provider', type: 'string', required: false }],
-        },
-        { key: 'GENERATION_COMPLETE', name: 'Generation Complete' },
-        {
-          key: 'FAILED', name: 'Failed',
-          payload: [{ name: 'error', type: 'string', required: true }],
-        },
-      ],
-      transitions: [
-        {
-          from: 'idle', to: 'idle', event: 'INIT',
-          effects: [
-            ['set', '@entity.sessionId', ['agent/session-id']],
-            ['set', '@entity.provider', ['agent/provider']],
-            ['set', '@entity.contextUsage', ['agent/context-usage']],
-            ['fetch', entityName],
-            ['render-ui', 'main', chatIdleUI(entityName)],
-          ],
-        },
-        {
-          from: 'idle', to: 'listening', event: 'SEND',
-          effects: [
-            ['set', '@entity.currentMessage', '@payload.currentMessage'],
-            ['set', '@entity.status', 'listening'],
-            ['render-ui', 'main', chatListeningUI()],
-          ],
-        },
-        {
-          from: 'responding', to: 'listening', event: 'SEND',
-          effects: [
-            ['set', '@entity.currentMessage', '@payload.currentMessage'],
-            ['set', '@entity.status', 'listening'],
-            ['render-ui', 'main', chatListeningUI()],
-          ],
-        },
-        {
-          from: 'listening', to: 'thinking', event: 'INIT',
-          effects: [
-            ['set', '@entity.status', 'thinking'],
-            ['set', '@entity.contextUsage', ['agent/context-usage']],
-            ['agent/generate', '@entity.currentMessage'],
-            ['render-ui', 'main', chatThinkingUI()],
-          ],
-        },
-        {
-          from: 'thinking', to: 'responding', event: 'GENERATION_COMPLETE',
-          effects: [
-            ['set', '@entity.status', 'responding'],
-            ['set', '@entity.contextUsage', ['agent/context-usage']],
-            ['agent/memorize', '@entity.response', 'conversation'],
-            ['emit', 'MEMORIZE_RESPONSE'],
-            ['render-ui', 'main', chatRespondingUI(entityName)],
-          ],
-        },
-        {
-          from: 'thinking', to: 'responding', event: 'FAILED',
-          effects: [
-            ['set', '@entity.error', '@payload.error'],
-            ['set', '@entity.status', 'responding'],
-            ['render-ui', 'main', chatRespondingUI(entityName)],
-          ],
-        },
-        {
-          from: 'responding', to: 'responding', event: 'COMPACT',
-          effects: [
-            ['agent/compact'],
-            ['set', '@entity.contextUsage', ['agent/context-usage']],
-            ['render-ui', 'main', chatRespondingUI(entityName)],
-          ],
-        },
-        {
-          from: 'idle', to: 'idle', event: 'COMPACT',
-          effects: [
-            ['agent/compact'],
-            ['set', '@entity.contextUsage', ['agent/context-usage']],
-            ['render-ui', 'main', chatIdleUI(entityName)],
-          ],
-        },
-        {
-          from: 'responding', to: 'responding', event: 'SWITCH_PROVIDER',
-          effects: [
-            ['agent/switch-provider', '@payload.provider'],
-            ['set', '@entity.provider', ['agent/provider']],
-            ['render-ui', 'main', chatRespondingUI(entityName)],
-          ],
-        },
-      ],
-    },
-  } as Trait;
-}
-
-function buildProviderOrbital(fields: EntityField[]): OrbitalDefinition {
-  const entityName = 'ProviderConfig';
-  const allFields = ensureIdField(fields);
-  const entity = makeEntity({ name: entityName, fields: allFields, persistence: 'runtime' });
-
-  const trait: Trait = {
-    name: 'ProviderManager',
-    linkedEntity: entityName,
-    category: 'interaction',
-    emits: [
-      { event: 'PROVIDER_CHANGED', description: 'Provider was switched', scope: 'internal' },
-    ],
-    stateMachine: {
-      states: [
-        { name: 'idle', isInitial: true },
-      ],
-      events: [
-        { key: 'INIT', name: 'Initialize' },
-        {
-          key: 'SWITCH', name: 'Switch',
-          payload: [{ name: 'provider', type: 'string', required: false }],
-        },
-      ],
-      transitions: [
-        {
-          from: 'idle', to: 'idle', event: 'INIT',
-          effects: [
-            ['set', '@entity.currentProvider', ['agent/provider']],
-            ['set', '@entity.currentModel', ['agent/model']],
-            ['fetch', entityName],
-            ['render-ui', 'main', providerIdleUI()],
-          ],
-        },
-        {
-          from: 'idle', to: 'idle', event: 'SWITCH',
-          effects: [
-            ['agent/switch-provider', '@payload.provider'],
-            ['set', '@entity.currentProvider', ['agent/provider']],
-            ['set', '@entity.currentModel', ['agent/model']],
-            ['emit', 'PROVIDER_CHANGED'],
-            ['render-ui', 'main', providerIdleUI()],
-          ],
-        },
-      ],
-    },
-  } as Trait;
-
-  const page = makePage({ name: 'ProviderPage', path: '/provider', traitName: 'ProviderManager' });
-  return makeOrbital('ProviderConfigOrbital', entity, [trait], [page]);
-}
-
 // ============================================================================
 // Organism
 // ============================================================================
@@ -383,14 +69,26 @@ function buildProviderOrbital(fields: EntityField[]): OrbitalDefinition {
 export function stdAgentAssistant(params: StdAgentAssistantParams = {}): OrbitalSchema {
   const appName = params.appName ?? 'Agent Assistant';
 
-  // Build conversation orbital with inline trait
-  const assistantFields = ensureIdField(params.assistantFields ?? DEFAULT_ASSISTANT_FIELDS);
-  const assistantEntity = makeEntity({ name: 'Assistant', fields: assistantFields, persistence: 'runtime' });
-  const conversationTrait = buildConversationTrait('Assistant');
-  const chatPage = makePage({ name: 'ChatPage', path: '/chat', traitName: 'AssistantConversation', isInitial: true });
-  const conversationOrbital = makeOrbital('AssistantOrbital', assistantEntity, [conversationTrait], [chatPage]);
+  // 1. Conversation orbital from atom
+  const conversationOrbital = stdAgentConversation({
+    entityName: 'Assistant',
+    fields: params.assistantFields ?? DEFAULT_ASSISTANT_FIELDS,
+    persistence: 'runtime',
+    pageName: 'ChatPage',
+    pagePath: '/chat',
+    isInitial: true,
+  });
+  // Rename trait for cross-orbital wiring
+  const convTrait = (conversationOrbital.traits as Trait[])[0];
+  convTrait.name = 'AssistantConversation';
+  convTrait.emits = [
+    ...(convTrait.emits ?? []),
+    { event: 'MEMORIZE_RESPONSE', description: 'Auto-memorize important responses', scope: 'internal' as const, payload: [
+      { name: 'content', type: 'string' },
+    ]},
+  ];
 
-  // Memory from atom
+  // 2. Memory from atom
   const memoryOrbital = stdAgentMemory({
     entityName: 'Memory',
     fields: params.memoryFields,
@@ -399,35 +97,115 @@ export function stdAgentAssistant(params: StdAgentAssistantParams = {}): Orbital
     pagePath: '/memory',
   });
 
-  // Provider management
-  const providerOrbital = buildProviderOrbital(params.providerFields ?? DEFAULT_PROVIDER_FIELDS);
+  // 3. Context window from atom
+  const contextOrbital = stdAgentContextWindow({
+    entityName: 'AssistantContext',
+    persistence: 'runtime',
+    pageName: 'ContextPage',
+    pagePath: '/context',
+  });
+  const ctxTrait = (contextOrbital.traits as Trait[])[0];
+  ctxTrait.name = 'AssistantContextMonitor';
+
+  // 4. Provider management from atom
+  const providerOrbital = stdAgentProvider({
+    entityName: 'ProviderConfig',
+    fields: params.providerFields,
+    persistence: 'runtime',
+    pageName: 'SettingsPage',
+    pagePath: '/settings',
+  });
+  const provTrait = (providerOrbital.traits as Trait[])[0];
+  provTrait.name = 'ProviderManager';
+  provTrait.emits = [
+    ...(provTrait.emits ?? []),
+    { event: 'PROVIDER_CHANGED', description: 'Provider was switched', scope: 'internal' as const, payload: [
+      { name: 'provider', type: 'string' },
+    ]},
+  ];
+
+  // 5. UI atom: tabs for Chat / Memory / Settings navigation
+  const assistantFields = ensureIdField(params.assistantFields ?? DEFAULT_ASSISTANT_FIELDS);
+  const tabsOrbital = stdTabs({
+    entityName: 'Assistant',
+    fields: assistantFields,
+    tabItems: [
+      { label: 'Chat', value: 'chat' },
+      { label: 'Memory', value: 'memory' },
+      { label: 'Settings', value: 'settings' },
+    ],
+    headerIcon: 'message-circle',
+    pageTitle: 'Assistant',
+  });
+  const tabsTrait = extractTrait(tabsOrbital);
+  tabsTrait.name = 'AssistantTabs';
+
+  // 6. UI atom: drawer for memory sidebar
+  const drawerOrbital = stdDrawer({
+    entityName: 'MemorySidebar',
+    fields: [
+      { name: 'content', type: 'string', default: '' },
+      { name: 'query', type: 'string', default: '' },
+      { name: 'strength', type: 'number', default: 0 },
+    ],
+    standalone: false,
+    drawerTitle: 'Memory Recall',
+    headerIcon: 'brain',
+  });
+  const drawerTrait = extractTrait(drawerOrbital);
+  drawerTrait.name = 'MemoryDrawer';
+
+  // Assemble orbitals with tabs and drawer inline
+  const tabsEntity = makeEntity({ name: 'AssistantNav', fields: assistantFields, persistence: 'runtime' });
+  const tabsOrbDef = makeOrbital('AssistantNavOrbital', tabsEntity, [tabsTrait], [
+    makePage({ name: 'NavPage', path: '/assistant/nav', traitName: 'AssistantTabs' }),
+  ]);
+
+  const drawerFields = ensureIdField([
+    { name: 'content', type: 'string', default: '' },
+    { name: 'query', type: 'string', default: '' },
+    { name: 'strength', type: 'number', default: 0 },
+  ]);
+  const drawerEntity = makeEntity({ name: 'MemorySidebar', fields: drawerFields, persistence: 'runtime' });
+  const drawerOrbDef = makeOrbital('MemorySidebarOrbital', drawerEntity, [drawerTrait], [
+    makePage({ name: 'SidebarPage', path: '/assistant/sidebar', traitName: 'MemoryDrawer' }),
+  ]);
 
   const pages: ComposePage[] = [
     { name: 'ChatPage', path: '/chat', traits: ['AssistantConversation'], isInitial: true },
-    { name: 'MemoryPage', path: '/memory', traits: ['MemoryLifecycle'] },
-    { name: 'ProviderPage', path: '/provider', traits: ['ProviderManager'] },
+    { name: 'ContextPage', path: '/context', traits: ['AssistantContextMonitor'] },
+    { name: 'NavPage', path: '/assistant/nav', traits: ['AssistantTabs'] },
+    { name: 'SidebarPage', path: '/assistant/sidebar', traits: ['MemoryDrawer'] },
+    { name: 'MemoryPage', path: '/memory', traits: ['MemoryBrowse', 'MemoryCreate', 'MemoryAgent'] },
+    { name: 'SettingsPage', path: '/settings', traits: ['ProviderManager'] },
   ];
 
   const connections: ComposeConnection[] = [
     {
       from: 'AssistantConversation',
-      to: 'MemoryLifecycle',
-      event: { event: 'MEMORIZE_RESPONSE', description: 'Auto-memorize important responses' },
+      to: 'MemoryAgent',
+      event: { event: 'MEMORIZE_RESPONSE', description: 'Auto-memorize important responses', payload: [{ name: 'content', type: 'string' }] },
       triggers: 'MEMORIZE',
     },
     {
       from: 'ProviderManager',
       to: 'AssistantConversation',
-      event: { event: 'PROVIDER_CHANGED', description: 'Provider was switched' },
+      event: { event: 'PROVIDER_CHANGED', description: 'Provider was switched', payload: [{ name: 'provider', type: 'string' }] },
       triggers: 'INIT',
     },
   ];
 
-  const schema = compose([conversationOrbital, memoryOrbital, providerOrbital], pages, connections, appName);
+  const schema = compose(
+    [conversationOrbital, memoryOrbital, contextOrbital, providerOrbital, tabsOrbDef, drawerOrbDef],
+    pages,
+    connections,
+    appName,
+  );
 
-  return wrapInDashboardLayout(schema, appName, buildNavItems(pages, {
+  const navPages = pages.filter(p => ['/chat', '/memory', '/settings'].includes(p.path));
+  return wrapInDashboardLayout(schema, appName, buildNavItems(navPages, {
     chat: 'message-circle',
     memory: 'brain',
-    provider: 'settings',
+    settings: 'settings',
   }));
 }

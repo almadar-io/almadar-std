@@ -1,15 +1,16 @@
 /**
- * std-agent-fix-loop — Validation-fix cycle
+ * std-agent-fix-loop -- Validation-fix cycle
  *
- * Composes tool invocation (validate + fix) and LLM completion into an
- * iterative validation-fix loop. Validates a target, and if errors are found,
+ * Composes agent atoms + UI atoms into an iterative validation-fix loop
+ * with step progress tracking and an errors browse list. Validates a target,
  * generates a fix via LLM, applies it via tool invocation, then re-validates.
- * Loops up to maxAttempts rounds (default 5).
  *
- * Traits composed (inline, representing atom-level concerns):
- * - FixLoopValidate: tool invocation for running validation
- * - FixLoopFix: LLM completion to generate fixes + tool invocation to apply
- * - FixLoopOrchestrator: state machine orchestrating the validate-fix cycle
+ * Composed atoms:
+ * - stdAgentToolCall (validate): run validation tool
+ * - stdAgentToolCall (fix): apply generated fix
+ * - stdAgentCompletion: generate fix via LLM
+ * - stdAgentStepProgress: visual step indicator
+ * - stdBrowse: browsable errors list
  *
  * @level molecule
  * @family agent
@@ -17,7 +18,11 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentToolCall } from '../atoms/std-agent-tool-call.js';
+import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
+import { stdAgentStepProgress } from '../atoms/std-agent-step-progress.js';
+import { stdBrowse } from '../atoms/std-browse.js';
 
 // ============================================================================
 // Params
@@ -69,6 +74,17 @@ function resolve(params: StdAgentFixLoopParams): FixLoopConfig {
     { name: 'currentFix', type: 'string', default: '' },
     { name: 'errorCount', type: 'number', default: 0 },
     { name: 'error', type: 'string', default: '' },
+    // Fields for composed atoms (step-progress, tool-call, completion)
+    { name: 'currentStep', type: 'number', default: 0 },
+    { name: 'totalSteps', type: 'number', default: 4 },
+    { name: 'steps', type: 'string', default: 'Validate,Analyze,Fix,Re-validate' },
+    { name: 'toolName', type: 'string', default: '' },
+    { name: 'args', type: 'string', default: '' },
+    { name: 'result', type: 'string', default: '' },
+    { name: 'prompt', type: 'string', default: '' },
+    { name: 'response', type: 'string', default: '' },
+    { name: 'provider', type: 'string', default: 'anthropic' },
+    { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -134,7 +150,7 @@ function validatingView(): unknown {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
           { type: 'badge', label: `@entity.target` },
-          { type: 'badge', label: ['string/concat', 'Attempt ', ['string/of', '@entity.fixAttempts'], '/', ['string/of', '@entity.maxAttempts']] },
+          { type: 'badge', label: ['str/concat', 'Attempt ', ['str/concat', '@entity.fixAttempts'], '/', ['str/concat', '@entity.maxAttempts']] },
         ],
       },
     ],
@@ -155,7 +171,7 @@ function fixingView(): unknown {
               { type: 'typography', content: 'Generating fix...', variant: 'h2' },
             ],
           },
-          { type: 'badge', label: ['string/concat', 'Attempt ', ['string/of', '@entity.fixAttempts']] },
+          { type: 'badge', label: ['str/concat', 'Attempt ', ['str/concat', '@entity.fixAttempts']] },
         ],
       },
       { type: 'divider' },
@@ -275,8 +291,12 @@ function buildTrait(c: FixLoopConfig): Trait {
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'FIX_SUCCEEDED' },
-      { event: 'FIX_FAILED' },
+      { event: 'FIX_SUCCEEDED', scope: 'external' as const, payload: [{ name: 'target', type: 'string' }] },
+      { event: 'FIX_FAILED', scope: 'external' as const, payload: [{ name: 'target', type: 'string' }, { name: 'error', type: 'string' }] },
+    ],
+    listens: [
+      { event: 'FIX_SUCCEEDED', triggers: 'INIT', scope: 'external' as const },
+      { event: 'FIX_FAILED', triggers: 'INIT', scope: 'external' as const },
     ],
     stateMachine: {
       states: [
@@ -290,9 +310,7 @@ function buildTrait(c: FixLoopConfig): Trait {
       events: [
         { key: 'INIT', name: 'Initialize' },
         { key: 'FIX', name: 'Start Fix Loop' },
-        {
-          key: 'VALIDATION_PASSED', name: 'Validation Passed',
-        },
+        { key: 'VALIDATION_PASSED', name: 'Validation Passed' },
         {
           key: 'VALIDATION_ERRORS', name: 'Validation Errors',
           payload: [
@@ -316,14 +334,12 @@ function buildTrait(c: FixLoopConfig): Trait {
         { key: 'RESET', name: 'Reset' },
       ],
       transitions: [
-        // INIT: idle -> idle
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // FIX: idle -> validating (run initial validation)
         {
           from: 'idle', to: 'validating', event: 'FIX',
           effects: [
@@ -335,7 +351,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', validatingView()],
           ],
         },
-        // VALIDATION_PASSED: validating -> succeeded
         {
           from: 'validating', to: 'succeeded', event: 'VALIDATION_PASSED',
           effects: [
@@ -344,16 +359,15 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', succeededView()],
           ],
         },
-        // VALIDATION_ERRORS: validating -> fixing (errors found, generate fix)
         {
           from: 'validating', to: 'fixing', event: 'VALIDATION_ERRORS',
-          guards: [['math/lt', '@entity.fixAttempts', maxAttempts]],
+          guards: [['<', '@entity.fixAttempts', maxAttempts]],
           effects: [
             ['set', '@entity.validationErrors', '@payload.errors'],
             ['set', '@entity.errorCount', '@payload.count'],
-            ['set', '@entity.fixAttempts', ['math/add', '@entity.fixAttempts', 1]],
+            ['set', '@entity.fixAttempts', ['+', '@entity.fixAttempts', 1]],
             ['set', '@entity.status', 'fixing'],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Target: ', '@entity.target',
               '\n\nValidation errors:\n', '@payload.errors',
               '\n\nGenerate a fix that resolves these errors. Return only the fix content.',
@@ -361,7 +375,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', fixingView()],
           ],
         },
-        // VALIDATION_ERRORS when max attempts exceeded: validating -> failed
         {
           from: 'validating', to: 'failed', event: 'EXCEEDED_ATTEMPTS',
           effects: [
@@ -371,7 +384,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', failedView()],
           ],
         },
-        // FIX_GENERATED: fixing -> applying (apply the generated fix)
         {
           from: 'fixing', to: 'applying', event: 'FIX_GENERATED',
           effects: [
@@ -381,7 +393,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', applyingView()],
           ],
         },
-        // FIX_APPLIED: applying -> validating (re-validate after applying fix)
         {
           from: 'applying', to: 'validating', event: 'FIX_APPLIED',
           effects: [
@@ -390,7 +401,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', validatingView()],
           ],
         },
-        // FAILED: fixing -> failed
         {
           from: 'fixing', to: 'failed', event: 'FAILED',
           effects: [
@@ -400,7 +410,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', failedView()],
           ],
         },
-        // FAILED: applying -> failed
         {
           from: 'applying', to: 'failed', event: 'FAILED',
           effects: [
@@ -410,7 +419,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', failedView()],
           ],
         },
-        // RESET: succeeded -> idle
         {
           from: 'succeeded', to: 'idle', event: 'RESET',
           effects: [
@@ -424,7 +432,6 @@ function buildTrait(c: FixLoopConfig): Trait {
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // RESET: failed -> idle
         {
           from: 'failed', to: 'idle', event: 'RESET',
           effects: [
@@ -451,10 +458,6 @@ function buildEntity(c: FixLoopConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildPage(c: FixLoopConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
-}
-
 export function stdAgentFixLoopEntity(params: StdAgentFixLoopParams): Entity {
   return buildEntity(resolve(params));
 }
@@ -464,7 +467,19 @@ export function stdAgentFixLoopTrait(params: StdAgentFixLoopParams): Trait {
 }
 
 export function stdAgentFixLoopPage(params: StdAgentFixLoopParams): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: c.traitName },
+      { ref: 'FixLoopStepProgress' },
+      { ref: 'FixLoopErrorsBrowse' },
+      { ref: 'FixLoopValidateCall' },
+      { ref: 'FixLoopFixCall' },
+      { ref: 'FixLoopCompletionFlow' },
+    ],
+  } as Page;
 }
 
 // ============================================================================
@@ -473,5 +488,82 @@ export function stdAgentFixLoopPage(params: StdAgentFixLoopParams): Page {
 
 export function stdAgentFixLoop(params: StdAgentFixLoopParams): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // 1. Core orchestrator trait
+  const fixTrait = buildTrait(c);
+
+  // 2. Agent atoms: validate tool call, fix tool call, completion
+  const validateCallTrait = extractTrait(stdAgentToolCall({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  validateCallTrait.name = 'FixLoopValidateCall';
+  validateCallTrait.listens = [];
+  if (validateCallTrait.emits) { for (const e of validateCallTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const fixCallTrait = extractTrait(stdAgentToolCall({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  fixCallTrait.name = 'FixLoopFixCall';
+  fixCallTrait.listens = [];
+  if (fixCallTrait.emits) { for (const e of fixCallTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const completionTrait = extractTrait(stdAgentCompletion({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  completionTrait.name = 'FixLoopCompletionFlow';
+  completionTrait.listens = [];
+  if (completionTrait.emits) { for (const e of completionTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 3. UI atoms: step progress + errors browse list
+  const stepProgressTrait = extractTrait(stdAgentStepProgress({
+    entityName,
+    fields,
+    stepLabels: ['Validate', 'Analyze', 'Fix', 'Re-validate'],
+    persistence: 'runtime',
+  }));
+  stepProgressTrait.name = 'FixLoopStepProgress';
+  stepProgressTrait.listens = [];
+  if (stepProgressTrait.emits) { for (const e of stepProgressTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const errorsBrowseTrait = extractTrait(stdBrowse({
+    entityName,
+    fields,
+    traitName: 'FixLoopErrorsBrowse',
+    listFields: ['target', 'errorCount', 'status'],
+    headerIcon: 'alert-triangle',
+    pageTitle: 'Validation Errors',
+    emptyTitle: 'No errors',
+    emptyDescription: 'All validations passed.',
+    itemActions: [{ label: 'View', event: 'VIEW' }],
+  }));
+  errorsBrowseTrait.name = 'FixLoopErrorsBrowse';
+
+  // 4. Entity + page
+  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: fixTrait.name },
+      { ref: stepProgressTrait.name },
+      { ref: errorsBrowseTrait.name },
+      { ref: validateCallTrait.name },
+      { ref: fixCallTrait.name },
+      { ref: completionTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(
+    `${entityName}Orbital`,
+    entity,
+    [fixTrait, stepProgressTrait, errorsBrowseTrait, validateCallTrait, fixCallTrait, completionTrait],
+    [page],
+  );
 }

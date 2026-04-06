@@ -2,8 +2,8 @@
  * std-agent-conversation
  *
  * Conversation flow atom for multi-turn agent interactions.
- * Manages message history, turn counting, and token tracking
- * using agent/generate for AI replies.
+ * Composes stdAgentChatThread (message display and compose) with an agent
+ * trait that handles agent/generate for AI replies and TOKEN_UPDATE emitting.
  *
  * @level atom
  * @family agent
@@ -11,7 +11,8 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentChatThread } from './std-agent-chat-thread.js';
 
 // ============================================================================
 // Params
@@ -40,7 +41,6 @@ interface ConversationConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -56,6 +56,11 @@ function resolve(params: StdAgentConversationParams): ConversationConfig {
     { name: 'turnCount', type: 'number', default: 0 },
     { name: 'lastMessage', type: 'string', default: '' },
     { name: 'tokenCount', type: 'number', default: 0 },
+    { name: 'role', type: 'string', default: 'user' },
+    { name: 'content', type: 'string', default: '' },
+    { name: 'timestamp', type: 'string', default: '' },
+    { name: 'toolName', type: 'string', default: '' },
+    { name: 'status', type: 'string', default: 'sent' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));
@@ -69,7 +74,6 @@ function resolve(params: StdAgentConversationParams): ConversationConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Flow`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -85,85 +89,18 @@ function buildEntity(c: ConversationConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: ConversationConfig): Trait {
+function buildAgentTrait(c: ConversationConfig): Trait {
   const { entityName } = c;
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'message-circle', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'typography', variant: 'caption', color: 'muted', content: 'Start a conversation with the agent.' },
-      { type: 'input', label: 'Message', bind: '@entity.lastMessage', placeholder: 'Type a message...' },
-      { type: 'button', label: 'Send', event: 'SEND_MESSAGE', variant: 'primary', icon: 'send' },
-    ],
-  };
-
-  const activeUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'message-circle', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-          { type: 'badge', label: '@entity.turnCount' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'typography', variant: 'body', content: '@entity.lastMessage' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'badge', label: '@entity.tokenCount' },
-        ],
-      },
-      { type: 'input', label: 'Message', bind: '@entity.lastMessage', placeholder: 'Type a message...' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Send', event: 'SEND_MESSAGE', variant: 'primary', icon: 'send' },
-          { type: 'button', label: 'Pause', event: 'PAUSE', variant: 'secondary', icon: 'pause' },
-          { type: 'button', label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'trash' },
-        ],
-      },
-    ],
-  };
-
-  const pausedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'pause-circle', size: 'lg' },
-          { type: 'typography', content: `${entityName} (Paused)`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'alert', variant: 'info', message: 'Conversation paused.' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Resume', event: 'RESUME', variant: 'primary', icon: 'play' },
-          { type: 'button', label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'trash' },
-        ],
-      },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'TOKEN_UPDATE', scope: 'external' },
+      { event: 'TOKEN_UPDATE', scope: 'internal' as const, payload: [
+        { name: 'tokenCount', type: 'number' },
+      ]},
     ],
     stateMachine: {
       states: [
@@ -185,7 +122,7 @@ function buildTrait(c: ConversationConfig): Trait {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'main', idleUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'message-circle', title: 'Conversation', description: 'Conversation is ready' }],
           ],
         },
         {
@@ -195,7 +132,6 @@ function buildTrait(c: ConversationConfig): Trait {
             ['set', '@entity.turnCount', ['+', '@entity.turnCount', 1]],
             ['agent/generate', '@payload.content'],
             ['emit', 'TOKEN_UPDATE'],
-            ['render-ui', 'main', activeUI],
           ],
         },
         {
@@ -205,20 +141,15 @@ function buildTrait(c: ConversationConfig): Trait {
             ['set', '@entity.turnCount', ['+', '@entity.turnCount', 1]],
             ['agent/generate', '@payload.content'],
             ['emit', 'TOKEN_UPDATE'],
-            ['render-ui', 'main', activeUI],
           ],
         },
         {
           from: 'active', to: 'paused', event: 'PAUSE',
-          effects: [
-            ['render-ui', 'main', pausedUI],
-          ],
+          effects: [],
         },
         {
           from: 'paused', to: 'active', event: 'RESUME',
-          effects: [
-            ['render-ui', 'main', activeUI],
-          ],
+          effects: [],
         },
         {
           from: 'active', to: 'idle', event: 'CLEAR',
@@ -227,7 +158,6 @@ function buildTrait(c: ConversationConfig): Trait {
             ['set', '@entity.turnCount', 0],
             ['set', '@entity.lastMessage', ''],
             ['set', '@entity.tokenCount', 0],
-            ['render-ui', 'main', idleUI],
           ],
         },
         {
@@ -237,16 +167,11 @@ function buildTrait(c: ConversationConfig): Trait {
             ['set', '@entity.turnCount', 0],
             ['set', '@entity.lastMessage', ''],
             ['set', '@entity.tokenCount', 0],
-            ['render-ui', 'main', idleUI],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: ConversationConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -258,14 +183,44 @@ export function stdAgentConversationEntity(params: StdAgentConversationParams = 
 }
 
 export function stdAgentConversationTrait(params: StdAgentConversationParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentConversationPage(params: StdAgentConversationParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Thread` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentConversation(params: StdAgentConversationParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName } = c;
+
+  // UI trait: chat thread for message display and compose
+  const chatThreadTrait = extractTrait(stdAgentChatThread({
+    entityName,
+    fields: c.fields,
+    onSendEvent: 'SEND_MESSAGE',
+  }));
+
+  // Agent trait: handles agent/generate for AI replies
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: chatThreadTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [chatThreadTrait, agentTrait], [page]);
 }

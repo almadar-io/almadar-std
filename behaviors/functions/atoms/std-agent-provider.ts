@@ -2,8 +2,9 @@
  * std-agent-provider
  *
  * Provider routing atom for agent model/provider switching.
- * Manages current provider, model selection, and fallback routing.
- * Uses agent/switch-provider, agent/provider, and agent/model operators.
+ * Composes UI atoms (stdModal for switch form, stdNotification for confirmation)
+ * with an agent trait that handles agent/switch-provider, agent/provider,
+ * and agent/model operators.
  *
  * @level atom
  * @family agent
@@ -11,7 +12,9 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdModal } from './std-modal.js';
+import { stdNotification } from './std-notification.js';
 
 // ============================================================================
 // Params
@@ -40,7 +43,6 @@ interface ProviderConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -56,6 +58,8 @@ function resolve(params: StdAgentProviderParams): ProviderConfig {
     { name: 'currentModel', type: 'string', default: 'claude-sonnet-4-20250514' },
     { name: 'fallbackProvider', type: 'string', default: 'openai' },
     { name: 'requestCount', type: 'number', default: 0 },
+    { name: 'message', type: 'string', default: '' },
+    { name: 'notificationType', type: 'string', default: 'info' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));
@@ -69,7 +73,6 @@ function resolve(params: StdAgentProviderParams): ProviderConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Router`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -85,80 +88,23 @@ function buildEntity(c: ProviderConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: ProviderConfig): Trait {
+function buildAgentTrait(c: ProviderConfig): Trait {
   const { entityName } = c;
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'server', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Provider:' },
-          { type: 'badge', label: '@entity.currentProvider' },
-          { type: 'typography', variant: 'caption', content: 'Model:' },
-          { type: 'badge', label: '@entity.currentModel' },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Fallback:' },
-          { type: 'badge', label: '@entity.fallbackProvider', variant: 'secondary' },
-          { type: 'typography', variant: 'caption', content: 'Requests:' },
-          { type: 'badge', label: '@entity.requestCount' },
-        ],
-      },
-      { type: 'button', label: 'Switch Provider', event: 'SWITCH', variant: 'primary', icon: 'repeat' },
-    ],
-  };
-
-  const activeUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'server', size: 'lg' },
-          { type: 'typography', content: `${entityName} (Active)`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'alert', variant: 'success', message: 'Provider is active and routing requests.' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'badge', label: '@entity.currentProvider' },
-          { type: 'badge', label: '@entity.currentModel' },
-          { type: 'badge', label: '@entity.requestCount' },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Switch', event: 'SWITCH', variant: 'secondary', icon: 'repeat' },
-          { type: 'button', label: 'Auto Switch', event: 'SWITCH_AUTO', variant: 'ghost', icon: 'zap' },
-        ],
-      },
-    ],
-  };
-
-  const switchingUI = {
-    type: 'loading-state', title: 'Switching...', message: 'Switching provider...',
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'SHOW', scope: 'internal' as const, payload: [
+        { name: 'provider', type: 'string' },
+        { name: 'model', type: 'string' },
+      ]},
+    ],
+    listens: [
+      { event: 'SWITCHED', triggers: 'SWITCHED' },
+    ],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -167,11 +113,11 @@ function buildTrait(c: ProviderConfig): Trait {
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'SWITCH', name: 'Switch Provider', payload: [
-          { name: 'provider', type: 'string', required: true },
-          { name: 'model', type: 'string', required: false },
+        { key: 'DO_SWITCH', name: 'Do Switch', payload: [
+          { name: 'data', type: 'object', required: true },
         ]},
         { key: 'SWITCH_AUTO', name: 'Auto Switch to Fallback' },
+        { key: 'SWITCHED', name: 'Switched', payload: [{ name: 'data', type: 'object', required: true }] },
       ],
       transitions: [
         {
@@ -180,16 +126,22 @@ function buildTrait(c: ProviderConfig): Trait {
             ['fetch', entityName],
             ['agent/provider'],
             ['agent/model'],
-            ['render-ui', 'main', activeUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'repeat', title: 'Provider', description: 'Provider is ready' }],
           ],
         },
         {
-          from: 'active', to: 'switching', event: 'SWITCH',
+          from: 'active', to: 'switching', event: 'DO_SWITCH',
           effects: [
-            ['render-ui', 'main', switchingUI],
-            ['agent/switch-provider', '@payload.provider', '@payload.model'],
-            ['set', '@entity.currentProvider', '@payload.provider'],
-            ['set', '@entity.currentModel', '@payload.model'],
+            ['agent/switch-provider', '@payload.data.currentProvider', '@payload.data.currentModel'],
+            ['set', '@entity.currentProvider', '@payload.data.currentProvider'],
+            ['set', '@entity.currentModel', '@payload.data.currentModel'],
+          ],
+        },
+        // Listen for SWITCHED from modal save
+        {
+          from: 'active', to: 'switching', event: 'SWITCHED',
+          effects: [
+            ['agent/switch-provider', '@entity.currentProvider', '@entity.currentModel'],
           ],
         },
         {
@@ -198,33 +150,27 @@ function buildTrait(c: ProviderConfig): Trait {
             ['agent/provider'],
             ['agent/model'],
             ['set', '@entity.requestCount', ['+', '@entity.requestCount', 1]],
-            ['render-ui', 'main', activeUI],
+            ['emit', 'SHOW'],
           ],
         },
         {
           from: 'active', to: 'switching', event: 'SWITCH_AUTO',
           effects: [
-            ['render-ui', 'main', switchingUI],
             ['agent/switch-provider', '@entity.fallbackProvider'],
             ['set', '@entity.currentProvider', '@entity.fallbackProvider'],
           ],
         },
         {
-          from: 'idle', to: 'switching', event: 'SWITCH',
+          from: 'idle', to: 'switching', event: 'DO_SWITCH',
           effects: [
-            ['render-ui', 'main', switchingUI],
-            ['agent/switch-provider', '@payload.provider', '@payload.model'],
-            ['set', '@entity.currentProvider', '@payload.provider'],
-            ['set', '@entity.currentModel', '@payload.model'],
+            ['agent/switch-provider', '@payload.data.currentProvider', '@payload.data.currentModel'],
+            ['set', '@entity.currentProvider', '@payload.data.currentProvider'],
+            ['set', '@entity.currentModel', '@payload.data.currentModel'],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: ProviderConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -236,14 +182,81 @@ export function stdAgentProviderEntity(params: StdAgentProviderParams = {}): Ent
 }
 
 export function stdAgentProviderTrait(params: StdAgentProviderParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentProviderPage(params: StdAgentProviderParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Modal` },
+      { ref: `${c.entityName}Notification` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentProvider(params: StdAgentProviderParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // UI trait: switch form modal
+  const switchContent = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'repeat', size: 'md' },
+        { type: 'typography', content: 'Switch Provider', variant: 'h3' },
+      ] },
+      { type: 'divider' },
+      {
+        type: 'stack', direction: 'horizontal', gap: 'md',
+        children: [
+          { type: 'typography', variant: 'caption', content: 'Current:' },
+          { type: 'badge', label: '@entity.currentProvider' },
+          { type: 'badge', label: '@entity.currentModel' },
+        ],
+      },
+      { type: 'form-section', entity: entityName, mode: 'edit', submitEvent: 'SAVE', cancelEvent: 'CLOSE', fields: ['currentProvider', 'currentModel'] },
+    ],
+  };
+
+  const modalTrait = extractTrait(stdModal({
+    entityName, fields,
+    traitName: `${entityName}Modal`,
+    modalTitle: 'Switch Provider',
+    headerIcon: 'repeat',
+    openContent: switchContent,
+    openEvent: 'SWITCH',
+    closeEvent: 'CLOSE',
+    openEffects: [['fetch', entityName]],
+    saveEvent: 'SAVE',
+    saveEffects: [['persist', 'update', entityName, '@payload.data']],
+    emitOnSave: 'SWITCHED',
+  }));
+
+  // UI trait: notification for switch confirmation
+  const notifTrait = extractTrait(stdNotification({
+    entityName, fields,
+    standalone: false,
+    headerIcon: 'server',
+    pageTitle: 'Provider Status',
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: modalTrait.name },
+      { ref: notifTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, notifTrait, agentTrait], [page]);
 }

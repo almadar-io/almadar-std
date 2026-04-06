@@ -203,6 +203,20 @@ function buildTrait(c: ModalConfig): Trait {
 
   // Save transition (molecule injects this for create/edit modals)
   if (c.saveEvent) {
+    const mainRefresh = c.standalone ? [['ref', c.entityName], ['render-ui', 'main', {
+      type: 'stack', direction: 'vertical', gap: 'lg',
+      children: [
+        { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
+          { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+            { type: 'icon', name: c.headerIcon, size: 'lg' },
+            { type: 'typography', content: c.modalTitle, variant: 'h2' },
+          ] },
+          { type: 'button', label: 'Open', event: c.openEvent, variant: 'primary', icon: c.headerIcon },
+        ] },
+        { type: 'divider' },
+        { type: 'empty-state', icon: c.headerIcon, title: 'Nothing open', description: 'Click Open to view details in a modal overlay.' },
+      ],
+    }]] : [];
     transitions.push({
       from: 'open', to: 'closed', event: c.saveEvent,
       effects: [
@@ -210,6 +224,7 @@ function buildTrait(c: ModalConfig): Trait {
         ['render-ui', 'modal', null],
         // Emit after persist succeeds so browse traits can fetch fresh data
         ...(c.emitOnSave ? [['emit', c.emitOnSave]] : []),
+        ...mainRefresh,
       ],
     });
   }

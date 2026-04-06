@@ -1,15 +1,20 @@
 /**
- * std-agent-rag — Retrieval-Augmented Generation
+ * std-agent-rag -- Retrieval-Augmented Generation
  *
- * Composes memory recall, code search, and LLM completion into a RAG pipeline.
+ * Composes agent atoms + UI atoms into a RAG pipeline with tabbed views.
  * Retrieves relevant memories and code snippets, injects them as context,
- * then generates a response with the augmented prompt. Reinforces memories
- * that contributed to the final output.
+ * then generates a response with the augmented prompt.
  *
- * Traits composed (inline, representing atom-level concerns):
- * - RagMemory: recall memories by semantic query
- * - RagSearch: search code repositories for relevant snippets
- * - RagCompletion: generate response with augmented context
+ * Composed atoms:
+ * - stdAgentMemory: recall memories by semantic query
+ * - stdAgentSearch: search code repositories for relevant snippets
+ * - stdAgentCompletion: generate response with augmented context
+ * - stdTabs: tabbed view for Query / Sources / Response
+ *
+ * Cross-trait events:
+ * - GENERATE (RagOrchestrator -> MemoryLifecycle): trigger recall
+ * - RETRIEVAL_DONE (RagOrchestrator -> SearchLifecycle): trigger search after recall
+ * - GENERATION_DONE (RagOrchestrator -> CompletionFlow): trigger completion
  *
  * @level molecule
  * @family agent
@@ -17,7 +22,11 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentMemory } from '../atoms/std-agent-memory.js';
+import { stdAgentSearch } from '../atoms/std-agent-search.js';
+import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
+import { stdTabs } from '../atoms/std-tabs.js';
 
 // ============================================================================
 // Params
@@ -65,6 +74,18 @@ function resolve(params: StdAgentRagParams): RagConfig {
     { name: 'searchHits', type: 'number', default: 0 },
     { name: 'status', type: 'string', default: 'idle' },
     { name: 'error', type: 'string', default: '' },
+    // Fields for composed atoms (memory, search, completion)
+    { name: 'content', type: 'string', default: '' },
+    { name: 'category', type: 'string', default: '' },
+    { name: 'scope', type: 'string', default: '' },
+    { name: 'strength', type: 'number', default: 1 },
+    { name: 'pinned', type: 'boolean', default: false },
+    { name: 'language', type: 'string', default: '' },
+    { name: 'resultCount', type: 'number', default: 0 },
+    { name: 'results', type: 'string', default: '[]' },
+    { name: 'prompt', type: 'string', default: '' },
+    { name: 'provider', type: 'string', default: 'anthropic' },
+    { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -146,8 +167,8 @@ function generatingView(): unknown {
       {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
-          { type: 'badge', label: ['string/concat', ['string/of', '@entity.memoryHits'], ' memories'] },
-          { type: 'badge', label: ['string/concat', ['string/of', '@entity.searchHits'], ' code hits'] },
+          { type: 'badge', label: ['str/concat', ['str/concat', '@entity.memoryHits'], ' memories'] },
+          { type: 'badge', label: ['str/concat', ['str/concat', '@entity.searchHits'], ' code hits'] },
         ],
       },
     ],
@@ -207,7 +228,7 @@ function completedView(entityName: string): unknown {
   };
 }
 
-function errorView(entityName: string): unknown {
+function errorView(_entityName: string): unknown {
   return {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
@@ -223,13 +244,8 @@ function errorView(entityName: string): unknown {
 // Trait Builder
 // ============================================================================
 
-function buildTrait(c: RagConfig): Trait {
+function buildRagTrait(c: RagConfig): Trait {
   const { entityName, memoryLimit, searchLanguage } = c;
-
-  const searchArgs: Record<string, unknown> = { query: '@entity.query' };
-  if (searchLanguage) {
-    searchArgs.language = searchLanguage;
-  }
 
   return {
     name: c.traitName,
@@ -264,14 +280,12 @@ function buildTrait(c: RagConfig): Trait {
         { key: 'RESET', name: 'Reset' },
       ],
       transitions: [
-        // INIT: idle -> idle (render query form)
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // GENERATE: idle -> retrieving (recall memories + search code)
         {
           from: 'idle', to: 'retrieving', event: 'GENERATE',
           effects: [
@@ -281,7 +295,6 @@ function buildTrait(c: RagConfig): Trait {
             ['render-ui', 'main', retrievingView()],
           ],
         },
-        // RETRIEVAL_DONE: retrieving -> generating (inject context, generate with augmented prompt)
         {
           from: 'retrieving', to: 'generating', event: 'RETRIEVAL_DONE',
           effects: [
@@ -289,7 +302,7 @@ function buildTrait(c: RagConfig): Trait {
             ['set', '@entity.memoryHits', '@payload.memoryHits'],
             ['set', '@entity.searchHits', '@payload.searchHits'],
             ['set', '@entity.status', 'generating'],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Context:\n', '@entity.context',
               '\n\nQuery: ', '@entity.query',
               '\n\nProvide a comprehensive answer based on the retrieved context.',
@@ -297,17 +310,15 @@ function buildTrait(c: RagConfig): Trait {
             ['render-ui', 'main', generatingView()],
           ],
         },
-        // GENERATION_DONE: generating -> completed (store response, reinforce used memories)
         {
           from: 'generating', to: 'completed', event: 'GENERATION_DONE',
           effects: [
             ['set', '@entity.response', '@payload.response'],
             ['set', '@entity.status', 'completed'],
-            ['agent/memorize', ['string/concat', 'RAG query: ', '@entity.query'], 'pattern-affinity'],
+            ['agent/memorize', ['str/concat', 'RAG query: ', '@entity.query'], 'pattern-affinity'],
             ['render-ui', 'main', completedView(entityName)],
           ],
         },
-        // FAILED: retrieving -> idle
         {
           from: 'retrieving', to: 'idle', event: 'FAILED',
           effects: [
@@ -316,7 +327,6 @@ function buildTrait(c: RagConfig): Trait {
             ['render-ui', 'main', errorView(entityName)],
           ],
         },
-        // FAILED: generating -> idle
         {
           from: 'generating', to: 'idle', event: 'FAILED',
           effects: [
@@ -325,7 +335,6 @@ function buildTrait(c: RagConfig): Trait {
             ['render-ui', 'main', errorView(entityName)],
           ],
         },
-        // RESET: completed -> idle
         {
           from: 'completed', to: 'idle', event: 'RESET',
           effects: [
@@ -351,20 +360,27 @@ function buildEntity(c: RagConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildPage(c: RagConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
-}
-
 export function stdAgentRagEntity(params: StdAgentRagParams): Entity {
   return buildEntity(resolve(params));
 }
 
 export function stdAgentRagTrait(params: StdAgentRagParams): Trait {
-  return buildTrait(resolve(params));
+  return buildRagTrait(resolve(params));
 }
 
 export function stdAgentRagPage(params: StdAgentRagParams): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: c.traitName },
+      { ref: 'RagTabs' },
+      { ref: 'RagMemoryLifecycle' },
+      { ref: 'RagSearchLifecycle' },
+      { ref: 'RagCompletionFlow' },
+    ],
+  } as Page;
 }
 
 // ============================================================================
@@ -373,5 +389,73 @@ export function stdAgentRagPage(params: StdAgentRagParams): Page {
 
 export function stdAgentRag(params: StdAgentRagParams): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // 1. Core RAG orchestrator trait
+  const ragTrait = buildRagTrait(c);
+
+  // 2. Compose atoms: memory for recall, search for code, completion for generation
+  const memoryTrait = extractTrait(stdAgentMemory({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  memoryTrait.name = 'RagMemoryLifecycle';
+  memoryTrait.listens = [];
+  if (memoryTrait.emits) { for (const e of memoryTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const searchTrait = extractTrait(stdAgentSearch({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  searchTrait.name = 'RagSearchLifecycle';
+  searchTrait.listens = [];
+  if (searchTrait.emits) { for (const e of searchTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const completionTrait = extractTrait(stdAgentCompletion({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  completionTrait.name = 'RagCompletionFlow';
+  completionTrait.listens = [];
+  if (completionTrait.emits) { for (const e of completionTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 3. UI atom: tabs for Query / Sources / Response views
+  const tabsTrait = extractTrait(stdTabs({
+    entityName,
+    fields,
+    tabItems: [
+      { label: 'Query', value: 'query' },
+      { label: 'Sources', value: 'sources' },
+      { label: 'Response', value: 'response' },
+    ],
+    headerIcon: 'brain',
+    pageTitle: 'RAG Pipeline',
+  }));
+  tabsTrait.name = 'RagTabs';
+
+  // 4. Entity
+  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
+
+  // 5. Page
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: ragTrait.name },
+      { ref: tabsTrait.name },
+      { ref: memoryTrait.name },
+      { ref: searchTrait.name },
+      { ref: completionTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(
+    `${entityName}Orbital`,
+    entity,
+    [ragTrait, tabsTrait, memoryTrait, searchTrait, completionTrait],
+    [page],
+  );
 }

@@ -2,8 +2,8 @@
  * std-agent-session
  *
  * Session lifecycle atom for agent session management.
- * Handles session creation, forking, labeling, and ending.
- * Uses agent/fork, agent/label, and agent/session-id operators.
+ * Composes UI atoms (stdBrowse for session list, stdModal for fork label form)
+ * with an agent trait that handles agent/fork, agent/label, and agent/session-id.
  *
  * @level atom
  * @family agent
@@ -11,7 +11,9 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdBrowse } from './std-browse.js';
+import { stdModal } from './std-modal.js';
 
 // ============================================================================
 // Params
@@ -40,7 +42,6 @@ interface SessionConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -70,7 +71,6 @@ function resolve(params: StdAgentSessionParams): SessionConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Lifecycle`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -86,107 +86,22 @@ function buildEntity(c: SessionConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: SessionConfig): Trait {
+function buildAgentTrait(c: SessionConfig): Trait {
   const { entityName } = c;
-
-  const activeUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'terminal', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-          { type: 'badge', label: 'Active', variant: 'success' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Session ID:' },
-          { type: 'badge', label: '@entity.sessionId' },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Label:' },
-          { type: 'badge', label: '@entity.label' },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Fork', event: 'FORK', variant: 'secondary', icon: 'git-branch' },
-          { type: 'button', label: 'Label', event: 'LABEL', variant: 'secondary', icon: 'tag' },
-          { type: 'button', label: 'End', event: 'END', variant: 'destructive', icon: 'square' },
-        ],
-      },
-    ],
-  };
-
-  const forkedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'git-branch', size: 'lg' },
-          { type: 'typography', content: `${entityName} (Forked)`, variant: 'h2' },
-          { type: 'badge', label: 'Forked', variant: 'info' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Session:' },
-          { type: 'badge', label: '@entity.sessionId' },
-          { type: 'typography', variant: 'caption', content: 'Parent:' },
-          { type: 'badge', label: '@entity.parentId' },
-        ],
-      },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Fork Again', event: 'FORK', variant: 'secondary', icon: 'git-branch' },
-          { type: 'button', label: 'Label', event: 'LABEL', variant: 'secondary', icon: 'tag' },
-          { type: 'button', label: 'End', event: 'END', variant: 'destructive', icon: 'square' },
-        ],
-      },
-    ],
-  };
-
-  const endedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'check-circle', size: 'lg' },
-          { type: 'typography', content: `${entityName} (Ended)`, variant: 'h2' },
-          { type: 'badge', label: 'Ended', variant: 'secondary' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'alert', variant: 'info', message: 'Session has ended.' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Session:' },
-          { type: 'badge', label: '@entity.sessionId' },
-          { type: 'typography', variant: 'caption', content: 'Label:' },
-          { type: 'badge', label: '@entity.label' },
-        ],
-      },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'ENDED', scope: 'external' as const, payload: [{ name: 'sessionId', type: 'string' }] },
+      { event: 'FORKED', scope: 'external' as const, payload: [{ name: 'sessionId', type: 'string' }] },
+    ],
+    listens: [
+      { event: 'ENDED', triggers: 'INIT', scope: 'external' as const },
+      { event: 'FORKED', triggers: 'INIT', scope: 'external' as const },
+    ],
     stateMachine: {
       states: [
         { name: 'active', isInitial: true },
@@ -196,10 +111,12 @@ function buildTrait(c: SessionConfig): Trait {
       events: [
         { key: 'INIT', name: 'Initialize' },
         { key: 'FORK', name: 'Fork Session' },
-        { key: 'LABEL', name: 'Label Session', payload: [
-          { name: 'label', type: 'string', required: true },
+        { key: 'DO_LABEL', name: 'Do Label', payload: [
+          { name: 'data', type: 'object', required: true },
         ]},
         { key: 'END', name: 'End Session' },
+        { key: 'LABELED', name: 'Labeled', payload: [{ name: 'data', type: 'object', required: true }] },
+        { key: 'FORKED', name: 'Forked', payload: [{ name: 'data', type: 'object', required: true }] },
       ],
       transitions: [
         {
@@ -208,7 +125,7 @@ function buildTrait(c: SessionConfig): Trait {
             ['fetch', entityName],
             ['agent/session-id'],
             ['set', '@entity.createdAt', '@now'],
-            ['render-ui', 'main', activeUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'git-branch', title: 'Session', description: 'Session is ready' }],
           ],
         },
         {
@@ -217,7 +134,13 @@ function buildTrait(c: SessionConfig): Trait {
             ['set', '@entity.parentId', '@entity.sessionId'],
             ['agent/fork'],
             ['agent/session-id'],
-            ['render-ui', 'main', forkedUI],
+            ['persist', 'create', entityName, {
+              sessionId: '@entity.sessionId',
+              parentId: '@entity.parentId',
+              status: 'forked',
+              createdAt: '@now',
+            }],
+            ['emit', 'FORKED'],
           ],
         },
         {
@@ -226,46 +149,72 @@ function buildTrait(c: SessionConfig): Trait {
             ['set', '@entity.parentId', '@entity.sessionId'],
             ['agent/fork'],
             ['agent/session-id'],
-            ['render-ui', 'main', forkedUI],
+            ['persist', 'create', entityName, {
+              sessionId: '@entity.sessionId',
+              parentId: '@entity.parentId',
+              status: 'forked',
+              createdAt: '@now',
+            }],
+            ['emit', 'FORKED'],
           ],
         },
         {
-          from: 'active', to: 'active', event: 'LABEL',
+          from: 'active', to: 'active', event: 'DO_LABEL',
           effects: [
-            ['agent/label', '@payload.label'],
-            ['set', '@entity.label', '@payload.label'],
-            ['render-ui', 'main', activeUI],
+            ['agent/label', '@payload.data.label'],
+            ['set', '@entity.label', '@payload.data.label'],
           ],
         },
         {
-          from: 'forked', to: 'forked', event: 'LABEL',
+          from: 'forked', to: 'forked', event: 'DO_LABEL',
           effects: [
-            ['agent/label', '@payload.label'],
-            ['set', '@entity.label', '@payload.label'],
-            ['render-ui', 'main', forkedUI],
+            ['agent/label', '@payload.data.label'],
+            ['set', '@entity.label', '@payload.data.label'],
+          ],
+        },
+        // Listen for LABELED from modal save
+        {
+          from: 'active', to: 'active', event: 'LABELED',
+          effects: [
+            ['agent/label', '@entity.label'],
+            ['fetch', entityName],
+          ],
+        },
+        {
+          from: 'forked', to: 'forked', event: 'LABELED',
+          effects: [
+            ['agent/label', '@entity.label'],
+            ['fetch', entityName],
           ],
         },
         {
           from: 'active', to: 'ended', event: 'END',
           effects: [
             ['set', '@entity.status', 'ended'],
-            ['render-ui', 'main', endedUI],
+            ['emit', 'ENDED'],
           ],
         },
         {
           from: 'forked', to: 'ended', event: 'END',
           effects: [
             ['set', '@entity.status', 'ended'],
-            ['render-ui', 'main', endedUI],
+            ['emit', 'ENDED'],
+          ],
+        },
+        // Allow re-initialization from ended state
+        {
+          from: 'ended', to: 'active', event: 'INIT',
+          effects: [
+            ['fetch', entityName],
+            ['agent/session-id'],
+            ['set', '@entity.createdAt', '@now'],
+            ['set', '@entity.status', 'active'],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'git-branch', title: 'Session', description: 'Session is ready' }],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: SessionConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -277,14 +226,92 @@ export function stdAgentSessionEntity(params: StdAgentSessionParams = {}): Entit
 }
 
 export function stdAgentSessionTrait(params: StdAgentSessionParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentSessionPage(params: StdAgentSessionParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Browse` },
+      { ref: `${c.entityName}Label` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentSession(params: StdAgentSessionParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // UI trait: browse session list
+  const browseTrait = extractTrait(stdBrowse({
+    entityName, fields,
+    traitName: `${entityName}Browse`,
+    listFields: ['sessionId', 'status', 'label'],
+    headerIcon: 'terminal',
+    pageTitle: `${entityName} Manager`,
+    emptyTitle: 'No sessions yet',
+    emptyDescription: 'Start a new session to begin.',
+    headerActions: [
+      { label: 'Fork', event: 'FORK', variant: 'secondary', icon: 'git-branch' },
+      { label: 'Label', event: 'LABEL', variant: 'secondary', icon: 'tag' },
+      { label: 'End', event: 'END', variant: 'ghost', icon: 'square' },
+    ],
+    itemActions: [
+      { label: 'View', event: 'VIEW' },
+    ],
+    refreshEvents: ['FORKED', 'LABELED', 'ENDED'],
+  }));
+
+  // UI trait: label form modal
+  const labelContent = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'tag', size: 'md' },
+        { type: 'typography', content: 'Label Session', variant: 'h3' },
+      ] },
+      { type: 'divider' },
+      {
+        type: 'stack', direction: 'horizontal', gap: 'md',
+        children: [
+          { type: 'typography', variant: 'caption', content: 'Session:' },
+          { type: 'badge', label: '@entity.sessionId' },
+        ],
+      },
+      { type: 'form-section', entity: entityName, mode: 'edit', submitEvent: 'SAVE', cancelEvent: 'CLOSE', fields: ['label'] },
+    ],
+  };
+
+  const labelTrait = extractTrait(stdModal({ standalone: false,
+    entityName, fields,
+    traitName: `${entityName}Label`,
+    modalTitle: 'Label Session',
+    headerIcon: 'tag',
+    openContent: labelContent,
+    openEvent: 'LABEL',
+    closeEvent: 'CLOSE',
+    openEffects: [['fetch', entityName]],
+    saveEvent: 'SAVE',
+    saveEffects: [['persist', 'update', entityName, '@payload.data']],
+    emitOnSave: 'LABELED',
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: browseTrait.name },
+      { ref: labelTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [browseTrait, labelTrait, agentTrait], [page]);
 }

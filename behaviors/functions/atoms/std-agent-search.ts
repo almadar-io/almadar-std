@@ -2,8 +2,8 @@
  * std-agent-search
  *
  * Code search flow atom for agent-powered codebase searching.
- * Uses agent/search-code to find relevant code across a repository.
- * States: idle -> searching -> results.
+ * Composes stdBrowse (results table) with an agent trait that
+ * handles agent/search-code.
  *
  * @level atom
  * @family agent
@@ -11,7 +11,8 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdBrowse } from './std-browse.js';
 
 // ============================================================================
 // Params
@@ -40,7 +41,6 @@ interface SearchConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -69,7 +69,6 @@ function resolve(params: StdAgentSearchParams): SearchConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Flow`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -85,66 +84,23 @@ function buildEntity(c: SearchConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: SearchConfig): Trait {
+function buildAgentTrait(c: SearchConfig): Trait {
   const { entityName } = c;
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'search', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'input', label: 'Search Query', bind: '@entity.query', placeholder: 'Search codebase...' },
-      { type: 'input', label: 'Language Filter', bind: '@entity.language', placeholder: 'e.g. typescript, rust' },
-      { type: 'button', label: 'Search', event: 'SEARCH', variant: 'primary', icon: 'search' },
-    ],
-  };
-
-  const searchingUI = {
-    type: 'loading-state', title: 'Searching...', message: 'Searching codebase...',
-  };
-
-  const resultsUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'search', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-          { type: 'badge', label: '@entity.resultCount' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Query:' },
-          { type: 'badge', label: '@entity.query' },
-          { type: 'typography', variant: 'caption', content: 'Language:' },
-          { type: 'badge', label: '@entity.language' },
-        ],
-      },
-      { type: 'typography', variant: 'body', content: '@entity.resultCount' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'New Search', event: 'SEARCH', variant: 'primary', icon: 'search' },
-          { type: 'button', label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'x' },
-        ],
-      },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'SEARCHED', scope: 'external' as const, payload: [
+        { name: 'query', type: 'string' },
+        { name: 'resultCount', type: 'number' },
+      ]},
+    ],
+    listens: [
+      { event: 'SEARCHED', triggers: 'INIT', scope: 'external' as const },
+    ],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -164,7 +120,7 @@ function buildTrait(c: SearchConfig): Trait {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'main', idleUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'search', title: 'Code Search', description: 'Code Search is ready' }],
           ],
         },
         {
@@ -172,14 +128,14 @@ function buildTrait(c: SearchConfig): Trait {
           effects: [
             ['set', '@entity.query', '@payload.query'],
             ['set', '@entity.language', '@payload.language'],
-            ['render-ui', 'main', searchingUI],
             ['agent/search-code', '@payload.query', '@payload.language'],
           ],
         },
         {
           from: 'searching', to: 'results', event: 'SEARCH',
           effects: [
-            ['render-ui', 'main', resultsUI],
+            ['fetch', entityName],
+            ['emit', 'SEARCHED'],
           ],
         },
         {
@@ -187,7 +143,6 @@ function buildTrait(c: SearchConfig): Trait {
           effects: [
             ['set', '@entity.query', '@payload.query'],
             ['set', '@entity.language', '@payload.language'],
-            ['render-ui', 'main', searchingUI],
             ['agent/search-code', '@payload.query', '@payload.language'],
           ],
         },
@@ -198,16 +153,11 @@ function buildTrait(c: SearchConfig): Trait {
             ['set', '@entity.results', []],
             ['set', '@entity.language', ''],
             ['set', '@entity.resultCount', 0],
-            ['render-ui', 'main', idleUI],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: SearchConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -219,14 +169,55 @@ export function stdAgentSearchEntity(params: StdAgentSearchParams = {}): Entity 
 }
 
 export function stdAgentSearchTrait(params: StdAgentSearchParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentSearchPage(params: StdAgentSearchParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Browse` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentSearch(params: StdAgentSearchParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // UI trait: browse results table
+  const browseTrait = extractTrait(stdBrowse({
+    entityName, fields,
+    traitName: `${entityName}Browse`,
+    listFields: ['query', 'language', 'resultCount'],
+    headerIcon: 'search',
+    pageTitle: `${entityName}`,
+    emptyTitle: 'No search results',
+    emptyDescription: 'Enter a query to search the codebase.',
+    headerActions: [
+      { label: 'Search', event: 'SEARCH', variant: 'primary', icon: 'search' },
+      { label: 'Clear', event: 'CLEAR', variant: 'ghost', icon: 'x' },
+    ],
+    itemActions: [
+      { label: 'View', event: 'VIEW' },
+    ],
+    refreshEvents: ['SEARCHED'],
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: browseTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [browseTrait, agentTrait], [page]);
 }

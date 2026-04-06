@@ -2,8 +2,8 @@
  * std-agent-tool-call
  *
  * Tool execution atom for agent tool invocation.
- * Manages the lifecycle of invoking external tools: idle -> executing -> completed/failed.
- * Emits TOOL_STARTED and TOOL_COMPLETED for cross-trait wiring.
+ * Composes UI atoms (stdModal for invoke form, stdAgentActivityLog for call history)
+ * with an agent trait that handles agent/invoke and TOOL_STARTED/TOOL_COMPLETED emits.
  *
  * @level atom
  * @family agent
@@ -11,7 +11,9 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdModal } from './std-modal.js';
+import { stdAgentActivityLog } from './std-agent-activity-log.js';
 
 // ============================================================================
 // Params
@@ -40,7 +42,6 @@ interface ToolCallConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -56,7 +57,11 @@ function resolve(params: StdAgentToolCallParams): ToolCallConfig {
     { name: 'args', type: 'string', default: '' },
     { name: 'result', type: 'string', default: '' },
     { name: 'status', type: 'string', default: 'idle' },
+    { name: 'error', type: 'string', default: '' },
     { name: 'duration', type: 'number', default: 0 },
+    { name: 'action', type: 'string', default: '' },
+    { name: 'detail', type: 'string', default: '' },
+    { name: 'timestamp', type: 'string', default: '' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));
@@ -70,7 +75,6 @@ function resolve(params: StdAgentToolCallParams): ToolCallConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Executor`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -86,62 +90,30 @@ function buildEntity(c: ToolCallConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: ToolCallConfig): Trait {
+function buildAgentTrait(c: ToolCallConfig): Trait {
   const { entityName } = c;
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'wrench', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'input', label: 'Tool Name', bind: '@entity.toolName', placeholder: 'e.g. read_file' },
-      { type: 'textarea', label: 'Arguments', bind: '@entity.args', placeholder: 'Tool arguments (JSON)...' },
-      { type: 'button', label: 'Invoke', event: 'INVOKE', variant: 'primary', icon: 'play' },
-    ],
-  };
-
-  const executingUI = {
-    type: 'loading-state', title: 'Executing...', message: 'Running tool...',
-  };
-
-  const completedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      { type: 'icon', name: 'check-circle', size: 'lg' },
-      { type: 'alert', variant: 'success', message: 'Tool execution complete' },
-      { type: 'typography', variant: 'caption', content: '@entity.toolName' },
-      { type: 'typography', variant: 'body', content: '@entity.result' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'badge', label: '@entity.duration' },
-        ],
-      },
-      { type: 'button', label: 'Invoke Another', event: 'INVOKE', variant: 'primary', icon: 'play' },
-    ],
-  };
-
-  const failedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      { type: 'error-state', title: 'Tool Failed', message: '@entity.result' },
-      { type: 'button', label: 'Retry', event: 'INVOKE', variant: 'primary', icon: 'refresh-cw' },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'TOOL_STARTED', scope: 'external' },
-      { event: 'TOOL_COMPLETED', scope: 'external' },
+      { event: 'TOOL_STARTED', scope: 'internal' as const, payload: [
+        { name: 'toolName', type: 'string' },
+      ]},
+      { event: 'TOOL_COMPLETED', scope: 'internal' as const, payload: [
+        { name: 'toolName', type: 'string' },
+        { name: 'result', type: 'string' },
+      ]},
+      { event: 'LOG_ENTRY', scope: 'internal' as const, payload: [
+        { name: 'action', type: 'string' },
+        { name: 'detail', type: 'string' },
+        { name: 'status', type: 'string' },
+      ]},
+    ],
+    listens: [
+      { event: 'INVOKED', triggers: 'INVOKED', scope: 'external' as const },
     ],
     stateMachine: {
       states: [
@@ -152,67 +124,93 @@ function buildTrait(c: ToolCallConfig): Trait {
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'INVOKE', name: 'Invoke Tool', payload: [
-          { name: 'toolName', type: 'string', required: true },
-          { name: 'args', type: 'string', required: false },
+        { key: 'DO_INVOKE', name: 'Do Invoke', payload: [
+          { name: 'data', type: 'object', required: true },
         ]},
         { key: 'CANCEL', name: 'Cancel' },
+        { key: 'INVOKED', name: 'Invoked', payload: [{ name: 'data', type: 'object', required: true }] },
       ],
       transitions: [
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'main', idleUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'wrench', title: 'Tool Call', description: 'Tool Call is ready' }],
           ],
         },
         {
-          from: 'idle', to: 'executing', event: 'INVOKE',
+          from: 'idle', to: 'executing', event: 'DO_INVOKE',
           effects: [
-            ['set', '@entity.toolName', '@payload.toolName'],
-            ['set', '@entity.args', '@payload.args'],
+            ['set', '@entity.toolName', '@payload.data.toolName'],
+            ['set', '@entity.args', '@payload.data.args'],
             ['set', '@entity.status', 'executing'],
             ['emit', 'TOOL_STARTED'],
-            ['render-ui', 'main', executingUI],
-            ['agent/invoke', '@payload.toolName', '@payload.args'],
+            ['emit', 'LOG_ENTRY'],
+            ['agent/invoke', '@payload.data.toolName', '@payload.data.args'],
+          ],
+        },
+        // Listen for INVOKED from modal save
+        {
+          from: 'idle', to: 'executing', event: 'INVOKED',
+          effects: [
+            ['set', '@entity.status', 'executing'],
+            ['emit', 'TOOL_STARTED'],
+            ['emit', 'LOG_ENTRY'],
+            ['agent/invoke', '@entity.toolName', '@entity.args'],
           ],
         },
         {
-          from: 'completed', to: 'executing', event: 'INVOKE',
+          from: 'completed', to: 'executing', event: 'DO_INVOKE',
           effects: [
-            ['set', '@entity.toolName', '@payload.toolName'],
-            ['set', '@entity.args', '@payload.args'],
+            ['set', '@entity.toolName', '@payload.data.toolName'],
+            ['set', '@entity.args', '@payload.data.args'],
             ['set', '@entity.status', 'executing'],
             ['emit', 'TOOL_STARTED'],
-            ['render-ui', 'main', executingUI],
-            ['agent/invoke', '@payload.toolName', '@payload.args'],
+            ['emit', 'LOG_ENTRY'],
+            ['agent/invoke', '@payload.data.toolName', '@payload.data.args'],
           ],
         },
         {
-          from: 'failed', to: 'executing', event: 'INVOKE',
+          from: 'failed', to: 'executing', event: 'DO_INVOKE',
           effects: [
-            ['set', '@entity.toolName', '@payload.toolName'],
-            ['set', '@entity.args', '@payload.args'],
+            ['set', '@entity.toolName', '@payload.data.toolName'],
+            ['set', '@entity.args', '@payload.data.args'],
             ['set', '@entity.status', 'executing'],
             ['emit', 'TOOL_STARTED'],
-            ['render-ui', 'main', executingUI],
-            ['agent/invoke', '@payload.toolName', '@payload.args'],
+            ['emit', 'LOG_ENTRY'],
+            ['agent/invoke', '@payload.data.toolName', '@payload.data.args'],
+          ],
+        },
+        // Successful completion: executing -> completed
+        {
+          from: 'executing', to: 'completed', event: 'DO_INVOKE',
+          effects: [
+            ['set', '@entity.status', 'completed'],
+            ['set', '@entity.result', '@payload.data.result'],
+            ['emit', 'TOOL_COMPLETED'],
+            ['emit', 'LOG_ENTRY'],
+          ],
+        },
+        // Failure: executing -> failed
+        {
+          from: 'executing', to: 'failed', event: 'CANCEL',
+          guard: ['=', '@entity.status', 'executing'],
+          effects: [
+            ['set', '@entity.status', 'failed'],
+            ['set', '@entity.error', 'Cancelled'],
+            ['emit', 'TOOL_COMPLETED'],
           ],
         },
         {
           from: 'executing', to: 'idle', event: 'CANCEL',
           effects: [
             ['set', '@entity.status', 'idle'],
-            ['render-ui', 'main', idleUI],
+            ['emit', 'TOOL_COMPLETED'],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: ToolCallConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -224,14 +222,70 @@ export function stdAgentToolCallEntity(params: StdAgentToolCallParams = {}): Ent
 }
 
 export function stdAgentToolCallTrait(params: StdAgentToolCallParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentToolCallPage(params: StdAgentToolCallParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Modal` },
+      { ref: `${c.entityName}Log` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentToolCall(params: StdAgentToolCallParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // UI trait: invoke form modal
+  const invokeContent = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'wrench', size: 'md' },
+        { type: 'typography', content: 'Invoke Tool', variant: 'h3' },
+      ] },
+      { type: 'divider' },
+      { type: 'form-section', entity: entityName, mode: 'create', submitEvent: 'SAVE', cancelEvent: 'CLOSE', fields: ['toolName', 'args'] },
+    ],
+  };
+
+  const modalTrait = extractTrait(stdModal({
+    entityName, fields,
+    traitName: `${entityName}Modal`,
+    modalTitle: 'Invoke Tool',
+    headerIcon: 'wrench',
+    openContent: invokeContent,
+    openEvent: 'INVOKE',
+    closeEvent: 'CLOSE',
+    saveEvent: 'SAVE',
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
+    emitOnSave: 'INVOKED',
+  }));
+
+  // UI trait: activity log for call history
+  const activityLogTrait = extractTrait(stdAgentActivityLog({
+    entityName: entityName,
+    fields,
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: modalTrait.name },
+      { ref: activityLogTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, activityLogTrait, agentTrait], [page]);
 }

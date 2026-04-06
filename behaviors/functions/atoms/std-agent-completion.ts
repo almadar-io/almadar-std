@@ -2,7 +2,8 @@
  * std-agent-completion
  *
  * Completion flow atom for agent text generation.
- * Wraps agent/generate with idle -> generating -> completed -> error lifecycle.
+ * Composes UI atoms (stdModal for prompt input, stdNotification for feedback)
+ * with an agent trait that handles agent/generate and retry logic.
  *
  * @level atom
  * @family agent
@@ -10,7 +11,9 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdModal } from './std-modal.js';
+import { stdNotification } from './std-notification.js';
 
 // ============================================================================
 // Params
@@ -39,7 +42,6 @@ interface CompletionConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   pageName: string;
   pagePath: string;
@@ -57,6 +59,8 @@ function resolve(params: StdAgentCompletionParams): CompletionConfig {
     { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
     { name: 'status', type: 'string', default: 'idle' },
     { name: 'error', type: 'string', default: '' },
+    { name: 'message', type: 'string', default: '' },
+    { name: 'notificationType', type: 'string', default: 'info' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));
@@ -70,7 +74,6 @@ function resolve(params: StdAgentCompletionParams): CompletionConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Flow`,
     pluralName: p,
     pageName: params.pageName ?? `${entityName}Page`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}`,
@@ -86,64 +89,22 @@ function buildEntity(c: CompletionConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: CompletionConfig): Trait {
+function buildAgentTrait(c: CompletionConfig): Trait {
   const { entityName } = c;
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'sparkles', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'textarea', label: 'Prompt', bind: '@entity.prompt', placeholder: 'Enter your prompt...' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'badge', label: '@entity.provider' },
-          { type: 'badge', label: '@entity.model' },
-        ],
-      },
-      { type: 'button', label: 'Generate', event: 'GENERATE', variant: 'primary', icon: 'sparkles' },
-    ],
-  };
-
-  const generatingUI = {
-    type: 'loading-state', title: 'Generating...', message: 'Waiting for AI response...',
-  };
-
-  const completedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      { type: 'icon', name: 'check-circle', size: 'lg' },
-      { type: 'alert', variant: 'success', message: 'Generation complete' },
-      { type: 'typography', variant: 'body', content: '@entity.response' },
-      { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
-    ],
-  };
-
-  const errorUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      { type: 'error-state', title: 'Generation Failed', message: '@entity.error' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'button', label: 'Retry', event: 'RETRY', variant: 'primary', icon: 'refresh-cw' },
-          { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
-        ],
-      },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'SHOW', scope: 'internal' as const, payload: [
+        { name: 'response', type: 'string' },
+      ]},
+    ],
+    listens: [
+      { event: 'GENERATED', triggers: 'GENERATED', scope: 'external' as const },
+    ],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -153,34 +114,51 @@ function buildTrait(c: CompletionConfig): Trait {
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'GENERATE', name: 'Generate', payload: [
-          { name: 'prompt', type: 'string', required: false },
+        { key: 'DO_GENERATE', name: 'Do Generate', payload: [
+          { name: 'data', type: 'object', required: true },
         ]},
         { key: 'RETRY', name: 'Retry' },
         { key: 'RESET', name: 'Reset' },
+        { key: 'GENERATED', name: 'Generated', payload: [{ name: 'data', type: 'object', required: true }] },
       ],
       transitions: [
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'main', idleUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'sparkles', title: 'Completion', description: 'Completion is ready' }],
           ],
         },
         {
-          from: 'idle', to: 'generating', event: 'GENERATE',
+          from: 'idle', to: 'generating', event: 'DO_GENERATE',
           effects: [
             ['set', '@entity.status', 'generating'],
-            ['render-ui', 'main', generatingUI],
+            ['agent/generate', '@entity.prompt'],
+          ],
+        },
+        // Listen for GENERATED from modal save
+        {
+          from: 'idle', to: 'generating', event: 'GENERATED',
+          effects: [
+            ['set', '@entity.status', 'generating'],
             ['agent/generate', '@entity.prompt'],
           ],
         },
         {
-          from: 'generating', to: 'completed', event: 'GENERATE',
+          from: 'generating', to: 'completed', event: 'DO_GENERATE',
           effects: [
-            ['set', '@entity.response', '@payload.prompt'],
+            ['set', '@entity.response', '@payload.data.prompt'],
             ['set', '@entity.status', 'completed'],
-            ['render-ui', 'main', completedUI],
+            ['emit', 'SHOW'],
+          ],
+        },
+        // Error: generating fails
+        {
+          from: 'generating', to: 'error', event: 'RESET',
+          guard: ['=', '@entity.status', 'generating'],
+          effects: [
+            ['set', '@entity.status', 'error'],
+            ['set', '@entity.error', 'Generation was cancelled'],
           ],
         },
         {
@@ -189,7 +167,6 @@ function buildTrait(c: CompletionConfig): Trait {
           effects: [
             ['set', '@entity.status', 'generating'],
             ['set', '@entity.error', ''],
-            ['render-ui', 'main', generatingUI],
             ['agent/generate', '@entity.prompt'],
           ],
         },
@@ -199,7 +176,6 @@ function buildTrait(c: CompletionConfig): Trait {
             ['set', '@entity.status', 'idle'],
             ['set', '@entity.response', ''],
             ['set', '@entity.prompt', ''],
-            ['render-ui', 'main', idleUI],
           ],
         },
         {
@@ -207,16 +183,11 @@ function buildTrait(c: CompletionConfig): Trait {
           effects: [
             ['set', '@entity.status', 'idle'],
             ['set', '@entity.error', ''],
-            ['render-ui', 'main', idleUI],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: CompletionConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -228,14 +199,79 @@ export function stdAgentCompletionEntity(params: StdAgentCompletionParams = {}):
 }
 
 export function stdAgentCompletionTrait(params: StdAgentCompletionParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentCompletionPage(params: StdAgentCompletionParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Modal` },
+      { ref: `${c.entityName}Notification` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentCompletion(params: StdAgentCompletionParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // UI trait: prompt input form modal
+  const promptContent = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'sparkles', size: 'md' },
+        { type: 'typography', content: `${entityName}`, variant: 'h3' },
+      ] },
+      { type: 'divider' },
+      {
+        type: 'stack', direction: 'horizontal', gap: 'sm',
+        children: [
+          { type: 'badge', label: '@entity.provider' },
+          { type: 'badge', label: '@entity.model' },
+        ],
+      },
+      { type: 'form-section', entity: entityName, mode: 'create', submitEvent: 'SAVE', cancelEvent: 'CLOSE', fields: ['prompt'] },
+    ],
+  };
+
+  const modalTrait = extractTrait(stdModal({
+    entityName, fields,
+    traitName: `${entityName}Modal`,
+    modalTitle: entityName,
+    headerIcon: 'sparkles',
+    openContent: promptContent,
+    openEvent: 'GENERATE',
+    closeEvent: 'CLOSE',
+    saveEvent: 'SAVE',
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
+    emitOnSave: 'GENERATED',
+  }));
+
+  // UI trait: notification for generation feedback
+  const notifTrait = extractTrait(stdNotification({
+    entityName, fields,
+    standalone: false,
+    headerIcon: 'sparkles',
+    pageTitle: `${entityName} Status`,
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: modalTrait.name },
+      { ref: notifTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, notifTrait, agentTrait], [page]);
 }

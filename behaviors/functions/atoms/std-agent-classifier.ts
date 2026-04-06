@@ -2,8 +2,8 @@
  * std-agent-classifier
  *
  * Classification flow atom for agent-powered text classification.
- * Uses agent/generate with a classification prompt to categorize input text.
- * States: idle -> classifying -> classified.
+ * Composes UI atoms (stdModal for input form, stdNotification for result badge)
+ * with an agent trait that uses agent/generate with a classification prompt.
  *
  * @level atom
  * @family agent
@@ -11,7 +11,9 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdModal } from './std-modal.js';
+import { stdNotification } from './std-notification.js';
 
 // ============================================================================
 // Params
@@ -42,7 +44,6 @@ interface ClassifierConfig {
   entityName: string;
   fields: EntityField[];
   persistence: 'persistent' | 'runtime' | 'singleton';
-  traitName: string;
   pluralName: string;
   categories: string[];
   pageName: string;
@@ -59,6 +60,8 @@ function resolve(params: StdAgentClassifierParams): ClassifierConfig {
     { name: 'category', type: 'string', default: '' },
     { name: 'confidence', type: 'number', default: 0 },
     { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
+    { name: 'message', type: 'string', default: '' },
+    { name: 'notificationType', type: 'string', default: 'info' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));
@@ -72,7 +75,6 @@ function resolve(params: StdAgentClassifierParams): ClassifierConfig {
     entityName,
     fields,
     persistence: params.persistence ?? 'persistent',
-    traitName: `${entityName}Flow`,
     pluralName: p,
     categories: params.categories ?? ['positive', 'negative', 'neutral'],
     pageName: params.pageName ?? `${entityName}Page`,
@@ -89,69 +91,23 @@ function buildEntity(c: ClassifierConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildTrait(c: ClassifierConfig): Trait {
+function buildAgentTrait(c: ClassifierConfig): Trait {
   const { entityName, categories } = c;
-
-  const categoryButtons = categories.map(cat => ({
-    type: 'badge', label: cat, variant: 'secondary',
-  }));
-
-  const idleUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'tag', size: 'lg' },
-          { type: 'typography', content: `${entityName}`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'textarea', label: 'Input Text', bind: '@entity.input', placeholder: 'Enter text to classify...' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Categories:' },
-          ...categoryButtons,
-        ],
-      },
-      { type: 'button', label: 'Classify', event: 'CLASSIFY', variant: 'primary', icon: 'tag' },
-    ],
-  };
-
-  const classifyingUI = {
-    type: 'loading-state', title: 'Classifying...', message: 'Analyzing input text...',
-  };
-
-  const classifiedUI = {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'check-circle', size: 'lg' },
-          { type: 'typography', content: `${entityName} Result`, variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      { type: 'typography', variant: 'body', content: '@entity.input' },
-      {
-        type: 'stack', direction: 'horizontal', gap: 'md',
-        children: [
-          { type: 'typography', variant: 'caption', content: 'Category:' },
-          { type: 'badge', label: '@entity.category' },
-          { type: 'typography', variant: 'caption', content: 'Confidence:' },
-          { type: 'badge', label: '@entity.confidence' },
-        ],
-      },
-      { type: 'button', label: 'Classify Another', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
-    ],
-  };
+  const agentTraitName = `${entityName}Agent`;
 
   return {
-    name: c.traitName,
+    name: agentTraitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'SHOW', scope: 'internal' as const, payload: [
+        { name: 'category', type: 'string' },
+        { name: 'confidence', type: 'number' },
+      ]},
+    ],
+    listens: [
+      { event: 'CLASSIFIED', triggers: 'CLASSIFIED', scope: 'external' as const },
+    ],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -160,24 +116,37 @@ function buildTrait(c: ClassifierConfig): Trait {
       ],
       events: [
         { key: 'INIT', name: 'Initialize' },
-        { key: 'CLASSIFY', name: 'Classify', payload: [
-          { name: 'input', type: 'string', required: false },
+        { key: 'DO_CLASSIFY', name: 'Do Classify', payload: [
+          { name: 'data', type: 'object', required: true },
         ]},
         { key: 'RESET', name: 'Reset' },
+        { key: 'CLASSIFIED', name: 'Classified', payload: [{ name: 'data', type: 'object', required: true }] },
       ],
       transitions: [
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['fetch', entityName],
-            ['render-ui', 'main', idleUI],
+            ['render-ui', 'main', { type: 'empty-state', icon: 'tag', title: 'Classifier', description: 'Classifier is ready' }],
           ],
         },
         {
-          from: 'idle', to: 'classifying', event: 'CLASSIFY',
+          from: 'idle', to: 'classifying', event: 'DO_CLASSIFY',
           effects: [
-            ['render-ui', 'main', classifyingUI],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
+              'Classify the following text into one of these categories: ',
+              categories.join(', '),
+              '. Text: ',
+              '@entity.input',
+              '. Respond with JSON: {"category": "...", "confidence": 0.0-1.0}',
+            ]],
+          ],
+        },
+        // Listen for CLASSIFIED from modal save
+        {
+          from: 'idle', to: 'classifying', event: 'CLASSIFIED',
+          effects: [
+            ['agent/generate', ['str/concat',
               'Classify the following text into one of these categories: ',
               categories.join(', '),
               '. Text: ',
@@ -187,10 +156,10 @@ function buildTrait(c: ClassifierConfig): Trait {
           ],
         },
         {
-          from: 'classifying', to: 'classified', event: 'CLASSIFY',
+          from: 'classifying', to: 'classified', event: 'DO_CLASSIFY',
           effects: [
-            ['set', '@entity.category', '@payload.input'],
-            ['render-ui', 'main', classifiedUI],
+            ['set', '@entity.category', '@payload.data.input'],
+            ['emit', 'SHOW'],
           ],
         },
         {
@@ -199,16 +168,11 @@ function buildTrait(c: ClassifierConfig): Trait {
             ['set', '@entity.input', ''],
             ['set', '@entity.category', ''],
             ['set', '@entity.confidence', 0],
-            ['render-ui', 'main', idleUI],
           ],
         },
       ],
     },
   } as Trait;
-}
-
-function buildPage(c: ClassifierConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
 }
 
 // ============================================================================
@@ -220,14 +184,83 @@ export function stdAgentClassifierEntity(params: StdAgentClassifierParams = {}):
 }
 
 export function stdAgentClassifierTrait(params: StdAgentClassifierParams = {}): Trait {
-  return buildTrait(resolve(params));
+  return buildAgentTrait(resolve(params));
 }
 
 export function stdAgentClassifierPage(params: StdAgentClassifierParams = {}): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: `${c.entityName}Modal` },
+      { ref: `${c.entityName}Notification` },
+      { ref: `${c.entityName}Agent` },
+    ],
+  } as Page;
 }
 
 export function stdAgentClassifier(params: StdAgentClassifierParams = {}): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields, categories } = c;
+
+  const categoryBadges = categories.map(cat => ({
+    type: 'badge', label: cat, variant: 'secondary',
+  }));
+
+  // UI trait: classification input form modal
+  const classifyContent = {
+    type: 'stack', direction: 'vertical', gap: 'md',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
+        { type: 'icon', name: 'tag', size: 'md' },
+        { type: 'typography', content: `${entityName}`, variant: 'h3' },
+      ] },
+      { type: 'divider' },
+      {
+        type: 'stack', direction: 'horizontal', gap: 'sm',
+        children: [
+          { type: 'typography', variant: 'caption', content: 'Categories:' },
+          ...categoryBadges,
+        ],
+      },
+      { type: 'form-section', entity: entityName, mode: 'create', submitEvent: 'SAVE', cancelEvent: 'CLOSE', fields: ['input'] },
+    ],
+  };
+
+  const modalTrait = extractTrait(stdModal({
+    entityName, fields,
+    traitName: `${entityName}Modal`,
+    modalTitle: entityName,
+    headerIcon: 'tag',
+    openContent: classifyContent,
+    openEvent: 'CLASSIFY',
+    closeEvent: 'CLOSE',
+    saveEvent: 'SAVE',
+    saveEffects: [['persist', 'create', entityName, '@payload.data']],
+    emitOnSave: 'CLASSIFIED',
+  }));
+
+  // UI trait: notification for classification result
+  const notifTrait = extractTrait(stdNotification({
+    entityName, fields,
+    standalone: false,
+    headerIcon: 'tag',
+    pageTitle: `${entityName} Result`,
+  }));
+
+  const agentTrait = buildAgentTrait(c);
+  const entity = buildEntity(c);
+
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: modalTrait.name },
+      { ref: notifTrait.name },
+      { ref: agentTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, notifTrait, agentTrait], [page]);
 }

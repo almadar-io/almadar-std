@@ -59,11 +59,23 @@
             {
               "event": "ASSESSMENT_DONE",
               "description": "Student level assessed",
-              "scope": "internal"
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "level",
+                  "type": "string"
+                }
+              ]
             },
             {
               "event": "ASSESSMENT_DONE",
               "description": "Student assessed, generate quiz",
+              "payload": [
+                {
+                  "name": "level",
+                  "type": "string"
+                }
+              ],
               "scope": "external"
             }
           ],
@@ -899,11 +911,23 @@
             {
               "event": "QUIZ_GRADED",
               "description": "Answer graded, reinforce or decay concept",
-              "scope": "internal"
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "correct",
+                  "type": "boolean"
+                }
+              ]
             },
             {
               "event": "QUIZ_GRADED",
               "description": "Reinforce or decay concept based on answer",
+              "payload": [
+                {
+                  "name": "correct",
+                  "type": "boolean"
+                }
+              ],
               "scope": "external"
             }
           ],
@@ -1572,6 +1596,1083 @@
       ]
     },
     {
+      "name": "TutorChatOrbital",
+      "entity": {
+        "name": "TutorChat",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "messages",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "turnCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "lastMessage",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "tokenCount",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "role",
+            "type": "string",
+            "default": "user"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "timestamp",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "toolName",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "sent"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TutorConversation",
+          "linkedEntity": "TutorChat",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SEND_MESSAGE",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "content",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "composing"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "COMPOSE",
+                "name": "Compose Message"
+              },
+              {
+                "key": "SEND",
+                "name": "Send Message",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear Thread"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorChat"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "TutorChat Thread",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Message",
+                                  "event": "COMPOSE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-list",
+                              "entity": "TutorChat",
+                              "emptyIcon": "message-circle",
+                              "emptyTitle": "No messages yet",
+                              "emptyDescription": "Start a conversation by sending a message.",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.role"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.status",
+                                          "variant": "outline"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "content": "@item.timestamp"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@item.content"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "composing",
+                "event": "COMPOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "TutorChat Thread",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Message",
+                                  "event": "COMPOSE",
+                                  "variant": "primary",
+                                  "icon": "plus",
+                                  "disabled": true
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-list",
+                              "entity": "TutorChat",
+                              "emptyIcon": "message-circle",
+                              "emptyTitle": "No messages yet",
+                              "emptyDescription": "Start a conversation by sending a message.",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.role"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.status",
+                                          "variant": "outline"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "content": "@item.timestamp"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@item.content"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "form-section",
+                              "title": "Compose Message",
+                              "children": [
+                                {
+                                  "type": "textarea",
+                                  "label": "Message",
+                                  "bind": "@entity.content",
+                                  "placeholder": "Type your message..."
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "label": "Send",
+                                      "event": "SEND",
+                                      "variant": "primary",
+                                      "icon": "send"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "idle",
+                "event": "SEND",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.content",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.role",
+                    "user"
+                  ],
+                  [
+                    "set",
+                    "@entity.timestamp",
+                    "@now"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "sent"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "TutorChat",
+                    {
+                      "role": "user",
+                      "content": "@payload.content",
+                      "timestamp": "@now",
+                      "status": "sent"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "SEND_MESSAGE"
+                  ],
+                  [
+                    "fetch",
+                    "TutorChat"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "TutorChat Thread",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Message",
+                                  "event": "COMPOSE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-list",
+                              "entity": "TutorChat",
+                              "emptyIcon": "message-circle",
+                              "emptyTitle": "No messages yet",
+                              "emptyDescription": "Start a conversation by sending a message.",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.role"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.status",
+                                          "variant": "outline"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "content": "@item.timestamp"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@item.content"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "TutorChat created successfully"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "TutorChat"
+                  ],
+                  [
+                    "fetch",
+                    "TutorChat"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "TutorChat Thread",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Message",
+                                  "event": "COMPOSE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-list",
+                              "entity": "TutorChat",
+                              "emptyIcon": "message-circle",
+                              "emptyTitle": "No messages yet",
+                              "emptyDescription": "Start a conversation by sending a message.",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.role"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.status",
+                                          "variant": "outline"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "content": "@item.timestamp"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@item.content"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "TutorChat deleted successfully"
+                  ]
+                ]
+              },
+              {
+                "from": "composing",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "TutorChat"
+                  ],
+                  [
+                    "fetch",
+                    "TutorChat"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "message-circle",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "TutorChat Thread",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "New Message",
+                                  "event": "COMPOSE",
+                                  "variant": "primary",
+                                  "icon": "plus"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-list",
+                              "entity": "TutorChat",
+                              "emptyIcon": "message-circle",
+                              "emptyTitle": "No messages yet",
+                              "emptyDescription": "Start a conversation by sending a message.",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "children": [
+                                    {
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.role"
+                                        },
+                                        {
+                                          "type": "badge",
+                                          "label": "@item.status",
+                                          "variant": "outline"
+                                        },
+                                        {
+                                          "type": "typography",
+                                          "variant": "caption",
+                                          "color": "muted",
+                                          "content": "@item.timestamp"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": "@item.content"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "TutorChat deleted successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "TutorChatAgent",
+          "linkedEntity": "TutorChat",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "TOKEN_UPDATE",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "tokenCount",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              },
+              {
+                "name": "paused"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEND_MESSAGE",
+                "name": "Send Message",
+                "payload": [
+                  {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PAUSE",
+                "name": "Pause"
+              },
+              {
+                "key": "RESUME",
+                "name": "Resume"
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorChat"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "empty-state",
+                          "icon": "message-circle",
+                          "title": "Conversation",
+                          "description": "Conversation is ready"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "SEND_MESSAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    [
+                      "+",
+                      "@entity.turnCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.content"
+                  ],
+                  [
+                    "emit",
+                    "TOKEN_UPDATE"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "SEND_MESSAGE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    "@payload.content"
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    [
+                      "+",
+                      "@entity.turnCount",
+                      1
+                    ]
+                  ],
+                  [
+                    "agent/generate",
+                    "@payload.content"
+                  ],
+                  [
+                    "emit",
+                    "TOKEN_UPDATE"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "paused",
+                "event": "PAUSE",
+                "effects": []
+              },
+              {
+                "from": "paused",
+                "to": "active",
+                "event": "RESUME",
+                "effects": []
+              },
+              {
+                "from": "active",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.messages",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.turnCount",
+                    0
+                  ],
+                  [
+                    "set",
+                    "@entity.lastMessage",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.tokenCount",
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ChatPage",
+          "path": "/chat",
+          "traits": [
+            {
+              "ref": "TutorConversation"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "ConceptOrbital",
       "entity": {
         "name": "Concept",
@@ -1622,9 +2723,576 @@
       },
       "traits": [
         {
-          "name": "ConceptLifecycle",
+          "name": "ConceptBrowse",
           "linkedEntity": "Concept",
           "category": "interaction",
+          "listens": [
+            {
+              "event": "MEMORIZED",
+              "triggers": "MEMORIZED"
+            },
+            {
+              "event": "PINNED",
+              "triggers": "PINNED"
+            },
+            {
+              "event": "FORGOT",
+              "triggers": "FORGOT"
+            },
+            {
+              "event": "REINFORCED",
+              "triggers": "REINFORCED"
+            },
+            {
+              "event": "DECAYED",
+              "triggers": "DECAYED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "MEMORIZE"
+              },
+              {
+                "key": "RECALL",
+                "name": "RECALL"
+              },
+              {
+                "key": "DECAY",
+                "name": "DECAY"
+              },
+              {
+                "key": "PIN",
+                "name": "PIN",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCE",
+                "name": "REINFORCE",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "FORGET",
+                "name": "FORGET",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "MEMORIZED",
+                "name": "MEMORIZED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "PINNED",
+                "name": "PINNED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "FORGOT",
+                "name": "FORGOT",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "REINFORCED",
+                "name": "REINFORCED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAYED",
+                "name": "DECAYED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "brain",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Concept Manager",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "label": "Memorize",
+                                      "event": "MEMORIZE",
+                                      "variant": "primary",
+                                      "icon": "plus"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "label": "Recall",
+                                      "event": "RECALL",
+                                      "variant": "secondary",
+                                      "icon": "search"
+                                    },
+                                    {
+                                      "type": "button",
+                                      "label": "Decay All",
+                                      "event": "DECAY",
+                                      "variant": "ghost",
+                                      "icon": "clock"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "Concept",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No memories yet",
+                              "emptyDescription": "Create your first memory to get started.",
+                              "itemActions": [
+                                {
+                                  "label": "Pin",
+                                  "event": "PIN",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                },
+                                {
+                                  "label": "Reinforce",
+                                  "event": "REINFORCE",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                },
+                                {
+                                  "label": "Forget",
+                                  "event": "FORGET",
+                                  "variant": "danger",
+                                  "size": "sm"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "content",
+                                  "label": "Content",
+                                  "variant": "h4",
+                                  "icon": "brain"
+                                },
+                                {
+                                  "name": "category",
+                                  "label": "Category",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
+                                },
+                                {
+                                  "name": "strength",
+                                  "label": "Strength",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "MEMORIZED",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "PINNED",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "FORGOT",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "REINFORCED",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "DECAYED",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ConceptCreate",
+          "linkedEntity": "Concept",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "MEMORIZED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MEMORIZE",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "MEMORIZE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "plus-circle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Memorize",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "Concept",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "content",
+                            "category",
+                            "scope"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "Concept",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "MEMORIZED"
+                  ],
+                  [
+                    "notify",
+                    "Concept created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "ConceptAgent",
+          "linkedEntity": "Concept",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "FORGOT",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REINFORCED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DECAYED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PINNED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1641,18 +3309,13 @@
                 "name": "Initialize"
               },
               {
-                "key": "MEMORIZE",
-                "name": "Memorize",
+                "key": "DO_MEMORIZE",
+                "name": "Do Memorize",
                 "payload": [
                   {
-                    "name": "content",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
-                  },
-                  {
-                    "name": "category",
-                    "type": "string",
-                    "required": false
                   }
                 ]
               },
@@ -1703,6 +3366,17 @@
               {
                 "key": "DECAY",
                 "name": "Decay"
+              },
+              {
+                "key": "MEMORIZED",
+                "name": "Memorized",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1740,60 +3414,10 @@
                       ],
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Concept Manager",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
-                                }
-                              ]
-                            }
-                          ]
+                          "type": "empty-state",
+                          "icon": "brain",
+                          "title": "Memory",
+                          "description": "Memory is ready"
                         }
                       ]
                     }
@@ -1803,244 +3427,33 @@
               {
                 "from": "idle",
                 "to": "active",
-                "event": "MEMORIZE",
+                "event": "DO_MEMORIZE",
                 "effects": [
                   [
                     "agent/memorize",
-                    "@payload.content",
-                    "@payload.category"
+                    "@payload.data.content",
+                    "@payload.data.category"
                   ],
                   [
-                    "set",
-                    "@entity.content",
-                    "@payload.content"
+                    "persist",
+                    "create",
+                    "Concept",
+                    "@payload.data"
                   ],
                   [
-                    "set",
-                    "@entity.category",
-                    "@payload.category"
-                  ],
-                  [
-                    "set",
-                    "@entity.createdAt",
-                    "@now"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "AI Tutor",
-                      "navItems": [
-                        {
-                          "label": "Teach",
-                          "href": "/teach",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Quiz",
-                          "href": "/quiz",
-                          "icon": "help-circle"
-                        },
-                        {
-                          "label": "Concepts",
-                          "href": "/concepts",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Concept Active",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.content"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.category"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.strength"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Pin",
-                                  "event": "PIN",
-                                  "variant": "secondary",
-                                  "icon": "pin"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Reinforce",
-                                  "event": "REINFORCE",
-                                  "variant": "secondary",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Forget",
-                                  "event": "FORGET",
-                                  "variant": "destructive",
-                                  "icon": "trash"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "notify",
+                    "Concept created successfully"
                   ]
                 ]
               },
               {
-                "from": "idle",
+                "from": "active",
                 "to": "active",
                 "event": "RECALL",
                 "effects": [
                   [
                     "agent/recall",
                     "@payload.query"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "AI Tutor",
-                      "navItems": [
-                        {
-                          "label": "Teach",
-                          "href": "/teach",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Quiz",
-                          "href": "/quiz",
-                          "icon": "help-circle"
-                        },
-                        {
-                          "label": "Concepts",
-                          "href": "/concepts",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Concept Active",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.content"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.category"
-                                },
-                                {
-                                  "type": "badge",
-                                  "label": "@entity.strength"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Pin",
-                                  "event": "PIN",
-                                  "variant": "secondary",
-                                  "icon": "pin"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Reinforce",
-                                  "event": "REINFORCE",
-                                  "variant": "secondary",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Forget",
-                                  "event": "FORGET",
-                                  "variant": "destructive",
-                                  "icon": "trash"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
                   ]
                 ]
               },
@@ -2064,6 +3477,10 @@
                     "set",
                     "@entity.pinned",
                     true
+                  ],
+                  [
+                    "emit",
+                    "PINNED"
                   ]
                 ]
               },
@@ -2077,87 +3494,8 @@
                     "@payload.id"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "AI Tutor",
-                      "navItems": [
-                        {
-                          "label": "Teach",
-                          "href": "/teach",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Quiz",
-                          "href": "/quiz",
-                          "icon": "help-circle"
-                        },
-                        {
-                          "label": "Concepts",
-                          "href": "/concepts",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Concept Manager",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "emit",
+                    "FORGOT"
                   ]
                 ]
               },
@@ -2169,6 +3507,10 @@
                   [
                     "agent/reinforce",
                     "@payload.id"
+                  ],
+                  [
+                    "emit",
+                    "REINFORCED"
                   ]
                 ]
               },
@@ -2179,99 +3521,35 @@
                 "effects": [
                   [
                     "agent/decay"
+                  ],
+                  [
+                    "emit",
+                    "DECAYED"
                   ]
                 ]
               },
               {
                 "from": "active",
-                "to": "idle",
+                "to": "active",
                 "event": "DECAY",
                 "effects": [
                   [
                     "agent/decay"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "AI Tutor",
-                      "navItems": [
-                        {
-                          "label": "Teach",
-                          "href": "/teach",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Quiz",
-                          "href": "/quiz",
-                          "icon": "help-circle"
-                        },
-                        {
-                          "label": "Concepts",
-                          "href": "/concepts",
-                          "icon": "brain"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Concept Manager",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "emit",
+                    "DECAYED"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "MEMORIZED",
+                "effects": [
+                  [
+                    "fetch",
+                    "Concept"
                   ]
                 ]
               }
@@ -2292,12 +3570,1538 @@
           "path": "/concepts",
           "traits": [
             {
-              "ref": "ConceptLifecycle"
+              "ref": "ConceptBrowse"
+            },
+            {
+              "ref": "ConceptCreate"
+            },
+            {
+              "ref": "ConceptAgent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "StudentAssessmentOrbital",
+      "entity": {
+        "name": "StudentAssessment",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "LevelClassifier",
+          "linkedEntity": "StudentAssessment",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CLASSIFIED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLASSIFY",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "StudentAssessment"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "StudentAssessment",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "CLASSIFY",
+                                  "variant": "primary",
+                                  "icon": "tag"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "CLASSIFY",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "tag",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "StudentAssessment",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Categories:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "beginner",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "intermediate",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "advanced",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "expert",
+                              "variant": "secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "StudentAssessment",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "input"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "StudentAssessment"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "StudentAssessment",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "CLASSIFY",
+                                  "variant": "primary",
+                                  "icon": "tag"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "StudentAssessment",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "CLASSIFIED"
+                  ],
+                  [
+                    "ref",
+                    "StudentAssessment"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "StudentAssessment",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Open",
+                                  "event": "CLASSIFY",
+                                  "variant": "primary",
+                                  "icon": "tag"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "empty-state",
+                              "icon": "tag",
+                              "title": "Nothing open",
+                              "description": "Click Open to view details in a modal overlay."
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "StudentAssessment created successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "StudentAssessmentNotification",
+          "linkedEntity": "StudentAssessment",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "hidden",
+                "isInitial": true
+              },
+              {
+                "name": "visible"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOW",
+                "name": "Show Notification",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HIDE",
+                "name": "Hide Notification"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "hidden",
+                "to": "hidden",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentAssessment"
+                  ]
+                ]
+              },
+              {
+                "from": "hidden",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "StudentAssessment Result",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Dismiss",
+                                  "event": "HIDE",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "notificationType"
+                              ],
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ]
+                            },
+                            {
+                              "type": "toast-slot",
+                              "position": "top-right"
+                            },
+                            {
+                              "type": "violation-alert",
+                              "severity": "warning",
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ],
+                              "category": "compliance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "tag",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "StudentAssessment Result",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Dismiss",
+                                  "event": "HIDE",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "alert",
+                              "variant": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "notificationType"
+                              ],
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ]
+                            },
+                            {
+                              "type": "toast-slot",
+                              "position": "top-right"
+                            },
+                            {
+                              "type": "violation-alert",
+                              "severity": "warning",
+                              "message": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "message"
+                              ],
+                              "category": "compliance"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "hidden",
+                "event": "HIDE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "StudentAssessmentAgent",
+          "linkedEntity": "StudentAssessment",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SHOW",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "confidence",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "CLASSIFIED",
+              "triggers": "CLASSIFIED",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "classifying"
+              },
+              {
+                "name": "classified"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CLASSIFY",
+                "name": "Do Classify",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "CLASSIFIED",
+                "name": "Classified",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "StudentAssessment"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "empty-state",
+                          "icon": "tag",
+                          "title": "Classifier",
+                          "description": "Classifier is ready"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "classifying",
+                "event": "DO_CLASSIFY",
+                "effects": [
+                  [
+                    "agent/generate",
+                    [
+                      "str/concat",
+                      "Classify the following text into one of these categories: ",
+                      "beginner, intermediate, advanced, expert",
+                      ". Text: ",
+                      "@entity.input",
+                      ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"
+                    ]
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "classifying",
+                "event": "CLASSIFIED",
+                "effects": [
+                  [
+                    "agent/generate",
+                    [
+                      "str/concat",
+                      "Classify the following text into one of these categories: ",
+                      "beginner, intermediate, advanced, expert",
+                      ". Text: ",
+                      "@entity.input",
+                      ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"
+                    ]
+                  ]
+                ]
+              },
+              {
+                "from": "classifying",
+                "to": "classified",
+                "event": "DO_CLASSIFY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.data.input"
+                  ],
+                  [
+                    "emit",
+                    "SHOW"
+                  ]
+                ]
+              },
+              {
+                "from": "classified",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.input",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.confidence",
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AssessmentPage",
+          "path": "/assessment",
+          "traits": [
+            {
+              "ref": "LevelClassifier"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TutorNavOrbital",
+      "entity": {
+        "name": "TutorNav",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "topic",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "studentLevel",
+            "type": "string",
+            "default": "unknown"
+          },
+          {
+            "name": "explanation",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "questionsAsked",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "correctAnswers",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "sessionStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "TutorTabs",
+          "linkedEntity": "TutorSession",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_TAB",
+                "name": "Select Tab",
+                "payload": [
+                  {
+                    "name": "tab",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorSession"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "graduation-cap",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AI Tutor",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Teach",
+                                  "value": "teach"
+                                },
+                                {
+                                  "label": "Quiz",
+                                  "value": "quiz"
+                                },
+                                {
+                                  "label": "Progress",
+                                  "value": "progress"
+                                }
+                              ],
+                              "defaultActiveTab": "teach",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "TutorSession",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tutorsessions yet",
+                              "emptyDescription": "Add tutorsessions to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.topic"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.teach"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_TAB",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorSession"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "graduation-cap",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AI Tutor",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Teach",
+                                  "value": "teach"
+                                },
+                                {
+                                  "label": "Quiz",
+                                  "value": "quiz"
+                                },
+                                {
+                                  "label": "Progress",
+                                  "value": "progress"
+                                }
+                              ],
+                              "defaultActiveTab": "teach",
+                              "activeTab": "@payload.tab",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "TutorSession",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tutorsessions yet",
+                              "emptyDescription": "Add tutorsessions to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.topic"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.teach"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "TutorNavPage",
+          "path": "/tutor/nav",
+          "traits": [
+            {
+              "ref": "TutorTabs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ConceptViewOrbital",
+      "entity": {
+        "name": "ConceptView",
+        "persistence": "persistent",
+        "collection": "conceptviews",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "strength",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ConceptsBrowse",
+          "linkedEntity": "Concept",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "brain",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Learned Concepts",
+                                      "variant": "h2"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "Concept",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No concepts yet",
+                              "emptyDescription": "Complete lessons and quizzes to build your concept library.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "content",
+                                  "label": "Content",
+                                  "variant": "h4",
+                                  "icon": "brain"
+                                },
+                                {
+                                  "name": "category",
+                                  "label": "Category",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
+                                },
+                                {
+                                  "name": "strength",
+                                  "label": "Strength",
+                                  "variant": "caption"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "floating-action-button",
+                              "icon": "plus",
+                              "event": "INIT",
+                              "label": "Create",
+                              "tooltip": "Create"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ConceptsViewPage",
+          "path": "/tutor/concepts",
+          "traits": [
+            {
+              "ref": "ConceptsBrowse"
             }
           ]
         }
       ]
     }
   ],
-  "description": "Teaching assistant organism. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength via memory reinforcement. Composed from: - inline TeachingTrait: assessment, teaching, quizzing flow - inline QuizTrait: generates and evaluates quiz questions - stdAgentMemory: tracks concept strength per student topic Cross-trait events: - ASSESSMENT_DONE (Teaching -> Quiz): student assessed, generate quiz - QUIZ_GRADED (Quiz -> Memory): reinforce or decay concept based on answer - CONCEPT_RECALLED (Memory -> Teaching): prior learning loaded for context Pages: /teach (initial), /quiz, /concepts"
+  "description": "Teaching assistant organism. Composes conversation + memory + classifier atoms with tabbed views and a concept browse list. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength. Composed from: - stdAgentConversation: multi-turn teaching interaction - stdAgentMemory: tracks concept strength per student topic - stdAgentClassifier: classifies student level - stdTabs: Teach / Quiz / Progress tab navigation - stdBrowse: browsable concepts list with strength tracking Cross-trait events: - ASSESSMENT_DONE (Teaching -> Quiz): student assessed, generate quiz - QUIZ_GRADED (Quiz -> Memory): reinforce or decay concept based on answer Pages: /teach (initial), /quiz, /concepts"
 }

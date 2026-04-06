@@ -1,15 +1,18 @@
 /**
- * std-agent-learner — Outcome learning
+ * std-agent-learner -- Outcome learning
  *
- * Composes memory management, LLM completion, and provider routing into
- * an outcome learning pipeline. Listens for task success/failure events,
- * memorizes outcomes, reinforces memories for successes, applies decay
- * for failures, and adjusts provider routing based on accumulated results.
+ * Composes agent atoms + UI atoms into an outcome learning pipeline with
+ * an activity log for learning history and a browse list for records.
+ * Listens for task success/failure events, memorizes outcomes, reinforces
+ * memories for successes, applies decay for failures, and adjusts
+ * provider routing based on accumulated results.
  *
- * Traits composed (inline, representing atom-level concerns):
- * - LearnerMemory: memorize outcomes, reinforce/decay based on results
- * - LearnerCompletion: analyze outcome impact via LLM
- * - LearnerProvider: adjust provider routing based on success patterns
+ * Composed atoms:
+ * - stdAgentMemory: memorize outcomes, reinforce/decay based on results
+ * - stdAgentCompletion: analyze outcome impact via LLM
+ * - stdAgentProvider: adjust provider routing based on success patterns
+ * - stdAgentActivityLog: chronological learning timeline
+ * - stdBrowse: browsable records list
  *
  * @level molecule
  * @family agent
@@ -17,7 +20,12 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentMemory } from '../atoms/std-agent-memory.js';
+import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
+import { stdAgentProvider } from '../atoms/std-agent-provider.js';
+import { stdAgentActivityLog } from '../atoms/std-agent-activity-log.js';
+import { stdBrowse } from '../atoms/std-browse.js';
 
 // ============================================================================
 // Params
@@ -69,6 +77,22 @@ function resolve(params: StdAgentLearnerParams): LearnerConfig {
     { name: 'totalSuccesses', type: 'number', default: 0 },
     { name: 'totalFailures', type: 'number', default: 0 },
     { name: 'error', type: 'string', default: '' },
+    // Fields for composed atoms (memory, completion, provider, activity-log)
+    { name: 'content', type: 'string', default: '' },
+    { name: 'scope', type: 'string', default: '' },
+    { name: 'strength', type: 'number', default: 1 },
+    { name: 'pinned', type: 'boolean', default: false },
+    { name: 'prompt', type: 'string', default: '' },
+    { name: 'response', type: 'string', default: '' },
+    { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
+    { name: 'currentProvider', type: 'string', default: 'anthropic' },
+    { name: 'currentModel', type: 'string', default: 'claude-sonnet-4-20250514' },
+    { name: 'fallbackProvider', type: 'string', default: 'anthropic' },
+    { name: 'requestCount', type: 'number', default: 0 },
+    { name: 'action', type: 'string', default: '' },
+    { name: 'detail', type: 'string', default: '' },
+    { name: 'timestamp', type: 'string', default: '' },
+    { name: 'duration', type: 'number', default: 0 },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -96,7 +120,7 @@ function resolve(params: StdAgentLearnerParams): LearnerConfig {
 // UI Content Builders
 // ============================================================================
 
-function idleView(entityName: string): unknown {
+function idleView(_entityName: string): unknown {
   return {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -165,8 +189,8 @@ function analyzingView(): unknown {
       {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
-          { type: 'badge', label: ['string/concat', 'Category: ', '@entity.category'] },
-          { type: 'badge', label: ['cond', '@entity.isSuccess', 'Success', 'Failure'] },
+          { type: 'badge', label: ['str/concat', 'Category: ', '@entity.category'] },
+          { type: 'badge', label: ['if', '@entity.isSuccess', 'Success', 'Failure'] },
         ],
       },
     ],
@@ -184,9 +208,19 @@ function buildTrait(c: LearnerConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
+    emits: [
+      { event: 'TASK_SUCCEEDED', scope: 'external' as const, payload: [
+        { name: 'outcome', type: 'string' },
+        { name: 'category', type: 'string' },
+      ]},
+      { event: 'TASK_FAILED', scope: 'external' as const, payload: [
+        { name: 'outcome', type: 'string' },
+        { name: 'category', type: 'string' },
+      ]},
+    ],
     listens: [
-      { event: 'TASK_SUCCEEDED', triggers: 'TASK_SUCCEEDED' },
-      { event: 'TASK_FAILED', triggers: 'TASK_FAILED' },
+      { event: 'TASK_SUCCEEDED', triggers: 'TASK_SUCCEEDED', scope: 'external' as const },
+      { event: 'TASK_FAILED', triggers: 'TASK_FAILED', scope: 'external' as const },
     ],
     stateMachine: {
       states: [
@@ -225,7 +259,6 @@ function buildTrait(c: LearnerConfig): Trait {
         { key: 'RESET', name: 'Reset View' },
       ],
       transitions: [
-        // INIT: idle -> idle (show dashboard)
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
@@ -233,7 +266,6 @@ function buildTrait(c: LearnerConfig): Trait {
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // TASK_SUCCEEDED: idle -> recording (memorize success)
         {
           from: 'idle', to: 'recording', event: 'TASK_SUCCEEDED',
           effects: [
@@ -241,54 +273,50 @@ function buildTrait(c: LearnerConfig): Trait {
             ['set', '@entity.category', '@payload.category'],
             ['set', '@entity.isSuccess', true],
             ['set', '@entity.consecutiveFailures', 0],
-            ['set', '@entity.totalSuccesses', ['math/add', '@entity.totalSuccesses', 1]],
+            ['set', '@entity.totalSuccesses', ['+', '@entity.totalSuccesses', 1]],
             ['set', '@entity.status', 'recording'],
-            ['agent/memorize', ['string/concat', 'Success: ', '@payload.outcome'], '@payload.category'],
+            ['agent/memorize', ['str/concat', 'Success: ', '@payload.outcome'], '@payload.category'],
             ['render-ui', 'main', recordingView()],
           ],
         },
-        // TASK_FAILED: idle -> recording (memorize failure)
         {
           from: 'idle', to: 'recording', event: 'TASK_FAILED',
           effects: [
             ['set', '@entity.outcome', '@payload.outcome'],
             ['set', '@entity.category', '@payload.category'],
             ['set', '@entity.isSuccess', false],
-            ['set', '@entity.consecutiveFailures', ['math/add', '@entity.consecutiveFailures', 1]],
-            ['set', '@entity.totalFailures', ['math/add', '@entity.totalFailures', 1]],
+            ['set', '@entity.consecutiveFailures', ['+', '@entity.consecutiveFailures', 1]],
+            ['set', '@entity.totalFailures', ['+', '@entity.totalFailures', 1]],
             ['set', '@entity.status', 'recording'],
-            ['agent/memorize', ['string/concat', 'Failure: ', '@payload.outcome'], '@payload.category'],
+            ['agent/memorize', ['str/concat', 'Failure: ', '@payload.outcome'], '@payload.category'],
             ['render-ui', 'main', recordingView()],
           ],
         },
-        // RECORDED: recording -> analyzing (reinforce or decay, then analyze)
         {
           from: 'recording', to: 'analyzing', event: 'RECORDED',
           effects: [
             ['set', '@entity.memoryId', '@payload.memoryId'],
-            // Reinforce for successes, decay for failures
-            ['cond',
+            ['if',
               '@entity.isSuccess',
               ['agent/reinforce', '@payload.memoryId'],
               ['agent/decay'],
             ],
-            // Switch provider if consecutive failures exceed threshold
-            ['cond',
-              ['math/gte', '@entity.consecutiveFailures', failureThreshold],
+            ['if',
+              ['>=', '@entity.consecutiveFailures', failureThreshold],
               ['agent/switch-provider', fallbackProvider],
+              ['log', 'No provider switch needed'],
             ],
             ['set', '@entity.status', 'analyzing'],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Outcome: ', '@entity.outcome', '\n',
               'Category: ', '@entity.category', '\n',
-              'Result: ', ['cond', '@entity.isSuccess', 'success', 'failure'], '\n',
-              'Consecutive failures: ', ['string/of', '@entity.consecutiveFailures'], '\n\n',
+              'Result: ', ['if', '@entity.isSuccess', 'success', 'failure'], '\n',
+              'Consecutive failures: ', ['str/concat', '@entity.consecutiveFailures'], '\n\n',
               'Analyze the impact of this outcome. What should be learned? Keep it to 1-2 sentences.',
             ]],
             ['render-ui', 'main', analyzingView()],
           ],
         },
-        // ANALYSIS_DONE: analyzing -> idle (store impact, return to dashboard)
         {
           from: 'analyzing', to: 'idle', event: 'ANALYSIS_DONE',
           effects: [
@@ -298,7 +326,6 @@ function buildTrait(c: LearnerConfig): Trait {
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // FAILED: recording -> idle
         {
           from: 'recording', to: 'idle', event: 'FAILED',
           effects: [
@@ -307,7 +334,6 @@ function buildTrait(c: LearnerConfig): Trait {
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // FAILED: analyzing -> idle
         {
           from: 'analyzing', to: 'idle', event: 'FAILED',
           effects: [
@@ -316,7 +342,6 @@ function buildTrait(c: LearnerConfig): Trait {
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // RESET: idle -> idle (refresh dashboard)
         {
           from: 'idle', to: 'idle', event: 'RESET',
           effects: [
@@ -337,10 +362,6 @@ function buildEntity(c: LearnerConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildPage(c: LearnerConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
-}
-
 export function stdAgentLearnerEntity(params: StdAgentLearnerParams): Entity {
   return buildEntity(resolve(params));
 }
@@ -350,7 +371,19 @@ export function stdAgentLearnerTrait(params: StdAgentLearnerParams): Trait {
 }
 
 export function stdAgentLearnerPage(params: StdAgentLearnerParams): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: c.traitName },
+      { ref: 'LearnerActivityLog' },
+      { ref: 'LearnerRecordsBrowse' },
+      { ref: 'LearnerMemoryLifecycle' },
+      { ref: 'LearnerCompletionFlow' },
+      { ref: 'LearnerProviderManager' },
+    ],
+  } as Page;
 }
 
 // ============================================================================
@@ -359,5 +392,81 @@ export function stdAgentLearnerPage(params: StdAgentLearnerParams): Page {
 
 export function stdAgentLearner(params: StdAgentLearnerParams): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // 1. Core learner orchestrator trait
+  const learnerTrait = buildTrait(c);
+
+  // 2. Compose agent atoms
+  const memoryTrait = extractTrait(stdAgentMemory({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  memoryTrait.name = 'LearnerMemoryLifecycle';
+  memoryTrait.listens = [];
+  if (memoryTrait.emits) { for (const e of memoryTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const completionTrait = extractTrait(stdAgentCompletion({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  completionTrait.name = 'LearnerCompletionFlow';
+  completionTrait.listens = [];
+  if (completionTrait.emits) { for (const e of completionTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const providerTrait = extractTrait(stdAgentProvider({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  providerTrait.name = 'LearnerProviderManager';
+  providerTrait.listens = [];
+  if (providerTrait.emits) { for (const e of providerTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 3. UI atoms: activity log for learning timeline + browse for records
+  const activityLogTrait = extractTrait(stdAgentActivityLog({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  activityLogTrait.name = 'LearnerActivityLog';
+  activityLogTrait.listens = [];
+  if (activityLogTrait.emits) { for (const e of activityLogTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const recordsBrowseTrait = extractTrait(stdBrowse({
+    entityName,
+    fields,
+    traitName: 'LearnerRecordsBrowse',
+    listFields: ['outcome', 'category', 'status'],
+    headerIcon: 'graduation-cap',
+    pageTitle: 'Learning Records',
+    emptyTitle: 'No records yet',
+    emptyDescription: 'Task outcomes will appear here as they are recorded.',
+    itemActions: [{ label: 'View', event: 'VIEW' }],
+  }));
+  recordsBrowseTrait.name = 'LearnerRecordsBrowse';
+
+  // 4. Entity + page
+  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: learnerTrait.name },
+      { ref: activityLogTrait.name },
+      { ref: recordsBrowseTrait.name },
+      { ref: memoryTrait.name },
+      { ref: completionTrait.name },
+      { ref: providerTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(
+    `${entityName}Orbital`,
+    entity,
+    [learnerTrait, activityLogTrait, recordsBrowseTrait, memoryTrait, completionTrait, providerTrait],
+    [page],
+  );
 }

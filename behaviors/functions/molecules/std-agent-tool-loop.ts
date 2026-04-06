@@ -1,15 +1,16 @@
 /**
- * std-agent-tool-loop — Tool execution loop
+ * std-agent-tool-loop -- Tool execution loop
  *
- * Composes LLM completion, tool invocation, and context window management
- * into an iterative tool-use loop. The agent generates a plan, invokes tools
- * to execute steps, checks results, and either loops back or finishes.
- * Automatically compacts the context window when usage gets too high.
+ * Composes agent atoms + UI atoms into an iterative tool-use loop with
+ * step progress tracking and activity logging. The agent generates a plan,
+ * invokes tools to execute steps, checks results, and either loops or finishes.
  *
- * Traits composed (inline, representing atom-level concerns):
- * - ToolLoopCompletion: LLM plan generation and result checking
- * - ToolLoopInvoke: tool invocation with argument passing
- * - ToolLoopContext: context window monitoring and compaction
+ * Composed atoms:
+ * - stdAgentCompletion: LLM plan generation and result checking
+ * - stdAgentToolCall: tool invocation with argument passing
+ * - stdAgentContextWindow: context window monitoring and compaction
+ * - stdAgentStepProgress: visual pipeline step indicator
+ * - stdAgentActivityLog: chronological action timeline
  *
  * @level molecule
  * @family agent
@@ -17,7 +18,12 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
+import { stdAgentToolCall } from '../atoms/std-agent-tool-call.js';
+import { stdAgentContextWindow } from '../atoms/std-agent-context-window.js';
+import { stdAgentStepProgress } from '../atoms/std-agent-step-progress.js';
+import { stdAgentActivityLog } from '../atoms/std-agent-activity-log.js';
 
 // ============================================================================
 // Params
@@ -67,6 +73,27 @@ function resolve(params: StdAgentToolLoopParams): ToolLoopConfig {
     { name: 'currentTool', type: 'string', default: '' },
     { name: 'lastToolResult', type: 'string', default: '' },
     { name: 'error', type: 'string', default: '' },
+    // Fields for composed atoms
+    { name: 'currentStep', type: 'number', default: 0 },
+    { name: 'totalSteps', type: 'number', default: 4 },
+    { name: 'steps', type: 'string', default: 'Plan,Execute,Check,Complete' },
+    { name: 'toolName', type: 'string', default: '' },
+    { name: 'args', type: 'string', default: '' },
+    { name: 'prompt', type: 'string', default: '' },
+    { name: 'response', type: 'string', default: '' },
+    { name: 'provider', type: 'string', default: 'anthropic' },
+    { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
+    { name: 'tokenCount', type: 'number', default: 0 },
+    { name: 'maxTokens', type: 'number', default: 200000 },
+    { name: 'usage', type: 'number', default: 0 },
+    { name: 'current', type: 'number', default: 0 },
+    { name: 'max', type: 'number', default: 200000 },
+    { name: 'threshold', type: 'number', default: 0.85 },
+    { name: 'lastCompactedAt', type: 'string', default: '' },
+    { name: 'action', type: 'string', default: '' },
+    { name: 'detail', type: 'string', default: '' },
+    { name: 'timestamp', type: 'string', default: '' },
+    { name: 'duration', type: 'number', default: 0 },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -146,7 +173,7 @@ function executingView(): unknown {
               { type: 'typography', content: 'Executing Tool', variant: 'h2' },
             ],
           },
-          { type: 'badge', label: ['string/concat', 'Iteration ', ['string/of', '@entity.iterations'], '/', ['string/of', '@entity.maxIterations']] },
+          { type: 'badge', label: ['str/concat', 'Iteration ', ['str/concat', '@entity.iterations'], '/', ['str/concat', '@entity.maxIterations']] },
         ],
       },
       { type: 'divider' },
@@ -182,12 +209,12 @@ function checkingView(): unknown {
       { type: 'icon', name: 'eye', size: 'lg' },
       { type: 'typography', content: 'Checking result...', variant: 'h3' },
       { type: 'spinner', size: 'lg' },
-      { type: 'badge', label: ['string/concat', 'Iteration ', ['string/of', '@entity.iterations']] },
+      { type: 'badge', label: ['str/concat', 'Iteration ', ['str/concat', '@entity.iterations']] },
     ],
   };
 }
 
-function completedView(entityName: string): unknown {
+function completedView(_entityName: string): unknown {
   return {
     type: 'stack', direction: 'vertical', gap: 'lg',
     children: [
@@ -230,7 +257,7 @@ function completedView(entityName: string): unknown {
   };
 }
 
-function failedView(entityName: string): unknown {
+function failedView(_entityName: string): unknown {
   return {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
@@ -305,44 +332,40 @@ function buildTrait(c: ToolLoopConfig): Trait {
         { key: 'RESET', name: 'Reset' },
       ],
       transitions: [
-        // INIT: idle -> idle
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // EXECUTE: idle -> planning (generate a plan via LLM)
         {
           from: 'idle', to: 'planning', event: 'EXECUTE',
           effects: [
             ['set', '@entity.status', 'planning'],
             ['set', '@entity.iterations', 0],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Task: ', '@entity.task',
-              '\n\nAvailable tools: ', ['string/join', ['agent/tools'], ', '],
+              '\n\nAvailable tools: ', ['str/join', ['agent/tools'], ', '],
               '\n\nGenerate a step-by-step plan. Return the first tool to call and its arguments.',
             ]],
             ['render-ui', 'main', planningView()],
           ],
         },
-        // PLAN_GENERATED: planning -> executing (invoke first tool)
         {
           from: 'planning', to: 'executing', event: 'PLAN_GENERATED',
           effects: [
             ['set', '@entity.plan', '@payload.plan'],
             ['set', '@entity.currentTool', '@payload.toolName'],
-            ['set', '@entity.iterations', ['math/add', '@entity.iterations', 1]],
+            ['set', '@entity.iterations', ['+', '@entity.iterations', 1]],
             ['agent/invoke', '@payload.toolName', '@payload.toolArgs'],
             ['render-ui', 'main', executingView()],
           ],
         },
-        // TOOL_RESULT: executing -> checking (check if result is sufficient)
         {
           from: 'executing', to: 'checking', event: 'TOOL_RESULT',
           effects: [
             ['set', '@entity.lastToolResult', '@payload.output'],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Task: ', '@entity.task',
               '\nPlan: ', '@entity.plan',
               '\nTool output: ', '@payload.output',
@@ -351,7 +374,6 @@ function buildTrait(c: ToolLoopConfig): Trait {
             ['render-ui', 'main', checkingView()],
           ],
         },
-        // CHECK_PASSED: checking -> completed
         {
           from: 'checking', to: 'completed', event: 'CHECK_PASSED',
           effects: [
@@ -360,25 +382,23 @@ function buildTrait(c: ToolLoopConfig): Trait {
             ['render-ui', 'main', completedView(entityName)],
           ],
         },
-        // CHECK_NEEDS_MORE: checking -> executing (loop: invoke next tool)
         {
           from: 'checking', to: 'executing', event: 'CHECK_NEEDS_MORE',
           guards: [['math/lt', '@entity.iterations', maxIterations]],
           effects: [
             ['set', '@entity.currentTool', '@payload.toolName'],
-            ['set', '@entity.iterations', ['math/add', '@entity.iterations', 1]],
-            // Compact context if usage is high
+            ['set', '@entity.iterations', ['+', '@entity.iterations', 1]],
             ...( compactThreshold < 1 ? [
-              ['cond',
-                ['math/gte', ['agent/context-usage'], compactThreshold],
+              ['if',
+                ['>=', ['agent/context-usage'], compactThreshold],
                 ['agent/compact', 'hybrid'],
+                ['log', 'Context below compact threshold'],
               ],
             ] as unknown[] : []),
             ['agent/invoke', '@payload.toolName', '@payload.toolArgs'],
             ['render-ui', 'main', executingView()],
           ],
         },
-        // MAX_ITERATIONS: checking -> failed (iteration guard failed)
         {
           from: 'checking', to: 'failed', event: 'MAX_ITERATIONS',
           effects: [
@@ -387,7 +407,6 @@ function buildTrait(c: ToolLoopConfig): Trait {
             ['render-ui', 'main', failedView(entityName)],
           ],
         },
-        // FAILED: planning -> failed
         {
           from: 'planning', to: 'failed', event: 'FAILED',
           effects: [
@@ -396,7 +415,6 @@ function buildTrait(c: ToolLoopConfig): Trait {
             ['render-ui', 'main', failedView(entityName)],
           ],
         },
-        // FAILED: executing -> failed
         {
           from: 'executing', to: 'failed', event: 'FAILED',
           effects: [
@@ -405,7 +423,6 @@ function buildTrait(c: ToolLoopConfig): Trait {
             ['render-ui', 'main', failedView(entityName)],
           ],
         },
-        // RESET: completed -> idle
         {
           from: 'completed', to: 'idle', event: 'RESET',
           effects: [
@@ -420,7 +437,6 @@ function buildTrait(c: ToolLoopConfig): Trait {
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // RESET: failed -> idle
         {
           from: 'failed', to: 'idle', event: 'RESET',
           effects: [
@@ -448,10 +464,6 @@ function buildEntity(c: ToolLoopConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildPage(c: ToolLoopConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
-}
-
 export function stdAgentToolLoopEntity(params: StdAgentToolLoopParams): Entity {
   return buildEntity(resolve(params));
 }
@@ -461,7 +473,19 @@ export function stdAgentToolLoopTrait(params: StdAgentToolLoopParams): Trait {
 }
 
 export function stdAgentToolLoopPage(params: StdAgentToolLoopParams): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: c.traitName },
+      { ref: 'ToolLoopStepProgress' },
+      { ref: 'ToolLoopActivityLog' },
+      { ref: 'ToolLoopCompletionFlow' },
+      { ref: 'ToolLoopToolCallFlow' },
+      { ref: 'ToolLoopContextMonitor' },
+    ],
+  } as Page;
 }
 
 // ============================================================================
@@ -470,5 +494,78 @@ export function stdAgentToolLoopPage(params: StdAgentToolLoopParams): Page {
 
 export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // 1. Core orchestrator trait
+  const loopTrait = buildTrait(c);
+
+  // 2. Compose agent atoms
+  const completionTrait = extractTrait(stdAgentCompletion({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  completionTrait.name = 'ToolLoopCompletionFlow';
+  completionTrait.listens = [];
+  if (completionTrait.emits) { for (const e of completionTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const toolCallTrait = extractTrait(stdAgentToolCall({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  toolCallTrait.name = 'ToolLoopToolCallFlow';
+  toolCallTrait.listens = [];
+  if (toolCallTrait.emits) { for (const e of toolCallTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const contextTrait = extractTrait(stdAgentContextWindow({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  contextTrait.name = 'ToolLoopContextMonitor';
+  contextTrait.listens = [];
+  if (contextTrait.emits) { for (const e of contextTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 3. Compose UI atoms: step progress + activity log
+  const stepProgressTrait = extractTrait(stdAgentStepProgress({
+    entityName,
+    fields,
+    stepLabels: ['Plan', 'Execute', 'Check', 'Complete'],
+    persistence: 'runtime',
+  }));
+  stepProgressTrait.name = 'ToolLoopStepProgress';
+  stepProgressTrait.listens = [];
+  if (stepProgressTrait.emits) { for (const e of stepProgressTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const activityLogTrait = extractTrait(stdAgentActivityLog({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  activityLogTrait.name = 'ToolLoopActivityLog';
+  activityLogTrait.listens = [];
+  if (activityLogTrait.emits) { for (const e of activityLogTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 4. Entity + page
+  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: loopTrait.name },
+      { ref: stepProgressTrait.name },
+      { ref: activityLogTrait.name },
+      { ref: completionTrait.name },
+      { ref: toolCallTrait.name },
+      { ref: contextTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(
+    `${entityName}Orbital`,
+    entity,
+    [loopTrait, stepProgressTrait, activityLogTrait, completionTrait, toolCallTrait, contextTrait],
+    [page],
+  );
 }

@@ -1,30 +1,36 @@
 /**
  * std-agent-reviewer
  *
- * Schema/code reviewer organism. Classifies input, searches for relevant
- * patterns via RAG, recalls best practices from memory, and generates
- * structured review output with issues, suggestions, and a score.
+ * Schema/code reviewer organism. Composes RAG molecule + classifier atom
+ * to classify input, search for relevant patterns, recall best practices,
+ * and generate structured review output with tabbed views and an issues browse.
  *
  * Composed from:
- * - inline ClassifierTrait: classifies input type (schema, component, trait, etc.)
- * - inline ReviewerTrait: RAG-powered review generation with scoring
- * - stdAgentMemory: best practices recall and reinforcement
+ * - stdAgentRag (molecule): retrieval-augmented generation pipeline
+ * - stdAgentClassifier: classifies input type (schema, component, trait, etc.)
+ * - stdAgentCompletion: generates review with scoring
+ * - stdTabs: Input / Analysis / Review tab navigation
+ * - stdBrowse: browsable issues list
  *
  * Cross-trait events:
  * - CLASSIFIED (Classifier -> Reviewer): input classified, begin review
  * - REVIEW_COMPLETE (Reviewer -> Memory): reinforce recalled best practices
  *
- * Pages: /review (initial), /analysis, /practices
+ * Pages: /review (initial), /analysis, /issues
  *
  * @level organism
  * @family agent
  * @packageDocumentation
  */
 
-import type { OrbitalSchema, OrbitalDefinition, Entity, Trait, Page, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, makePage, ensureIdField, compose } from '@almadar/core/builders';
+import type { OrbitalSchema, OrbitalDefinition, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makePage, ensureIdField, extractTrait, compose } from '@almadar/core/builders';
 import type { ComposePage, ComposeConnection } from '@almadar/core/builders';
-import { stdAgentMemory } from '../atoms/std-agent-memory.js';
+import { stdAgentRag } from '../molecules/std-agent-rag.js';
+import { stdAgentClassifier } from '../atoms/std-agent-classifier.js';
+import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
+import { stdTabs } from '../atoms/std-tabs.js';
+import { stdBrowse } from '../atoms/std-browse.js';
 import { wrapInDashboardLayout, buildNavItems } from '../layout.js';
 
 // ============================================================================
@@ -50,13 +56,6 @@ const DEFAULT_REVIEW_FIELDS: EntityField[] = [
   { name: 'score', type: 'number', default: 0 },
   { name: 'reviewStatus', type: 'string', default: 'idle' },
   { name: 'error', type: 'string', default: '' },
-];
-
-const DEFAULT_ANALYSIS_FIELDS: EntityField[] = [
-  { name: 'inputText', type: 'string', default: '' },
-  { name: 'detectedCategory', type: 'string', default: '' },
-  { name: 'confidence', type: 'number', default: 0 },
-  { name: 'classifyStatus', type: 'string', default: 'idle' },
 ];
 
 // ============================================================================
@@ -156,95 +155,9 @@ function completedUI(entityName: string): unknown {
   };
 }
 
-function classifierIdleUI(entityName: string): unknown {
-  return {
-    type: 'stack', direction: 'vertical', gap: 'lg',
-    children: [
-      {
-        type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
-        children: [
-          { type: 'icon', name: 'tag', size: 'lg' },
-          { type: 'typography', content: 'Input Analysis', variant: 'h2' },
-        ],
-      },
-      { type: 'divider' },
-      {
-        type: 'card',
-        children: [{
-          type: 'stack', direction: 'vertical', gap: 'md',
-          children: [
-            { type: 'typography', content: 'Category', variant: 'caption' },
-            { type: 'typography', content: '@entity.detectedCategory', variant: 'h3' },
-            { type: 'typography', content: 'Confidence', variant: 'caption' },
-            { type: 'typography', content: '@entity.confidence', variant: 'body' },
-          ],
-        }],
-      },
-    ],
-  };
-}
-
 // ============================================================================
 // Trait Builders
 // ============================================================================
-
-function buildClassifierOrbital(fields: EntityField[]): OrbitalDefinition {
-  const entityName = 'Analysis';
-  const allFields = ensureIdField(fields);
-  const entity = makeEntity({ name: entityName, fields: allFields, persistence: 'runtime' });
-
-  const trait: Trait = {
-    name: 'InputClassifier',
-    linkedEntity: entityName,
-    category: 'interaction',
-    emits: [
-      { event: 'CLASSIFIED', description: 'Input has been classified', scope: 'internal' },
-    ],
-    stateMachine: {
-      states: [
-        { name: 'idle', isInitial: true },
-        { name: 'classifying' },
-      ],
-      events: [
-        { key: 'INIT', name: 'Initialize' },
-        {
-          key: 'CLASSIFY', name: 'Classify',
-          payload: [{ name: 'inputText', type: 'string', required: true }],
-        },
-        { key: 'CLASSIFICATION_DONE', name: 'Classification Done' },
-      ],
-      transitions: [
-        {
-          from: 'idle', to: 'idle', event: 'INIT',
-          effects: [
-            ['fetch', entityName],
-            ['render-ui', 'main', classifierIdleUI(entityName)],
-          ],
-        },
-        {
-          from: 'idle', to: 'classifying', event: 'CLASSIFY',
-          effects: [
-            ['set', '@entity.inputText', '@payload.inputText'],
-            ['set', '@entity.classifyStatus', 'classifying'],
-            ['agent/generate', '@payload.inputText'],
-            ['render-ui', 'main', analyzingUI()],
-          ],
-        },
-        {
-          from: 'classifying', to: 'idle', event: 'CLASSIFICATION_DONE',
-          effects: [
-            ['set', '@entity.classifyStatus', 'done'],
-            ['emit', 'CLASSIFIED'],
-            ['render-ui', 'main', classifierIdleUI(entityName)],
-          ],
-        },
-      ],
-    },
-  } as Trait;
-
-  const page = makePage({ name: 'AnalysisPage', path: '/analysis', traitName: 'InputClassifier' });
-  return makeOrbital('AnalysisOrbital', entity, [trait], [page]);
-}
 
 function buildReviewerTrait(entityName: string): Trait {
   return {
@@ -252,7 +165,7 @@ function buildReviewerTrait(entityName: string): Trait {
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'REVIEW_COMPLETE', description: 'Review is complete', scope: 'internal' },
+      { event: 'REVIEW_COMPLETE', description: 'Review is complete', scope: 'internal' as const, payload: [{ name: 'score', type: 'number' }] },
     ],
     stateMachine: {
       states: [
@@ -329,51 +242,122 @@ function buildReviewerTrait(entityName: string): Trait {
 export function stdAgentReviewer(params: StdAgentReviewerParams = {}): OrbitalSchema {
   const appName = params.appName ?? 'Code Reviewer';
 
-  // Review orbital with inline reviewer trait
+  // 1. Review orbital with inline reviewer trait
   const reviewFields = ensureIdField(params.reviewFields ?? DEFAULT_REVIEW_FIELDS);
   const reviewEntity = makeEntity({ name: 'Review', fields: reviewFields, persistence: 'runtime' });
   const reviewerTrait = buildReviewerTrait('Review');
   const reviewPage = makePage({ name: 'ReviewPage', path: '/review', traitName: 'ReviewGenerator', isInitial: true });
   const reviewOrbital = makeOrbital('ReviewOrbital', reviewEntity, [reviewerTrait], [reviewPage]);
 
-  // Classifier orbital
-  const classifierOrbital = buildClassifierOrbital(params.analysisFields ?? DEFAULT_ANALYSIS_FIELDS);
-
-  // Best practices memory from atom
-  const memoryOrbital = stdAgentMemory({
-    entityName: 'Practice',
-    fields: params.memoryFields,
-    persistence: 'persistent',
-    pageName: 'PracticesPage',
-    pagePath: '/practices',
+  // 2. RAG molecule for retrieval-augmented context
+  const ragOrbital = stdAgentRag({
+    entityName: 'ReviewRag',
+    persistence: 'runtime',
+    pageName: 'RagPage',
+    pagePath: '/rag',
   });
+
+  // 3. Classifier atom
+  const classifierOrbital = stdAgentClassifier({
+    entityName: 'Analysis',
+    fields: params.analysisFields,
+    categories: ['schema', 'component', 'trait', 'page', 'behavior', 'style'],
+    persistence: 'runtime',
+    pageName: 'AnalysisPage',
+    pagePath: '/analysis',
+  });
+  const classifierTrait = (classifierOrbital.traits as Trait[])[0];
+  classifierTrait.name = 'InputClassifier';
+  classifierTrait.emits = [
+    { event: 'CLASSIFIED', description: 'Input has been classified', scope: 'internal' as const, payload: [{ name: 'category', type: 'string' }] },
+  ];
+
+  // 4. Completion atom for review generation
+  const completionOrbital = stdAgentCompletion({
+    entityName: 'ReviewCompletion',
+    persistence: 'runtime',
+    pageName: 'CompletionPage',
+    pagePath: '/completion',
+  });
+  const completionTrait = (completionOrbital.traits as Trait[])[0];
+  completionTrait.name = 'ReviewCompletionFlow';
+
+  // 5. UI: tabs for Input / Analysis / Review
+  const tabsTrait = extractTrait(stdTabs({
+    entityName: 'Review',
+    fields: reviewFields,
+    tabItems: [
+      { label: 'Input', value: 'input' },
+      { label: 'Analysis', value: 'analysis' },
+      { label: 'Review', value: 'review' },
+    ],
+    headerIcon: 'file-search',
+    pageTitle: 'Code Reviewer',
+  }));
+  tabsTrait.name = 'ReviewerTabs';
+  const tabsEntity = makeEntity({ name: 'ReviewNav', fields: reviewFields, persistence: 'runtime' });
+  const tabsOrbital: OrbitalDefinition = makeOrbital('ReviewNavOrbital', tabsEntity, [tabsTrait], [
+    makePage({ name: 'ReviewerNavPage', path: '/reviewer/nav', traitName: 'ReviewerTabs' }),
+  ]);
+
+  // 6. UI: issues browse list
+  const issueFields = ensureIdField([
+    { name: 'description', type: 'string', default: '' },
+    { name: 'severity', type: 'string', default: 'info' },
+    { name: 'line', type: 'number', default: 0 },
+  ]);
+  const issuesBrowseTrait = extractTrait(stdBrowse({
+    entityName: 'ReviewIssue',
+    fields: issueFields,
+    traitName: 'IssuesBrowse',
+    listFields: ['description', 'severity'],
+    headerIcon: 'alert-triangle',
+    pageTitle: 'Issues',
+    emptyTitle: 'No issues found',
+    emptyDescription: 'The review found no issues.',
+    itemActions: [{ label: 'View', event: 'VIEW' }],
+  }));
+  issuesBrowseTrait.name = 'IssuesBrowse';
+  const issuesEntity = makeEntity({ name: 'ReviewIssue', fields: issueFields, persistence: 'runtime' });
+  const issuesOrbital: OrbitalDefinition = makeOrbital('ReviewIssueOrbital', issuesEntity, [issuesBrowseTrait], [
+    makePage({ name: 'IssuesPage', path: '/issues', traitName: 'IssuesBrowse' }),
+  ]);
 
   const pages: ComposePage[] = [
     { name: 'ReviewPage', path: '/review', traits: ['ReviewGenerator'], isInitial: true },
+    { name: 'RagPage', path: '/rag', traits: ['ReviewRagRag'] },
     { name: 'AnalysisPage', path: '/analysis', traits: ['InputClassifier'] },
-    { name: 'PracticesPage', path: '/practices', traits: ['PracticeLifecycle'] },
+    { name: 'CompletionPage', path: '/completion', traits: ['ReviewCompletionFlow'] },
+    { name: 'ReviewerNavPage', path: '/reviewer/nav', traits: ['ReviewerTabs'] },
+    { name: 'IssuesPage', path: '/issues', traits: ['IssuesBrowse'] },
   ];
 
   const connections: ComposeConnection[] = [
     {
       from: 'InputClassifier',
       to: 'ReviewGenerator',
-      event: { event: 'CLASSIFIED', description: 'Input classified, begin review' },
+      event: { event: 'CLASSIFIED', description: 'Input classified, begin review', payload: [{ name: 'category', type: 'string' }] },
       triggers: 'SUBMIT_REVIEW',
     },
     {
       from: 'ReviewGenerator',
-      to: 'PracticeLifecycle',
-      event: { event: 'REVIEW_COMPLETE', description: 'Reinforce recalled best practices' },
-      triggers: 'REINFORCE',
+      to: 'IssuesBrowse',
+      event: { event: 'REVIEW_COMPLETE', description: 'Refresh issues list with review findings', payload: [{ name: 'score', type: 'number' }] },
+      triggers: 'INIT',
     },
   ];
 
-  const schema = compose([reviewOrbital, classifierOrbital, memoryOrbital], pages, connections, appName);
+  const schema = compose(
+    [reviewOrbital, ragOrbital, classifierOrbital, completionOrbital, tabsOrbital, issuesOrbital],
+    pages,
+    connections,
+    appName,
+  );
 
-  return wrapInDashboardLayout(schema, appName, buildNavItems(pages, {
+  const navPages = pages.filter(p => ['/review', '/analysis', '/issues'].includes(p.path));
+  return wrapInDashboardLayout(schema, appName, buildNavItems(navPages, {
     review: 'file-search',
     analysis: 'tag',
-    practices: 'brain',
+    issues: 'alert-triangle',
   }));
 }

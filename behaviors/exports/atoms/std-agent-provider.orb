@@ -53,14 +53,653 @@
             "name": "requestCount",
             "type": "number",
             "default": 0
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
           }
         ]
       },
       "traits": [
         {
-          "name": "AgentProviderRouter",
+          "name": "AgentProviderModal",
           "linkedEntity": "AgentProvider",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SWITCHED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SWITCH",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentProvider"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "repeat",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Switch Provider",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "SWITCH",
+                              "variant": "primary",
+                              "icon": "repeat"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "repeat",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "SWITCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentProvider"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Switch Provider",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Current:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.currentProvider"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "@entity.currentModel"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "AgentProvider",
+                          "mode": "edit",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "currentProvider",
+                            "currentModel"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "AgentProvider"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "repeat",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Switch Provider",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "SWITCH",
+                              "variant": "primary",
+                              "icon": "repeat"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "repeat",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "AgentProvider",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "SWITCHED"
+                  ],
+                  [
+                    "ref",
+                    "AgentProvider"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "repeat",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Switch Provider",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "SWITCH",
+                              "variant": "primary",
+                              "icon": "repeat"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "repeat",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ],
+                  [
+                    "notify",
+                    "AgentProvider updated successfully"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentProviderNotification",
+          "linkedEntity": "AgentProvider",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "hidden",
+                "isInitial": true
+              },
+              {
+                "name": "visible"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOW",
+                "name": "Show Notification",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HIDE",
+                "name": "Hide Notification"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "hidden",
+                "to": "hidden",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentProvider"
+                  ]
+                ]
+              },
+              {
+                "from": "hidden",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "server",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Provider Status",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Dismiss",
+                              "event": "HIDE",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ],
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "toast-slot",
+                          "position": "top-right"
+                        },
+                        {
+                          "type": "violation-alert",
+                          "severity": "warning",
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ],
+                          "category": "compliance"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "server",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Provider Status",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Dismiss",
+                              "event": "HIDE",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ],
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "toast-slot",
+                          "position": "top-right"
+                        },
+                        {
+                          "type": "violation-alert",
+                          "severity": "warning",
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ],
+                          "category": "compliance"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "hidden",
+                "event": "HIDE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentProviderAgent",
+          "linkedEntity": "AgentProvider",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SHOW",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "provider",
+                  "type": "string"
+                },
+                {
+                  "name": "model",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SWITCHED",
+              "triggers": "SWITCHED"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -80,24 +719,30 @@
                 "name": "Initialize"
               },
               {
-                "key": "SWITCH",
-                "name": "Switch Provider",
+                "key": "DO_SWITCH",
+                "name": "Do Switch",
                 "payload": [
                   {
-                    "name": "provider",
-                    "type": "string",
+                    "name": "data",
+                    "type": "object",
                     "required": true
-                  },
-                  {
-                    "name": "model",
-                    "type": "string",
-                    "required": false
                   }
                 ]
               },
               {
                 "key": "SWITCH_AUTO",
                 "name": "Auto Switch to Fallback"
+              },
+              {
+                "key": "SWITCHED",
+                "name": "Switched",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -120,77 +765,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "server",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AgentProvider (Active)",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "success",
-                          "message": "Provider is active and routing requests."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "badge",
-                              "label": "@entity.currentProvider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.currentModel"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.requestCount"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Switch",
-                              "event": "SWITCH",
-                              "variant": "secondary",
-                              "icon": "repeat"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Auto Switch",
-                              "event": "SWITCH_AUTO",
-                              "variant": "ghost",
-                              "icon": "zap"
-                            }
-                          ]
-                        }
-                      ]
+                      "type": "empty-state",
+                      "icon": "repeat",
+                      "title": "Provider",
+                      "description": "Provider is ready"
                     }
                   ]
                 ]
@@ -198,31 +776,34 @@
               {
                 "from": "active",
                 "to": "switching",
-                "event": "SWITCH",
+                "event": "DO_SWITCH",
                 "effects": [
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Switching...",
-                      "message": "Switching provider..."
-                    }
-                  ],
-                  [
                     "agent/switch-provider",
-                    "@payload.provider",
-                    "@payload.model"
+                    "@payload.data.currentProvider",
+                    "@payload.data.currentModel"
                   ],
                   [
                     "set",
                     "@entity.currentProvider",
-                    "@payload.provider"
+                    "@payload.data.currentProvider"
                   ],
                   [
                     "set",
                     "@entity.currentModel",
-                    "@payload.model"
+                    "@payload.data.currentModel"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "switching",
+                "event": "SWITCHED",
+                "effects": [
+                  [
+                    "agent/switch-provider",
+                    "@entity.currentProvider",
+                    "@entity.currentModel"
                   ]
                 ]
               },
@@ -247,81 +828,8 @@
                     ]
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "server",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AgentProvider (Active)",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "success",
-                          "message": "Provider is active and routing requests."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "badge",
-                              "label": "@entity.currentProvider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.currentModel"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.requestCount"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Switch",
-                              "event": "SWITCH",
-                              "variant": "secondary",
-                              "icon": "repeat"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Auto Switch",
-                              "event": "SWITCH_AUTO",
-                              "variant": "ghost",
-                              "icon": "zap"
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "emit",
+                    "SHOW"
                   ]
                 ]
               },
@@ -330,15 +838,6 @@
                 "to": "switching",
                 "event": "SWITCH_AUTO",
                 "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Switching...",
-                      "message": "Switching provider..."
-                    }
-                  ],
                   [
                     "agent/switch-provider",
                     "@entity.fallbackProvider"
@@ -353,31 +852,22 @@
               {
                 "from": "idle",
                 "to": "switching",
-                "event": "SWITCH",
+                "event": "DO_SWITCH",
                 "effects": [
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Switching...",
-                      "message": "Switching provider..."
-                    }
-                  ],
-                  [
                     "agent/switch-provider",
-                    "@payload.provider",
-                    "@payload.model"
+                    "@payload.data.currentProvider",
+                    "@payload.data.currentModel"
                   ],
                   [
                     "set",
                     "@entity.currentProvider",
-                    "@payload.provider"
+                    "@payload.data.currentProvider"
                   ],
                   [
                     "set",
                     "@entity.currentModel",
-                    "@payload.model"
+                    "@payload.data.currentModel"
                   ]
                 ]
               }
@@ -391,12 +881,18 @@
           "path": "/agentproviders",
           "traits": [
             {
-              "ref": "AgentProviderRouter"
+              "ref": "AgentProviderModal"
+            },
+            {
+              "ref": "AgentProviderNotification"
+            },
+            {
+              "ref": "AgentProviderAgent"
             }
           ]
         }
       ]
     }
   ],
-  "description": "Provider routing atom for agent model/provider switching. Manages current provider, model selection, and fallback routing. Uses agent/switch-provider, agent/provider, and agent/model operators."
+  "description": "Provider routing atom for agent model/provider switching. Composes UI atoms (stdModal for switch form, stdNotification for confirmation) with an agent trait that handles agent/switch-provider, agent/provider, and agent/model operators."
 }

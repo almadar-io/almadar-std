@@ -1,15 +1,17 @@
 /**
- * std-agent-planner — Task planning
+ * std-agent-planner -- Task planning
  *
- * Composes classification, memory recall, and LLM completion into a
- * task planning pipeline. Classifies the incoming task, recalls relevant
- * memories for context, then generates a step-by-step execution plan
- * with confidence scoring.
+ * Composes agent atoms + UI atoms into a task planning pipeline with
+ * a modal for task input and an activity log for plan history.
+ * Classifies the incoming task, recalls relevant memories for context,
+ * then generates a step-by-step execution plan with confidence scoring.
  *
- * Traits composed (inline, representing atom-level concerns):
- * - PlannerClassifier: categorize the task type
- * - PlannerMemory: recall relevant past patterns and plans
- * - PlannerCompletion: generate the step-by-step plan via LLM
+ * Composed atoms:
+ * - stdAgentClassifier: categorize the task type
+ * - stdAgentCompletion: generate the step-by-step plan via LLM
+ * - stdAgentMemory: recall relevant past patterns and plans
+ * - stdModal: task input form overlay
+ * - stdAgentActivityLog: plan history timeline
  *
  * @level molecule
  * @family agent
@@ -17,7 +19,12 @@
  */
 
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import { stdAgentClassifier } from '../atoms/std-agent-classifier.js';
+import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
+import { stdAgentMemory } from '../atoms/std-agent-memory.js';
+import { stdModal } from '../atoms/std-modal.js';
+import { stdAgentActivityLog } from '../atoms/std-agent-activity-log.js';
 
 // ============================================================================
 // Params
@@ -66,6 +73,20 @@ function resolve(params: StdAgentPlannerParams): PlannerConfig {
     { name: 'relevantMemories', type: 'string', default: '' },
     { name: 'memoryCount', type: 'number', default: 0 },
     { name: 'error', type: 'string', default: '' },
+    // Fields for composed atoms (classifier, completion, memory, activity-log)
+    { name: 'input', type: 'string', default: '' },
+    { name: 'prompt', type: 'string', default: '' },
+    { name: 'response', type: 'string', default: '' },
+    { name: 'provider', type: 'string', default: 'anthropic' },
+    { name: 'model', type: 'string', default: 'claude-sonnet-4-20250514' },
+    { name: 'content', type: 'string', default: '' },
+    { name: 'scope', type: 'string', default: '' },
+    { name: 'strength', type: 'number', default: 1 },
+    { name: 'pinned', type: 'boolean', default: false },
+    { name: 'action', type: 'string', default: '' },
+    { name: 'detail', type: 'string', default: '' },
+    { name: 'timestamp', type: 'string', default: '' },
+    { name: 'duration', type: 'number', default: 0 },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -138,7 +159,7 @@ function recallingView(): unknown {
       { type: 'icon', name: 'brain', size: 'lg' },
       { type: 'typography', content: 'Recalling relevant experience...', variant: 'h3' },
       { type: 'spinner', size: 'lg' },
-      { type: 'badge', label: ['string/concat', 'Category: ', '@entity.category'] },
+      { type: 'badge', label: ['str/concat', 'Category: ', '@entity.category'] },
     ],
   };
 }
@@ -153,8 +174,8 @@ function planningView(): unknown {
       {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
-          { type: 'badge', label: ['string/concat', 'Category: ', '@entity.category'] },
-          { type: 'badge', label: ['string/concat', ['string/of', '@entity.memoryCount'], ' memories loaded'] },
+          { type: 'badge', label: ['str/concat', 'Category: ', '@entity.category'] },
+          { type: 'badge', label: ['str/concat', ['str/concat', '@entity.memoryCount'], ' memories loaded'] },
         ],
       },
     ],
@@ -183,7 +204,7 @@ function readyView(entityName: string): unknown {
         type: 'simple-grid', columns: 3,
         children: [
           { type: 'stat-display', label: 'Category', value: `@entity.category`, icon: 'tag' },
-          { type: 'stat-display', label: 'Confidence', value: ['string/concat', ['string/of', '@entity.confidence'], '%'], icon: 'target' },
+          { type: 'stat-display', label: 'Confidence', value: ['str/concat', ['str/concat', '@entity.confidence'], '%'], icon: 'target' },
           { type: 'stat-display', label: 'Memories Used', value: `@entity.memoryCount`, icon: 'brain' },
         ],
       },
@@ -215,7 +236,7 @@ function readyView(entityName: string): unknown {
   };
 }
 
-function errorView(entityName: string): unknown {
+function errorView(_entityName: string): unknown {
   return {
     type: 'stack', direction: 'vertical', gap: 'lg', align: 'center',
     children: [
@@ -240,7 +261,13 @@ function buildTrait(c: PlannerConfig): Trait {
     linkedEntity: entityName,
     category: 'interaction',
     emits: [
-      { event: 'PLAN_READY' },
+      { event: 'PLAN_READY', scope: 'external' as const, payload: [
+        { name: 'plan', type: 'string' },
+        { name: 'category', type: 'string' },
+      ]},
+    ],
+    listens: [
+      { event: 'PLAN_READY', triggers: 'INIT', scope: 'external' as const },
     ],
     stateMachine: {
       states: [
@@ -278,19 +305,17 @@ function buildTrait(c: PlannerConfig): Trait {
         { key: 'RESET', name: 'Reset' },
       ],
       transitions: [
-        // INIT: idle -> idle
         {
           from: 'idle', to: 'idle', event: 'INIT',
           effects: [
             ['render-ui', 'main', idleView(entityName)],
           ],
         },
-        // PLAN: idle -> classifying (classify the task)
         {
           from: 'idle', to: 'classifying', event: 'PLAN',
           effects: [
             ['set', '@entity.status', 'classifying'],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Classify this task into exactly one category.\n',
               'Categories: ', categoryList, '\n',
               'Task: ', '@entity.task', '\n',
@@ -299,24 +324,22 @@ function buildTrait(c: PlannerConfig): Trait {
             ['render-ui', 'main', classifyingView()],
           ],
         },
-        // CLASSIFIED: classifying -> recalling (recall memories for the category)
         {
           from: 'classifying', to: 'recalling', event: 'CLASSIFIED',
           effects: [
             ['set', '@entity.category', '@payload.category'],
             ['set', '@entity.status', 'recalling'],
-            ['agent/recall', ['string/concat', '@entity.category', ' ', '@entity.task'], memoryLimit],
+            ['agent/recall', ['str/concat', '@entity.category', ' ', '@entity.task'], memoryLimit],
             ['render-ui', 'main', recallingView()],
           ],
         },
-        // MEMORIES_LOADED: recalling -> planning (generate plan with context)
         {
           from: 'recalling', to: 'planning', event: 'MEMORIES_LOADED',
           effects: [
             ['set', '@entity.relevantMemories', '@payload.memories'],
             ['set', '@entity.memoryCount', '@payload.count'],
             ['set', '@entity.status', 'planning'],
-            ['agent/generate', ['string/concat',
+            ['agent/generate', ['str/concat',
               'Task: ', '@entity.task', '\n',
               'Category: ', '@entity.category', '\n',
               'Relevant experience:\n', '@entity.relevantMemories', '\n\n',
@@ -326,19 +349,17 @@ function buildTrait(c: PlannerConfig): Trait {
             ['render-ui', 'main', planningView()],
           ],
         },
-        // PLAN_GENERATED: planning -> ready
         {
           from: 'planning', to: 'ready', event: 'PLAN_GENERATED',
           effects: [
             ['set', '@entity.steps', '@payload.steps'],
             ['set', '@entity.confidence', '@payload.confidence'],
             ['set', '@entity.status', 'ready'],
-            ['agent/memorize', ['string/concat', 'Plan for ', '@entity.category', ' task: ', '@entity.task'], 'pattern-affinity'],
+            ['agent/memorize', ['str/concat', 'Plan for ', '@entity.category', ' task: ', '@entity.task'], 'pattern-affinity'],
             ['emit', 'PLAN_READY'],
             ['render-ui', 'main', readyView(entityName)],
           ],
         },
-        // FAILED: classifying -> idle
         {
           from: 'classifying', to: 'idle', event: 'FAILED',
           effects: [
@@ -347,7 +368,6 @@ function buildTrait(c: PlannerConfig): Trait {
             ['render-ui', 'main', errorView(entityName)],
           ],
         },
-        // FAILED: recalling -> idle
         {
           from: 'recalling', to: 'idle', event: 'FAILED',
           effects: [
@@ -356,7 +376,6 @@ function buildTrait(c: PlannerConfig): Trait {
             ['render-ui', 'main', errorView(entityName)],
           ],
         },
-        // FAILED: planning -> idle
         {
           from: 'planning', to: 'idle', event: 'FAILED',
           effects: [
@@ -365,7 +384,6 @@ function buildTrait(c: PlannerConfig): Trait {
             ['render-ui', 'main', errorView(entityName)],
           ],
         },
-        // RESET: ready -> idle
         {
           from: 'ready', to: 'idle', event: 'RESET',
           effects: [
@@ -393,10 +411,6 @@ function buildEntity(c: PlannerConfig): Entity {
   return makeEntity({ name: c.entityName, fields: c.fields, persistence: c.persistence });
 }
 
-function buildPage(c: PlannerConfig): Page {
-  return makePage({ name: c.pageName, path: c.pagePath, traitName: c.traitName, isInitial: c.isInitial });
-}
-
 export function stdAgentPlannerEntity(params: StdAgentPlannerParams): Entity {
   return buildEntity(resolve(params));
 }
@@ -406,7 +420,19 @@ export function stdAgentPlannerTrait(params: StdAgentPlannerParams): Trait {
 }
 
 export function stdAgentPlannerPage(params: StdAgentPlannerParams): Page {
-  return buildPage(resolve(params));
+  const c = resolve(params);
+  return {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: c.traitName },
+      { ref: 'PlannerTaskInput' },
+      { ref: 'PlannerActivityLog' },
+      { ref: 'PlannerClassifierFlow' },
+      { ref: 'PlannerCompletionFlow' },
+      { ref: 'PlannerMemoryLifecycle' },
+    ],
+  } as Page;
 }
 
 // ============================================================================
@@ -415,5 +441,91 @@ export function stdAgentPlannerPage(params: StdAgentPlannerParams): Page {
 
 export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinition {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  const { entityName, fields } = c;
+
+  // 1. Core planner orchestrator trait
+  const plannerTrait = buildTrait(c);
+
+  // 2. Compose agent atoms
+  const classifierTrait = extractTrait(stdAgentClassifier({
+    entityName,
+    fields,
+    categories: c.categories,
+    persistence: 'runtime',
+  }));
+  classifierTrait.name = 'PlannerClassifierFlow';
+  classifierTrait.listens = [];
+  if (classifierTrait.emits) { for (const e of classifierTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const completionTrait = extractTrait(stdAgentCompletion({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  completionTrait.name = 'PlannerCompletionFlow';
+  completionTrait.listens = [];
+  if (completionTrait.emits) { for (const e of completionTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  const memoryTrait = extractTrait(stdAgentMemory({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  memoryTrait.name = 'PlannerMemoryLifecycle';
+  memoryTrait.listens = [];
+  if (memoryTrait.emits) { for (const e of memoryTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 3. UI atoms: modal for task input + activity log for plan history
+  const modalTrait = extractTrait(stdModal({
+    entityName,
+    fields,
+    standalone: false,
+    traitName: 'PlannerTaskInput',
+    modalTitle: 'New Task',
+    headerIcon: 'plus-circle',
+    openEvent: 'NEW_TASK',
+    closeEvent: 'CLOSE',
+    openContent: {
+      type: 'stack', direction: 'vertical', gap: 'md',
+      children: [
+        { type: 'icon', name: 'map', size: 'md' },
+        { type: 'typography', content: 'Describe the task to plan', variant: 'h3' },
+        { type: 'divider' },
+        { type: 'form-section', entity: entityName, mode: 'edit', submitEvent: 'PLAN', cancelEvent: 'CLOSE', fields: ['task'] },
+      ],
+    },
+    saveEvent: 'PLAN',
+  }));
+  modalTrait.name = 'PlannerTaskInput';
+
+  const activityLogTrait = extractTrait(stdAgentActivityLog({
+    entityName,
+    fields,
+    persistence: 'runtime',
+  }));
+  activityLogTrait.name = 'PlannerActivityLog';
+  activityLogTrait.listens = [];
+  if (activityLogTrait.emits) { for (const e of activityLogTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
+
+  // 4. Entity + page
+  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
+  const page: Page = {
+    name: c.pageName, path: c.pagePath,
+    ...(c.isInitial ? { isInitial: true } : {}),
+    traits: [
+      { ref: plannerTrait.name },
+      { ref: modalTrait.name },
+      { ref: activityLogTrait.name },
+      { ref: classifierTrait.name },
+      { ref: completionTrait.name },
+      { ref: memoryTrait.name },
+    ],
+  } as Page;
+
+  return makeOrbital(
+    `${entityName}Orbital`,
+    entity,
+    [plannerTrait, modalTrait, activityLogTrait, classifierTrait, completionTrait, memoryTrait],
+    [page],
+  );
 }
