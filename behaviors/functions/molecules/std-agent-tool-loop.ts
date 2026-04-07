@@ -23,7 +23,6 @@ import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
 import { stdAgentToolCall } from '../atoms/std-agent-tool-call.js';
 import { stdAgentContextWindow } from '../atoms/std-agent-context-window.js';
 import { stdAgentStepProgress } from '../atoms/std-agent-step-progress.js';
-import { stdAgentActivityLog } from '../atoms/std-agent-activity-log.js';
 
 // ============================================================================
 // Params
@@ -233,7 +232,7 @@ function completedView(_entityName: string): unknown {
       },
       { type: 'divider' },
       {
-        type: 'simple-grid', columns: 2,
+        type: 'simple-grid', cols: 2,
         children: [
           { type: 'stat-display', label: 'Iterations', value: `@entity.iterations`, icon: 'repeat' },
           { type: 'stat-display', label: 'Status', value: `@entity.status`, icon: 'check' },
@@ -265,7 +264,7 @@ function failedView(_entityName: string): unknown {
       { type: 'typography', content: 'Loop Failed', variant: 'h2' },
       { type: 'alert', variant: 'error', message: `@entity.error` },
       {
-        type: 'simple-grid', columns: 2,
+        type: 'simple-grid', cols: 2,
         children: [
           { type: 'stat-display', label: 'Iterations Used', value: `@entity.iterations`, icon: 'repeat' },
           { type: 'stat-display', label: 'Max Allowed', value: `@entity.maxIterations`, icon: 'shield' },
@@ -480,7 +479,6 @@ export function stdAgentToolLoopPage(params: StdAgentToolLoopParams): Page {
     traits: [
       { ref: c.traitName },
       { ref: 'ToolLoopStepProgress' },
-      { ref: 'ToolLoopActivityLog' },
       { ref: 'ToolLoopCompletionFlow' },
       { ref: 'ToolLoopToolCallFlow' },
       { ref: 'ToolLoopContextMonitor' },
@@ -538,15 +536,6 @@ export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinit
   stepProgressTrait.listens = [];
   if (stepProgressTrait.emits) { for (const e of stepProgressTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
 
-  const activityLogTrait = extractTrait(stdAgentActivityLog({
-    entityName,
-    fields,
-    persistence: 'runtime',
-  }));
-  activityLogTrait.name = 'ToolLoopActivityLog';
-  activityLogTrait.listens = [];
-  if (activityLogTrait.emits) { for (const e of activityLogTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
-
   // 4. Entity + page
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
   const page: Page = {
@@ -555,7 +544,6 @@ export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinit
     traits: [
       { ref: loopTrait.name },
       { ref: stepProgressTrait.name },
-      { ref: activityLogTrait.name },
       { ref: completionTrait.name },
       { ref: toolCallTrait.name },
       { ref: contextTrait.name },
@@ -565,7 +553,7 @@ export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinit
   return makeOrbital(
     `${entityName}Orbital`,
     entity,
-    [loopTrait, stepProgressTrait, activityLogTrait, completionTrait, toolCallTrait, contextTrait],
+    [loopTrait, stepProgressTrait, completionTrait, toolCallTrait, contextTrait],
     [page],
   );
 }

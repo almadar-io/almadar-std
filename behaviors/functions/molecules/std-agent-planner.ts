@@ -24,7 +24,6 @@ import { stdAgentClassifier } from '../atoms/std-agent-classifier.js';
 import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
 import { stdAgentMemory } from '../atoms/std-agent-memory.js';
 import { stdModal } from '../atoms/std-modal.js';
-import { stdAgentActivityLog } from '../atoms/std-agent-activity-log.js';
 
 // ============================================================================
 // Params
@@ -87,6 +86,7 @@ function resolve(params: StdAgentPlannerParams): PlannerConfig {
     { name: 'detail', type: 'string', default: '' },
     { name: 'timestamp', type: 'string', default: '' },
     { name: 'duration', type: 'number', default: 0 },
+    { name: 'icon', type: 'string', default: 'circle' },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -427,7 +427,6 @@ export function stdAgentPlannerPage(params: StdAgentPlannerParams): Page {
     traits: [
       { ref: c.traitName },
       { ref: 'PlannerTaskInput' },
-      { ref: 'PlannerActivityLog' },
       { ref: 'PlannerClassifierFlow' },
       { ref: 'PlannerCompletionFlow' },
       { ref: 'PlannerMemoryLifecycle' },
@@ -498,15 +497,6 @@ export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinitio
   }));
   modalTrait.name = 'PlannerTaskInput';
 
-  const activityLogTrait = extractTrait(stdAgentActivityLog({
-    entityName,
-    fields,
-    persistence: 'runtime',
-  }));
-  activityLogTrait.name = 'PlannerActivityLog';
-  activityLogTrait.listens = [];
-  if (activityLogTrait.emits) { for (const e of activityLogTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
-
   // 4. Entity + page
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence });
   const page: Page = {
@@ -515,7 +505,6 @@ export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinitio
     traits: [
       { ref: plannerTrait.name },
       { ref: modalTrait.name },
-      { ref: activityLogTrait.name },
       { ref: classifierTrait.name },
       { ref: completionTrait.name },
       { ref: memoryTrait.name },
@@ -525,7 +514,7 @@ export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinitio
   return makeOrbital(
     `${entityName}Orbital`,
     entity,
-    [plannerTrait, modalTrait, activityLogTrait, classifierTrait, completionTrait, memoryTrait],
+    [plannerTrait, modalTrait, classifierTrait, completionTrait, memoryTrait],
     [page],
   );
 }

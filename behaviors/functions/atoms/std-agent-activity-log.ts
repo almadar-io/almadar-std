@@ -58,6 +58,7 @@ function resolve(params: StdAgentActivityLogParams): ActivityLogConfig {
     { name: 'status', type: 'string', default: 'pending' },
     { name: 'timestamp', type: 'string', default: '' },
     { name: 'duration', type: 'number', default: 0 },
+    { name: 'icon', type: 'string', default: 'circle' },
   ];
   const baseFields = params.fields ?? [];
   const existingNames = new Set(baseFields.map(f => f.name));

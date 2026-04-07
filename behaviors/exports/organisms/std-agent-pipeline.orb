@@ -117,6 +117,11 @@
             "name": "duration",
             "type": "number",
             "default": 0
+          },
+          {
+            "name": "icon",
+            "type": "string",
+            "default": "circle"
           }
         ]
       },
@@ -1289,523 +1294,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ]
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "PlannerActivityLog",
-          "linkedEntity": "PipelinePlan",
-          "category": "interaction",
-          "emits": [
-            {
-              "event": "LOG_ENTRY",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "action",
-                  "type": "string"
-                },
-                {
-                  "name": "detail",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "logging",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "LOG_ENTRY",
-                "name": "Log Entry",
-                "payload": [
-                  {
-                    "name": "action",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "detail",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "status",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLEAR",
-                "name": "Clear Log"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "PipelinePlan"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Agent Pipeline",
-                      "navItems": [
-                        {
-                          "label": "Pipeline",
-                          "href": "/pipeline",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Execution",
-                          "href": "/execution",
-                          "icon": "play"
-                        },
-                        {
-                          "label": "Logs",
-                          "href": "/logs",
-                          "icon": "terminal"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Activity Log",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Clear",
-                                  "event": "CLEAR",
-                                  "variant": "ghost",
-                                  "icon": "trash"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "timeline",
-                              "entity": "PipelinePlan",
-                              "emptyIcon": "activity",
-                              "emptyTitle": "No activity yet",
-                              "emptyDescription": "Agent actions will appear here as they occur.",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "LOG_ENTRY",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "PipelinePlan",
-                    {
-                      "action": "@payload.action",
-                      "detail": "@payload.detail",
-                      "status": "@payload.status",
-                      "timestamp": "@now"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "PipelinePlan"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Agent Pipeline",
-                      "navItems": [
-                        {
-                          "label": "Pipeline",
-                          "href": "/pipeline",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Execution",
-                          "href": "/execution",
-                          "icon": "play"
-                        },
-                        {
-                          "label": "Logs",
-                          "href": "/logs",
-                          "icon": "terminal"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Activity Log",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Clear",
-                                  "event": "CLEAR",
-                                  "variant": "ghost",
-                                  "icon": "trash"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "timeline",
-                              "entity": "PipelinePlan",
-                              "emptyIcon": "activity",
-                              "emptyTitle": "No activity yet",
-                              "emptyDescription": "Agent actions will appear here as they occur.",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "PipelinePlan created successfully"
-                  ]
-                ]
-              },
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "PipelinePlan"
-                  ],
-                  [
-                    "fetch",
-                    "PipelinePlan"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Agent Pipeline",
-                      "navItems": [
-                        {
-                          "label": "Pipeline",
-                          "href": "/pipeline",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Execution",
-                          "href": "/execution",
-                          "icon": "play"
-                        },
-                        {
-                          "label": "Logs",
-                          "href": "/logs",
-                          "icon": "terminal"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Activity Log",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Clear",
-                                  "event": "CLEAR",
-                                  "variant": "ghost",
-                                  "icon": "trash"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "timeline",
-                              "entity": "PipelinePlan",
-                              "emptyIcon": "activity",
-                              "emptyTitle": "No activity yet",
-                              "emptyDescription": "Agent actions will appear here as they occur.",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "PipelinePlan deleted successfully"
                   ]
                 ]
               }
@@ -3784,7 +3272,7 @@
                             },
                             {
                               "type": "simple-grid",
-                              "columns": 2,
+                              "cols": 2,
                               "children": [
                                 {
                                   "type": "stat-display",
@@ -4086,7 +3574,7 @@
                             },
                             {
                               "type": "simple-grid",
-                              "columns": 2,
+                              "cols": 2,
                               "children": [
                                 {
                                   "type": "stat-display",
@@ -4178,7 +3666,7 @@
                             },
                             {
                               "type": "simple-grid",
-                              "columns": 2,
+                              "cols": 2,
                               "children": [
                                 {
                                   "type": "stat-display",
@@ -4270,7 +3758,7 @@
                             },
                             {
                               "type": "simple-grid",
-                              "columns": 2,
+                              "cols": 2,
                               "children": [
                                 {
                                   "type": "stat-display",
@@ -4753,8 +4241,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -4843,8 +4347,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "stack",
@@ -4969,8 +4489,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "stack",
@@ -5091,8 +4627,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.totalSteps",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "alert",
@@ -5181,8 +4733,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "alert",
@@ -5288,8 +4856,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -5378,8 +4962,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -5468,8 +5068,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -5558,8 +5174,24 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Check"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Complete"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -5572,523 +5204,6 @@
                         }
                       ]
                     }
-                  ]
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "ToolLoopActivityLog",
-          "linkedEntity": "PipelineExec",
-          "category": "interaction",
-          "emits": [
-            {
-              "event": "LOG_ENTRY",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "action",
-                  "type": "string"
-                },
-                {
-                  "name": "detail",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "logging",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "LOG_ENTRY",
-                "name": "Log Entry",
-                "payload": [
-                  {
-                    "name": "action",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "detail",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "status",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLEAR",
-                "name": "Clear Log"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "PipelineExec"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Agent Pipeline",
-                      "navItems": [
-                        {
-                          "label": "Pipeline",
-                          "href": "/pipeline",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Execution",
-                          "href": "/execution",
-                          "icon": "play"
-                        },
-                        {
-                          "label": "Logs",
-                          "href": "/logs",
-                          "icon": "terminal"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Activity Log",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Clear",
-                                  "event": "CLEAR",
-                                  "variant": "ghost",
-                                  "icon": "trash"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "timeline",
-                              "entity": "PipelineExec",
-                              "emptyIcon": "activity",
-                              "emptyTitle": "No activity yet",
-                              "emptyDescription": "Agent actions will appear here as they occur.",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "LOG_ENTRY",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "PipelineExec",
-                    {
-                      "action": "@payload.action",
-                      "detail": "@payload.detail",
-                      "status": "@payload.status",
-                      "timestamp": "@now"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "PipelineExec"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Agent Pipeline",
-                      "navItems": [
-                        {
-                          "label": "Pipeline",
-                          "href": "/pipeline",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Execution",
-                          "href": "/execution",
-                          "icon": "play"
-                        },
-                        {
-                          "label": "Logs",
-                          "href": "/logs",
-                          "icon": "terminal"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Activity Log",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Clear",
-                                  "event": "CLEAR",
-                                  "variant": "ghost",
-                                  "icon": "trash"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "timeline",
-                              "entity": "PipelineExec",
-                              "emptyIcon": "activity",
-                              "emptyTitle": "No activity yet",
-                              "emptyDescription": "Agent actions will appear here as they occur.",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "PipelineExec created successfully"
-                  ]
-                ]
-              },
-              {
-                "from": "logging",
-                "to": "logging",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "PipelineExec"
-                  ],
-                  [
-                    "fetch",
-                    "PipelineExec"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Agent Pipeline",
-                      "navItems": [
-                        {
-                          "label": "Pipeline",
-                          "href": "/pipeline",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Execution",
-                          "href": "/execution",
-                          "icon": "play"
-                        },
-                        {
-                          "label": "Logs",
-                          "href": "/logs",
-                          "icon": "terminal"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Activity Log",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Clear",
-                                  "event": "CLEAR",
-                                  "variant": "ghost",
-                                  "icon": "trash"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "timeline",
-                              "entity": "PipelineExec",
-                              "emptyIcon": "activity",
-                              "emptyTitle": "No activity yet",
-                              "emptyDescription": "Agent actions will appear here as they occur.",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "PipelineExec deleted successfully"
                   ]
                 ]
               }
@@ -10797,8 +9912,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -10887,8 +10022,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "stack",
@@ -11013,8 +10168,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "stack",
@@ -11135,8 +10310,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.totalSteps",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "alert",
@@ -11225,8 +10420,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "alert",
@@ -11332,8 +10547,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -11422,8 +10657,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -11512,8 +10767,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "button",
@@ -11602,8 +10877,28 @@
                             {
                               "type": "wizard-progress",
                               "currentStep": "@entity.currentStep",
-                              "totalSteps": "@entity.totalSteps",
-                              "steps": "@entity.steps"
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
                             {
                               "type": "button",

@@ -230,7 +230,7 @@ function succeededView(): unknown {
       },
       { type: 'divider' },
       {
-        type: 'simple-grid', columns: 2,
+        type: 'simple-grid', cols: 2,
         children: [
           { type: 'stat-display', label: 'Fix Attempts', value: `@entity.fixAttempts`, icon: 'wrench' },
           { type: 'stat-display', label: 'Status', value: 'Passed', icon: 'check' },
@@ -258,7 +258,7 @@ function failedView(): unknown {
       { type: 'typography', content: 'Fix Loop Failed', variant: 'h2' },
       { type: 'alert', variant: 'error', message: `@entity.error` },
       {
-        type: 'simple-grid', columns: 2,
+        type: 'simple-grid', cols: 2,
         children: [
           { type: 'stat-display', label: 'Attempts Used', value: `@entity.fixAttempts`, icon: 'wrench' },
           { type: 'stat-display', label: 'Remaining Errors', value: `@entity.errorCount`, icon: 'alert-triangle' },

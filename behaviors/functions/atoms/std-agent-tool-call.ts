@@ -13,7 +13,6 @@
 import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
 import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdModal } from './std-modal.js';
-import { stdAgentActivityLog } from './std-agent-activity-log.js';
 
 // ============================================================================
 // Params
@@ -232,7 +231,6 @@ export function stdAgentToolCallPage(params: StdAgentToolCallParams = {}): Page 
     ...(c.isInitial ? { isInitial: true } : {}),
     traits: [
       { ref: `${c.entityName}Modal` },
-      { ref: `${c.entityName}Log` },
       { ref: `${c.entityName}Agent` },
     ],
   } as Page;
@@ -268,12 +266,6 @@ export function stdAgentToolCall(params: StdAgentToolCallParams = {}): OrbitalDe
     emitOnSave: 'INVOKED',
   }));
 
-  // UI trait: activity log for call history
-  const activityLogTrait = extractTrait(stdAgentActivityLog({
-    entityName: entityName,
-    fields,
-  }));
-
   const agentTrait = buildAgentTrait(c);
   const entity = buildEntity(c);
 
@@ -282,10 +274,9 @@ export function stdAgentToolCall(params: StdAgentToolCallParams = {}): OrbitalDe
     ...(c.isInitial ? { isInitial: true } : {}),
     traits: [
       { ref: modalTrait.name },
-      { ref: activityLogTrait.name },
       { ref: agentTrait.name },
     ],
   } as Page;
 
-  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, activityLogTrait, agentTrait], [page]);
+  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, agentTrait], [page]);
 }

@@ -24,7 +24,6 @@ import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@a
 import { stdAgentMemory } from '../atoms/std-agent-memory.js';
 import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
 import { stdAgentProvider } from '../atoms/std-agent-provider.js';
-import { stdAgentActivityLog } from '../atoms/std-agent-activity-log.js';
 import { stdBrowse } from '../atoms/std-browse.js';
 
 // ============================================================================
@@ -93,6 +92,7 @@ function resolve(params: StdAgentLearnerParams): LearnerConfig {
     { name: 'detail', type: 'string', default: '' },
     { name: 'timestamp', type: 'string', default: '' },
     { name: 'duration', type: 'number', default: 0 },
+    { name: 'icon', type: 'string', default: 'circle' },
   ];
 
   const baseFields = ensureIdField(params.fields ?? []);
@@ -133,7 +133,7 @@ function idleView(_entityName: string): unknown {
       },
       { type: 'divider' },
       {
-        type: 'simple-grid', columns: 3,
+        type: 'simple-grid', cols: 3,
         children: [
           { type: 'stat-display', label: 'Successes', value: `@entity.totalSuccesses`, icon: 'check-circle' },
           { type: 'stat-display', label: 'Failures', value: `@entity.totalFailures`, icon: 'x-circle' },
@@ -377,7 +377,6 @@ export function stdAgentLearnerPage(params: StdAgentLearnerParams): Page {
     ...(c.isInitial ? { isInitial: true } : {}),
     traits: [
       { ref: c.traitName },
-      { ref: 'LearnerActivityLog' },
       { ref: 'LearnerRecordsBrowse' },
       { ref: 'LearnerMemoryLifecycle' },
       { ref: 'LearnerCompletionFlow' },
@@ -425,16 +424,7 @@ export function stdAgentLearner(params: StdAgentLearnerParams): OrbitalDefinitio
   providerTrait.listens = [];
   if (providerTrait.emits) { for (const e of providerTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
 
-  // 3. UI atoms: activity log for learning timeline + browse for records
-  const activityLogTrait = extractTrait(stdAgentActivityLog({
-    entityName,
-    fields,
-    persistence: 'runtime',
-  }));
-  activityLogTrait.name = 'LearnerActivityLog';
-  activityLogTrait.listens = [];
-  if (activityLogTrait.emits) { for (const e of activityLogTrait.emits) { (e as unknown as { scope: string }).scope = 'internal'; } }
-
+  // 3. UI atom: browse for records
   const recordsBrowseTrait = extractTrait(stdBrowse({
     entityName,
     fields,
@@ -455,7 +445,6 @@ export function stdAgentLearner(params: StdAgentLearnerParams): OrbitalDefinitio
     ...(c.isInitial ? { isInitial: true } : {}),
     traits: [
       { ref: learnerTrait.name },
-      { ref: activityLogTrait.name },
       { ref: recordsBrowseTrait.name },
       { ref: memoryTrait.name },
       { ref: completionTrait.name },
@@ -466,7 +455,7 @@ export function stdAgentLearner(params: StdAgentLearnerParams): OrbitalDefinitio
   return makeOrbital(
     `${entityName}Orbital`,
     entity,
-    [learnerTrait, activityLogTrait, recordsBrowseTrait, memoryTrait, completionTrait, providerTrait],
+    [learnerTrait, recordsBrowseTrait, memoryTrait, completionTrait, providerTrait],
     [page],
   );
 }

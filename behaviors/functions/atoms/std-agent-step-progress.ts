@@ -57,7 +57,6 @@ function resolve(params: StdAgentStepProgressParams): StepProgressConfig {
   const stepLabels = params.stepLabels ?? ['Initialize', 'Process', 'Validate', 'Complete'];
 
   const requiredFields: EntityField[] = [
-    { name: 'steps', type: 'string', default: stepLabels.join(',') },
     { name: 'currentStep', type: 'number', default: 0 },
     { name: 'totalSteps', type: 'number', default: stepLabels.length },
     { name: 'status', type: 'string', default: 'idle' },
@@ -93,6 +92,7 @@ function buildEntity(c: StepProgressConfig): Entity {
 
 function buildTrait(c: StepProgressConfig): Trait {
   const { entityName } = c;
+  const stepsLiteral = c.stepLabels.map((label, i) => ({ id: String(i), title: label }));
 
   const idleUI = {
     type: 'stack', direction: 'vertical', gap: 'lg',
@@ -106,7 +106,7 @@ function buildTrait(c: StepProgressConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'wizard-progress', currentStep: '@entity.currentStep', totalSteps: '@entity.totalSteps', steps: '@entity.steps' },
+      { type: 'wizard-progress', currentStep: '@entity.currentStep', steps: stepsLiteral },
       { type: 'button', label: 'Start', event: 'START', variant: 'primary', icon: 'play' },
     ],
   };
@@ -123,7 +123,7 @@ function buildTrait(c: StepProgressConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'wizard-progress', currentStep: '@entity.currentStep', totalSteps: '@entity.totalSteps', steps: '@entity.steps' },
+      { type: 'wizard-progress', currentStep: '@entity.currentStep', steps: stepsLiteral },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm', align: 'center',
         children: [
@@ -153,7 +153,7 @@ function buildTrait(c: StepProgressConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'wizard-progress', currentStep: '@entity.totalSteps', totalSteps: '@entity.totalSteps', steps: '@entity.steps' },
+      { type: 'wizard-progress', currentStep: '@entity.totalSteps', steps: stepsLiteral },
       { type: 'alert', variant: 'success', message: 'All steps completed successfully.' },
       { type: 'button', label: 'Reset', event: 'RESET', variant: 'ghost', icon: 'rotate-ccw' },
     ],
@@ -171,7 +171,7 @@ function buildTrait(c: StepProgressConfig): Trait {
         ],
       },
       { type: 'divider' },
-      { type: 'wizard-progress', currentStep: '@entity.currentStep', totalSteps: '@entity.totalSteps', steps: '@entity.steps' },
+      { type: 'wizard-progress', currentStep: '@entity.currentStep', steps: stepsLiteral },
       { type: 'alert', variant: 'error', message: 'Pipeline failed at the current step.' },
       {
         type: 'stack', direction: 'horizontal', gap: 'sm',
