@@ -1,0 +1,190 @@
+{
+  "name": "std-simulation-canvas",
+  "version": "1.0.0",
+  "description": "2D physics simulation renderer atom using the `simulation-canvas` pattern. Runs built-in Euler integration for educational presets (pendulum, spring, etc.). Supports start, stop, and reset controls.",
+  "orbitals": [
+    {
+      "name": "SimulationWorldOrbital",
+      "entity": {
+        "name": "SimulationWorld",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SimulationWorldSimulationCanvas",
+          "linkedEntity": "SimulationWorld",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "running"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "STOP",
+                "name": "Stop"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SimulationWorld"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "simulation-canvas",
+                      "preset": "pendulum",
+                      "width": 800,
+                      "height": 400,
+                      "running": false,
+                      "speed": 1
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "running",
+                "event": "START",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "simulation-canvas",
+                      "preset": "pendulum",
+                      "width": 800,
+                      "height": 400,
+                      "running": true,
+                      "speed": 1
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "idle",
+                "event": "STOP",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "simulation-canvas",
+                      "preset": "pendulum",
+                      "width": 800,
+                      "height": 400,
+                      "running": false,
+                      "speed": 1
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "running",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "simulation-canvas",
+                      "preset": "pendulum",
+                      "width": 800,
+                      "height": 400,
+                      "running": true,
+                      "speed": 1
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "simulation-canvas",
+                      "preset": "pendulum",
+                      "width": 800,
+                      "height": 400,
+                      "running": false,
+                      "speed": 1
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "SimulationWorldSimulationPage",
+          "path": "/simulationworlds",
+          "traits": [
+            {
+              "ref": "SimulationWorldSimulationCanvas"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

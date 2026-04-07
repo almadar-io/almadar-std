@@ -1,0 +1,158 @@
+{
+  "name": "std-game-hud",
+  "version": "1.0.0",
+  "description": "Heads-up display atom. Renders the `game-hud` pattern showing health, score, lives, and other stats.",
+  "orbitals": [
+    {
+      "name": "HudStateOrbital",
+      "entity": {
+        "name": "HudState",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "HudStateHud",
+          "linkedEntity": "HudState",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "HudState"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "position": "top-left",
+                      "size": "md",
+                      "transparent": false,
+                      "stats": [
+                        {
+                          "label": "Name",
+                          "value": "@entity.name"
+                        },
+                        {
+                          "label": "Description",
+                          "value": "@entity.description"
+                        },
+                        {
+                          "label": "Status",
+                          "value": "@entity.status"
+                        },
+                        {
+                          "label": "CreatedAt",
+                          "value": "@entity.createdAt"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "REFRESH",
+                "effects": [
+                  [
+                    "fetch",
+                    "HudState"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "position": "top-left",
+                      "size": "md",
+                      "transparent": false,
+                      "stats": [
+                        {
+                          "label": "Name",
+                          "value": "@entity.name"
+                        },
+                        {
+                          "label": "Description",
+                          "value": "@entity.description"
+                        },
+                        {
+                          "label": "Status",
+                          "value": "@entity.status"
+                        },
+                        {
+                          "label": "CreatedAt",
+                          "value": "@entity.createdAt"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "HudStateHudPage",
+          "path": "/hudstates",
+          "traits": [
+            {
+              "ref": "HudStateHud"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

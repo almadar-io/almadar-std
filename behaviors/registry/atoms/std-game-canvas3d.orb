@@ -1,0 +1,398 @@
+{
+  "name": "std-game-canvas3d",
+  "version": "1.0.0",
+  "description": "3D game canvas atom using the `game-canvas-3d` pattern. Renders tiles, units, and features in a 3D scene with configurable orientation, camera mode, grid, shadows, and background color.",
+  "orbitals": [
+    {
+      "name": "Canvas3dSceneOrbital",
+      "entity": {
+        "name": "Canvas3dScene",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "units",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "default": []
+          }
+        ],
+        "instances": [
+          {
+            "id": "scene-1",
+            "name": "Battle Arena",
+            "description": "A 3D battle arena",
+            "status": "active",
+            "createdAt": "2026-01-01",
+            "tiles": [
+              {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "type": "grass"
+              },
+              {
+                "x": 1,
+                "y": 0,
+                "z": 0,
+                "type": "grass"
+              },
+              {
+                "x": 0,
+                "y": 0,
+                "z": 1,
+                "type": "stone"
+              },
+              {
+                "x": 1,
+                "y": 0,
+                "z": 1,
+                "type": "water"
+              }
+            ],
+            "units": [],
+            "features": []
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "Canvas3dSceneGameCanvas3d",
+          "linkedEntity": "Canvas3dScene",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "active"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payload": [
+                  {
+                    "name": "tileId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payload": [
+                  {
+                    "name": "unitId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CAMERA_CHANGE",
+                "name": "Camera Change"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "Canvas3dScene"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas-3d",
+                      "tiles": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "tiles"
+                      ],
+                      "units": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "units"
+                      ],
+                      "features": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "features"
+                      ],
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "TILE_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas-3d",
+                      "tiles": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "tiles"
+                      ],
+                      "units": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "units"
+                      ],
+                      "features": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "features"
+                      ],
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "UNIT_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas-3d",
+                      "tiles": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "tiles"
+                      ],
+                      "units": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "units"
+                      ],
+                      "features": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "features"
+                      ],
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "TILE_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas-3d",
+                      "tiles": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "tiles"
+                      ],
+                      "units": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "units"
+                      ],
+                      "features": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "features"
+                      ],
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "UNIT_CLICK",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas-3d",
+                      "tiles": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "tiles"
+                      ],
+                      "units": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "units"
+                      ],
+                      "features": [
+                        "object/get",
+                        [
+                          "array/first",
+                          "@Canvas3dScene"
+                        ],
+                        "features"
+                      ],
+                      "orientation": "isometric",
+                      "cameraMode": "orbital",
+                      "showGrid": true,
+                      "shadows": true,
+                      "backgroundColor": "#1a1a2e",
+                      "tileClickEvent": "TILE_CLICK",
+                      "unitClickEvent": "UNIT_CLICK"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "CAMERA_CHANGE",
+                "effects": []
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CAMERA_CHANGE",
+                "effects": []
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Canvas3dSceneCanvas3dPage",
+          "path": "/canvas3dscenes",
+          "traits": [
+            {
+              "ref": "Canvas3dSceneGameCanvas3d"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

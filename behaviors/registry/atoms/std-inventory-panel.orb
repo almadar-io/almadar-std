@@ -1,0 +1,258 @@
+{
+  "name": "std-inventory-panel",
+  "version": "1.0.0",
+  "description": "Grid-based inventory atom using the `inventory-panel` pattern. Shows items in a grid with select, use, and drop actions.",
+  "orbitals": [
+    {
+      "name": "InventorySlotOrbital",
+      "entity": {
+        "name": "InventorySlot",
+        "persistence": "singleton",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "items",
+            "type": "array"
+          }
+        ],
+        "instances": [
+          {
+            "id": "inventory",
+            "items": [
+              {
+                "id": "item-0",
+                "name": "Iron Sword",
+                "quantity": 1,
+                "rarity": "common"
+              },
+              {
+                "id": "item-1",
+                "name": "Health Potion",
+                "quantity": 3,
+                "rarity": "common"
+              },
+              {
+                "id": "item-2",
+                "name": "Shield",
+                "quantity": 1,
+                "rarity": "uncommon"
+              },
+              {
+                "id": "item-3",
+                "name": "Magic Scroll",
+                "quantity": 2,
+                "rarity": "rare"
+              },
+              {
+                "id": "item-4",
+                "name": "Gold Ring",
+                "quantity": 1,
+                "rarity": "epic"
+              },
+              {
+                "id": "item-5",
+                "name": "Dragon Scale",
+                "quantity": 1,
+                "rarity": "epic"
+              }
+            ]
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "InventorySlotInventoryPanel",
+          "linkedEntity": "InventorySlot",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_SLOT",
+                "name": "Select Slot",
+                "payload": [
+                  {
+                    "name": "slotId",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "USE_ITEM",
+                "name": "Use Item",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DROP_ITEM",
+                "name": "Drop Item",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "InventorySlot"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "inventory-panel",
+                      "items": "@entity.items",
+                      "slots": 16,
+                      "columns": 4,
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "useItemEvent": "USE_ITEM",
+                      "dropItemEvent": "DROP_ITEM",
+                      "showTooltips": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_SLOT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "inventory-panel",
+                      "items": "@entity.items",
+                      "slots": 16,
+                      "columns": 4,
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "useItemEvent": "USE_ITEM",
+                      "dropItemEvent": "DROP_ITEM",
+                      "showTooltips": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "USE_ITEM",
+                "effects": [
+                  [
+                    "fetch",
+                    "InventorySlot"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "inventory-panel",
+                      "items": "@entity.items",
+                      "slots": 16,
+                      "columns": 4,
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "useItemEvent": "USE_ITEM",
+                      "dropItemEvent": "DROP_ITEM",
+                      "showTooltips": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DROP_ITEM",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "InventorySlot",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "InventorySlot"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "inventory-panel",
+                      "items": "@entity.items",
+                      "slots": 16,
+                      "columns": 4,
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "useItemEvent": "USE_ITEM",
+                      "dropItemEvent": "DROP_ITEM",
+                      "showTooltips": true
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "InventorySlotInventoryPage",
+          "path": "/inventoryslots",
+          "traits": [
+            {
+              "ref": "InventorySlotInventoryPanel"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

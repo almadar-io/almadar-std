@@ -124,6 +124,12 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Agent memory management, LLM access, tool invocation, context management, and session control.',
         icon: '🤖',
     },
+    composition: {
+        name: 'Composition',
+        displayName: 'Behavior Composition',
+        description: 'Compile-time operators for composing N orbitals into a single application schema.',
+        icon: '🧩',
+    },
 };
 
 /**

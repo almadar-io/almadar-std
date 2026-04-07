@@ -1,0 +1,868 @@
+{
+  "name": "std-agent-classifier",
+  "version": "1.0.0",
+  "description": "Classification flow atom for agent-powered text classification. Composes UI atoms (stdModal for input form, stdNotification for result badge) with an agent trait that uses agent/generate with a classification prompt.",
+  "orbitals": [
+    {
+      "name": "AgentClassifierOrbital",
+      "entity": {
+        "name": "AgentClassifier",
+        "persistence": "persistent",
+        "collection": "agentclassifiers",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "input",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "confidence",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "name": "model",
+            "type": "string",
+            "default": "claude-sonnet-4-20250514"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "notificationType",
+            "type": "string",
+            "default": "info"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentClassifierModal",
+          "linkedEntity": "AgentClassifier",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CLASSIFIED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CLASSIFY",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentClassifier"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentClassifier",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "CLASSIFY",
+                              "variant": "primary",
+                              "icon": "tag"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "tag",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "CLASSIFY",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "tag",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentClassifier",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "typography",
+                              "variant": "caption",
+                              "content": "Categories:"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "positive",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "negative",
+                              "variant": "secondary"
+                            },
+                            {
+                              "type": "badge",
+                              "label": "neutral",
+                              "variant": "secondary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "form-section",
+                          "entity": "AgentClassifier",
+                          "mode": "create",
+                          "submitEvent": "SAVE",
+                          "cancelEvent": "CLOSE",
+                          "fields": [
+                            "input"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "notify",
+                    "Cancelled",
+                    "info"
+                  ],
+                  [
+                    "ref",
+                    "AgentClassifier"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentClassifier",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "CLASSIFY",
+                              "variant": "primary",
+                              "icon": "tag"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "tag",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "AgentClassifier",
+                    "@payload.data"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "emit",
+                    "CLASSIFIED"
+                  ],
+                  [
+                    "ref",
+                    "AgentClassifier"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentClassifier",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "CLASSIFY",
+                              "variant": "primary",
+                              "icon": "tag"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "tag",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentClassifierNotification",
+          "linkedEntity": "AgentClassifier",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "hidden",
+                "isInitial": true
+              },
+              {
+                "name": "visible"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SHOW",
+                "name": "Show Notification",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HIDE",
+                "name": "Hide Notification"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "hidden",
+                "to": "hidden",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentClassifier"
+                  ]
+                ]
+              },
+              {
+                "from": "hidden",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentClassifier Result",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Dismiss",
+                              "event": "HIDE",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ],
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "toast-slot",
+                          "position": "top-right"
+                        },
+                        {
+                          "type": "violation-alert",
+                          "severity": "warning",
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ],
+                          "category": "compliance"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "visible",
+                "event": "SHOW",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "tag",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentClassifier Result",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Dismiss",
+                              "event": "HIDE",
+                              "variant": "ghost",
+                              "icon": "x"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ],
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "toast-slot",
+                          "position": "top-right"
+                        },
+                        {
+                          "type": "violation-alert",
+                          "severity": "warning",
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ],
+                          "category": "compliance"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "visible",
+                "to": "hidden",
+                "event": "HIDE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    ""
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentClassifierAgent",
+          "linkedEntity": "AgentClassifier",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SHOW",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "confidence",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "CLASSIFIED",
+              "triggers": "CLASSIFIED",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "classifying"
+              },
+              {
+                "name": "classified"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CLASSIFY",
+                "name": "Do Classify",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "CLASSIFIED",
+                "name": "Classified",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentClassifier"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "empty-state",
+                      "icon": "tag",
+                      "title": "Classifier",
+                      "description": "Classifier is ready"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "classifying",
+                "event": "DO_CLASSIFY",
+                "effects": [
+                  [
+                    "agent/generate",
+                    [
+                      "str/concat",
+                      "Classify the following text into one of these categories: ",
+                      "positive, negative, neutral",
+                      ". Text: ",
+                      "@entity.input",
+                      ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"
+                    ]
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "classifying",
+                "event": "CLASSIFIED",
+                "effects": [
+                  [
+                    "agent/generate",
+                    [
+                      "str/concat",
+                      "Classify the following text into one of these categories: ",
+                      "positive, negative, neutral",
+                      ". Text: ",
+                      "@entity.input",
+                      ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"
+                    ]
+                  ]
+                ]
+              },
+              {
+                "from": "classifying",
+                "to": "classified",
+                "event": "DO_CLASSIFY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.category",
+                    "@payload.data.input"
+                  ],
+                  [
+                    "emit",
+                    "SHOW"
+                  ]
+                ]
+              },
+              {
+                "from": "classified",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.input",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.category",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.confidence",
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentClassifierPage",
+          "path": "/agentclassifiers",
+          "traits": [
+            {
+              "ref": "AgentClassifierModal"
+            },
+            {
+              "ref": "AgentClassifierNotification"
+            },
+            {
+              "ref": "AgentClassifierAgent"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

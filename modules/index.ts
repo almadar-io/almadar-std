@@ -37,3 +37,6 @@ export { OS_OPERATORS } from './os.js';
 
 // Agent intelligence module
 export { AGENT_OPERATORS, getAgentOperators } from './agent.js';
+
+// Behavior composition module (compile-time operators)
+export { COMPOSITION_OPERATORS, getCompositionOperators } from './composition.js';

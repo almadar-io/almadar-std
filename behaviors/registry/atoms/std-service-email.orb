@@ -1,0 +1,541 @@
+{
+  "name": "std-service-email",
+  "version": "1.0.0",
+  "description": "Email service integration behavior: compose, send, track delivery status. Wraps the `email` service with call-service for send operations. Pure function: params in, OrbitalDefinition out.",
+  "orbitals": [
+    {
+      "name": "ServiceEmailOrbital",
+      "entity": {
+        "name": "ServiceEmail",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "to",
+            "type": "string"
+          },
+          {
+            "name": "subject",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "type": "string"
+          },
+          {
+            "name": "from",
+            "type": "string"
+          },
+          {
+            "name": "sendStatus",
+            "type": "string",
+            "default": "idle"
+          },
+          {
+            "name": "messageId",
+            "type": "string"
+          },
+          {
+            "name": "error",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "ServiceEmailEmail",
+          "linkedEntity": "ServiceEmail",
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "sending"
+              },
+              {
+                "name": "sent"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEND",
+                "name": "Send Email"
+              },
+              {
+                "key": "SENT",
+                "name": "Email Sent",
+                "payload": [
+                  {
+                    "name": "messageId",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "FAILED",
+                "name": "Send Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "ServiceEmail"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mail",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceEmail Email",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "To",
+                          "bind": "@entity.to",
+                          "placeholder": "recipient@example.com"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Subject",
+                          "bind": "@entity.subject",
+                          "placeholder": "Email subject"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Body",
+                          "bind": "@entity.body",
+                          "placeholder": "Write your message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "sending",
+                "event": "SEND",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "loading-state",
+                      "title": "Sending email...",
+                      "message": "Delivering serviceemail email..."
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "email",
+                    "send",
+                    {
+                      "to": "@entity.to",
+                      "subject": "@entity.subject",
+                      "body": "@entity.body"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "sending",
+                "to": "sent",
+                "event": "SENT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sendStatus",
+                    "sent"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "check-circle",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "success",
+                          "message": "Email sent successfully"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send Another",
+                          "event": "RESET",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "sending",
+                "to": "error",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sendStatus",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "error-state",
+                          "title": "Send Failed",
+                          "message": "Could not deliver the email.",
+                          "onRetry": "RETRY"
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Retry",
+                              "event": "RETRY",
+                              "variant": "primary",
+                              "icon": "refresh-cw"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RETRY",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mail",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceEmail Email",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "To",
+                          "bind": "@entity.to",
+                          "placeholder": "recipient@example.com"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Subject",
+                          "bind": "@entity.subject",
+                          "placeholder": "Email subject"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Body",
+                          "bind": "@entity.body",
+                          "placeholder": "Write your message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "sent",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sendStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mail",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceEmail Email",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "To",
+                          "bind": "@entity.to",
+                          "placeholder": "recipient@example.com"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Subject",
+                          "bind": "@entity.subject",
+                          "placeholder": "Email subject"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Body",
+                          "bind": "@entity.body",
+                          "placeholder": "Write your message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.sendStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mail",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "ServiceEmail Email",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "input",
+                          "label": "To",
+                          "bind": "@entity.to",
+                          "placeholder": "recipient@example.com"
+                        },
+                        {
+                          "type": "input",
+                          "label": "Subject",
+                          "bind": "@entity.subject",
+                          "placeholder": "Email subject"
+                        },
+                        {
+                          "type": "textarea",
+                          "label": "Body",
+                          "bind": "@entity.body",
+                          "placeholder": "Write your message..."
+                        },
+                        {
+                          "type": "button",
+                          "label": "Send",
+                          "event": "SEND",
+                          "variant": "primary",
+                          "icon": "send"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "ServiceEmailPage",
+          "path": "/serviceemails",
+          "traits": [
+            {
+              "ref": "ServiceEmailEmail"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

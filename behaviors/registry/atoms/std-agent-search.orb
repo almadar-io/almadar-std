@@ -1,0 +1,449 @@
+{
+  "name": "std-agent-search",
+  "version": "1.0.0",
+  "description": "Code search flow atom for agent-powered codebase searching. Composes stdBrowse (results table) with an agent trait that handles agent/search-code.",
+  "orbitals": [
+    {
+      "name": "AgentSearchOrbital",
+      "entity": {
+        "name": "AgentSearch",
+        "persistence": "persistent",
+        "collection": "agentsearchs",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "default": "active",
+            "values": [
+              "active",
+              "inactive",
+              "pending"
+            ]
+          },
+          {
+            "name": "createdAt",
+            "type": "string"
+          },
+          {
+            "name": "query",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "results",
+            "type": "array",
+            "default": []
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "name": "resultCount",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "AgentSearchBrowse",
+          "linkedEntity": "AgentSearch",
+          "category": "interaction",
+          "listens": [
+            {
+              "event": "SEARCHED",
+              "triggers": "SEARCHED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "SEARCH"
+              },
+              {
+                "key": "CLEAR",
+                "name": "CLEAR"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "SEARCHED",
+                "name": "SEARCHED",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentSearch"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "search",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AgentSearch",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Search",
+                                  "event": "SEARCH",
+                                  "variant": "primary",
+                                  "icon": "search"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Clear",
+                                  "event": "CLEAR",
+                                  "variant": "ghost",
+                                  "icon": "x"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "AgentSearch",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No search results",
+                          "emptyDescription": "Enter a query to search the codebase.",
+                          "itemActions": [
+                            {
+                              "label": "View",
+                              "event": "VIEW",
+                              "variant": "ghost",
+                              "size": "sm"
+                            }
+                          ],
+                          "columns": [
+                            {
+                              "name": "query",
+                              "label": "Query",
+                              "variant": "h4",
+                              "icon": "search"
+                            },
+                            {
+                              "name": "language",
+                              "label": "Language",
+                              "variant": "badge",
+                              "colorMap": {
+                                "active": "success",
+                                "completed": "success",
+                                "done": "success",
+                                "pending": "warning",
+                                "draft": "warning",
+                                "scheduled": "warning",
+                                "inactive": "neutral",
+                                "archived": "neutral",
+                                "disabled": "neutral",
+                                "error": "destructive",
+                                "cancelled": "destructive",
+                                "failed": "destructive"
+                              }
+                            },
+                            {
+                              "name": "resultCount",
+                              "label": "Result Count",
+                              "variant": "caption"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "SEARCHED",
+                "effects": [
+                  [
+                    "ref",
+                    "AgentSearch"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AgentSearchAgent",
+          "linkedEntity": "AgentSearch",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "SEARCHED",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "query",
+                  "type": "string"
+                },
+                {
+                  "name": "resultCount",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SEARCHED",
+              "triggers": "INIT",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "searching"
+              },
+              {
+                "name": "results"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SEARCH",
+                "name": "Search",
+                "payload": [
+                  {
+                    "name": "query",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "language",
+                    "type": "string",
+                    "required": false
+                  }
+                ]
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear Results"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSearch"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "empty-state",
+                      "icon": "search",
+                      "title": "Code Search",
+                      "description": "Code Search is ready"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "searching",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "set",
+                    "@entity.language",
+                    "@payload.language"
+                  ],
+                  [
+                    "agent/search-code",
+                    "@payload.query",
+                    "@payload.language"
+                  ]
+                ]
+              },
+              {
+                "from": "searching",
+                "to": "results",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentSearch"
+                  ],
+                  [
+                    "emit",
+                    "SEARCHED"
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "searching",
+                "event": "SEARCH",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    "@payload.query"
+                  ],
+                  [
+                    "set",
+                    "@entity.language",
+                    "@payload.language"
+                  ],
+                  [
+                    "agent/search-code",
+                    "@payload.query",
+                    "@payload.language"
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.query",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.results",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.language",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.resultCount",
+                    0
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "AgentSearchPage",
+          "path": "/agentsearchs",
+          "traits": [
+            {
+              "ref": "AgentSearchBrowse"
+            },
+            {
+              "ref": "AgentSearchAgent"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

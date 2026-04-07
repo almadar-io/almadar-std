@@ -35,6 +35,7 @@ export const OPERATOR_CATEGORIES = [
   'std-prob',
   'std-os',
   'std-agent',
+  'std-composition',
   'ml-arch',
   'ml-effect',
   'ml-tensor',
@@ -95,6 +96,7 @@ export const STD_MODULES = [
   'graph',
   'contract',
   'data',
+  'composition',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];
@@ -118,6 +120,7 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-prob',
   'std-os',
   'std-agent',
+  'std-composition',
   'ml-arch',
   'ml-effect',
   'ml-tensor',
@@ -153,6 +156,8 @@ export interface StdOperatorMeta extends OperatorMeta {
   acceptsLambda?: boolean;
   /** Position of the lambda argument (0-indexed) */
   lambdaArgPosition?: number;
+  /** Compile-time operator (resolved during .lolo lowering, not at runtime) */
+  compileTime?: boolean;
 }
 
 /**
