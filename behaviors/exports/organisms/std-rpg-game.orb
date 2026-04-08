@@ -1,6 +1,7 @@
 {
-  "name": "RPG Game",
+  "name": "std-rpg-game",
   "version": "1.0.0",
+  "description": "RPG game organism. Composes: stdTurnBasedBattle(BattleState) + stdOverworld(WorldZone) + stdInventory(RpgItem) + stdQuest(Mission)",
   "orbitals": [
     {
       "name": "BattleStateOrbital",
@@ -1210,15 +1211,15 @@
           "listens": [
             {
               "event": "ITEM_ADDED",
-              "triggers": "ITEM_ADDED"
+              "triggers": "INIT"
             },
             {
               "event": "ITEM_USED",
-              "triggers": "ITEM_USED"
+              "triggers": "INIT"
             },
             {
               "event": "CONFIRM_DROP",
-              "triggers": "CONFIRM_DROP"
+              "triggers": "INIT"
             },
             {
               "event": "LOOT_DROPPED",
@@ -1269,39 +1270,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_ADDED",
-                "name": "ITEM_ADDED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_USED",
-                "name": "ITEM_USED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DROP",
-                "name": "CONFIRM_DROP",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -1433,39 +1401,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ITEM_ADDED",
-                "effects": [
-                  [
-                    "ref",
-                    "RpgItem"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ITEM_USED",
-                "effects": [
-                  [
-                    "ref",
-                    "RpgItem"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "CONFIRM_DROP",
-                "effects": [
-                  [
-                    "ref",
-                    "RpgItem"
-                  ]
-                ]
               }
             ]
           }
@@ -1475,6 +1410,9 @@
           "linkedEntity": "RpgItem",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "ITEM_ADDED"
             }
@@ -1617,10 +1555,6 @@
                   [
                     "emit",
                     "ITEM_ADDED"
-                  ],
-                  [
-                    "notify",
-                    "RpgItem created successfully"
                   ]
                 ]
               }
@@ -1632,6 +1566,9 @@
           "linkedEntity": "RpgItem",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "ITEM_USED"
             }
@@ -1799,10 +1736,6 @@
                   [
                     "emit",
                     "ITEM_USED"
-                  ],
-                  [
-                    "notify",
-                    "RpgItem updated successfully"
                   ]
                 ]
               }
@@ -1846,14 +1779,7 @@
               },
               {
                 "key": "CONFIRM_DROP",
-                "name": "Confirm",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
+                "name": "Confirm"
               },
               {
                 "key": "CANCEL",
@@ -1962,7 +1888,7 @@
                     "persist",
                     "delete",
                     "RpgItem",
-                    "@payload.id"
+                    "@entity.pendingId"
                   ],
                   [
                     "render-ui",
@@ -1972,14 +1898,6 @@
                   [
                     "ref",
                     "RpgItem"
-                  ],
-                  [
-                    "emit",
-                    "CONFIRM_DROP"
-                  ],
-                  [
-                    "notify",
-                    "RpgItem deleted successfully"
                   ]
                 ]
               },
@@ -2726,10 +2644,6 @@
                         }
                       ]
                     }
-                  ],
-                  [
-                    "notify",
-                    "Mission updated successfully"
                   ]
                 ]
               },
@@ -3364,6 +3278,5 @@
         }
       ]
     }
-  ],
-  "description": "RPG game organism. Composes: stdTurnBasedBattle(BattleState) + stdOverworld(WorldZone)         + stdInventory(RpgItem) + stdQuest(Mission) Pages: /battle, /world (initial), /inventory, /quests Connections: ENCOUNTER_STARTED (world->battle), LOOT_DROPPED (battle->inventory),              QUEST_ACCEPTED (world->quests)"
+  ]
 }

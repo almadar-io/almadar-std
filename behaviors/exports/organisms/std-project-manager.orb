@@ -1,6 +1,7 @@
 {
-  "name": "ProjectManagerApp",
+  "name": "std-project-manager",
   "version": "1.0.0",
+  "description": "Project management organism. Composes molecules via compose: - stdList(Task): task management with CRUD - stdList(Sprint): sprint management with CRUD - stdDisplay(Burndown): burndown chart dashboard",
   "orbitals": [
     {
       "name": "TaskOrbital",
@@ -68,11 +69,15 @@
           "listens": [
             {
               "event": "TASK_CREATED",
-              "triggers": "TASK_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "TASK_UPDATED",
-              "triggers": "TASK_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "TASK_DELETED",
+              "triggers": "INIT"
             },
             {
               "event": "ASSIGN_TASK",
@@ -85,9 +90,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -143,40 +145,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "TASK_CREATED",
-                "name": "TASK_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TASK_UPDATED",
-                "name": "TASK_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -187,629 +155,6 @@
                 "effects": [
                   [
                     "ref",
-                    "Task"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
-                      "navItems": [
-                        {
-                          "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
-                        },
-                        {
-                          "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "check-square",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Tasks",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Task",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Total Tasks",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "check-square"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Task",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No tasks yet",
-                              "emptyDescription": "Create tasks to plan your sprint.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "title",
-                                  "variant": "h3",
-                                  "icon": "check-square"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "assignee",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "storyPoints",
-                                  "label": "Points",
-                                  "variant": "body",
-                                  "format": "number"
-                                },
-                                {
-                                  "name": "dueDate",
-                                  "label": "Due",
-                                  "variant": "caption",
-                                  "format": "date"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TASK_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Task"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TASK_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Task"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Task",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Task",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.title",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Task",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
-                      "navItems": [
-                        {
-                          "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
-                        },
-                        {
-                          "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "check-square",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Tasks",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Task",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Total Tasks",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "check-square"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Task",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No tasks yet",
-                              "emptyDescription": "Create tasks to plan your sprint.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "title",
-                                  "variant": "h3",
-                                  "icon": "check-square"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "assignee",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "storyPoints",
-                                  "label": "Points",
-                                  "variant": "body",
-                                  "format": "number"
-                                },
-                                {
-                                  "name": "dueDate",
-                                  "label": "Due",
-                                  "variant": "caption",
-                                  "format": "date"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Task deleted successfully"
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Task"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
-                      "navItems": [
-                        {
-                          "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
-                        },
-                        {
-                          "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "check-square",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Tasks",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Task",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Total Tasks",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "check-square"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Task",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No tasks yet",
-                              "emptyDescription": "Create tasks to plan your sprint.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "title",
-                                  "variant": "h3",
-                                  "icon": "check-square"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "assignee",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "storyPoints",
-                                  "label": "Points",
-                                  "variant": "body",
-                                  "format": "number"
-                                },
-                                {
-                                  "name": "dueDate",
-                                  "label": "Due",
-                                  "variant": "caption",
-                                  "format": "date"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
                     "Task"
                   ],
                   [
@@ -980,6 +325,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "TASK_CREATED"
             }
           ],
@@ -1124,10 +472,6 @@
                   [
                     "emit",
                     "TASK_CREATED"
-                  ],
-                  [
-                    "notify",
-                    "Task created successfully"
                   ]
                 ]
               }
@@ -1139,6 +483,9 @@
           "linkedEntity": "Task",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "TASK_UPDATED"
             }
@@ -1295,10 +642,6 @@
                   [
                     "emit",
                     "TASK_UPDATED"
-                  ],
-                  [
-                    "notify",
-                    "Task updated successfully"
                   ]
                 ]
               }
@@ -1309,6 +652,11 @@
           "name": "TaskView",
           "linkedEntity": "Task",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1338,6 +686,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1557,6 +916,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "TaskDelete",
+          "linkedEntity": "Task",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "TASK_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Task"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Task",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Task",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Task",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Task"
+                  ],
+                  [
+                    "emit",
+                    "TASK_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Task"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Task"
+                  ]
+                ]
               }
             ]
           }
@@ -1579,6 +1151,9 @@
             },
             {
               "ref": "TaskView"
+            },
+            {
+              "ref": "TaskDelete"
             }
           ]
         }
@@ -1640,11 +1215,15 @@
           "listens": [
             {
               "event": "SPRINT_CREATED",
-              "triggers": "SPRINT_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "SPRINT_UPDATED",
-              "triggers": "SPRINT_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "SPRINT_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -1652,9 +1231,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -1710,40 +1286,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "SPRINT_CREATED",
-                "name": "SPRINT_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "SPRINT_UPDATED",
-                "name": "SPRINT_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -1754,581 +1296,6 @@
                 "effects": [
                   [
                     "ref",
-                    "Sprint"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
-                      "navItems": [
-                        {
-                          "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
-                        },
-                        {
-                          "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "zap",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Sprints",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Sprint",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Sprint",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No sprints yet",
-                              "emptyDescription": "Create a sprint to organize your work.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "name",
-                                  "variant": "h3",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "goal",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "startDate",
-                                  "label": "Start",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "endDate",
-                                  "label": "End",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "taskCount",
-                                  "label": "Tasks",
-                                  "variant": "body",
-                                  "format": "number"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SPRINT_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Sprint"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SPRINT_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Sprint"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Sprint",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Sprint",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.name",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Sprint",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
-                      "navItems": [
-                        {
-                          "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
-                        },
-                        {
-                          "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "zap",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Sprints",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Sprint",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Sprint",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No sprints yet",
-                              "emptyDescription": "Create a sprint to organize your work.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "name",
-                                  "variant": "h3",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "goal",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "startDate",
-                                  "label": "Start",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "endDate",
-                                  "label": "End",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "taskCount",
-                                  "label": "Tasks",
-                                  "variant": "body",
-                                  "format": "number"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Sprint deleted successfully"
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Sprint"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "ProjectManagerApp",
-                      "navItems": [
-                        {
-                          "label": "Tasks",
-                          "href": "/tasks",
-                          "icon": "check-square"
-                        },
-                        {
-                          "label": "Sprints",
-                          "href": "/sprints",
-                          "icon": "zap"
-                        },
-                        {
-                          "label": "Burndown",
-                          "href": "/burndown",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "zap",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Sprints",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Sprint",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Sprint",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No sprints yet",
-                              "emptyDescription": "Create a sprint to organize your work.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "name",
-                                  "variant": "h3",
-                                  "icon": "zap"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "goal",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "startDate",
-                                  "label": "Start",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "endDate",
-                                  "label": "End",
-                                  "variant": "caption",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "taskCount",
-                                  "label": "Tasks",
-                                  "variant": "body",
-                                  "format": "number"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
                     "Sprint"
                   ],
                   [
@@ -2507,6 +1474,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "SPRINT_CREATED"
             }
           ],
@@ -2650,10 +1620,6 @@
                   [
                     "emit",
                     "SPRINT_CREATED"
-                  ],
-                  [
-                    "notify",
-                    "Sprint created successfully"
                   ]
                 ]
               }
@@ -2665,6 +1631,9 @@
           "linkedEntity": "Sprint",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "SPRINT_UPDATED"
             }
@@ -2820,10 +1789,6 @@
                   [
                     "emit",
                     "SPRINT_UPDATED"
-                  ],
-                  [
-                    "notify",
-                    "Sprint updated successfully"
                   ]
                 ]
               }
@@ -2834,6 +1799,11 @@
           "name": "SprintView",
           "linkedEntity": "Sprint",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -2863,6 +1833,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -3065,6 +2046,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "SprintDelete",
+          "linkedEntity": "Sprint",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "SPRINT_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Sprint"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Sprint",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Sprint",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Sprint",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Sprint"
+                  ],
+                  [
+                    "emit",
+                    "SPRINT_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Sprint"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Sprint"
+                  ]
+                ]
               }
             ]
           }
@@ -3086,6 +2280,9 @@
             },
             {
               "ref": "SprintView"
+            },
+            {
+              "ref": "SprintDelete"
             }
           ]
         }
@@ -4584,6 +3781,5 @@
         }
       ]
     }
-  ],
-  "description": "Project management organism. Composes molecules via compose: - stdList(Task): task management with CRUD - stdList(Sprint): sprint management with CRUD - stdDisplay(Burndown): burndown chart dashboard Cross-orbital connections: - ASSIGN_TASK: SprintBrowse -> TaskBrowse - COMPLETE_SPRINT: SprintBrowse -> BurndownDisplay"
+  ]
 }

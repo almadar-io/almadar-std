@@ -1,6 +1,7 @@
 {
-  "name": "Helpdesk",
+  "name": "std-helpdesk",
   "version": "1.0.0",
+  "description": "Helpdesk organism. Composes molecules via compose: - stdList(Ticket): CRUD list of support tickets - stdMessaging(Response): messaging thread for ticket responses - stdDisplay(SupportMetrics): read-only metrics dashboard",
   "orbitals": [
     {
       "name": "TicketOrbital",
@@ -60,11 +61,15 @@
           "listens": [
             {
               "event": "TICKET_CREATED",
-              "triggers": "TICKET_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "TICKET_UPDATED",
-              "triggers": "TICKET_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "TICKET_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -72,9 +77,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -130,40 +132,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "TICKET_CREATED",
-                "name": "TICKET_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TICKET_UPDATED",
-                "name": "TICKET_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -174,605 +142,6 @@
                 "effects": [
                   [
                     "ref",
-                    "Ticket"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "label": "Responses",
-                          "href": "/responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "inbox",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Tickets",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "New Ticket",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Open Tickets",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "inbox"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Ticket",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No tickets filed",
-                              "emptyDescription": "Your support queue is clear.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "subject",
-                                  "variant": "h3",
-                                  "icon": "inbox"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "assignee",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "description",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TICKET_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Ticket"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TICKET_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Ticket"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Ticket",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Ticket",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.subject",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Ticket",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "label": "Responses",
-                          "href": "/responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "inbox",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Tickets",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "New Ticket",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Open Tickets",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "inbox"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Ticket",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No tickets filed",
-                              "emptyDescription": "Your support queue is clear.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "subject",
-                                  "variant": "h3",
-                                  "icon": "inbox"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "assignee",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "description",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ],
-                  [
-                    "notify",
-                    "Ticket deleted successfully"
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Ticket"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Helpdesk",
-                      "navItems": [
-                        {
-                          "label": "Tickets",
-                          "href": "/tickets",
-                          "icon": "inbox"
-                        },
-                        {
-                          "label": "Responses",
-                          "href": "/responses",
-                          "icon": "message-circle"
-                        },
-                        {
-                          "label": "Metrics",
-                          "href": "/metrics",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "inbox",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Tickets",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "New Ticket",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Open Tickets",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "inbox"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Ticket",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No tickets filed",
-                              "emptyDescription": "Your support queue is clear.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "subject",
-                                  "variant": "h3",
-                                  "icon": "inbox"
-                                },
-                                {
-                                  "name": "priority",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "assignee",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "description",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
                     "Ticket"
                   ],
                   [
@@ -949,6 +318,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "TICKET_CREATED"
             }
           ],
@@ -1091,10 +463,6 @@
                   [
                     "emit",
                     "TICKET_CREATED"
-                  ],
-                  [
-                    "notify",
-                    "Ticket created successfully"
                   ]
                 ]
               }
@@ -1106,6 +474,9 @@
           "linkedEntity": "Ticket",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "TICKET_UPDATED"
             }
@@ -1260,10 +631,6 @@
                   [
                     "emit",
                     "TICKET_UPDATED"
-                  ],
-                  [
-                    "notify",
-                    "Ticket updated successfully"
                   ]
                 ]
               }
@@ -1274,6 +641,11 @@
           "name": "TicketView",
           "linkedEntity": "Ticket",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1303,6 +675,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1488,6 +871,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "TicketDelete",
+          "linkedEntity": "Ticket",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "TICKET_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Ticket"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Ticket",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Ticket",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Ticket",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Ticket"
+                  ],
+                  [
+                    "emit",
+                    "TICKET_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Ticket"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Ticket"
+                  ]
+                ]
               }
             ]
           }
@@ -1510,6 +1106,9 @@
             },
             {
               "ref": "TicketView"
+            },
+            {
+              "ref": "TicketDelete"
             }
           ]
         }
@@ -1556,7 +1155,7 @@
           "listens": [
             {
               "event": "SEND",
-              "triggers": "SEND"
+              "triggers": "INIT"
             },
             {
               "event": "ASSIGN",
@@ -1592,17 +1191,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "SEND",
-                "name": "SEND",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -1728,17 +1316,6 @@
                         }
                       ]
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SEND",
-                "effects": [
-                  [
-                    "ref",
-                    "Response"
                   ]
                 ]
               }
@@ -1897,14 +1474,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "emit",
-                    "SEND"
-                  ],
-                  [
-                    "notify",
-                    "Response created successfully"
                   ]
                 ]
               }
@@ -1915,6 +1484,11 @@
           "name": "ResponseView",
           "linkedEntity": "Response",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1944,6 +1518,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -2103,6 +1688,18 @@
                     "notify",
                     "Cancelled",
                     "info"
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
                   ]
                 ]
               }
@@ -3706,6 +3303,5 @@
         }
       ]
     }
-  ],
-  "description": "Helpdesk organism. Composes molecules via compose: - stdList(Ticket): CRUD list of support tickets - stdMessaging(Response): messaging thread for ticket responses - stdDisplay(SupportMetrics): read-only metrics dashboard Pages: /tickets (initial), /responses, /metrics Connections: ASSIGN (tickets->responses), RESOLVE (responses->metrics)"
+  ]
 }

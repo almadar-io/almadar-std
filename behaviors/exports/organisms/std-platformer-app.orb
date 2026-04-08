@@ -1,6 +1,7 @@
 {
-  "name": "Platformer App",
+  "name": "std-platformer-app",
   "version": "1.0.0",
+  "description": "Platformer game organism. Composes: stdPlatformerGame(PlatLevel) + stdScoreBoard(PlatScore) + stdInventory(Collectible)",
   "orbitals": [
     {
       "name": "PlatLevelOrbital",
@@ -920,15 +921,15 @@
           "listens": [
             {
               "event": "ITEM_ADDED",
-              "triggers": "ITEM_ADDED"
+              "triggers": "INIT"
             },
             {
               "event": "ITEM_USED",
-              "triggers": "ITEM_USED"
+              "triggers": "INIT"
             },
             {
               "event": "CONFIRM_DROP",
-              "triggers": "CONFIRM_DROP"
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -974,39 +975,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_ADDED",
-                "name": "ITEM_ADDED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_USED",
-                "name": "ITEM_USED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DROP",
-                "name": "CONFIRM_DROP",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -1138,39 +1106,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ITEM_ADDED",
-                "effects": [
-                  [
-                    "ref",
-                    "Collectible"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ITEM_USED",
-                "effects": [
-                  [
-                    "ref",
-                    "Collectible"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "CONFIRM_DROP",
-                "effects": [
-                  [
-                    "ref",
-                    "Collectible"
-                  ]
-                ]
               }
             ]
           }
@@ -1180,6 +1115,9 @@
           "linkedEntity": "Collectible",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "ITEM_ADDED"
             }
@@ -1322,10 +1260,6 @@
                   [
                     "emit",
                     "ITEM_ADDED"
-                  ],
-                  [
-                    "notify",
-                    "Collectible created successfully"
                   ]
                 ]
               }
@@ -1337,6 +1271,9 @@
           "linkedEntity": "Collectible",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "ITEM_USED"
             }
@@ -1504,10 +1441,6 @@
                   [
                     "emit",
                     "ITEM_USED"
-                  ],
-                  [
-                    "notify",
-                    "Collectible updated successfully"
                   ]
                 ]
               }
@@ -1551,14 +1484,7 @@
               },
               {
                 "key": "CONFIRM_DROP",
-                "name": "Confirm",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
+                "name": "Confirm"
               },
               {
                 "key": "CANCEL",
@@ -1667,7 +1593,7 @@
                     "persist",
                     "delete",
                     "Collectible",
-                    "@payload.id"
+                    "@entity.pendingId"
                   ],
                   [
                     "render-ui",
@@ -1677,14 +1603,6 @@
                   [
                     "ref",
                     "Collectible"
-                  ],
-                  [
-                    "emit",
-                    "CONFIRM_DROP"
-                  ],
-                  [
-                    "notify",
-                    "Collectible deleted successfully"
                   ]
                 ]
               },
@@ -1745,6 +1663,5 @@
         }
       ]
     }
-  ],
-  "description": "Platformer game organism. Composes: stdPlatformerGame(PlatLevel) + stdScoreBoard(PlatScore) + stdInventory(Collectible) Pages: /game (initial), /scores, /collectibles"
+  ]
 }

@@ -106,15 +106,6 @@ export {
 // All behavior functions
 export * from './behaviors/functions/index.js';
 
-// Phase F follow-up: behavior parameter metadata snapshot for
-// @almadar-tools/lolo-types-sync. AUTO-GENERATED — regenerate via
-// `npx tsx scripts/build-lolo-behavior-metadata.ts` whenever any
-// behavior's *Params interface changes.
-export {
-  LOLO_BEHAVIOR_METADATA,
-  type LoloBehaviorMetadata,
-} from './behaviors/generated/lolo-behavior-metadata.js';
-
 // Documentation Generator
 export {
   // Types

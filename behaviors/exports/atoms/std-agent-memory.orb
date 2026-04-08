@@ -1,5 +1,7 @@
 {
-  "name": "AgentMemoryOrbital",
+  "name": "std-agent-memory",
+  "version": "1.0.0",
+  "description": "Memory lifecycle atom for agent memory operations. Composes UI atoms (stdBrowse for memory table, stdModal for memorize form) with an agent trait that handles agent/memorize, agent/recall, agent/pin, agent/forget, agent/reinforce, and agent/decay operators.",
   "orbitals": [
     {
       "name": "AgentMemoryOrbital",
@@ -74,23 +76,23 @@
           "listens": [
             {
               "event": "MEMORIZED",
-              "triggers": "MEMORIZED"
+              "triggers": "INIT"
             },
             {
               "event": "PINNED",
-              "triggers": "PINNED"
+              "triggers": "INIT"
             },
             {
               "event": "FORGOT",
-              "triggers": "FORGOT"
+              "triggers": "INIT"
             },
             {
               "event": "REINFORCED",
-              "triggers": "REINFORCED"
+              "triggers": "INIT"
             },
             {
               "event": "DECAYED",
-              "triggers": "DECAYED"
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -159,61 +161,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "MEMORIZED",
-                "name": "MEMORIZED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PINNED",
-                "name": "PINNED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "FORGOT",
-                "name": "FORGOT",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REINFORCED",
-                "name": "REINFORCED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DECAYED",
-                "name": "DECAYED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -358,61 +305,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "MEMORIZED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentMemory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PINNED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentMemory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "FORGOT",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentMemory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "REINFORCED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentMemory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "DECAYED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentMemory"
-                  ]
-                ]
               }
             ]
           }
@@ -422,6 +314,9 @@
           "linkedEntity": "AgentMemory",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "MEMORIZED"
             }
@@ -559,10 +454,6 @@
                   [
                     "emit",
                     "MEMORIZED"
-                  ],
-                  [
-                    "notify",
-                    "AgentMemory created successfully"
                   ]
                 ]
               }
@@ -738,10 +629,6 @@
                     "create",
                     "AgentMemory",
                     "@payload.data"
-                  ],
-                  [
-                    "notify",
-                    "AgentMemory created successfully"
                   ]
                 ]
               },
@@ -874,6 +761,5 @@
         }
       ]
     }
-  ],
-  "description": "Memory lifecycle atom for agent memory operations. Composes UI atoms (stdBrowse for memory table, stdModal for memorize form) with an agent trait that handles agent/memorize, agent/recall, agent/pin, agent/forget, agent/reinforce, and agent/decay operators."
+  ]
 }

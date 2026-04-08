@@ -1,6 +1,16 @@
-# Std Behavior Authoring (post-Phase 3.5.G)
+# Std Behavior Authoring (DEPRECATED — post-Phase F.10)
 
-This directory holds the **TypeScript source** for every Almadar standard behavior. The `.orb` files in `../registry/` are **generated** by the ts-to-orb converter from these sources. The compiler embeds the registry, not these TS files.
+> **DEPRECATED 2026-04-08.** The TypeScript factory layer in this directory is **deprecated as a documentation surface and as a stable public API**. The canonical source for std behaviors is now the registry `.orb` files at `../registry/{atoms,molecules,organisms}/std-X.orb`, which the compiler's embedded loader consumes. Consumers should import behaviors via `.lolo` / `.orb` `uses` declarations and reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying overrides at the call site (`linkedEntity`, `name`, `events`, `effects`, `listens`, `emitsScope`).
+>
+> **What still works:** these `.ts` files remain as the **authoring path** for the converter (`tools/almadar-behavior-ts-to-orb/`). Editing one of them, running the converter, and rebuilding the compiler still propagates changes through to the embedded registry. New behaviors can still be added here for now, until raw `.orb` authoring of new atoms is mature.
+>
+> **What does not work anymore:** importing `stdModal` / `stdCart` / `*Params` from `@almadar/std` and treating those as a stable public API. Other tooling (`@almadar/agent` gates, Storybook scaffolds, anything that scrapes `*Params` interfaces) is on a legacy path and should migrate to read the registry `.orb` files instead. **No backwards-compat shims are planned.**
+>
+> See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and `docs/LOLO_Gaps.md` for the migration plan and verification gate.
+
+---
+
+This directory holds the **TypeScript authoring source** for every Almadar standard behavior. The `.orb` files in `../registry/` are **generated** by the ts-to-orb converter from these sources. The compiler embeds the registry, not these TS files.
 
 ## The two-tier model
 
@@ -54,15 +64,21 @@ When a molecule or organism imports a behavior via `uses[]` and references its t
 
 The state machine topology of the imported trait is fixed. States, transitions, and the event key set are owned by the atom that defines them.
 
-## Why TS sources still exist
+## Why TS sources still exist (despite being deprecated)
 
-The TS layer:
+The TS layer is deprecated as a documentation surface and as a stable public API, but it remains live for two practical reasons:
 
-1. **Holds atom logic.** Atoms have helper functions, content builders, and parameterized factories that aren't trivially expressible as raw `.orb`. Authoring atoms in TS is the canonical path.
-2. **Bridges the converter.** The converter invokes the factory at runtime to capture the canonical trait shape, then writes the registry .orb.
-3. **Feeds @almadar/agent gates and Storybook.** Several consumers still import from this directory for runtime introspection. They'll migrate over time.
+1. **It is the authoring path for new behaviors.** Atoms have helper functions, content builders, and parameterized factories that are not yet trivially expressible as raw `.orb` source. Editing a `.ts` file here, running the converter, and rebuilding the compiler is currently the lowest-friction way to add or modify a standard behavior.
+2. **It bridges the converter.** `tools/almadar-behavior-ts-to-orb/` invokes each factory at runtime to capture its canonical trait/page/entity shape, then writes the registry `.orb`. Removing the `.ts` source would break the converter.
 
-This directory is **active source**, not a deprecated artifact. The naming "deprecated" never applied. What changed in Phase 3.5.G is that the **registry** at `../registry/` is now the compiler's source of truth, generated from these TS files, and molecules + organisms can also be authored as raw `.orb` files when their composition pattern is simple enough.
+What changed in Phase F.10 (and is now reflected by the deprecation): the **registry** at `../registry/` is the compiler's source of truth. The TS layer is upstream of that, but no consumer of the orbital-as-function model should reach into this directory. Read the registry `.orb` files instead, or import via `.lolo` / `.orb` `uses` declarations and let the inliner do the resolution.
+
+**Migration path for external consumers** (`@almadar/agent` gates, Storybook scaffolds, anything that imports `stdModal` / `*Params` for runtime introspection):
+
+1. Switch from `import { stdModal } from '@almadar/std/behaviors/functions/atoms/std-modal'` to reading `packages/almadar-std/behaviors/registry/atoms/std-modal.orb` as JSON, OR
+2. Author the consuming `.orb` / `.lolo` file with a `uses` declaration and let the compiler's inline phase resolve the reference.
+
+The legacy import path will continue to work until external consumers migrate, but every exported function and `*Params` interface in this directory now carries an `@deprecated` JSDoc tag and IDEs will warn at every import site.
 
 ## Reference docs
 

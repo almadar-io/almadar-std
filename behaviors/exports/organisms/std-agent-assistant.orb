@@ -1,6 +1,7 @@
 {
-  "name": "Agent Assistant",
+  "name": "std-agent-assistant",
   "version": "1.0.0",
+  "description": "Full chat assistant organism. Composes molecule + atoms into a multi-turn conversational agent with memory persistence, context compaction, provider switching, tabbed views, and a memory sidebar drawer.",
   "orbitals": [
     {
       "name": "AssistantOrbital",
@@ -609,10 +610,6 @@
                         }
                       ]
                     }
-                  ],
-                  [
-                    "notify",
-                    "Assistant created successfully"
                   ]
                 ]
               },
@@ -746,10 +743,6 @@
                         }
                       ]
                     }
-                  ],
-                  [
-                    "notify",
-                    "Assistant deleted successfully"
                   ]
                 ]
               },
@@ -883,10 +876,6 @@
                         }
                       ]
                     }
-                  ],
-                  [
-                    "notify",
-                    "Assistant deleted successfully"
                   ]
                 ]
               }
@@ -1201,23 +1190,23 @@
           "listens": [
             {
               "event": "MEMORIZED",
-              "triggers": "MEMORIZED"
+              "triggers": "INIT"
             },
             {
               "event": "PINNED",
-              "triggers": "PINNED"
+              "triggers": "INIT"
             },
             {
               "event": "FORGOT",
-              "triggers": "FORGOT"
+              "triggers": "INIT"
             },
             {
               "event": "REINFORCED",
-              "triggers": "REINFORCED"
+              "triggers": "INIT"
             },
             {
               "event": "DECAYED",
-              "triggers": "DECAYED"
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -1286,61 +1275,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "MEMORIZED",
-                "name": "MEMORIZED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PINNED",
-                "name": "PINNED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "FORGOT",
-                "name": "FORGOT",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REINFORCED",
-                "name": "REINFORCED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DECAYED",
-                "name": "DECAYED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -1508,61 +1442,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "MEMORIZED",
-                "effects": [
-                  [
-                    "ref",
-                    "Memory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PINNED",
-                "effects": [
-                  [
-                    "ref",
-                    "Memory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "FORGOT",
-                "effects": [
-                  [
-                    "ref",
-                    "Memory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "REINFORCED",
-                "effects": [
-                  [
-                    "ref",
-                    "Memory"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "DECAYED",
-                "effects": [
-                  [
-                    "ref",
-                    "Memory"
-                  ]
-                ]
               }
             ]
           }
@@ -1572,6 +1451,9 @@
           "linkedEntity": "Memory",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "MEMORIZED"
             }
@@ -1709,10 +1591,6 @@
                   [
                     "emit",
                     "MEMORIZED"
-                  ],
-                  [
-                    "notify",
-                    "Memory created successfully"
                   ]
                 ]
               }
@@ -1911,10 +1789,6 @@
                     "create",
                     "Memory",
                     "@payload.data"
-                  ],
-                  [
-                    "notify",
-                    "Memory created successfully"
                   ]
                 ]
               },
@@ -4801,6 +4675,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "SWITCHED"
             },
             {
@@ -5215,10 +5092,6 @@
                         }
                       ]
                     }
-                  ],
-                  [
-                    "notify",
-                    "ProviderConfig updated successfully"
                   ]
                 ]
               }
@@ -6435,6 +6308,5 @@
         }
       ]
     }
-  ],
-  "description": "Full chat assistant organism. Composes molecule + atoms into a multi-turn conversational agent with memory persistence, context compaction, provider switching, tabbed views, and a memory sidebar drawer. Composed from: - stdAgentConversation: multi-turn chat with generate + context tracking - stdAgentMemory: memory lifecycle (memorize, recall, pin, forget, reinforce, decay) - stdAgentContextWindow: token monitoring and auto-compaction - stdAgentProvider: provider switching based on task complexity - stdTabs: Chat / Memory / Settings tab navigation - stdDrawer: memory sidebar for quick recall Cross-trait events: - MEMORIZE_RESPONSE (Conversation -> Memory): auto-memorize important responses - PROVIDER_CHANGED (Provider -> Conversation): notify conversation of provider switch Pages: /chat (initial), /memory, /settings"
+  ]
 }

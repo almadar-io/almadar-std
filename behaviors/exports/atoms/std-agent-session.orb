@@ -1,5 +1,7 @@
 {
-  "name": "AgentSessionOrbital",
+  "name": "std-agent-session",
+  "version": "1.0.0",
+  "description": "Session lifecycle atom for agent session management. Composes UI atoms (stdBrowse for session list, stdModal for fork label form) with an agent trait that handles agent/fork, agent/label, and agent/session-id.",
   "orbitals": [
     {
       "name": "AgentSessionOrbital",
@@ -59,15 +61,15 @@
           "listens": [
             {
               "event": "FORKED",
-              "triggers": "FORKED"
+              "triggers": "INIT"
             },
             {
               "event": "LABELED",
-              "triggers": "LABELED"
+              "triggers": "INIT"
             },
             {
               "event": "ENDED",
-              "triggers": "ENDED"
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -106,39 +108,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "FORKED",
-                "name": "FORKED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "LABELED",
-                "name": "LABELED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ENDED",
-                "name": "ENDED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -271,39 +240,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "FORKED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentSession"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "LABELED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentSession"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ENDED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentSession"
-                  ]
-                ]
               }
             ]
           }
@@ -313,6 +249,9 @@
           "linkedEntity": "AgentSession",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "LABELED"
             }
@@ -468,10 +407,6 @@
                   [
                     "emit",
                     "LABELED"
-                  ],
-                  [
-                    "notify",
-                    "AgentSession updated successfully"
                   ]
                 ]
               }
@@ -636,10 +571,6 @@
                   [
                     "emit",
                     "FORKED"
-                  ],
-                  [
-                    "notify",
-                    "AgentSession created successfully"
                   ]
                 ]
               },
@@ -673,10 +604,6 @@
                   [
                     "emit",
                     "FORKED"
-                  ],
-                  [
-                    "notify",
-                    "AgentSession created successfully"
                   ]
                 ]
               },
@@ -830,6 +757,5 @@
         }
       ]
     }
-  ],
-  "description": "Session lifecycle atom for agent session management. Composes UI atoms (stdBrowse for session list, stdModal for fork label form) with an agent trait that handles agent/fork, agent/label, and agent/session-id."
+  ]
 }

@@ -1,6 +1,7 @@
 {
-  "name": "SocialFeed",
+  "name": "std-social-feed",
   "version": "1.0.0",
+  "description": "Social feed organism. Composes molecules via compose: - stdDetail(Post): browse + create + view posts - stdMessaging(Comment): messaging thread for comments",
   "orbitals": [
     {
       "name": "PostOrbital",
@@ -48,7 +49,7 @@
           "listens": [
             {
               "event": "SAVE",
-              "triggers": "SAVE"
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -79,17 +80,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "SAVE",
-                "name": "SAVE",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -220,17 +210,6 @@
                         }
                       ]
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "ref",
-                    "Post"
                   ]
                 ]
               }
@@ -394,14 +373,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "emit",
-                    "SAVE"
-                  ],
-                  [
-                    "notify",
-                    "Post created successfully"
                   ]
                 ]
               }
@@ -412,6 +383,11 @@
           "name": "PostView",
           "linkedEntity": "Post",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -441,6 +417,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -619,6 +606,18 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
               }
             ]
           }
@@ -684,7 +683,7 @@
           "listens": [
             {
               "event": "SEND",
-              "triggers": "SEND"
+              "triggers": "INIT"
             },
             {
               "event": "COMMENT",
@@ -720,17 +719,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "SEND",
-                "name": "SEND",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -851,17 +839,6 @@
                         }
                       ]
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SEND",
-                "effects": [
-                  [
-                    "ref",
-                    "Comment"
                   ]
                 ]
               }
@@ -1006,14 +983,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "emit",
-                    "SEND"
-                  ],
-                  [
-                    "notify",
-                    "Comment created successfully"
                   ]
                 ]
               }
@@ -1024,6 +993,11 @@
           "name": "CommentView",
           "linkedEntity": "Comment",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1053,6 +1027,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1214,6 +1199,18 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
               }
             ]
           }
@@ -1237,6 +1234,5 @@
         }
       ]
     }
-  ],
-  "description": "Social feed organism. Composes molecules via compose: - stdDetail(Post): browse + create + view posts - stdMessaging(Comment): messaging thread for comments Pages: /feed (initial), /messages Connections: COMMENT event wires posts to comments."
+  ]
 }

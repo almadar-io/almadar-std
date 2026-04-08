@@ -1,5 +1,7 @@
 {
-  "name": "ModalRecordOrbital",
+  "name": "std-modal",
+  "version": "1.0.0",
+  "description": "Modal overlay atom. Accepts content injection so molecules can control what renders inside the open state.",
   "orbitals": [
     {
       "name": "ModalRecordOrbital",
@@ -40,6 +42,11 @@
           "name": "ModalRecordModal",
           "linkedEntity": "ModalRecord",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -62,6 +69,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -314,6 +332,74 @@
                     }
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "ModalRecord"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "layout-panel-top",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Details",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Open",
+                              "event": "OPEN",
+                              "variant": "primary",
+                              "icon": "layout-panel-top"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "empty-state",
+                          "icon": "layout-panel-top",
+                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay."
+                        }
+                      ]
+                    }
+                  ]
+                ]
               }
             ]
           }
@@ -331,6 +417,5 @@
         }
       ]
     }
-  ],
-  "description": "Modal overlay atom. Accepts content injection so molecules can control what renders inside the open state."
+  ]
 }

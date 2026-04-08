@@ -21,6 +21,22 @@
  * @level organism
  * @family agent
  * @packageDocumentation
+ *
+ * @deprecated The TypeScript factory layer is deprecated as of Phase F.10
+ * (2026-04-08). The canonical source for std behaviors is now the registry
+ * `.orb` file at `packages/almadar-std/behaviors/registry/<level>/<name>.orb`,
+ * which is generated from this TS source by `tools/almadar-behavior-ts-to-orb/`
+ * and consumed by the compiler's embedded loader.
+ *
+ * Consumers should import behaviors via `.lolo`/`.orb` `uses` declarations and
+ * reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying
+ * overrides at the call site (`linkedEntity`, `name`, `events`, `effects`,
+ * `listens`, `emitsScope`). The TS `*Params` interface and the exported factory
+ * functions remain ONLY as the authoring path for the converter; they are NOT a
+ * stable public API and may change without notice.
+ *
+ * See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and
+ * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
 import type { OrbitalSchema, OrbitalDefinition, Trait, EntityField } from '@almadar/core/types';
