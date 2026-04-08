@@ -1,10 +1,28 @@
 {
   "name": "std-agent-learner",
   "version": "1.0.0",
-  "description": "Composes agent atoms + UI atoms into an outcome learning pipeline with an activity log for learning history and a browse list for records. Listens for task success/failure events, memorizes outcomes, reinforces memories for successes, applies decay for failures, and adjusts provider routing based on accumulated results. Composed atoms: - stdAgentMemory: memorize outcomes, reinforce/decay based on results - stdAgentCompletion: analyze outcome impact via LLM - stdAgentProvider: adjust provider routing based on success patterns - stdAgentActivityLog: chronological learning timeline - stdBrowse: browsable records list",
+  "description": "std-agent-learner -- Outcome learning",
   "orbitals": [
     {
       "name": "AgentLearnerOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-agent-completion",
+          "as": "AgentCompletion"
+        },
+        {
+          "from": "std/behaviors/std-agent-memory",
+          "as": "AgentMemory"
+        },
+        {
+          "from": "std/behaviors/std-agent-provider",
+          "as": "AgentProvider"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        }
+      ],
       "entity": {
         "name": "AgentLearner",
         "persistence": "runtime",
@@ -1244,1148 +1262,799 @@
           }
         },
         {
+          "ref": "Browse.traits.BrowseItemBrowse",
           "name": "LearnerRecordsBrowse",
           "linkedEntity": "AgentLearner",
-          "category": "interaction",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "browsing",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "VIEW",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+          "effects": {
+            "INIT": [
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "className": "max-w-5xl mx-auto w-full",
+                  "children": [
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "graduation-cap",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Learning Records",
-                                  "variant": "h2"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "AgentLearner",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No records yet",
-                          "emptyDescription": "Task outcomes will appear here as they are recorded.",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "event": "VIEW",
-                              "variant": "ghost",
-                              "size": "sm"
-                            }
-                          ],
-                          "columns": [
-                            {
-                              "name": "outcome",
-                              "label": "Outcome",
-                              "variant": "h4",
-                              "icon": "graduation-cap"
-                            },
-                            {
-                              "name": "category",
-                              "label": "Category",
-                              "variant": "badge",
-                              "colorMap": {
-                                "active": "success",
-                                "completed": "success",
-                                "done": "success",
-                                "pending": "warning",
-                                "draft": "warning",
-                                "scheduled": "warning",
-                                "inactive": "neutral",
-                                "archived": "neutral",
-                                "disabled": "neutral",
-                                "error": "destructive",
-                                "cancelled": "destructive",
-                                "failed": "destructive"
-                              }
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "caption"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "floating-action-button",
-                          "icon": "plus",
-                          "event": "INIT",
-                          "label": "Create",
-                          "tooltip": "Create"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "LearnerMemoryLifecycle",
-          "linkedEntity": "AgentLearner",
-          "category": "interaction",
-          "listens": [],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "browsing",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "MEMORIZE",
-                "name": "MEMORIZE"
-              },
-              {
-                "key": "RECALL",
-                "name": "RECALL"
-              },
-              {
-                "key": "DECAY",
-                "name": "DECAY"
-              },
-              {
-                "key": "PIN",
-                "name": "PIN",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "REINFORCE",
-                "name": "REINFORCE",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "FORGET",
-                "name": "FORGET",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "MEMORIZED",
-                "name": "MEMORIZED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PINNED",
-                "name": "PINNED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "FORGOT",
-                "name": "FORGOT",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "REINFORCED",
-                "name": "REINFORCED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DECAYED",
-                "name": "DECAYED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "AgentLearner Manager",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Memorize",
-                                  "event": "MEMORIZE",
-                                  "variant": "primary",
-                                  "icon": "plus"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
-                                  "variant": "secondary",
-                                  "icon": "search"
-                                },
-                                {
-                                  "type": "button",
-                                  "label": "Decay All",
-                                  "event": "DECAY",
-                                  "variant": "ghost",
-                                  "icon": "clock"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "AgentLearner",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No memories yet",
-                          "emptyDescription": "Create your first memory to get started.",
-                          "itemActions": [
-                            {
-                              "label": "Pin",
-                              "event": "PIN",
-                              "variant": "ghost",
-                              "size": "sm"
-                            },
-                            {
-                              "label": "Reinforce",
-                              "event": "REINFORCE",
-                              "variant": "ghost",
-                              "size": "sm"
-                            },
-                            {
-                              "label": "Forget",
-                              "event": "FORGET",
-                              "variant": "danger",
-                              "size": "sm"
-                            }
-                          ],
-                          "columns": [
-                            {
-                              "name": "content",
-                              "label": "Content",
-                              "variant": "h4",
-                              "icon": "brain"
-                            },
-                            {
-                              "name": "category",
-                              "label": "Category",
-                              "variant": "badge",
-                              "colorMap": {
-                                "active": "success",
-                                "completed": "success",
-                                "done": "success",
-                                "pending": "warning",
-                                "draft": "warning",
-                                "scheduled": "warning",
-                                "inactive": "neutral",
-                                "archived": "neutral",
-                                "disabled": "neutral",
-                                "error": "destructive",
-                                "cancelled": "destructive",
-                                "failed": "destructive"
-                              }
-                            },
-                            {
-                              "name": "strength",
-                              "label": "Strength",
-                              "variant": "caption"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "MEMORIZED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PINNED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "FORGOT",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "REINFORCED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "DECAYED",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ]
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "LearnerCompletionFlow",
-          "linkedEntity": "AgentLearner",
-          "category": "interaction",
-          "emits": [
-            {
-              "event": "GENERATED",
-              "scope": "internal"
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "GENERATE",
-                "name": "Open"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "sparkles",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "AgentLearner",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "button",
-                              "label": "Open",
-                              "event": "GENERATE",
-                              "variant": "primary",
-                              "icon": "sparkles"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "empty-state",
-                          "icon": "sparkles",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "GENERATE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "direction": "horizontal",
                       "gap": "md",
+                      "justify": "space-between",
+                      "align": "center",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Learning Records",
+                              "variant": "h2"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "data-grid",
+                      "entity": "AgentLearner",
+                      "emptyIcon": "inbox",
+                      "emptyTitle": "No records yet",
+                      "emptyDescription": "Task outcomes will appear here as they are recorded.",
+                      "itemActions": [
+                        {
+                          "label": "View",
+                          "event": "VIEW",
+                          "variant": "ghost",
+                          "size": "sm"
+                        }
+                      ],
+                      "columns": [
+                        {
+                          "name": "outcome",
+                          "label": "Outcome",
+                          "variant": "h4",
+                          "icon": "graduation-cap"
+                        },
+                        {
+                          "name": "category",
+                          "label": "Category",
+                          "variant": "badge",
+                          "colorMap": {
+                            "active": "success",
+                            "completed": "success",
+                            "done": "success",
+                            "pending": "warning",
+                            "draft": "warning",
+                            "scheduled": "warning",
+                            "inactive": "neutral",
+                            "archived": "neutral",
+                            "disabled": "neutral",
+                            "error": "destructive",
+                            "cancelled": "destructive",
+                            "failed": "destructive"
+                          }
+                        },
+                        {
+                          "name": "status",
+                          "label": "Status",
+                          "variant": "caption"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "floating-action-button",
+                      "icon": "plus",
+                      "event": "INIT",
+                      "label": "Create",
+                      "tooltip": "Create"
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "ref": "AgentMemory.traits.AgentMemoryBrowse",
+          "name": "LearnerMemoryLifecycle",
+          "linkedEntity": "AgentLearner",
+          "listens": [],
+          "emitsScope": "internal",
+          "effects": {
+            "INIT": [
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "className": "max-w-5xl mx-auto w-full",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "brain",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentLearner Manager",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Memorize",
+                              "event": "MEMORIZE",
+                              "variant": "primary",
+                              "icon": "plus"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Recall",
+                              "event": "RECALL",
+                              "variant": "secondary",
+                              "icon": "search"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Decay All",
+                              "event": "DECAY",
+                              "variant": "ghost",
+                              "icon": "clock"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "data-grid",
+                      "entity": "AgentLearner",
+                      "emptyIcon": "inbox",
+                      "emptyTitle": "No memories yet",
+                      "emptyDescription": "Create your first memory to get started.",
+                      "itemActions": [
+                        {
+                          "label": "Pin",
+                          "event": "PIN",
+                          "variant": "ghost",
+                          "size": "sm"
+                        },
+                        {
+                          "label": "Reinforce",
+                          "event": "REINFORCE",
+                          "variant": "ghost",
+                          "size": "sm"
+                        },
+                        {
+                          "label": "Forget",
+                          "event": "FORGET",
+                          "variant": "danger",
+                          "size": "sm"
+                        }
+                      ],
+                      "columns": [
+                        {
+                          "name": "content",
+                          "label": "Content",
+                          "variant": "h4",
+                          "icon": "brain"
+                        },
+                        {
+                          "name": "category",
+                          "label": "Category",
+                          "variant": "badge",
+                          "colorMap": {
+                            "active": "success",
+                            "completed": "success",
+                            "done": "success",
+                            "pending": "warning",
+                            "draft": "warning",
+                            "scheduled": "warning",
+                            "inactive": "neutral",
+                            "archived": "neutral",
+                            "disabled": "neutral",
+                            "error": "destructive",
+                            "cancelled": "destructive",
+                            "failed": "destructive"
+                          }
+                        },
+                        {
+                          "name": "strength",
+                          "label": "Strength",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "ref": "AgentCompletion.traits.AgentCompletionModal",
+          "name": "LearnerCompletionFlow",
+          "linkedEntity": "AgentLearner",
+          "listens": [],
+          "emitsScope": "internal",
+          "effects": {
+            "INIT": [
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
                               "name": "sparkles",
-                              "size": "md"
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
                               "content": "AgentLearner",
-                              "variant": "h3"
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "badge",
-                              "label": "@entity.provider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.model"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "form-section",
-                          "entity": "AgentLearner",
-                          "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "prompt"
-                          ]
+                          "type": "button",
+                          "label": "Open",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "sparkles"
                         }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "icon": "sparkles",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay."
+                    }
+                  ]
+                }
+              ]
+            ],
+            "GENERATE": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "sparkles",
+                          "size": "md"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "AgentLearner",
+                          "variant": "h3"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "type": "badge",
+                          "label": "@entity.provider"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.model"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "form-section",
+                      "entity": "AgentLearner",
+                      "mode": "create",
+                      "submitEvent": "SAVE",
+                      "cancelEvent": "CLOSE",
+                      "fields": [
+                        "prompt"
                       ]
                     }
                   ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ],
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+                }
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ],
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "children": [
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "sparkles",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "AgentLearner",
-                                  "variant": "h2"
-                                }
-                              ]
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "lg"
                             },
                             {
-                              "type": "button",
-                              "label": "Open",
-                              "event": "GENERATE",
-                              "variant": "primary",
-                              "icon": "sparkles"
+                              "type": "typography",
+                              "content": "AgentLearner",
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "empty-state",
-                          "icon": "sparkles",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
+                          "type": "button",
+                          "label": "Open",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "sparkles"
                         }
                       ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "icon": "sparkles",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay."
                     }
                   ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "AgentLearner",
-                    "@payload.data"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "emit",
-                    "GENERATED"
-                  ],
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+                }
+              ]
+            ],
+            "SAVE": [
+              [
+                "persist",
+                "create",
+                "AgentLearner",
+                "@payload.data"
+              ],
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "emit",
+                "GENERATED"
+              ],
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "children": [
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "sparkles",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "AgentLearner",
-                                  "variant": "h2"
-                                }
-                              ]
+                              "type": "icon",
+                              "name": "sparkles",
+                              "size": "lg"
                             },
                             {
-                              "type": "button",
-                              "label": "Open",
-                              "event": "GENERATE",
-                              "variant": "primary",
-                              "icon": "sparkles"
+                              "type": "typography",
+                              "content": "AgentLearner",
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "empty-state",
-                          "icon": "sparkles",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
+                          "type": "button",
+                          "label": "Open",
+                          "event": "GENERATE",
+                          "variant": "primary",
+                          "icon": "sparkles"
                         }
                       ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "icon": "sparkles",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay."
                     }
-                  ],
-                  [
-                    "notify",
-                    "AgentLearner created successfully"
                   ]
-                ]
-              }
+                }
+              ]
             ]
-          },
-          "listens": []
+          }
         },
         {
+          "ref": "AgentProvider.traits.AgentProviderModal",
           "name": "LearnerProviderManager",
           "linkedEntity": "AgentLearner",
-          "category": "interaction",
-          "emits": [
-            {
-              "event": "SWITCHED",
-              "scope": "internal"
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SWITCH",
-                "name": "Open"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+          "listens": [],
+          "emitsScope": "internal",
+          "effects": {
+            "INIT": [
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "children": [
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "repeat",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Switch Provider",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "button",
-                              "label": "Open",
-                              "event": "SWITCH",
-                              "variant": "primary",
-                              "icon": "repeat"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "empty-state",
-                          "icon": "repeat",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "SWITCH",
-                "effects": [
-                  [
-                    "fetch",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
                               "name": "repeat",
-                              "size": "md"
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
                               "content": "Switch Provider",
-                              "variant": "h3"
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "divider"
+                          "type": "button",
+                          "label": "Open",
+                          "event": "SWITCH",
+                          "variant": "primary",
+                          "icon": "repeat"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "icon": "repeat",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay."
+                    }
+                  ]
+                }
+              ]
+            ],
+            "SWITCH": [
+              [
+                "fetch",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "repeat",
+                          "size": "md"
                         },
+                        {
+                          "type": "typography",
+                          "content": "Switch Provider",
+                          "variant": "h3"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Current:"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.currentProvider"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.currentModel"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "form-section",
+                      "entity": "AgentLearner",
+                      "mode": "edit",
+                      "submitEvent": "SAVE",
+                      "cancelEvent": "CLOSE",
+                      "fields": [
+                        "currentProvider",
+                        "currentModel"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ],
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
+                      "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
                           "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "lg"
+                            },
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Current:"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.currentProvider"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "@entity.currentModel"
+                              "content": "Switch Provider",
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "form-section",
-                          "entity": "AgentLearner",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
-                          "fields": [
-                            "currentProvider",
-                            "currentModel"
-                          ]
+                          "type": "button",
+                          "label": "Open",
+                          "event": "SWITCH",
+                          "variant": "primary",
+                          "icon": "repeat"
                         }
                       ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "icon": "repeat",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay."
                     }
                   ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "notify",
-                    "Cancelled",
-                    "info"
-                  ],
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+                }
+              ]
+            ],
+            "SAVE": [
+              [
+                "persist",
+                "update",
+                "AgentLearner",
+                "@payload.data"
+              ],
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "emit",
+                "SWITCHED"
+              ],
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "children": [
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "repeat",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Switch Provider",
-                                  "variant": "h2"
-                                }
-                              ]
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "lg"
                             },
                             {
-                              "type": "button",
-                              "label": "Open",
-                              "event": "SWITCH",
-                              "variant": "primary",
-                              "icon": "repeat"
+                              "type": "typography",
+                              "content": "Switch Provider",
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "empty-state",
-                          "icon": "repeat",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
+                          "type": "button",
+                          "label": "Open",
+                          "event": "SWITCH",
+                          "variant": "primary",
+                          "icon": "repeat"
                         }
                       ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "persist",
-                    "update",
-                    "AgentLearner",
-                    "@payload.data"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "emit",
-                    "SWITCHED"
-                  ],
-                  [
-                    "ref",
-                    "AgentLearner"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+                    },
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "repeat",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Switch Provider",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "button",
-                              "label": "Open",
-                              "event": "SWITCH",
-                              "variant": "primary",
-                              "icon": "repeat"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "empty-state",
-                          "icon": "repeat",
-                          "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay."
-                        }
-                      ]
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "icon": "repeat",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay."
                     }
-                  ],
-                  [
-                    "notify",
-                    "AgentLearner updated successfully"
                   ]
-                ]
-              }
+                }
+              ]
             ]
-          },
-          "listens": []
+          }
         }
       ],
       "pages": [

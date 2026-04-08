@@ -216,6 +216,11 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     emitOnSave: 'ITEM_USED',
   }));
 
+  // Phase F.10: dropTrait composes std-confirmation cleanly. The
+  // std-confirmation atom stores @payload.id in @entity.pendingId during the
+  // REQUEST → confirming transition, so confirmEffects bind the id via
+  // @entity.pendingId rather than @payload.id (which the CONFIRM event
+  // doesn't carry). This matches std-cart's remove-confirmation pattern.
   const dropTrait = extractTrait(stdConfirmation({ standalone: false,
     entityName, fields,
     traitName: `${entityName}Drop`,
@@ -225,19 +230,9 @@ export function stdInventory(params: StdInventoryParams): OrbitalDefinition {
     headerIcon: 'trash-2',
     requestEvent: 'DROP',
     confirmEvent: 'CONFIRM_DROP',
-    confirmEffects: [['persist', 'delete', entityName, '@payload.id']],
+    confirmEffects: [['persist', 'delete', entityName, '@entity.pendingId']],
     emitOnConfirm: 'CONFIRM_DROP',
   }));
-
-  // CONFIRM_DROP effects reference @payload.id, so declare the payload on the event
-  const dropSm = dropTrait.stateMachine;
-  if (dropSm && 'events' in dropSm) {
-    const events = dropSm.events as Array<{ key: string; payload?: unknown[] }>;
-    const confirmDropEvt = events.find(e => e.key === 'CONFIRM_DROP');
-    if (confirmDropEvt && !confirmDropEvt.payload) {
-      confirmDropEvt.payload = [{ name: 'id', type: 'string', required: true }];
-    }
-  }
 
   // 2. Shared entity with seed instances so INIT fetch returns data
   const instances = [

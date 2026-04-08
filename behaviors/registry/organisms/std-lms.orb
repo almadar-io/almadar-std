@@ -54,11 +54,15 @@
           "listens": [
             {
               "event": "COURSE_CREATED",
-              "triggers": "COURSE_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "COURSE_UPDATED",
-              "triggers": "COURSE_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "COURSE_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -66,9 +70,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -124,40 +125,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "COURSE_CREATED",
-                "name": "COURSE_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "COURSE_UPDATED",
-                "name": "COURSE_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -168,547 +135,6 @@
                 "effects": [
                   [
                     "ref",
-                    "Course"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "LMS",
-                      "navItems": [
-                        {
-                          "label": "Courses",
-                          "href": "/courses",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Enroll",
-                          "href": "/enroll",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Progress",
-                          "href": "/progress",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "book-open",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Courses",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Add Course",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Course",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No courses yet",
-                              "emptyDescription": "Create a course to start teaching.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "title",
-                                  "variant": "h3",
-                                  "icon": "book-open"
-                                },
-                                {
-                                  "name": "level",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "instructor",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "duration",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "description",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "COURSE_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Course"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "COURSE_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Course"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Course",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Course",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.title",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Course",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "LMS",
-                      "navItems": [
-                        {
-                          "label": "Courses",
-                          "href": "/courses",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Enroll",
-                          "href": "/enroll",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Progress",
-                          "href": "/progress",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "book-open",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Courses",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Add Course",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Course",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No courses yet",
-                              "emptyDescription": "Create a course to start teaching.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "title",
-                                  "variant": "h3",
-                                  "icon": "book-open"
-                                },
-                                {
-                                  "name": "level",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "instructor",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "duration",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "description",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Course"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "LMS",
-                      "navItems": [
-                        {
-                          "label": "Courses",
-                          "href": "/courses",
-                          "icon": "book-open"
-                        },
-                        {
-                          "label": "Enroll",
-                          "href": "/enroll",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Progress",
-                          "href": "/progress",
-                          "icon": "layout-list"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "book-open",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Courses",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Add Course",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-grid",
-                              "entity": "Course",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No courses yet",
-                              "emptyDescription": "Create a course to start teaching.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "title",
-                                  "variant": "h3",
-                                  "icon": "book-open"
-                                },
-                                {
-                                  "name": "level",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "instructor",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "duration",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "description",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "cols": 2,
-                              "gap": "md"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
                     "Course"
                   ],
                   [
@@ -867,6 +293,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "COURSE_CREATED"
             }
           ],
@@ -1020,6 +449,9 @@
           "linkedEntity": "Course",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "COURSE_UPDATED"
             }
@@ -1184,6 +616,11 @@
           "name": "CourseView",
           "linkedEntity": "Course",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1213,6 +650,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1398,6 +846,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "CourseDelete",
+          "linkedEntity": "Course",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "COURSE_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Course"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Course",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Course",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Course",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Course"
+                  ],
+                  [
+                    "emit",
+                    "COURSE_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Course"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Course"
+                  ]
+                ]
               }
             ]
           }
@@ -1420,6 +1081,9 @@
             },
             {
               "ref": "CourseView"
+            },
+            {
+              "ref": "CourseDelete"
             }
           ]
         }

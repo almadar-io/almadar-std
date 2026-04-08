@@ -4,10 +4,16 @@
  * CRUD list molecule. Composes atoms via shared event bus:
  * - stdBrowse: data-grid with item actions (fires CREATE, VIEW, EDIT, DELETE)
  * - stdModal (x3): create form, edit form, detail view (responds to matching events)
- * - stdConfirmation: delete confirmation (responds to DELETE)
+ * - stdConfirmation: delete confirmation (responds to DELETE → CONFIRM_DELETE)
  *
- * No emits/listens wiring. Traits on the same page share the event bus.
- * Only the trait with a matching transition from its current state responds.
+ * Phase F.10: previously the delete confirmation was inlined into the browse
+ * trait via post-processing (added a `deleting` state, three new transitions,
+ * and patched the events array). That made std-list un-liftable AND prevented
+ * any organism from composing it as a clean molecule. The refactored version
+ * has 5 separate traits, all from extractTrait, no post-processing — so the
+ * converter lifts every trait into a reference and the molecule itself
+ * becomes a first-class composable unit that organisms can extend with the
+ * same override surface molecules use over atoms.
  *
  * @level molecule
  * @family crud
@@ -18,8 +24,8 @@ import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almad
 import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
+import { stdConfirmation } from '../atoms/std-confirmation.js';
 import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
-// Delete confirmation is inline in the browse trait (single-trait for entity context)
 
 // ============================================================================
 // Params
@@ -191,8 +197,12 @@ export function stdList(params: StdListParams): OrbitalDefinition {
   const UPPER = entityName.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase();
   const CREATED = `${UPPER}_CREATED`;
   const UPDATED = `${UPPER}_UPDATED`;
+  const DELETED = `${UPPER}_DELETED`;
 
-  // 1. Build atoms (shared event names, no wiring needed)
+  // 1. Browse trait. Refresh events include DELETED so the list re-fetches
+  // after the delete confirmation completes. The browse trait declares
+  // DELETE in its itemActions; the deleteTrait listens for that event and
+  // runs the confirmation flow.
   const browseTrait = extractTrait(stdBrowse({
     entityName, fields,
     traitName: `${entityName}Browse`,
@@ -212,7 +222,7 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       { label: 'Edit', event: 'EDIT' },
       { label: 'Delete', event: 'DELETE', variant: 'danger' },
     ],
-    refreshEvents: [CREATED, UPDATED],
+    refreshEvents: [CREATED, UPDATED, DELETED],
   }));
 
   const createTrait = extractTrait(stdModal({ standalone: false,
@@ -256,72 +266,27 @@ export function stdList(params: StdListParams): OrbitalDefinition {
     openEffects: [['fetch', entityName, { id: '@payload.id' }]],
   }));
 
-  // Delete: inline in browse trait (single-trait so entity context carries across DELETE → CONFIRM_DELETE)
-  // Add deleting state + transitions directly to the browse trait's state machine
-  const sm = browseTrait.stateMachine as { states: unknown[]; events: unknown[]; transitions: unknown[] };
-  sm.states.push({ name: 'deleting' });
-  // Ensure DELETE event has payload schema with 'row' field (used in delete confirmation)
-  const deleteEvent = (sm.events as Array<{key: string; payload?: unknown[]}>).find(e => e.key === 'DELETE');
-  if (deleteEvent && !deleteEvent.payload) {
-    deleteEvent.payload = [{ name: 'id', type: 'string' }, { name: 'row', type: 'object' }];
-  }
-  // DELETE already exists from itemActions. Only add events that aren't already there.
-  const existingKeys = new Set((sm.events as Array<{key: string}>).map(e => e.key));
-  if (!existingKeys.has('CONFIRM_DELETE')) sm.events.push({ key: 'CONFIRM_DELETE', name: 'Confirm Delete' });
-  if (!existingKeys.has('CANCEL')) sm.events.push({ key: 'CANCEL', name: 'Cancel' });
-  if (!existingKeys.has('CLOSE')) sm.events.push({ key: 'CLOSE', name: 'Close' });
-
-  // Extract the browse main view from INIT transition so we can re-render it after modal dismiss
-  const initTransition = sm.transitions[0] as { effects: unknown[] };
-  const initRenderEffect = initTransition.effects.find(
-    (e: unknown) => Array.isArray(e) && (e as unknown[])[0] === 'render-ui' && (e as unknown[])[1] === 'main',
-  ) as unknown[] | undefined;
-  const browseMainView = initRenderEffect ? initRenderEffect[2] : null;
-
-  sm.transitions.push(
-    // DELETE: browsing → deleting (fetch entity by ID, show confirmation modal)
-    { from: 'browsing', to: 'deleting', event: 'DELETE', effects: [
-      ['fetch', entityName, { id: '@payload.id' }],
-      ['render-ui', 'modal', {
-        type: 'stack', direction: 'vertical', gap: 'md',
-        children: [
-          { type: 'stack', direction: 'horizontal', gap: 'sm', children: [
-            { type: 'icon', name: 'trash-2', size: 'md' },
-            { type: 'typography', content: `Delete ${entityName}`, variant: 'h3' },
-          ] },
-          { type: 'divider' },
-          { type: 'typography', content: `@entity.${c.nonIdFields[0]?.name ?? 'name'}`, variant: 'h4' },
-          { type: 'typography', content: c.deleteMessage, variant: 'body' },
-          { type: 'stack', direction: 'horizontal', gap: 'sm', justify: 'end', children: [
-            { type: 'button', label: 'Cancel', event: 'CANCEL', variant: 'ghost' },
-            { type: 'button', label: 'Delete', event: 'CONFIRM_DELETE', variant: 'danger', icon: 'trash' },
-          ] },
-        ],
-      }],
-    ] },
-    // CONFIRM_DELETE: deleting → browsing (persist delete, dismiss modal, re-render main)
-    { from: 'deleting', to: 'browsing', event: 'CONFIRM_DELETE', effects: [
-      ['persist', 'delete', entityName, '@entity.id'],
-      ['render-ui', 'modal', null],
-      ['render-ui', 'main', browseMainView],
-    ] },
-    // CANCEL/CLOSE from deleting (dismiss modal, re-render main)
-    { from: 'deleting', to: 'browsing', event: 'CANCEL', effects: [
-      ['render-ui', 'modal', null],
-      ['fetch', entityName],
-      ['render-ui', 'main', browseMainView],
-    ] },
-    { from: 'deleting', to: 'browsing', event: 'CLOSE', effects: [
-      ['render-ui', 'modal', null],
-      ['fetch', entityName],
-      ['render-ui', 'main', browseMainView],
-    ] },
-  );
+  // Delete confirmation. Composes std-confirmation with the canonical
+  // pattern: REQUEST stores @payload.id in @entity.pendingId, CONFIRM uses
+  // @entity.pendingId in the persist effect. Emits DELETED on success so
+  // the browse trait's listens fires INIT and re-fetches.
+  const deleteTrait = extractTrait(stdConfirmation({ standalone: false,
+    entityName, fields,
+    traitName: `${entityName}Delete`,
+    confirmTitle: `Delete ${entityName}`,
+    confirmMessage: c.deleteMessage,
+    confirmLabel: 'Delete',
+    headerIcon: 'trash-2',
+    requestEvent: 'DELETE',
+    confirmEvent: 'CONFIRM_DELETE',
+    confirmEffects: [['persist', 'delete', entityName, '@entity.pendingId']],
+    emitOnConfirm: DELETED,
+  }));
 
   // 2. Shared entity
   const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
 
-  // 3. Page references all traits
+  // 3. Page references all 5 traits
   const page: Page = {
     name: c.pageName, path: c.pagePath,
     ...(c.isInitial ? { isInitial: true } : {}),
@@ -330,14 +295,16 @@ export function stdList(params: StdListParams): OrbitalDefinition {
       { ref: createTrait.name },
       { ref: editTrait.name },
       { ref: viewTrait.name },
+      { ref: deleteTrait.name },
     ],
   } as Page;
 
-  // 4. One orbital, multiple traits, shared event bus
+  // 4. One orbital, 5 traits, shared event bus. Each trait owns its own
+  // state machine (clean atomic composition, no post-processing).
   return {
     name: `${entityName}Orbital`,
     entity,
-    traits: [browseTrait, createTrait, editTrait, viewTrait],
+    traits: [browseTrait, createTrait, editTrait, viewTrait, deleteTrait],
     pages: [page],
   } as OrbitalDefinition;
 }

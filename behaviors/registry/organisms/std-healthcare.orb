@@ -58,11 +58,15 @@
           "listens": [
             {
               "event": "PATIENT_CREATED",
-              "triggers": "PATIENT_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "PATIENT_UPDATED",
-              "triggers": "PATIENT_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "PATIENT_DELETED",
+              "triggers": "INIT"
             },
             {
               "event": "INTAKE_COMPLETE",
@@ -75,9 +79,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -133,40 +134,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "PATIENT_CREATED",
-                "name": "PATIENT_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PATIENT_UPDATED",
-                "name": "PATIENT_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -177,652 +144,6 @@
                 "effects": [
                   [
                     "ref",
-                    "Patient"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "HealthcareApp",
-                      "navItems": [
-                        {
-                          "label": "Patients",
-                          "href": "/patients",
-                          "icon": "heart"
-                        },
-                        {
-                          "label": "Appointments",
-                          "href": "/appointments",
-                          "icon": "calendar"
-                        },
-                        {
-                          "label": "Intake",
-                          "href": "/intake",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Prescriptions",
-                          "href": "/prescriptions",
-                          "icon": "pill"
-                        },
-                        {
-                          "label": "Dashboard",
-                          "href": "/dashboard",
-                          "icon": "layout-dashboard"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "users",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Patients",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Patient",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Total Patients",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "users"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Patient",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No patients registered",
-                              "emptyDescription": "Register a patient to get started.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "firstName",
-                                  "variant": "h3",
-                                  "icon": "user"
-                                },
-                                {
-                                  "name": "lastName",
-                                  "variant": "h3"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "dateOfBirth",
-                                  "label": "Date of Birth",
-                                  "variant": "body",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "phone",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "name": "insuranceId",
-                                  "label": "Insurance ID",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PATIENT_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Patient"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "PATIENT_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Patient"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Patient",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Patient",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.firstName",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Patient",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "HealthcareApp",
-                      "navItems": [
-                        {
-                          "label": "Patients",
-                          "href": "/patients",
-                          "icon": "heart"
-                        },
-                        {
-                          "label": "Appointments",
-                          "href": "/appointments",
-                          "icon": "calendar"
-                        },
-                        {
-                          "label": "Intake",
-                          "href": "/intake",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Prescriptions",
-                          "href": "/prescriptions",
-                          "icon": "pill"
-                        },
-                        {
-                          "label": "Dashboard",
-                          "href": "/dashboard",
-                          "icon": "layout-dashboard"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "users",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Patients",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Patient",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Total Patients",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "users"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Patient",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No patients registered",
-                              "emptyDescription": "Register a patient to get started.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "firstName",
-                                  "variant": "h3",
-                                  "icon": "user"
-                                },
-                                {
-                                  "name": "lastName",
-                                  "variant": "h3"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "dateOfBirth",
-                                  "label": "Date of Birth",
-                                  "variant": "body",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "phone",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "name": "insuranceId",
-                                  "label": "Insurance ID",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Patient"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "HealthcareApp",
-                      "navItems": [
-                        {
-                          "label": "Patients",
-                          "href": "/patients",
-                          "icon": "heart"
-                        },
-                        {
-                          "label": "Appointments",
-                          "href": "/appointments",
-                          "icon": "calendar"
-                        },
-                        {
-                          "label": "Intake",
-                          "href": "/intake",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Prescriptions",
-                          "href": "/prescriptions",
-                          "icon": "pill"
-                        },
-                        {
-                          "label": "Dashboard",
-                          "href": "/dashboard",
-                          "icon": "layout-dashboard"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "users",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Patients",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Patient",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "simple-grid",
-                              "columns": 1,
-                              "children": [
-                                {
-                                  "type": "stat-display",
-                                  "label": "Total Patients",
-                                  "value": [
-                                    "array/len",
-                                    "@entity"
-                                  ],
-                                  "icon": "users"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Patient",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No patients registered",
-                              "emptyDescription": "Register a patient to get started.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "firstName",
-                                  "variant": "h3",
-                                  "icon": "user"
-                                },
-                                {
-                                  "name": "lastName",
-                                  "variant": "h3"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "dateOfBirth",
-                                  "label": "Date of Birth",
-                                  "variant": "body",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "phone",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "name": "insuranceId",
-                                  "label": "Insurance ID",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
                     "Patient"
                   ],
                   [
@@ -1002,6 +323,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "PATIENT_CREATED"
             }
           ],
@@ -1156,6 +480,9 @@
           "linkedEntity": "Patient",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "PATIENT_UPDATED"
             }
@@ -1321,6 +648,11 @@
           "name": "PatientView",
           "linkedEntity": "Patient",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1350,6 +682,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1552,6 +895,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "PatientDelete",
+          "linkedEntity": "Patient",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "PATIENT_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Patient"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Patient",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Patient",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Patient",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Patient"
+                  ],
+                  [
+                    "emit",
+                    "PATIENT_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Patient"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Patient"
+                  ]
+                ]
               }
             ]
           }
@@ -1574,6 +1130,9 @@
             },
             {
               "ref": "PatientView"
+            },
+            {
+              "ref": "PatientDelete"
             }
           ]
         }
@@ -1636,11 +1195,15 @@
           "listens": [
             {
               "event": "APPOINTMENT_CREATED",
-              "triggers": "APPOINTMENT_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "APPOINTMENT_UPDATED",
-              "triggers": "APPOINTMENT_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "APPOINTMENT_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -1648,9 +1211,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -1706,40 +1266,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "APPOINTMENT_CREATED",
-                "name": "APPOINTMENT_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "APPOINTMENT_UPDATED",
-                "name": "APPOINTMENT_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -1750,598 +1276,6 @@
                 "effects": [
                   [
                     "ref",
-                    "Appointment"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "HealthcareApp",
-                      "navItems": [
-                        {
-                          "label": "Patients",
-                          "href": "/patients",
-                          "icon": "heart"
-                        },
-                        {
-                          "label": "Appointments",
-                          "href": "/appointments",
-                          "icon": "calendar"
-                        },
-                        {
-                          "label": "Intake",
-                          "href": "/intake",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Prescriptions",
-                          "href": "/prescriptions",
-                          "icon": "pill"
-                        },
-                        {
-                          "label": "Dashboard",
-                          "href": "/dashboard",
-                          "icon": "layout-dashboard"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "calendar",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Appointments",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Appointment",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Appointment",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No appointments scheduled",
-                              "emptyDescription": "Schedule an appointment to get started.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "patientName",
-                                  "label": "Patient",
-                                  "variant": "h3",
-                                  "icon": "calendar"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "doctorName",
-                                  "label": "Doctor",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "date",
-                                  "variant": "body",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "time",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "name": "reason",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "APPOINTMENT_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Appointment"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "APPOINTMENT_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Appointment"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Appointment",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Appointment",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.patientName",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Appointment",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "HealthcareApp",
-                      "navItems": [
-                        {
-                          "label": "Patients",
-                          "href": "/patients",
-                          "icon": "heart"
-                        },
-                        {
-                          "label": "Appointments",
-                          "href": "/appointments",
-                          "icon": "calendar"
-                        },
-                        {
-                          "label": "Intake",
-                          "href": "/intake",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Prescriptions",
-                          "href": "/prescriptions",
-                          "icon": "pill"
-                        },
-                        {
-                          "label": "Dashboard",
-                          "href": "/dashboard",
-                          "icon": "layout-dashboard"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "calendar",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Appointments",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Appointment",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Appointment",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No appointments scheduled",
-                              "emptyDescription": "Schedule an appointment to get started.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "patientName",
-                                  "label": "Patient",
-                                  "variant": "h3",
-                                  "icon": "calendar"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "doctorName",
-                                  "label": "Doctor",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "date",
-                                  "variant": "body",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "time",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "name": "reason",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Appointment"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "HealthcareApp",
-                      "navItems": [
-                        {
-                          "label": "Patients",
-                          "href": "/patients",
-                          "icon": "heart"
-                        },
-                        {
-                          "label": "Appointments",
-                          "href": "/appointments",
-                          "icon": "calendar"
-                        },
-                        {
-                          "label": "Intake",
-                          "href": "/intake",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Prescriptions",
-                          "href": "/prescriptions",
-                          "icon": "pill"
-                        },
-                        {
-                          "label": "Dashboard",
-                          "href": "/dashboard",
-                          "icon": "layout-dashboard"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "calendar",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Appointments",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Appointment",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Appointment",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No appointments scheduled",
-                              "emptyDescription": "Schedule an appointment to get started.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "patientName",
-                                  "label": "Patient",
-                                  "variant": "h3",
-                                  "icon": "calendar"
-                                },
-                                {
-                                  "name": "status",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "doctorName",
-                                  "label": "Doctor",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "date",
-                                  "variant": "body",
-                                  "format": "date"
-                                },
-                                {
-                                  "name": "time",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "name": "reason",
-                                  "variant": "caption"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
                     "Appointment"
                   ],
                   [
@@ -2516,6 +1450,9 @@
           "category": "interaction",
           "emits": [
             {
+              "event": "SAVE"
+            },
+            {
               "event": "APPOINTMENT_CREATED"
             }
           ],
@@ -2670,6 +1607,9 @@
           "linkedEntity": "Appointment",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "APPOINTMENT_UPDATED"
             }
@@ -2835,6 +1775,11 @@
           "name": "AppointmentView",
           "linkedEntity": "Appointment",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -2864,6 +1809,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -3066,6 +2022,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "AppointmentDelete",
+          "linkedEntity": "Appointment",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "APPOINTMENT_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Appointment",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Appointment",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Appointment",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Appointment"
+                  ],
+                  [
+                    "emit",
+                    "APPOINTMENT_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Appointment"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Appointment"
+                  ]
+                ]
               }
             ]
           }
@@ -3087,6 +2256,9 @@
             },
             {
               "ref": "AppointmentView"
+            },
+            {
+              "ref": "AppointmentDelete"
             }
           ]
         }
@@ -4676,7 +3848,7 @@
           "listens": [
             {
               "event": "SAVE",
-              "triggers": "SAVE"
+              "triggers": "INIT"
             },
             {
               "event": "PRESCRIBE",
@@ -4712,17 +3884,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "SAVE",
-                "name": "SAVE",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -4875,17 +4036,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "ref",
-                    "Prescription"
-                  ]
-                ]
               }
             ]
           }
@@ -5036,10 +4186,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "emit",
-                    "SAVE"
                   ]
                 ]
               }
@@ -5050,6 +4196,11 @@
           "name": "PrescriptionView",
           "linkedEntity": "Prescription",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -5079,6 +4230,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -5289,6 +4451,18 @@
                     "notify",
                     "Cancelled",
                     "info"
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
                   ]
                 ]
               }

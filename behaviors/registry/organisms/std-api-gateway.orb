@@ -51,11 +51,15 @@
           "listens": [
             {
               "event": "ROUTE_CREATED",
-              "triggers": "ROUTE_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "ROUTE_UPDATED",
-              "triggers": "ROUTE_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "ROUTE_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -63,9 +67,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -121,40 +122,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "ROUTE_CREATED",
-                "name": "ROUTE_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ROUTE_UPDATED",
-                "name": "ROUTE_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -297,541 +264,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ROUTE_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Route"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "ROUTE_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Route"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Route",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Route",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.path",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Route",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "git-branch",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Routes",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Route",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Route",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No routes configured",
-                              "emptyDescription": "Add API routes to your gateway.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "method",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "path",
-                                  "variant": "h3",
-                                  "icon": "git-branch"
-                                },
-                                {
-                                  "name": "backend",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "rateLimit",
-                                  "label": "Rate Limit",
-                                  "variant": "caption",
-                                  "format": "number"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Route"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "git-branch",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Routes",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Route",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Route",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No routes configured",
-                              "emptyDescription": "Add API routes to your gateway.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "method",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "path",
-                                  "variant": "h3",
-                                  "icon": "git-branch"
-                                },
-                                {
-                                  "name": "backend",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "rateLimit",
-                                  "label": "Rate Limit",
-                                  "variant": "caption",
-                                  "format": "number"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Route"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "API Gateway",
-                      "navItems": [
-                        {
-                          "label": "Routes",
-                          "href": "/routes",
-                          "icon": "git-branch"
-                        },
-                        {
-                          "label": "Backends",
-                          "href": "/backends",
-                          "icon": "server"
-                        },
-                        {
-                          "label": "Analytics",
-                          "href": "/analytics",
-                          "icon": "bar-chart-2"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "git-branch",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Routes",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Route",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Route",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No routes configured",
-                              "emptyDescription": "Add API routes to your gateway.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "method",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "path",
-                                  "variant": "h3",
-                                  "icon": "git-branch"
-                                },
-                                {
-                                  "name": "backend",
-                                  "variant": "body"
-                                },
-                                {
-                                  "name": "rateLimit",
-                                  "label": "Rate Limit",
-                                  "variant": "caption",
-                                  "format": "number"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
               }
             ]
           }
@@ -841,6 +273,9 @@
           "linkedEntity": "Route",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "ROUTE_CREATED"
             }
@@ -994,6 +429,9 @@
           "linkedEntity": "Route",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "ROUTE_UPDATED"
             }
@@ -1157,6 +595,11 @@
           "name": "RouteView",
           "linkedEntity": "Route",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1186,6 +629,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1354,6 +808,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "RouteDelete",
+          "linkedEntity": "Route",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "ROUTE_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Route"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Route",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Route",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Route",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Route"
+                  ],
+                  [
+                    "emit",
+                    "ROUTE_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Route"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Route"
+                  ]
+                ]
               }
             ]
           }
@@ -1376,6 +1043,9 @@
             },
             {
               "ref": "RouteView"
+            },
+            {
+              "ref": "RouteDelete"
             }
           ]
         }

@@ -71,9 +71,11 @@ interface ModalConfig {
   openPayload: Array<{ name: string; type: string; required?: boolean }>;
   closeEvent: string;
   openEffects: unknown[];
-  saveEvent: string | null;
+  // Phase F.10: SAVE is part of std-modal's permanent topology. Always set.
+  saveEvent: string;
   saveEffects: unknown[];
-  emitOnSave: string | null;
+  // Always set (defaults to saveEvent so the atom's emits[] is always populated).
+  emitOnSave: string;
   standalone: boolean;
   pageName: string;
   pagePath: string;
@@ -113,6 +115,18 @@ function resolve(params: StdModalParams): ModalConfig {
     ],
   };
 
+  // Phase F.10: SAVE is now part of std-modal's permanent topology, not
+  // conditional. Default saveEvent = 'SAVE' so the transition + event entry
+  // always exist in the atom's state machine. Molecules that don't customize
+  // SAVE inherit a no-op effect; molecules that do override the effects via
+  // the F.8 effects override.
+  const saveEvent = params.saveEvent ?? 'SAVE';
+  // emitOnSave defaults to the same key as saveEvent so the atom's emits
+  // declaration always lists SAVE (or the molecule's renamed key). This
+  // makes the lifted reference's emits[] declaration valid without needing
+  // a separate addEmits override.
+  const emitOnSave = params.emitOnSave ?? saveEvent;
+
   return {
     entityName,
     fields,
@@ -126,9 +140,9 @@ function resolve(params: StdModalParams): ModalConfig {
     openPayload: params.openPayload ?? [],
     closeEvent: params.closeEvent ?? 'CLOSE',
     openEffects: params.openEffects ?? [],
-    saveEvent: params.saveEvent ?? null,
+    saveEvent,
     saveEffects: params.saveEffects ?? [],
-    emitOnSave: params.emitOnSave ?? null,
+    emitOnSave,
     standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}ModalPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/modal`,
@@ -145,14 +159,14 @@ function buildEntity(c: ModalConfig): Entity {
 }
 
 function buildTrait(c: ModalConfig): Trait {
+  // Phase F.10: SAVE is always declared, not conditional. The atom's
+  // permanent topology includes INIT + open + close + save events.
   const events: unknown[] = [
     { key: 'INIT', name: 'Initialize' },
     { key: c.openEvent, name: 'Open', ...(c.openPayload.length > 0 ? { payload: c.openPayload } : {}) },
     { key: c.closeEvent, name: 'Close' },
+    { key: c.saveEvent, name: 'Save', payload: [{ name: 'data', type: 'object', required: true }] },
   ];
-  if (c.saveEvent) {
-    events.push({ key: c.saveEvent, name: 'Save', payload: [{ name: 'data', type: 'object', required: true }] });
-  }
 
   const transitions: unknown[] = [
     // INIT: closed → closed
@@ -201,39 +215,50 @@ function buildTrait(c: ModalConfig): Trait {
     ] },
   ];
 
-  // Save transition (molecule injects this for create/edit modals)
-  if (c.saveEvent) {
-    const mainRefresh = c.standalone ? [['ref', c.entityName], ['render-ui', 'main', {
-      type: 'stack', direction: 'vertical', gap: 'lg',
-      children: [
-        { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
-          { type: 'stack', direction: 'horizontal', gap: 'md', children: [
-            { type: 'icon', name: c.headerIcon, size: 'lg' },
-            { type: 'typography', content: c.modalTitle, variant: 'h2' },
-          ] },
-          { type: 'button', label: 'Open', event: c.openEvent, variant: 'primary', icon: c.headerIcon },
+  // Phase F.10: SAVE transition is now permanent (no `if (c.saveEvent)` guard).
+  // Molecules customize the effects via the F.8 effects override; molecules
+  // that don't supply saveEffects inherit a no-op save (just close the modal
+  // and refresh the main render). The atom always declares its emit so the
+  // lifted reference's emits[] is valid even when molecules add their own
+  // ['emit', X] inside the override effects (because emitOnSave defaults to
+  // saveEvent).
+  const mainRefresh = c.standalone ? [['ref', c.entityName], ['render-ui', 'main', {
+    type: 'stack', direction: 'vertical', gap: 'lg',
+    children: [
+      { type: 'stack', direction: 'horizontal', gap: 'md', justify: 'space-between', children: [
+        { type: 'stack', direction: 'horizontal', gap: 'md', children: [
+          { type: 'icon', name: c.headerIcon, size: 'lg' },
+          { type: 'typography', content: c.modalTitle, variant: 'h2' },
         ] },
-        { type: 'divider' },
-        { type: 'empty-state', icon: c.headerIcon, title: 'Nothing open', description: 'Click Open to view details in a modal overlay.' },
-      ],
-    }]] : [];
-    transitions.push({
-      from: 'open', to: 'closed', event: c.saveEvent,
-      effects: [
-        ...c.saveEffects,
-        ['render-ui', 'modal', null],
-        // Emit after persist succeeds so browse traits can fetch fresh data
-        ...(c.emitOnSave ? [['emit', c.emitOnSave]] : []),
-        ...mainRefresh,
-      ],
-    });
-  }
+        { type: 'button', label: 'Open', event: c.openEvent, variant: 'primary', icon: c.headerIcon },
+      ] },
+      { type: 'divider' },
+      { type: 'empty-state', icon: c.headerIcon, title: 'Nothing open', description: 'Click Open to view details in a modal overlay.' },
+    ],
+  }]] : [];
+  transitions.push({
+    from: 'open', to: 'closed', event: c.saveEvent,
+    effects: [
+      ...c.saveEffects,
+      ['render-ui', 'modal', null],
+      // Emit after persist succeeds so browse traits can fetch fresh data.
+      // Skip the emit when emitOnSave equals saveEvent — that's a self-emit
+      // that the runtime would short-circuit anyway, and avoids double
+      // dispatch on every save.
+      ...(c.emitOnSave !== c.saveEvent ? [['emit', c.emitOnSave]] : []),
+      ...mainRefresh,
+    ],
+  });
 
   return {
     name: c.traitName,
     linkedEntity: c.entityName,
     category: 'interaction',
-    ...(c.emitOnSave ? { emits: [{ event: c.emitOnSave }] } : {}),
+    // Phase F.10: emits[] is always populated (default emitOnSave = saveEvent).
+    // If a molecule supplies a distinct emitOnSave, declare both events.
+    emits: c.emitOnSave === c.saveEvent
+      ? [{ event: c.saveEvent }]
+      : [{ event: c.saveEvent }, { event: c.emitOnSave }],
     stateMachine: {
       states: [{ name: 'closed', isInitial: true }, { name: 'open' }],
       events,

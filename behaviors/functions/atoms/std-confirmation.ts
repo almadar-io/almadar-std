@@ -70,7 +70,8 @@ interface ConfirmationConfig {
   requestEvent: string;
   confirmEvent: string;
   confirmEffects: unknown[];
-  emitOnConfirm: string | null;
+  // Phase F.10: emitOnConfirm always set (defaults to confirmEvent).
+  emitOnConfirm: string;
   standalone: boolean;
   pageName: string;
   pagePath: string;
@@ -82,6 +83,13 @@ function resolve(params: StdConfirmationParams): ConfirmationConfig {
   const fields = ensureIdField(params.fields);
   const nonIdFields = fields.filter(f => f.name !== 'id');
   const p = plural(entityName);
+
+  // Phase F.10: emitOnConfirm always defaults to the confirm event key so
+  // the atom's emits[] is always populated. The lifted reference's emits
+  // declaration stays valid regardless of whether a molecule supplies a
+  // distinct emitOnConfirm.
+  const confirmEvent = params.confirmEvent ?? 'CONFIRM';
+  const emitOnConfirm = params.emitOnConfirm ?? confirmEvent;
 
   return {
     entityName,
@@ -96,9 +104,9 @@ function resolve(params: StdConfirmationParams): ConfirmationConfig {
     cancelLabel: params.cancelLabel ?? 'Cancel',
     headerIcon: params.headerIcon ?? 'shield-check',
     requestEvent: params.requestEvent ?? 'REQUEST',
-    confirmEvent: params.confirmEvent ?? 'CONFIRM',
+    confirmEvent,
     confirmEffects: params.confirmEffects ?? [],
-    emitOnConfirm: params.emitOnConfirm ?? null,
+    emitOnConfirm,
     standalone: params.standalone ?? true,
     pageName: params.pageName ?? `${entityName}ConfirmPage`,
     pagePath: params.pagePath ?? `/${p.toLowerCase()}/confirm`,
@@ -179,7 +187,11 @@ function buildTrait(c: ConfirmationConfig): Trait {
     name: c.traitName,
     linkedEntity: entityName,
     category: 'interaction',
-    ...(c.emitOnConfirm ? { emits: [{ event: c.emitOnConfirm }] } : {}),
+    // Phase F.10: emits[] always populated. When emitOnConfirm equals
+    // confirmEvent, declare just the one. When they differ, declare both.
+    emits: c.emitOnConfirm === c.confirmEvent
+      ? [{ event: c.confirmEvent }]
+      : [{ event: c.confirmEvent }, { event: c.emitOnConfirm }],
     stateMachine: {
       states: [
         { name: 'idle', isInitial: true },
@@ -212,7 +224,9 @@ function buildTrait(c: ConfirmationConfig): Trait {
           effects: [
             ...c.confirmEffects,
             ...dismissAndRefresh,
-            ...(c.emitOnConfirm ? [['emit', c.emitOnConfirm]] : []),
+            // Skip self-emit when emitOnConfirm == confirmEvent (the runtime
+            // would short-circuit anyway).
+            ...(c.emitOnConfirm !== c.confirmEvent ? [['emit', c.emitOnConfirm]] : []),
           ],
         },
         {

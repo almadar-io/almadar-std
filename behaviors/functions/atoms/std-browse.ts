@@ -238,32 +238,31 @@ function buildTrait(c: BrowseConfig): Trait {
     });
   }
 
-  // Collect all event keys from actions
+  // Collect all event keys from header + item actions. Refresh events are
+  // NOT added to the events array — they are external events that flow in
+  // via listens (Phase F.10), not local state-machine triggers.
   const actionEvents = new Set<string>();
   for (const a of c.headerActions) actionEvents.add(a.event);
   for (const a of c.itemActions) actionEvents.add(a.event);
-
-  // Add refresh events to the set (they need event declarations too)
-  for (const re of c.refreshEvents) actionEvents.add(re);
 
   const events: unknown[] = [
     { key: 'INIT', name: 'Initialize' },
     ...Array.from(actionEvents).map(e => {
       const needsId = c.itemActions.some(a => a.event === e);
-      // Refresh events with 'data' payload (SAVE-like events)
-      const isRefresh = c.refreshEvents.includes(e);
-      if (isRefresh) {
-        return { key: e, name: e, payload: [{ name: 'data', type: 'object', required: true }] };
-      }
       return needsId
         ? { key: e, name: e, payload: [{ name: 'id', type: 'string', required: true }, { name: 'row', type: 'object' }] }
         : { key: e, name: e };
     }),
   ];
 
-  // Declare listens for refresh events (emitted by modal/confirmation atoms after persist)
+  // Phase F.10: refresh events become listens that trigger the existing
+  // INIT transition (which re-fetches via `['ref', entityName]`). The atom
+  // no longer adds refresh-specific transitions, so its topology stays
+  // stable across customizations: always 1 transition (INIT). Molecules
+  // that pass `refreshEvents: [...]` get their listens declared without
+  // changing the transition graph.
   const listensDecl = c.refreshEvents.length > 0
-    ? c.refreshEvents.map(evt => ({ event: evt, triggers: evt }))
+    ? c.refreshEvents.map(evt => ({ event: evt, triggers: 'INIT' }))
     : undefined;
 
   return {
@@ -297,11 +296,6 @@ function buildTrait(c: BrowseConfig): Trait {
             }],
           ],
         },
-        // Refresh self-loops: when modal atoms fire SAVE etc., re-fetch data
-        ...c.refreshEvents.map(evt => ({
-          from: 'browsing', to: 'browsing', event: evt,
-          effects: [['ref', entityName]],
-        })),
       ],
     },
   } as Trait;

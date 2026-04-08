@@ -43,11 +43,15 @@
           "listens": [
             {
               "event": "TRANSACTION_CREATED",
-              "triggers": "TRANSACTION_CREATED"
+              "triggers": "INIT"
             },
             {
               "event": "TRANSACTION_UPDATED",
-              "triggers": "TRANSACTION_UPDATED"
+              "triggers": "INIT"
+            },
+            {
+              "event": "TRANSACTION_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -55,9 +59,6 @@
               {
                 "name": "browsing",
                 "isInitial": true
-              },
-              {
-                "name": "deleting"
               }
             ],
             "events": [
@@ -113,40 +114,6 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "TRANSACTION_CREATED",
-                "name": "TRANSACTION_CREATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TRANSACTION_UPDATED",
-                "name": "TRANSACTION_UPDATED",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_DELETE",
-                "name": "Confirm Delete"
-              },
-              {
-                "key": "CANCEL",
-                "name": "Cancel"
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close"
               }
             ],
             "transitions": [
@@ -289,541 +256,6 @@
                     }
                   ]
                 ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TRANSACTION_CREATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Transaction"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TRANSACTION_UPDATED",
-                "effects": [
-                  [
-                    "ref",
-                    "Transaction"
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "deleting",
-                "event": "DELETE",
-                "effects": [
-                  [
-                    "fetch",
-                    "Transaction",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "trash-2",
-                              "size": "md"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Delete Transaction",
-                              "variant": "h3"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.description",
-                          "variant": "h4"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "This action cannot be undone.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Cancel",
-                              "event": "CANCEL",
-                              "variant": "ghost"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Delete",
-                              "event": "CONFIRM_DELETE",
-                              "variant": "danger",
-                              "icon": "trash"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CONFIRM_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "Transaction",
-                    "@entity.id"
-                  ],
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Finance Tracker",
-                      "navItems": [
-                        {
-                          "label": "Transactions",
-                          "href": "/transactions",
-                          "icon": "dollar-sign"
-                        },
-                        {
-                          "label": "Summary",
-                          "href": "/summary",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "credit-card",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Transactions",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Transaction",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Transaction",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No transactions yet",
-                              "emptyDescription": "Record your first transaction.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "description",
-                                  "variant": "h3",
-                                  "icon": "credit-card"
-                                },
-                                {
-                                  "name": "category",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "amount",
-                                  "variant": "h4",
-                                  "format": "currency"
-                                },
-                                {
-                                  "name": "date",
-                                  "variant": "caption",
-                                  "format": "date"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CANCEL",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Transaction"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Finance Tracker",
-                      "navItems": [
-                        {
-                          "label": "Transactions",
-                          "href": "/transactions",
-                          "icon": "dollar-sign"
-                        },
-                        {
-                          "label": "Summary",
-                          "href": "/summary",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "credit-card",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Transactions",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Transaction",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Transaction",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No transactions yet",
-                              "emptyDescription": "Record your first transaction.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "description",
-                                  "variant": "h3",
-                                  "icon": "credit-card"
-                                },
-                                {
-                                  "name": "category",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "amount",
-                                  "variant": "h4",
-                                  "format": "currency"
-                                },
-                                {
-                                  "name": "date",
-                                  "variant": "caption",
-                                  "format": "date"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "deleting",
-                "to": "browsing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "fetch",
-                    "Transaction"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "dashboard-layout",
-                      "appName": "Finance Tracker",
-                      "navItems": [
-                        {
-                          "label": "Transactions",
-                          "href": "/transactions",
-                          "icon": "dollar-sign"
-                        },
-                        {
-                          "label": "Summary",
-                          "href": "/summary",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Reports",
-                          "href": "/reports",
-                          "icon": "bar-chart"
-                        }
-                      ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "name": "credit-card",
-                                      "size": "lg"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "Transactions",
-                                      "variant": "h2"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "type": "button",
-                                      "label": "Create Transaction",
-                                      "event": "CREATE",
-                                      "variant": "primary",
-                                      "icon": "plus"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "data-list",
-                              "entity": "Transaction",
-                              "emptyIcon": "inbox",
-                              "emptyTitle": "No transactions yet",
-                              "emptyDescription": "Record your first transaction.",
-                              "itemActions": [
-                                {
-                                  "label": "View",
-                                  "event": "VIEW",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Edit",
-                                  "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
-                                },
-                                {
-                                  "label": "Delete",
-                                  "event": "DELETE",
-                                  "variant": "danger",
-                                  "size": "sm"
-                                }
-                              ],
-                              "columns": [
-                                {
-                                  "name": "description",
-                                  "variant": "h3",
-                                  "icon": "credit-card"
-                                },
-                                {
-                                  "name": "category",
-                                  "variant": "badge"
-                                },
-                                {
-                                  "name": "amount",
-                                  "variant": "h4",
-                                  "format": "currency"
-                                },
-                                {
-                                  "name": "date",
-                                  "variant": "caption",
-                                  "format": "date"
-                                }
-                              ],
-                              "variant": "card",
-                              "gap": "sm"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
               }
             ]
           }
@@ -833,6 +265,9 @@
           "linkedEntity": "Transaction",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "TRANSACTION_CREATED"
             }
@@ -986,6 +421,9 @@
           "linkedEntity": "Transaction",
           "category": "interaction",
           "emits": [
+            {
+              "event": "SAVE"
+            },
             {
               "event": "TRANSACTION_UPDATED"
             }
@@ -1149,6 +587,11 @@
           "name": "TransactionView",
           "linkedEntity": "Transaction",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1178,6 +621,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1346,6 +800,219 @@
                     "info"
                   ]
                 ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "TransactionDelete",
+          "linkedEntity": "Transaction",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "CONFIRM_DELETE"
+            },
+            {
+              "event": "TRANSACTION_DELETED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "confirming"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DELETE",
+                "name": "Request Confirmation",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "CONFIRM_DELETE",
+                "name": "Confirm"
+              },
+              {
+                "key": "CANCEL",
+                "name": "Cancel"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Transaction"
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "confirming",
+                "event": "DELETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingId",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "Transaction",
+                    {
+                      "id": "@payload.id"
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "alert-triangle",
+                              "size": "md"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Delete Transaction",
+                              "variant": "h3"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "danger",
+                          "message": "This action cannot be undone."
+                        },
+                        {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "type": "button",
+                              "label": "Cancel",
+                              "event": "CANCEL",
+                              "variant": "ghost"
+                            },
+                            {
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "CONFIRM_DELETE",
+                              "variant": "danger",
+                              "icon": "check"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CONFIRM_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "Transaction",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Transaction"
+                  ],
+                  [
+                    "emit",
+                    "TRANSACTION_DELETED"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CANCEL",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Transaction"
+                  ]
+                ]
+              },
+              {
+                "from": "confirming",
+                "to": "idle",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
+                  [
+                    "ref",
+                    "Transaction"
+                  ]
+                ]
               }
             ]
           }
@@ -1368,6 +1035,9 @@
             },
             {
               "ref": "TransactionView"
+            },
+            {
+              "ref": "TransactionDelete"
             }
           ]
         }
@@ -2834,7 +2504,7 @@
           "listens": [
             {
               "event": "SAVE",
-              "triggers": "SAVE"
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -2865,17 +2535,6 @@
                   {
                     "name": "row",
                     "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "SAVE",
-                "name": "SAVE",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
                   }
                 ]
               }
@@ -3007,17 +2666,6 @@
                         }
                       ]
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "SAVE",
-                "effects": [
-                  [
-                    "ref",
-                    "FinanceReport"
                   ]
                 ]
               }
@@ -3167,10 +2815,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "emit",
-                    "SAVE"
                   ]
                 ]
               }
@@ -3181,6 +2825,11 @@
           "name": "FinanceReportView",
           "linkedEntity": "FinanceReport",
           "category": "interaction",
+          "emits": [
+            {
+              "event": "SAVE"
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -3210,6 +2859,17 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "SAVE",
+                "name": "Save",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -3369,6 +3029,18 @@
                     "notify",
                     "Cancelled",
                     "info"
+                  ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "SAVE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
                   ]
                 ]
               }
