@@ -1,0 +1,29 @@
+;; app std-inventory-panel
+
+orbital InventorySlotOrbital {
+  entity InventorySlot [singleton] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    items : [string]
+  }
+  trait InventorySlotInventoryPanel -> InventorySlot [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch InventorySlot)
+        (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
+      SELECT_SLOT -> idle
+        (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
+      USE_ITEM -> idle
+        (fetch InventorySlot)
+        (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
+      DROP_ITEM -> idle
+        (persist delete InventorySlot @payload.id)
+        (fetch InventorySlot)
+        (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
+    }
+  }
+  page "/inventoryslots" -> InventorySlotInventoryPanel
+}

@@ -1,0 +1,86 @@
+;; app std-validate-on-save
+
+orbital ValidateOnSave {
+  entity ValidateOnSave [runtime] {
+    id : string!
+    path : string
+    valid : boolean
+    errors : [string]
+    warnings : [string]
+    timestamp : number
+    status : string
+  }
+  trait OrbFileWatcher -> ValidateOnSave [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (os/watch-files "**/*.orb")
+        (os/debounce 500 OS_FILE_MODIFIED)
+        (set @entity.status idle)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Watching **/*.orb for changes" })
+        (render-ui center { type: "empty-state", title: "Waiting for file changes", description: "Watching **/*.orb. Save an .orb file to trigger validation." })
+      OS_FILE_MODIFIED -> validating
+        (set @entity.path @payload.path)
+        (set @entity.timestamp @now)
+        (set @entity.status validating)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Validating..." })
+        (render-ui center { type: "loading-state", title: "Running orbital validate..." })
+        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+    }
+    state validating {
+      VALIDATION_PASSED -> valid
+        (set @entity.valid true)
+        (set @entity.errors [])
+        (set @entity.warnings @payload.warnings)
+        (set @entity.status valid)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Validation passed", actions: [{ event: "REFRESH", label: "Validate Now", variant: "primary" }] })
+        (render-ui center { type: "entity-detail", entity: "ValidateOnSave", fields: ["path", "valid", "status", "timestamp"] })
+        (notify success "Schema is valid")
+        (emit AGENT_INTERRUPT { type: "validation", status: "passed", path: "@entity.path", blocking: false })
+      VALIDATION_FAILED -> invalid
+        (set @entity.valid false)
+        (set @entity.errors @payload.errors)
+        (set @entity.warnings @payload.warnings)
+        (set @entity.status invalid)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Validation failed", actions: [{ event: "REFRESH", label: "Validate Now", variant: "primary" }] })
+        (render-ui center { type: "entity-detail", entity: "ValidateOnSave", fields: ["path", "valid", "errors", "warnings", "status"] })
+        (notify error "Schema has errors")
+        (emit AGENT_INTERRUPT { type: "validation", status: "failed", path: "@entity.path", errors: "@payload.errors", blocking: true })
+    }
+    state valid {
+      OS_FILE_MODIFIED -> validating
+        (set @entity.path @payload.path)
+        (set @entity.timestamp @now)
+        (set @entity.status validating)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
+        (render-ui center { type: "loading-state", title: "Running orbital validate..." })
+        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+      REFRESH -> validating
+        (set @entity.status validating)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
+        (render-ui center { type: "loading-state", title: "Running orbital validate..." })
+        (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+    }
+    state invalid {
+      OS_FILE_MODIFIED -> validating
+        (set @entity.path @payload.path)
+        (set @entity.timestamp @now)
+        (set @entity.status validating)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
+        (render-ui center { type: "loading-state", title: "Running orbital validate..." })
+        (call-service orbital-cli validate { path: "@payload.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+      REFRESH -> validating
+        (set @entity.status validating)
+        (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Re-validating..." })
+        (render-ui center { type: "loading-state", title: "Running orbital validate..." })
+        (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
+    }
+    emits {
+      AGENT_INTERRUPT external { type: string, status: string, path: string, errors: array, blocking: boolean }
+    }
+    listens {
+      * OS_FILE_MODIFIED -> undefined
+    }
+  }
+  page "/validator" -> OrbFileWatcher
+}

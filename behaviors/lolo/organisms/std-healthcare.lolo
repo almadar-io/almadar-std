@@ -1,0 +1,402 @@
+;; app std-healthcare
+
+orbital PatientOrbital {
+  entity Patient [persistent: patients] {
+    id : string!
+    firstName : string!
+    lastName : string!
+    dateOfBirth : datetime!
+    phone : string
+    insuranceId : string
+    status : string
+  }
+  trait PatientBrowse -> Patient [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Patient)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Patients", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Patient", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", columns: 1, children: [{ type: "stat-display", label: "Total Patients", value: ["array/len", "@entity"], icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: "Patient", emptyIcon: "inbox", emptyTitle: "No patients registered", emptyDescription: "Register a patient to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "firstName", variant: "h3", icon: "user" }, { name: "lastName", variant: "h3" }, { name: "status", variant: "badge" }, { name: "dateOfBirth", label: "Date of Birth", variant: "body", format: "date" }, { name: "phone", variant: "caption" }, { name: "insuranceId", label: "Insurance ID", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * PATIENT_CREATED -> INIT
+      * PATIENT_UPDATED -> INIT
+      * PATIENT_DELETED -> INIT
+      * INTAKE_COMPLETE -> INIT
+    }
+  }
+  trait PatientCreate -> Patient [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Patient)
+      CREATE -> open
+        (fetch Patient)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Patient", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Patient", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["firstName", "lastName", "dateOfBirth", "phone", "insuranceId", "status"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Patient @payload.data)
+        (render-ui modal null)
+        (emit PATIENT_CREATED)
+    }
+    emits {
+      SAVE
+      PATIENT_CREATED
+    }
+  }
+  trait PatientEdit -> Patient [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Patient)
+      EDIT -> open
+        (fetch Patient { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Patient", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Patient", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["firstName", "lastName", "dateOfBirth", "phone", "insuranceId", "status"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Patient @payload.data)
+        (render-ui modal null)
+        (emit PATIENT_UPDATED)
+    }
+    emits {
+      SAVE
+      PATIENT_UPDATED
+    }
+  }
+  trait PatientView -> Patient [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Patient)
+      VIEW -> open
+        (fetch Patient { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.firstName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "First Name" }, { type: "typography", variant: "body", content: "@entity.firstName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Last Name" }, { type: "typography", variant: "body", content: "@entity.lastName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date Of Birth" }, { type: "typography", variant: "body", content: "@entity.dateOfBirth" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Insurance ID" }, { type: "typography", variant: "body", content: "@entity.insuranceId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait PatientDelete -> Patient [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Patient)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Patient { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Patient", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Patient @entity.pendingId)
+        (render-ui modal null)
+        (ref Patient)
+        (emit PATIENT_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Patient)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Patient)
+    }
+    emits {
+      CONFIRM_DELETE
+      PATIENT_DELETED
+    }
+  }
+  page "/patients" -> PatientBrowse, PatientCreate, PatientEdit, PatientView, PatientDelete
+}
+orbital AppointmentOrbital {
+  entity Appointment [persistent: appointments] {
+    id : string!
+    patientName : string!
+    doctorName : string!
+    date : datetime!
+    time : string!
+    reason : string
+    status : string
+  }
+  trait AppointmentBrowse -> Appointment [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Appointment)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar", size: "lg" }, { type: "typography", content: "Appointments", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Appointment", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Appointment", emptyIcon: "inbox", emptyTitle: "No appointments scheduled", emptyDescription: "Schedule an appointment to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "patientName", label: "Patient", variant: "h3", icon: "calendar" }, { name: "status", variant: "badge" }, { name: "doctorName", label: "Doctor", variant: "body" }, { name: "date", variant: "body", format: "date" }, { name: "time", variant: "caption" }, { name: "reason", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      PRESCRIBE external { id: string }
+    }
+    listens {
+      * APPOINTMENT_CREATED -> INIT
+      * APPOINTMENT_UPDATED -> INIT
+      * APPOINTMENT_DELETED -> INIT
+    }
+  }
+  trait AppointmentCreate -> Appointment [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Appointment)
+      CREATE -> open
+        (fetch Appointment)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Appointment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Appointment", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["patientName", "doctorName", "date", "time", "reason", "status"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Appointment @payload.data)
+        (render-ui modal null)
+        (emit APPOINTMENT_CREATED)
+    }
+    emits {
+      SAVE
+      APPOINTMENT_CREATED
+    }
+  }
+  trait AppointmentEdit -> Appointment [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Appointment)
+      EDIT -> open
+        (fetch Appointment { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Appointment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Appointment", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["patientName", "doctorName", "date", "time", "reason", "status"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Appointment @payload.data)
+        (render-ui modal null)
+        (emit APPOINTMENT_UPDATED)
+    }
+    emits {
+      SAVE
+      APPOINTMENT_UPDATED
+    }
+  }
+  trait AppointmentView -> Appointment [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Appointment)
+      VIEW -> open
+        (fetch Appointment { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.patientName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Patient Name" }, { type: "typography", variant: "body", content: "@entity.patientName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Doctor Name" }, { type: "typography", variant: "body", content: "@entity.doctorName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date" }, { type: "typography", variant: "body", content: "@entity.date" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Time" }, { type: "typography", variant: "body", content: "@entity.time" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Reason" }, { type: "typography", variant: "body", content: "@entity.reason" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait AppointmentDelete -> Appointment [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Appointment)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Appointment { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Appointment", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Appointment @entity.pendingId)
+        (render-ui modal null)
+        (ref Appointment)
+        (emit APPOINTMENT_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Appointment)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Appointment)
+    }
+    emits {
+      CONFIRM_DELETE
+      APPOINTMENT_DELETED
+    }
+  }
+  page "/appointments" -> AppointmentBrowse, AppointmentCreate, AppointmentEdit, AppointmentView, AppointmentDelete
+}
+orbital IntakeFormOrbital {
+  entity IntakeForm [runtime] {
+    id : string!
+    firstName : string!
+    lastName : string!
+    dateOfBirth : datetime!
+    allergies : string
+    medications : string
+    emergencyContact : string
+    insuranceProvider : string
+    insuranceId : string
+  }
+  trait IntakeFormWizard -> IntakeForm [interaction] {
+    initial: step1
+    state step1 {
+      INIT -> step1
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["firstName", "lastName", "dateOfBirth"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      NEXT -> step2
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Medical History", variant: "h3" }, { type: "repeatable-form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["allergies", "medications"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    state step2 {
+      NEXT -> step3
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Insurance", variant: "h3" }, { type: "repeatable-form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["emergencyContact", "insuranceProvider", "insuranceId"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      PREV -> step1
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["firstName", "lastName", "dateOfBirth"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    state step3 {
+      NEXT -> review
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "badge", label: "Review" }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 3 }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", entity: "IntakeForm", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "First Name" }, { type: "typography", variant: "body", content: "@entity.firstName" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Last Name" }, { type: "typography", variant: "body", content: "@entity.lastName" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Date Of Birth" }, { type: "typography", variant: "body", content: "@entity.dateOfBirth" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Allergies" }, { type: "typography", variant: "body", content: "@entity.allergies" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Medications" }, { type: "typography", variant: "body", content: "@entity.medications" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Emergency Contact" }, { type: "typography", variant: "body", content: "@entity.emergencyContact" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Insurance Provider" }, { type: "typography", variant: "body", content: "@entity.insuranceProvider" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Insurance Id" }, { type: "typography", variant: "body", content: "@entity.insuranceId" }] }] }, { type: "wizard-navigation", currentStep: 3, totalSteps: 4, showBack: true, showComplete: true, showNext: false }] }] })
+      PREV -> step2
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Medical History", variant: "h3" }, { type: "repeatable-form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["allergies", "medications"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    state review {
+      PREV -> step3
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Insurance", variant: "h3" }, { type: "repeatable-form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["emergencyContact", "insuranceProvider", "insuranceId"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      COMPLETE -> complete
+        (persist create IntakeForm @payload.data)
+        (notify success "IntakeForm created successfully")
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Intake Complete", variant: "h2" }, { type: "typography", content: "Patient intake form has been submitted successfully.", variant: "body" }, { type: "button", label: "Start New", event: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
+    }
+    state complete {
+      RESTART -> step1
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["firstName", "lastName", "dateOfBirth"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      INIT -> step1
+        (fetch IntakeForm)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Patient Intake", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Medical History", "Insurance"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", entity: "IntakeForm", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["firstName", "lastName", "dateOfBirth"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    emits {
+      INTAKE_COMPLETE external { id: string }
+    }
+  }
+  page "/intake" -> IntakeFormWizard
+}
+orbital PrescriptionOrbital {
+  entity Prescription [persistent: prescriptions] {
+    id : string!
+    medication : string!
+    dosage : string!
+    frequency : string!
+    patientName : string!
+    prescribedBy : string
+    startDate : datetime
+    endDate : datetime
+  }
+  trait PrescriptionBrowse -> Prescription [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Prescription)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "Prescriptions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Prescription", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Prescription", emptyIcon: "inbox", emptyTitle: "No prescriptions yet", emptyDescription: "Prescriptions will appear here after appointments.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "medication", variant: "h3", icon: "pill" }, { name: "dosage", variant: "badge" }, { name: "frequency", variant: "body" }, { name: "patientName", label: "Patient", variant: "body" }, { name: "prescribedBy", label: "Prescribed By", variant: "caption" }, { name: "startDate", label: "Start Date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * SAVE -> INIT
+      * PRESCRIBE -> INIT
+    }
+  }
+  trait PrescriptionCreate -> Prescription [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Prescription)
+      CREATE -> open
+        (fetch Prescription)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New Prescription", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Prescription", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["medication", "dosage", "frequency", "patientName", "prescribedBy", "startDate", "endDate"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Prescription @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait PrescriptionView -> Prescription [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Prescription)
+      VIEW -> open
+        (fetch Prescription { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.medication" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Medication" }, { type: "typography", variant: "body", content: "@entity.medication" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Dosage" }, { type: "typography", variant: "body", content: "@entity.dosage" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Frequency" }, { type: "typography", variant: "body", content: "@entity.frequency" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Patient Name" }, { type: "typography", variant: "body", content: "@entity.patientName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Prescribed By" }, { type: "typography", variant: "body", content: "@entity.prescribedBy" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "End Date" }, { type: "typography", variant: "body", content: "@entity.endDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/prescriptions" -> PrescriptionBrowse, PrescriptionCreate, PrescriptionView
+}
+orbital DashboardOrbital {
+  entity Dashboard [singleton] {
+    id : string!
+    totalPatients : number
+    appointmentsToday : number
+    pendingIntakes : number
+    activePrescriptions : number
+  }
+  trait DashboardDisplay -> Dashboard [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch Dashboard)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Clinic Dashboard" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Clinic Dashboard", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 4, children: [{ type: "stat-display", label: "TotalPatients", value: ["object/get", ["array/first", "@entity"], "totalPatients"] }, { type: "stat-display", label: "AppointmentsToday", value: ["object/get", ["array/first", "@entity"], "appointmentsToday"] }, { type: "stat-display", label: "PendingIntakes", value: ["object/get", ["array/first", "@entity"], "pendingIntakes"] }, { type: "stat-display", label: "ActivePrescriptions", value: ["object/get", ["array/first", "@entity"], "activePrescriptions"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch Dashboard)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Clinic Dashboard" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Clinic Dashboard", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 4, children: [{ type: "stat-display", label: "TotalPatients", value: ["object/get", ["array/first", "@entity"], "totalPatients"] }, { type: "stat-display", label: "AppointmentsToday", value: ["object/get", ["array/first", "@entity"], "appointmentsToday"] }, { type: "stat-display", label: "PendingIntakes", value: ["object/get", ["array/first", "@entity"], "pendingIntakes"] }, { type: "stat-display", label: "ActivePrescriptions", value: ["object/get", ["array/first", "@entity"], "activePrescriptions"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch Dashboard)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Clinic Dashboard" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Clinic Dashboard", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 4, children: [{ type: "stat-display", label: "TotalPatients", value: ["object/get", ["array/first", "@entity"], "totalPatients"] }, { type: "stat-display", label: "AppointmentsToday", value: ["object/get", ["array/first", "@entity"], "appointmentsToday"] }, { type: "stat-display", label: "PendingIntakes", value: ["object/get", ["array/first", "@entity"], "pendingIntakes"] }, { type: "stat-display", label: "ActivePrescriptions", value: ["object/get", ["array/first", "@entity"], "activePrescriptions"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch Dashboard)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Clinic Dashboard" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Clinic Dashboard", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 4, children: [{ type: "stat-display", label: "TotalPatients", value: ["object/get", ["array/first", "@entity"], "totalPatients"] }, { type: "stat-display", label: "AppointmentsToday", value: ["object/get", ["array/first", "@entity"], "appointmentsToday"] }, { type: "stat-display", label: "PendingIntakes", value: ["object/get", ["array/first", "@entity"], "pendingIntakes"] }, { type: "stat-display", label: "ActivePrescriptions", value: ["object/get", ["array/first", "@entity"], "activePrescriptions"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch Dashboard)
+        (render-ui main { type: "dashboard-layout", appName: "HealthcareApp", navItems: [{ label: "Patients", href: "/patients", icon: "heart" }, { label: "Appointments", href: "/appointments", icon: "calendar" }, { label: "Intake", href: "/intake", icon: "layout-list" }, { label: "Prescriptions", href: "/prescriptions", icon: "pill" }, { label: "Dashboard", href: "/dashboard", icon: "layout-dashboard" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Clinic Dashboard" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Clinic Dashboard", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 4, children: [{ type: "stat-display", label: "TotalPatients", value: ["object/get", ["array/first", "@entity"], "totalPatients"] }, { type: "stat-display", label: "AppointmentsToday", value: ["object/get", ["array/first", "@entity"], "appointmentsToday"] }, { type: "stat-display", label: "PendingIntakes", value: ["object/get", ["array/first", "@entity"], "pendingIntakes"] }, { type: "stat-display", label: "ActivePrescriptions", value: ["object/get", ["array/first", "@entity"], "activePrescriptions"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+  }
+  page "/dashboard" -> DashboardDisplay
+}

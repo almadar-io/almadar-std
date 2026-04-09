@@ -1,0 +1,39 @@
+;; app std-async
+
+orbital AsyncTaskOrbital {
+  entity AsyncTask [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait AsyncTaskAsync -> AsyncTask [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AsyncTask)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AsyncTask", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start asynctask operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+      START -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Loading...", message: "Processing asynctask..." }, { type: "skeleton", variant: "text" }] })
+    }
+    state loading {
+      LOADED -> success
+        (persist create AsyncTask @payload.data)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Operation completed successfully." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      FAILED -> error
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "An error occurred. Please try again.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", event: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    state success {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AsyncTask", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start asynctask operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    state error {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AsyncTask", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start asynctask operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+      RETRY -> loading
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Loading...", message: "Processing asynctask..." }, { type: "skeleton", variant: "text" }] })
+    }
+  }
+  page "/asynctasks" -> AsyncTaskAsync
+}

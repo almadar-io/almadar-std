@@ -1,0 +1,36 @@
+;; app std-score-board
+
+orbital ScoreBoardEntryOrbital {
+  entity ScoreBoardEntry [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    score : number
+    highScore : number
+    combo : number
+    multiplier : number
+    level : number
+  }
+  trait ScoreBoardEntryScoreBoard -> ScoreBoardEntry [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch ScoreBoardEntry)
+        (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
+      ADD_SCORE -> idle
+        (set @entity.score (+ @entity.score @payload.points))
+        (set @entity.combo (+ @entity.combo 1))
+        (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
+      COMBO -> idle
+        (set @entity.multiplier @payload.multiplier)
+        (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
+      RESET -> idle
+        (set @entity.score 0)
+        (set @entity.combo 0)
+        (set @entity.multiplier 1)
+        (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
+    }
+  }
+  page "/scoreboardentrys" -> ScoreBoardEntryScoreBoard
+}

@@ -1,0 +1,59 @@
+;; app std-service-notification-hub
+
+orbital ServiceNotificationHubOrbital {
+  entity ServiceNotificationHub [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    recipient : string
+    subject : string
+    messageBody : string
+    channel : string
+    sendStatus : string
+    error : string
+  }
+  trait ServiceNotificationHubNotificationHub -> ServiceNotificationHub [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceNotificationHub)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Recipient", bind: "@entity.recipient", placeholder: "Email or phone number" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Notification subject" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", event: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", event: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+      SEND_EMAIL -> sending
+        (set @entity.channel email)
+        (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
+        (call-service email send { to: "@entity.recipient", subject: "@entity.subject", body: "@entity.messageBody" })
+      SEND_SMS -> sending
+        (set @entity.channel sms)
+        (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
+        (call-service twilio "sendSMS" { to: "@entity.recipient", body: "@entity.messageBody" })
+      SEND_WHATSAPP -> sending
+        (set @entity.channel whatsapp)
+        (render-ui main { type: "loading-state", title: "Sending notification...", message: "Delivering servicenotificationhub notification..." })
+        (call-service twilio "sendWhatsApp" { to: "@entity.recipient", body: "@entity.messageBody" })
+    }
+    state sending {
+      SENT -> sent
+        (set @entity.sendStatus sent)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Notification sent successfully" }, { type: "button", label: "Send Another", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.sendStatus error)
+        (set @entity.error @payload.error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Send Failed", message: "Could not deliver the notification.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", event: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    state sent {
+      RESET -> idle
+        (set @entity.sendStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Recipient", bind: "@entity.recipient", placeholder: "Email or phone number" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Notification subject" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", event: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", event: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Recipient", bind: "@entity.recipient", placeholder: "Email or phone number" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Notification subject" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", event: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", event: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+      RESET -> idle
+        (set @entity.sendStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Recipient", bind: "@entity.recipient", placeholder: "Email or phone number" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Notification subject" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", event: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", event: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+    }
+  }
+  page "/servicenotificationhubs" -> ServiceNotificationHubNotificationHub
+}

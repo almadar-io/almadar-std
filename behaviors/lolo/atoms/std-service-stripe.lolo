@@ -1,0 +1,57 @@
+;; app std-service-stripe
+
+orbital ServiceStripeOrbital {
+  entity ServiceStripe [runtime] {
+    id : string!
+    amount : number
+    currency : string
+    paymentIntentId : string
+    clientSecret : string
+    paymentStatus : string
+    error : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait ServiceStripeStripe -> ServiceStripe [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceStripe)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+      CREATE_PAYMENT -> creating
+        (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
+        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" })
+    }
+    state creating {
+      PAYMENT_CREATED -> confirming
+        (set @entity.paymentIntentId @payload.id)
+        (set @entity.clientSecret @payload.clientSecret)
+        (render-ui main { type: "loading-state", title: "Confirming payment...", message: "Processing your payment." })
+        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state confirming {
+      PAYMENT_CONFIRMED -> succeeded
+        (set @entity.paymentStatus succeeded)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Payment successful!" }, { type: "typography", variant: "body", color: "muted", content: "@entity.paymentIntentId" }, { type: "button", label: "New Payment", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state succeeded {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+    }
+  }
+  page "/servicestripes" -> ServiceStripeStripe
+}

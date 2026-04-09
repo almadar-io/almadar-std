@@ -1,0 +1,51 @@
+;; app std-service-github
+
+orbital ServiceGithubOrbital {
+  entity ServiceGithub [runtime] {
+    id : string!
+    title : string
+    body : string
+    head : string
+    base : string
+    prUrl : string
+    prNumber : number
+    ghStatus : string
+    error : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait ServiceGithubGithub -> ServiceGithub [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceGithub)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "Create Pull Request", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Title", field: "title", placeholder: "PR title" }, { type: "textarea", label: "Body", field: "body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", field: "head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", field: "base", placeholder: "main" }] }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+      CREATE_PR -> creatingPR
+        (render-ui main { type: "loading-state", title: "Creating pull request...", message: "Submitting your PR to GitHub." })
+        (call-service github "createPR" { title: "@entity.title", body: "@entity.body", head: "@entity.head", base: "@entity.base" })
+    }
+    state creatingPR {
+      PR_CREATED -> prCreated
+        (set @entity.prUrl @payload.url)
+        (set @entity.prNumber @payload.number)
+        (set @entity.ghStatus created)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Pull request created!" }, { type: "typography", variant: "body", color: "muted", content: "@entity.prUrl" }, { type: "button", label: "Create Another", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "PR Creation Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state prCreated {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "Create Pull Request", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Title", field: "title", placeholder: "PR title" }, { type: "textarea", label: "Body", field: "body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", field: "head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", field: "base", placeholder: "main" }] }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "Create Pull Request", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Title", field: "title", placeholder: "PR title" }, { type: "textarea", label: "Body", field: "body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", field: "head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", field: "base", placeholder: "main" }] }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "Create Pull Request", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Title", field: "title", placeholder: "PR title" }, { type: "textarea", label: "Body", field: "body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", field: "head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", field: "base", placeholder: "main" }] }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+    }
+  }
+  page "/servicegithubs" -> ServiceGithubGithub
+}

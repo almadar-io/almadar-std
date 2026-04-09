@@ -1,0 +1,33 @@
+;; app std-classifier-game
+
+orbital ClassifierGameOrbital {
+  entity ClassifierGame [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    score : number
+    level : number
+  }
+  trait ClassifierGameClassifierGame -> ClassifierGame [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch ClassifierGame)
+        (render-ui main { type: "game-menu", title: "Sort & Classify", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+      START -> playing
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "classifier-board", entity: "ClassifierGame", completeEvent: "COMPLETE" }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      COMPLETE -> complete
+        (render-ui main { type: "game-over-screen", title: "Well Done!", menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }] })
+    }
+    state complete {
+      RESTART -> menu
+        (render-ui main { type: "game-menu", title: "Sort & Classify", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+  }
+  page "/classifiergames" -> ClassifierGameClassifierGame
+}

@@ -1,0 +1,282 @@
+;; app std-project-manager
+
+orbital TaskOrbital {
+  entity Task [persistent: tasks] {
+    id : string!
+    title : string!
+    description : string
+    assignee : string
+    priority : string
+    status : string
+    storyPoints : number
+    dueDate : datetime
+  }
+  trait TaskBrowse -> Task [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Task)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-square", size: "lg" }, { type: "typography", content: "Tasks", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Task", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", columns: 1, children: [{ type: "stat-display", label: "Total Tasks", value: ["array/len", "@entity"], icon: "check-square" }] }, { type: "divider" }, { type: "data-grid", entity: "Task", emptyIcon: "inbox", emptyTitle: "No tasks yet", emptyDescription: "Create tasks to plan your sprint.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "check-square" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "storyPoints", label: "Points", variant: "body", format: "number" }, { name: "dueDate", label: "Due", variant: "caption", format: "date" }], cols: 2, gap: "md" }] }] })
+    }
+    listens {
+      * TASK_CREATED -> INIT
+      * TASK_UPDATED -> INIT
+      * TASK_DELETED -> INIT
+      * ASSIGN_TASK -> INIT
+    }
+  }
+  trait TaskCreate -> Task [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Task)
+      CREATE -> open
+        (fetch Task)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Task", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Task", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "assignee", "priority", "status", "storyPoints", "dueDate"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Task @payload.data)
+        (render-ui modal null)
+        (emit TASK_CREATED)
+    }
+    emits {
+      SAVE
+      TASK_CREATED
+    }
+  }
+  trait TaskEdit -> Task [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Task)
+      EDIT -> open
+        (fetch Task { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Task", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Task", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "description", "assignee", "priority", "status", "storyPoints", "dueDate"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Task @payload.data)
+        (render-ui modal null)
+        (emit TASK_UPDATED)
+    }
+    emits {
+      SAVE
+      TASK_UPDATED
+    }
+  }
+  trait TaskView -> Task [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Task)
+      VIEW -> open
+        (fetch Task { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Assignee" }, { type: "typography", variant: "body", content: "@entity.assignee" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Priority" }, { type: "typography", variant: "body", content: "@entity.priority" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Story Points" }, { type: "typography", variant: "body", content: "@entity.storyPoints" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Due Date" }, { type: "typography", variant: "body", content: "@entity.dueDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait TaskDelete -> Task [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Task)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Task { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Task", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Task @entity.pendingId)
+        (render-ui modal null)
+        (ref Task)
+        (emit TASK_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Task)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Task)
+    }
+    emits {
+      CONFIRM_DELETE
+      TASK_DELETED
+    }
+  }
+  page "/tasks" -> TaskBrowse, TaskCreate, TaskEdit, TaskView, TaskDelete
+}
+orbital SprintOrbital {
+  entity Sprint [persistent: sprints] {
+    id : string!
+    name : string!
+    startDate : datetime!
+    endDate : datetime!
+    goal : string
+    status : string
+    taskCount : number
+  }
+  trait SprintBrowse -> Sprint [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Sprint)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap", size: "lg" }, { type: "typography", content: "Sprints", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Sprint", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Sprint", emptyIcon: "inbox", emptyTitle: "No sprints yet", emptyDescription: "Create a sprint to organize your work.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "zap" }, { name: "status", variant: "badge" }, { name: "goal", variant: "body" }, { name: "startDate", label: "Start", variant: "caption", format: "date" }, { name: "endDate", label: "End", variant: "caption", format: "date" }, { name: "taskCount", label: "Tasks", variant: "body", format: "number" }], cols: 2, gap: "md" }] }] })
+    }
+    emits {
+      ASSIGN_TASK external { id: string }
+      COMPLETE_SPRINT external { id: string }
+    }
+    listens {
+      * SPRINT_CREATED -> INIT
+      * SPRINT_UPDATED -> INIT
+      * SPRINT_DELETED -> INIT
+    }
+  }
+  trait SprintCreate -> Sprint [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Sprint)
+      CREATE -> open
+        (fetch Sprint)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Sprint", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Sprint", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "startDate", "endDate", "goal", "status", "taskCount"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Sprint @payload.data)
+        (render-ui modal null)
+        (emit SPRINT_CREATED)
+    }
+    emits {
+      SAVE
+      SPRINT_CREATED
+    }
+  }
+  trait SprintEdit -> Sprint [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Sprint)
+      EDIT -> open
+        (fetch Sprint { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Sprint", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Sprint", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "startDate", "endDate", "goal", "status", "taskCount"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Sprint @payload.data)
+        (render-ui modal null)
+        (emit SPRINT_UPDATED)
+    }
+    emits {
+      SAVE
+      SPRINT_UPDATED
+    }
+  }
+  trait SprintView -> Sprint [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Sprint)
+      VIEW -> open
+        (fetch Sprint { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "End Date" }, { type: "typography", variant: "body", content: "@entity.endDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Goal" }, { type: "typography", variant: "body", content: "@entity.goal" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Task Count" }, { type: "typography", variant: "body", content: "@entity.taskCount" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait SprintDelete -> Sprint [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Sprint)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Sprint { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Sprint", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Sprint @entity.pendingId)
+        (render-ui modal null)
+        (ref Sprint)
+        (emit SPRINT_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Sprint)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Sprint)
+    }
+    emits {
+      CONFIRM_DELETE
+      SPRINT_DELETED
+    }
+  }
+  page "/sprints" -> SprintBrowse, SprintCreate, SprintEdit, SprintView, SprintDelete
+}
+orbital BurndownOrbital {
+  entity Burndown [singleton] {
+    id : string!
+    totalPoints : number
+    completedPoints : number
+    remainingPoints : number
+    velocity : number
+    daysRemaining : number
+  }
+  trait BurndownDisplay -> Burndown [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch Burndown)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down", size: "lg" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 5, children: [{ type: "stat-display", label: "TotalPoints", value: ["object/get", ["array/first", "@entity"], "totalPoints"] }, { type: "stat-display", label: "CompletedPoints", value: ["object/get", ["array/first", "@entity"], "completedPoints"] }, { type: "stat-display", label: "RemainingPoints", value: ["object/get", ["array/first", "@entity"], "remainingPoints"] }, { type: "stat-display", label: "Velocity", value: ["object/get", ["array/first", "@entity"], "velocity"] }, { type: "stat-display", label: "DaysRemaining", value: ["object/get", ["array/first", "@entity"], "daysRemaining"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch Burndown)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down", size: "lg" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 5, children: [{ type: "stat-display", label: "TotalPoints", value: ["object/get", ["array/first", "@entity"], "totalPoints"] }, { type: "stat-display", label: "CompletedPoints", value: ["object/get", ["array/first", "@entity"], "completedPoints"] }, { type: "stat-display", label: "RemainingPoints", value: ["object/get", ["array/first", "@entity"], "remainingPoints"] }, { type: "stat-display", label: "Velocity", value: ["object/get", ["array/first", "@entity"], "velocity"] }, { type: "stat-display", label: "DaysRemaining", value: ["object/get", ["array/first", "@entity"], "daysRemaining"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch Burndown)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down", size: "lg" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 5, children: [{ type: "stat-display", label: "TotalPoints", value: ["object/get", ["array/first", "@entity"], "totalPoints"] }, { type: "stat-display", label: "CompletedPoints", value: ["object/get", ["array/first", "@entity"], "completedPoints"] }, { type: "stat-display", label: "RemainingPoints", value: ["object/get", ["array/first", "@entity"], "remainingPoints"] }, { type: "stat-display", label: "Velocity", value: ["object/get", ["array/first", "@entity"], "velocity"] }, { type: "stat-display", label: "DaysRemaining", value: ["object/get", ["array/first", "@entity"], "daysRemaining"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch Burndown)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down", size: "lg" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 5, children: [{ type: "stat-display", label: "TotalPoints", value: ["object/get", ["array/first", "@entity"], "totalPoints"] }, { type: "stat-display", label: "CompletedPoints", value: ["object/get", ["array/first", "@entity"], "completedPoints"] }, { type: "stat-display", label: "RemainingPoints", value: ["object/get", ["array/first", "@entity"], "remainingPoints"] }, { type: "stat-display", label: "Velocity", value: ["object/get", ["array/first", "@entity"], "velocity"] }, { type: "stat-display", label: "DaysRemaining", value: ["object/get", ["array/first", "@entity"], "daysRemaining"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch Burndown)
+        (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Burndown Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-down", size: "lg" }, { type: "typography", content: "Burndown Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 5, children: [{ type: "stat-display", label: "TotalPoints", value: ["object/get", ["array/first", "@entity"], "totalPoints"] }, { type: "stat-display", label: "CompletedPoints", value: ["object/get", ["array/first", "@entity"], "completedPoints"] }, { type: "stat-display", label: "RemainingPoints", value: ["object/get", ["array/first", "@entity"], "remainingPoints"] }, { type: "stat-display", label: "Velocity", value: ["object/get", ["array/first", "@entity"], "velocity"] }, { type: "stat-display", label: "DaysRemaining", value: ["object/get", ["array/first", "@entity"], "daysRemaining"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    listens {
+      * COMPLETE_SPRINT -> INIT
+    }
+  }
+  page "/burndown" -> BurndownDisplay
+}

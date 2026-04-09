@@ -1,0 +1,341 @@
+;; app std-crm
+
+orbital ContactOrbital {
+  entity Contact [runtime] {
+    id : string!
+    name : string
+    company : string
+    email : string
+    phone : string
+    status : string
+  }
+  trait ContactBrowse -> Contact [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Contact)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Contacts", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Contact", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", columns: 1, children: [{ type: "stat-display", label: "Total Contacts", value: ["array/len", "@entity"], icon: "users" }] }, { type: "divider" }, { type: "data-list", entity: "Contact", emptyIcon: "inbox", emptyTitle: "No contacts yet", emptyDescription: "Add your first contact to start building your CRM.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "user" }, { name: "status", variant: "badge" }, { name: "company", variant: "body" }, { name: "email", variant: "caption" }, { name: "phone", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      CONVERT_LEAD external { id: string }
+    }
+    listens {
+      * CONTACT_CREATED -> INIT
+      * CONTACT_UPDATED -> INIT
+      * CONTACT_DELETED -> INIT
+    }
+  }
+  trait ContactCreate -> Contact [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Contact)
+      CREATE -> open
+        (fetch Contact)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Contact", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Contact @payload.data)
+        (render-ui modal null)
+        (emit CONTACT_CREATED)
+    }
+    emits {
+      SAVE
+      CONTACT_CREATED
+    }
+  }
+  trait ContactEdit -> Contact [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Contact)
+      EDIT -> open
+        (fetch Contact { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Contact", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Contact @payload.data)
+        (render-ui modal null)
+        (emit CONTACT_UPDATED)
+    }
+    emits {
+      SAVE
+      CONTACT_UPDATED
+    }
+  }
+  trait ContactView -> Contact [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Contact)
+      VIEW -> open
+        (fetch Contact { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Company" }, { type: "typography", variant: "body", content: "@entity.company" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait ContactDelete -> Contact [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Contact)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Contact { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Contact", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Contact @entity.pendingId)
+        (render-ui modal null)
+        (ref Contact)
+        (emit CONTACT_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Contact)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Contact)
+    }
+    emits {
+      CONFIRM_DELETE
+      CONTACT_DELETED
+    }
+  }
+  page "/contacts" -> ContactBrowse, ContactCreate, ContactEdit, ContactView, ContactDelete
+}
+orbital DealOrbital {
+  entity Deal [runtime] {
+    id : string!
+    title : string
+    contactId : string
+    value : number
+    stage : string
+    closedAt : datetime
+  }
+  trait DealBrowse -> Deal [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Deal)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase", size: "lg" }, { type: "typography", content: "Deals", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Deal", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Deal", emptyIcon: "inbox", emptyTitle: "No deals yet", emptyDescription: "Create a deal to track your sales pipeline.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "briefcase" }, { name: "stage", variant: "badge" }, { name: "value", variant: "h4", format: "currency" }, { name: "contactId", label: "Contact", variant: "caption" }], cols: 2, gap: "md" }] }] })
+    }
+    emits {
+      CLOSE_DEAL external { id: string }
+    }
+    listens {
+      * DEAL_CREATED -> INIT
+      * DEAL_UPDATED -> INIT
+      * DEAL_DELETED -> INIT
+      * CONVERT_LEAD -> INIT
+    }
+  }
+  trait DealCreate -> Deal [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Deal)
+      CREATE -> open
+        (fetch Deal)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Deal", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Deal @payload.data)
+        (render-ui modal null)
+        (emit DEAL_CREATED)
+    }
+    emits {
+      SAVE
+      DEAL_CREATED
+    }
+  }
+  trait DealEdit -> Deal [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Deal)
+      EDIT -> open
+        (fetch Deal { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Deal", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Deal @payload.data)
+        (render-ui modal null)
+        (emit DEAL_UPDATED)
+    }
+    emits {
+      SAVE
+      DEAL_UPDATED
+    }
+  }
+  trait DealView -> Deal [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Deal)
+      VIEW -> open
+        (fetch Deal { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Contact ID" }, { type: "typography", variant: "body", content: "@entity.contactId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Value" }, { type: "typography", variant: "body", content: "@entity.value" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Stage" }, { type: "typography", variant: "body", content: "@entity.stage" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Closed At" }, { type: "typography", variant: "body", content: "@entity.closedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait DealDelete -> Deal [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Deal)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Deal { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Deal", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Deal @entity.pendingId)
+        (render-ui modal null)
+        (ref Deal)
+        (emit DEAL_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Deal)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Deal)
+    }
+    emits {
+      CONFIRM_DELETE
+      DEAL_DELETED
+    }
+  }
+  page "/deals" -> DealBrowse, DealCreate, DealEdit, DealView, DealDelete
+}
+orbital PipelineOrbital {
+  entity Pipeline [runtime] {
+    id : string!
+    totalDeals : number
+    totalValue : number
+    wonDeals : number
+    lostDeals : number
+    conversionRate : number
+  }
+  trait PipelineDisplay -> Pipeline [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch Pipeline)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch Pipeline)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch Pipeline)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch Pipeline)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch Pipeline)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    listens {
+      * CLOSE_DEAL -> INIT
+    }
+  }
+  page "/pipeline" -> PipelineDisplay
+}
+orbital NoteOrbital {
+  entity Note [runtime] {
+    id : string!
+    subject : string
+    body : string
+    author : string
+    createdAt : datetime
+  }
+  trait NoteBrowse -> Note [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Note)
+        (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "Notes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "Note", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "subject", variant: "h4", icon: "file-text" }, { name: "author", variant: "caption" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * SEND -> INIT
+    }
+  }
+  trait NoteCompose -> Note [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Note)
+      COMPOSE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "New Note", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Note", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["subject", "body", "author"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SEND -> closed
+        (persist create Note @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SEND
+    }
+  }
+  trait NoteView -> Note [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Note)
+      VIEW -> open
+        (fetch Note { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.subject" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/notes" -> NoteBrowse, NoteCompose, NoteView
+}

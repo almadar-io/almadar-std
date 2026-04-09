@@ -1,0 +1,122 @@
+;; app std-arcade-game
+
+orbital ArcadeStateOrbital {
+  entity ArcadeState [runtime] {
+    id : string!
+    level : number
+    score : number
+    lives : number
+    highScore : number
+  }
+  trait ArcadeStateGameflow -> ArcadeState [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch ArcadeState)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
+      START -> playing
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Score", value: ["object/get", ["array/first", "@entity"], "score"] }, { label: "Level", value: ["object/get", ["array/first", "@entity"], "level"] }] }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      PAUSE -> paused
+        (render-ui modal { type: "game-menu", title: "Paused", menuItems: [{ label: "Resume", event: "RESUME", variant: "primary" }, { label: "Quit", event: "RESTART", variant: "ghost" }] })
+      GAME_OVER -> gameover
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-over-screen", title: "Game Over", stats: [{ label: "Score", value: ["object/get", ["array/first", "@entity"], "score"] }, { label: "Level", value: ["object/get", ["array/first", "@entity"], "level"] }], menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }, { label: "Main Menu", event: "RESTART", variant: "secondary" }] }] })
+    }
+    state paused {
+      NAVIGATE -> paused
+      RESUME -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Score", value: ["object/get", ["array/first", "@entity"], "score"] }, { label: "Level", value: ["object/get", ["array/first", "@entity"], "level"] }] }] })
+      CLOSE -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Score", value: ["object/get", ["array/first", "@entity"], "score"] }, { label: "Level", value: ["object/get", ["array/first", "@entity"], "level"] }] }] })
+      RESTART -> menu
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
+    }
+    state gameover {
+      RESTART -> menu
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
+    }
+  }
+  page "/game" -> ArcadeStateGameflow
+}
+orbital ArcadeCanvasOrbital {
+  entity ArcadeCanvas [runtime] {
+    id : string!
+    width : number
+    height : number
+    fps : number
+    running : boolean
+  }
+  trait ArcadeCanvasGameCanvas2d -> ArcadeCanvas [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ArcadeCanvas)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor", size: "md" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "typography", content: "800x600 @ 60fps", variant: "caption", color: "muted" }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
+      START -> rendering
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor", size: "md" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
+    }
+    state rendering {
+      TICK -> rendering
+      STOP -> idle
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor", size: "md" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "typography", content: "800x600 @ 60fps", variant: "caption", color: "muted" }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
+    }
+  }
+  page "/canvas" -> ArcadeCanvasGameCanvas2d
+}
+orbital ArcadeScoreOrbital {
+  entity ArcadeScore [runtime] {
+    id : string!
+    playerName : string!
+    score : number!
+    level : number
+    completedAt : string
+    highScore : number
+    combo : number
+    multiplier : number
+  }
+  trait ArcadeScoreScoreBoard -> ArcadeScore [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch ArcadeScore)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      ADD_SCORE -> idle
+        (set @entity.score (+ @entity.score @payload.points))
+        (set @entity.combo (+ @entity.combo 1))
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      COMBO -> idle
+        (set @entity.multiplier @payload.multiplier)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      RESET -> idle
+        (set @entity.score 0)
+        (set @entity.combo 0)
+        (set @entity.multiplier 1)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+    }
+  }
+  page "/scores" -> ArcadeScoreScoreBoard
+}
+orbital ArcadeHudOrbital {
+  entity ArcadeHud [runtime] {
+    id : string!
+    score : number
+    lives : number
+    level : number
+    timer : number
+  }
+  trait ArcadeHudHud -> ArcadeHud [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch ArcadeHud)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", position: "top-left", size: "md", transparent: false, stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }, { label: "Level", value: "@entity.level" }, { label: "Timer", value: "@entity.timer" }] }] })
+      REFRESH -> idle
+        (fetch ArcadeHud)
+        (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", position: "top-left", size: "md", transparent: false, stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }, { label: "Level", value: "@entity.level" }, { label: "Timer", value: "@entity.timer" }] }] })
+    }
+  }
+  page "/hud" -> ArcadeHudHud
+}

@@ -1,0 +1,30 @@
+;; app std-simulation-canvas
+
+orbital SimulationWorldOrbital {
+  entity SimulationWorld [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait SimulationWorldSimulationCanvas -> SimulationWorld [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch SimulationWorld)
+        (render-ui main { type: "simulation-canvas", preset: "pendulum", width: 800, height: 400, running: false, speed: 1 })
+      START -> running
+        (render-ui main { type: "simulation-canvas", preset: "pendulum", width: 800, height: 400, running: true, speed: 1 })
+      RESET -> idle
+        (render-ui main { type: "simulation-canvas", preset: "pendulum", width: 800, height: 400, running: false, speed: 1 })
+    }
+    state running {
+      STOP -> idle
+        (render-ui main { type: "simulation-canvas", preset: "pendulum", width: 800, height: 400, running: false, speed: 1 })
+      RESET -> running
+        (render-ui main { type: "simulation-canvas", preset: "pendulum", width: 800, height: 400, running: true, speed: 1 })
+    }
+  }
+  page "/simulationworlds" -> SimulationWorldSimulationCanvas
+}

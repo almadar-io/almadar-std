@@ -1,0 +1,35 @@
+;; app std-notification
+
+orbital NotificationOrbital {
+  entity Notification [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    message : string
+    notificationType : string
+  }
+  trait NotificationNotification -> Notification [interaction] {
+    initial: hidden
+    state hidden {
+      INIT -> hidden
+        (fetch Notification)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "Notifications", variant: "h2" }] }, { type: "divider" }, { type: "empty-state", icon: "bell-off", title: "No notifications", description: "New notifications will appear here." }, { type: "button", label: "Test Notification", event: "SHOW", variant: "secondary", icon: "bell", actionPayload: { message: "This is a test notification", notificationType: "info" } }] })
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "Notifications", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
+    }
+    state visible {
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "Notifications", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
+      HIDE -> hidden
+        (set @entity.message "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "Notifications", variant: "h2" }] }, { type: "divider" }, { type: "empty-state", icon: "bell-off", title: "No notifications", description: "New notifications will appear here." }, { type: "button", label: "Test Notification", event: "SHOW", variant: "secondary", icon: "bell", actionPayload: { message: "This is a test notification", notificationType: "info" } }] })
+    }
+  }
+  page "/notifications/notifications" -> NotificationNotification
+}

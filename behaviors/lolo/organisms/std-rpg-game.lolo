@@ -1,0 +1,254 @@
+;; app std-rpg-game
+
+orbital BattleStateOrbital {
+  entity BattleState [runtime] {
+    id : string!
+    turn : number
+    score : number
+    phase : string
+    outcome : string
+  }
+  trait BattleStateBattleFlow -> BattleState [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch BattleState)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
+      START -> playing
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      END_TURN -> playing
+        (set @entity.turn (+ @entity.turn 1))
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      PAUSE -> paused
+        (render-ui modal { type: "game-menu", title: "Paused", menuItems: [{ label: "Resume", event: "RESUME", variant: "primary" }, { label: "Quit", event: "RESTART", variant: "ghost" }] })
+      GAME_OVER -> gameover
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-over-screen", title: "Battle Over", stats: [{ label: "Turns", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }], menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }, { label: "Main Menu", event: "RESTART", variant: "secondary" }] }] })
+    }
+    state paused {
+      NAVIGATE -> paused
+      RESUME -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      CLOSE -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      RESTART -> menu
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
+    }
+    state gameover {
+      RESTART -> menu
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
+    }
+    emits {
+      LOOT_DROPPED external { itemId: string }
+    }
+    listens {
+      * ENCOUNTER_STARTED -> START
+    }
+  }
+  trait BattleStateCombatLog -> BattleState [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch BattleState)
+      LOG_EVENT -> idle
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "combat-log", events: "@BattleState", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
+      CLEAR -> idle
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "combat-log", events: "@BattleState", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
+    }
+  }
+  page "/battle" -> BattleStateBattleFlow, BattleStateCombatLog
+}
+orbital WorldZoneOrbital {
+  entity WorldZone [runtime] {
+    id : string!
+    name : string!
+    description : string
+    level : number
+    explored : boolean
+  }
+  trait WorldZoneNavigation -> WorldZone [interaction] {
+    initial: exploring
+    state exploring {
+      INIT -> exploring
+        (fetch WorldZone)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "World Map", variant: "h2" }] }, { type: "status-dot", status: "active", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "WorldZone", emptyIcon: "compass", emptyTitle: "No worldzones discovered", emptyDescription: "Explore to discover new worldzones.", itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }] }] })
+      TRAVEL -> transitioning
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "Traveling...", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Traveling to the destination worldzones map.", variant: "body" }] }] })
+    }
+    state transitioning {
+      ARRIVE -> entered
+        (fetch WorldZone)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "WorldZones Map", variant: "h2" }] }, { type: "status-dot", status: "success", label: "Entered" }] }, { type: "divider" }, { type: "data-grid", entity: "WorldZone", emptyIcon: "inbox", emptyTitle: "Nothing here", emptyDescription: "This zone is empty.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Map", event: "BACK", variant: "ghost", icon: "arrow-left" }] }] }] })
+    }
+    state entered {
+      BACK -> exploring
+        (fetch WorldZone)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "World Map", variant: "h2" }] }, { type: "status-dot", status: "active", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "WorldZone", emptyIcon: "compass", emptyTitle: "No worldzones discovered", emptyDescription: "Explore to discover new worldzones.", itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.level" }] }] }] }] })
+    }
+    emits {
+      ENCOUNTER_STARTED external { zoneId: string }
+      QUEST_ACCEPTED external { questId: string }
+    }
+  }
+  page "/world" -> WorldZoneNavigation
+}
+orbital RpgItemOrbital {
+  entity RpgItem [persistent: rpgitems] {
+    id : string!
+    name : string!
+    type : string!
+    quantity : number
+    rarity : string
+    pendingId : string
+  }
+  trait RpgItemBrowse -> RpgItem [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref RpgItem)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "briefcase", size: "lg" }, { type: "typography", content: "Inventory", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add RpgItem", event: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "RpgItem", emptyIcon: "inbox", emptyTitle: "No items yet", emptyDescription: "Add your first item to get started.", itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost", size: "sm" }, { label: "Drop", event: "DROP", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "briefcase" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+    }
+    listens {
+      * ITEM_ADDED -> INIT
+      * ITEM_USED -> INIT
+      * CONFIRM_DROP -> INIT
+      * LOOT_DROPPED -> INIT
+    }
+  }
+  trait RpgItemAdd -> RpgItem [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref RpgItem)
+      ADD_ITEM -> open
+        (fetch RpgItem)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Add RpgItem", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "RpgItem", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "quantity", "rarity"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create RpgItem @payload.data)
+        (render-ui modal null)
+        (emit ITEM_ADDED)
+    }
+    emits {
+      SAVE
+      ITEM_ADDED
+    }
+  }
+  trait RpgItemUse -> RpgItem [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref RpgItem)
+      USE_ITEM -> open
+        (fetch RpgItem { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap", size: "md" }, { type: "typography", content: "Use RpgItem", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", event: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", event: "SAVE", variant: "primary", icon: "check" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update RpgItem @payload.data)
+        (render-ui modal null)
+        (emit ITEM_USED)
+    }
+    emits {
+      SAVE
+      ITEM_USED
+    }
+  }
+  trait RpgItemDrop -> RpgItem [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref RpgItem)
+      DROP -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch RpgItem { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Drop RpgItem", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure you want to drop this rpgitem?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Drop", event: "CONFIRM_DROP", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DROP -> idle
+        (persist delete RpgItem @entity.pendingId)
+        (render-ui modal null)
+        (ref RpgItem)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref RpgItem)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref RpgItem)
+    }
+    emits {
+      CONFIRM_DROP
+    }
+  }
+  page "/inventory" -> RpgItemBrowse, RpgItemAdd, RpgItemUse, RpgItemDrop
+}
+orbital MissionOrbital {
+  entity Mission [runtime] {
+    id : string!
+    title : string!
+    description : string
+    status : string
+    reward : string
+  }
+  trait MissionTracking -> Mission [interaction] {
+    initial: available
+    state available {
+      INIT -> available
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "Mission", groupBy: "status", emptyIcon: "inbox", emptyTitle: "No missions available", emptyDescription: "Check back later for new missions.", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+      ACCEPT -> active
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "Mission", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+    }
+    state active {
+      INIT -> active
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "Mission", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+      PROGRESS -> progressing
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "trending-up", size: "md" }, { type: "typography", content: "Update Progress", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Mission", mode: "edit", submitEvent: "SAVE", cancelEvent: "CANCEL", fields: ["title", "description", "status", "reward"] }] })
+      COMPLETE -> complete
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Quest Complete", variant: "h2" }, { type: "alert", variant: "success", message: "Congratulations! The quest has been completed." }, { type: "button", label: "View Quests", event: "RESET", variant: "primary", icon: "arrow-left" }] }] })
+      FAIL -> failed
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Quest Failed", variant: "h2" }, { type: "alert", variant: "danger", message: "The quest was not completed. You can try again." }, { type: "button", label: "View Quests", event: "RESET", variant: "primary", icon: "arrow-left" }] }] })
+    }
+    state progressing {
+      SAVE -> active
+        (persist update Mission @payload.data)
+        (render-ui modal null)
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "Mission", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+      CANCEL -> active
+        (render-ui modal null)
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "Mission", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+      CLOSE -> active
+        (render-ui modal null)
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "Mission", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+    }
+    state complete {
+      RESET -> available
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "Mission", groupBy: "status", emptyIcon: "inbox", emptyTitle: "No missions available", emptyDescription: "Check back later for new missions.", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+    }
+    state failed {
+      RESET -> available
+        (fetch Mission)
+        (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "Missions Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "Mission", groupBy: "status", emptyIcon: "inbox", emptyTitle: "No missions available", emptyDescription: "Check back later for new missions.", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.title" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] }] })
+    }
+    listens {
+      * QUEST_ACCEPTED -> INIT
+    }
+  }
+  page "/quests" -> MissionTracking
+}

@@ -1,0 +1,213 @@
+;; app std-finance-tracker
+
+orbital TransactionOrbital {
+  entity Transaction [persistent: transactions] {
+    id : string!
+    description : string!
+    amount : number!
+    category : string
+    date : datetime
+  }
+  trait TransactionBrowse -> Transaction [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Transaction)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Transactions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Transaction", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Transaction", emptyIcon: "inbox", emptyTitle: "No transactions yet", emptyDescription: "Record your first transaction.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "description", variant: "h3", icon: "credit-card" }, { name: "category", variant: "badge" }, { name: "amount", variant: "h4", format: "currency" }, { name: "date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * TRANSACTION_CREATED -> INIT
+      * TRANSACTION_UPDATED -> INIT
+      * TRANSACTION_DELETED -> INIT
+    }
+  }
+  trait TransactionCreate -> Transaction [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Transaction)
+      CREATE -> open
+        (fetch Transaction)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Transaction", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Transaction", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["description", "amount", "category", "date"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Transaction @payload.data)
+        (render-ui modal null)
+        (emit TRANSACTION_CREATED)
+    }
+    emits {
+      SAVE
+      TRANSACTION_CREATED
+    }
+  }
+  trait TransactionEdit -> Transaction [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Transaction)
+      EDIT -> open
+        (fetch Transaction { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Transaction", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Transaction", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["description", "amount", "category", "date"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Transaction @payload.data)
+        (render-ui modal null)
+        (emit TRANSACTION_UPDATED)
+    }
+    emits {
+      SAVE
+      TRANSACTION_UPDATED
+    }
+  }
+  trait TransactionView -> Transaction [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Transaction)
+      VIEW -> open
+        (fetch Transaction { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.description" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Amount" }, { type: "typography", variant: "body", content: "@entity.amount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Category" }, { type: "typography", variant: "body", content: "@entity.category" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Date" }, { type: "typography", variant: "body", content: "@entity.date" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait TransactionDelete -> Transaction [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Transaction)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Transaction { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Transaction", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Transaction @entity.pendingId)
+        (render-ui modal null)
+        (ref Transaction)
+        (emit TRANSACTION_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Transaction)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Transaction)
+    }
+    emits {
+      CONFIRM_DELETE
+      TRANSACTION_DELETED
+    }
+  }
+  page "/transactions" -> TransactionBrowse, TransactionCreate, TransactionEdit, TransactionView, TransactionDelete
+}
+orbital FinanceSummaryOrbital {
+  entity FinanceSummary [runtime] {
+    id : string!
+    totalIncome : number
+    totalExpenses : number
+    balance : number
+    savingsRate : number
+  }
+  trait FinanceSummaryDisplay -> FinanceSummary [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch FinanceSummary)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart", size: "lg" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalIncome", value: ["object/get", ["array/first", "@entity"], "totalIncome"] }, { type: "stat-display", label: "TotalExpenses", value: ["object/get", ["array/first", "@entity"], "totalExpenses"] }, { type: "stat-display", label: "Balance", value: ["object/get", ["array/first", "@entity"], "balance"] }, { type: "stat-display", label: "SavingsRate", value: ["object/get", ["array/first", "@entity"], "savingsRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch FinanceSummary)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart", size: "lg" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalIncome", value: ["object/get", ["array/first", "@entity"], "totalIncome"] }, { type: "stat-display", label: "TotalExpenses", value: ["object/get", ["array/first", "@entity"], "totalExpenses"] }, { type: "stat-display", label: "Balance", value: ["object/get", ["array/first", "@entity"], "balance"] }, { type: "stat-display", label: "SavingsRate", value: ["object/get", ["array/first", "@entity"], "savingsRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch FinanceSummary)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart", size: "lg" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalIncome", value: ["object/get", ["array/first", "@entity"], "totalIncome"] }, { type: "stat-display", label: "TotalExpenses", value: ["object/get", ["array/first", "@entity"], "totalExpenses"] }, { type: "stat-display", label: "Balance", value: ["object/get", ["array/first", "@entity"], "balance"] }, { type: "stat-display", label: "SavingsRate", value: ["object/get", ["array/first", "@entity"], "savingsRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch FinanceSummary)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart", size: "lg" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalIncome", value: ["object/get", ["array/first", "@entity"], "totalIncome"] }, { type: "stat-display", label: "TotalExpenses", value: ["object/get", ["array/first", "@entity"], "totalExpenses"] }, { type: "stat-display", label: "Balance", value: ["object/get", ["array/first", "@entity"], "balance"] }, { type: "stat-display", label: "SavingsRate", value: ["object/get", ["array/first", "@entity"], "savingsRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch FinanceSummary)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Financial Summary" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "pie-chart", size: "lg" }, { type: "typography", content: "Financial Summary", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalIncome", value: ["object/get", ["array/first", "@entity"], "totalIncome"] }, { type: "stat-display", label: "TotalExpenses", value: ["object/get", ["array/first", "@entity"], "totalExpenses"] }, { type: "stat-display", label: "Balance", value: ["object/get", ["array/first", "@entity"], "balance"] }, { type: "stat-display", label: "SavingsRate", value: ["object/get", ["array/first", "@entity"], "savingsRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+  }
+  page "/summary" -> FinanceSummaryDisplay
+}
+orbital FinanceReportOrbital {
+  entity FinanceReport [persistent: financereports] {
+    id : string!
+    title : string!
+    period : string!
+    total : number
+    generatedAt : datetime
+  }
+  trait FinanceReportBrowse -> FinanceReport [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref FinanceReport)
+        (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "Reports", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create FinanceReport", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "FinanceReport", emptyIcon: "inbox", emptyTitle: "No reports yet", emptyDescription: "Generate a report to analyze your finances.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "period", variant: "badge" }, { name: "total", variant: "h4", format: "currency" }, { name: "generatedAt", label: "Generated", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * SAVE -> INIT
+    }
+  }
+  trait FinanceReportCreate -> FinanceReport [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref FinanceReport)
+      CREATE -> open
+        (fetch FinanceReport)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New FinanceReport", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "FinanceReport", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "period", "total", "generatedAt"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create FinanceReport @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait FinanceReportView -> FinanceReport [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref FinanceReport)
+      VIEW -> open
+        (fetch FinanceReport { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Period" }, { type: "typography", variant: "body", content: "@entity.period" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Total" }, { type: "typography", variant: "body", content: "@entity.total" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Generated At" }, { type: "typography", variant: "body", content: "@entity.generatedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/reports" -> FinanceReportBrowse, FinanceReportCreate, FinanceReportView
+}

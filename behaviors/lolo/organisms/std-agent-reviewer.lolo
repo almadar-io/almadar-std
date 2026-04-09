@@ -1,0 +1,413 @@
+;; app std-agent-reviewer
+
+orbital ReviewOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Tabs from "std/behaviors/std-tabs"
+
+  entity Review [runtime] {
+    id : string!
+    target : string
+    category : string
+    issues : string
+    suggestions : string
+    score : number
+    reviewStatus : string
+    error : string
+  }
+  trait ReviewGenerator -> Review [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch Review)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-search", size: "lg" }, { type: "typography", content: "Code Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.", variant: "body" }, { type: "form-section", entity: "Review", mode: "edit", submitEvent: "SUBMIT_REVIEW", fields: ["target"] }] }] }] }] })
+      SUBMIT_REVIEW -> analyzing
+        (set @entity.target @payload.target)
+        (set @entity.reviewStatus analyzing)
+        (agent/recall @payload.target)
+        (agent/search-code @payload.target)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Analyzing input...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "typography", content: "Classifying and searching for patterns", variant: "caption" }] }] })
+    }
+    state analyzing {
+      PATTERNS_FOUND -> reviewing
+        (set @entity.reviewStatus reviewing)
+        (agent/generate @entity.target)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Generating review...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "typography", content: "Category: @entity.category", variant: "caption" }] }] })
+    }
+    state reviewing {
+      REVIEW_GENERATED -> completed
+        (set @entity.reviewStatus completed)
+        (agent/memorize @entity.target review-pattern)
+        (emit REVIEW_COMPLETE)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Review Complete", variant: "h2" }] }, { type: "badge", label: "@entity.score" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.category" }, { type: "badge", label: "@entity.reviewStatus" }] }, { type: "typography", content: "Issues", variant: "h4" }, { type: "typography", content: "@entity.issues", variant: "body" }, { type: "divider" }, { type: "typography", content: "Suggestions", variant: "h4" }, { type: "typography", content: "@entity.suggestions", variant: "body" }] }] }, { type: "button", label: "New Review", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    state completed {
+      RESET -> idle
+        (set @entity.reviewStatus idle)
+        (set @entity.target "")
+        (set @entity.issues "[]")
+        (set @entity.suggestions "[]")
+        (set @entity.score 0)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-search", size: "lg" }, { type: "typography", content: "Code Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.", variant: "body" }, { type: "form-section", entity: "Review", mode: "edit", submitEvent: "SUBMIT_REVIEW", fields: ["target"] }] }] }] }] })
+    }
+    emits {
+      REVIEW_COMPLETE internal { score: number }
+      REVIEW_COMPLETE external { score: number }
+    }
+    listens {
+      * CLASSIFIED -> SUBMIT_REVIEW
+    }
+  }
+  page "/review" -> ReviewGenerator
+}
+orbital ReviewRagOrbital {
+  entity ReviewRag [runtime] {
+    id : string!
+    query : string
+    context : string
+    response : string
+    memoryHits : number
+    searchHits : number
+    status : string
+    error : string
+    content : string
+    category : string
+    scope : string
+    strength : number
+    pinned : boolean
+    language : string
+    resultCount : number
+    results : string
+    prompt : string
+    provider : string
+    model : string
+  }
+  trait ReviewRagRag -> ReviewRag [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: "ReviewRag", mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] }] })
+      GENERATE -> retrieving
+        (set @entity.status retrieving)
+        (agent/recall @entity.query 5)
+        (agent/search-code @entity.query)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Retrieving context...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "Recalling memories" }, { type: "badge", label: "Searching code" }] }] }] })
+    }
+    state retrieving {
+      RETRIEVAL_DONE -> generating
+        (set @entity.context @payload.context)
+        (set @entity.memoryHits @payload.memoryHits)
+        (set @entity.searchHits @payload.searchHits)
+        (set @entity.status generating)
+        (agent/generate (str/concat "Context:\n" @entity.context "\n\nQuery: " @entity.query "\n\nProvide a comprehensive answer based on the retrieved context."))
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Generating response...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: ["str/concat", ["str/concat", "@entity.memoryHits"], " memories"] }, { type: "badge", label: ["str/concat", ["str/concat", "@entity.searchHits"], " code hits"] }] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "RAG Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] }] })
+    }
+    state generating {
+      GENERATION_DONE -> completed
+        (set @entity.response @payload.response)
+        (set @entity.status completed)
+        (agent/memorize (str/concat "RAG query: " @entity.query) pattern-affinity)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "RAG Complete", variant: "h2" }] }, { type: "button", label: "New Query", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Memory Hits", value: "@entity.memoryHits", icon: "brain" }, { type: "stat-display", label: "Code Hits", value: "@entity.searchHits", icon: "code" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Query", variant: "caption" }, { type: "typography", content: "@entity.query", variant: "body" }, { type: "divider" }, { type: "typography", content: "Response", variant: "caption" }, { type: "typography", content: "@entity.response", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Retrieved Context", variant: "caption" }, { type: "typography", content: "@entity.context", variant: "body" }] }] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "RAG Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] }] })
+    }
+    state completed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.response "")
+        (set @entity.context "")
+        (set @entity.memoryHits 0)
+        (set @entity.searchHits 0)
+        (set @entity.error "")
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: "ReviewRag", mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] }] })
+    }
+  }
+  trait RagTabs -> ReviewRag [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No reviewrags yet", emptyDescription: "Add reviewrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.query" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] }] })
+      SELECT_TAB -> idle
+        (fetch ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No reviewrags yet", emptyDescription: "Add reviewrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.query" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] }] })
+    }
+  }
+  trait RagMemoryLifecycle -> ReviewRag [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "ReviewRag Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
+    }
+  }
+  trait RagSearchLifecycle -> ReviewRag [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Search", event: "SEARCH", variant: "primary", icon: "search" }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No search results", emptyDescription: "Enter a query to search the codebase.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "query", label: "Query", variant: "h4", icon: "search" }, { name: "language", label: "Language", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "resultCount", label: "Result Count", variant: "caption" }] }] }] })
+    }
+  }
+  trait RagCompletionFlow -> ReviewRag [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+      GENERATE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "ReviewRag", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "ReviewRag", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+      SAVE -> closed
+        (persist create ReviewRag @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref ReviewRag)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+    }
+    emits {
+      SAVE internal
+      GENERATED internal
+    }
+  }
+  page "/rag" -> ReviewRagRag
+}
+orbital AnalysisOrbital {
+  entity Analysis [runtime] {
+    id : string!
+    input : string
+    category : string
+    confidence : number
+    model : string
+    message : string
+    notificationType : string
+  }
+  trait InputClassifier -> Analysis [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Analysis)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+      CLASSIFY -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag", size: "md" }, { type: "typography", content: "Analysis", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "schema", variant: "secondary" }, { type: "badge", label: "component", variant: "secondary" }, { type: "badge", label: "trait", variant: "secondary" }, { type: "badge", label: "page", variant: "secondary" }, { type: "badge", label: "behavior", variant: "secondary" }, { type: "badge", label: "style", variant: "secondary" }] }, { type: "form-section", entity: "Analysis", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref Analysis)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+      SAVE -> closed
+        (persist create Analysis @payload.data)
+        (render-ui modal null)
+        (emit CLASSIFIED)
+        (ref Analysis)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "Analysis", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+    }
+    emits {
+      CLASSIFIED internal { category: string }
+      CLASSIFIED external { category: string }
+    }
+  }
+  trait AnalysisNotification -> Analysis [interaction] {
+    initial: hidden
+    state hidden {
+      INIT -> hidden
+        (fetch Analysis)
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "Analysis Result", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] }] })
+    }
+    state visible {
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "Analysis Result", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] }] })
+      HIDE -> hidden
+        (set @entity.message "")
+    }
+  }
+  trait AnalysisAgent -> Analysis [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch Analysis)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "empty-state", icon: "tag", title: "Classifier", description: "Classifier is ready" }] })
+      DO_CLASSIFY -> classifying
+        (agent/generate (str/concat "Classify the following text into one of these categories: " "schema, component, trait, page, behavior, style" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
+      CLASSIFIED -> classifying
+        (agent/generate (str/concat "Classify the following text into one of these categories: " "schema, component, trait, page, behavior, style" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
+    }
+    state classifying {
+      DO_CLASSIFY -> classified
+        (set @entity.category @payload.data.input)
+        (emit SHOW)
+    }
+    state classified {
+      RESET -> idle
+        (set @entity.input "")
+        (set @entity.category "")
+        (set @entity.confidence 0)
+    }
+    emits {
+      SHOW internal { category: string, confidence: number }
+    }
+    listens {
+      * CLASSIFIED -> CLASSIFIED
+    }
+  }
+  page "/analysis" -> InputClassifier
+}
+orbital ReviewCompletionOrbital {
+  entity ReviewCompletion [runtime] {
+    id : string!
+    prompt : string
+    response : string
+    provider : string
+    model : string
+    status : string
+    error : string
+    message : string
+    notificationType : string
+  }
+  trait ReviewCompletionFlow -> ReviewCompletion [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref ReviewCompletion)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+      GENERATE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "ReviewCompletion", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "ReviewCompletion", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref ReviewCompletion)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+      SAVE -> closed
+        (persist create ReviewCompletion @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref ReviewCompletion)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
+    }
+    emits {
+      SAVE
+      GENERATED
+    }
+  }
+  trait ReviewCompletionNotification -> ReviewCompletion [interaction] {
+    initial: hidden
+    state hidden {
+      INIT -> hidden
+        (fetch ReviewCompletion)
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewCompletion Status", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] }] })
+    }
+    state visible {
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewCompletion Status", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] }] })
+      HIDE -> hidden
+        (set @entity.message "")
+    }
+  }
+  trait ReviewCompletionAgent -> ReviewCompletion [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ReviewCompletion)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "empty-state", icon: "sparkles", title: "Completion", description: "Completion is ready" }] })
+      DO_GENERATE -> generating
+        (set @entity.status generating)
+        (agent/generate @entity.prompt)
+      GENERATED -> generating
+        (set @entity.status generating)
+        (agent/generate @entity.prompt)
+    }
+    state generating {
+      DO_GENERATE -> completed
+        (set @entity.response @payload.data.prompt)
+        (set @entity.status completed)
+        (emit SHOW)
+      RESET -> error
+        ? (= @entity.status generating)
+        (set @entity.status error)
+        (set @entity.error "Generation was cancelled")
+    }
+    state completed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.response "")
+        (set @entity.prompt "")
+    }
+    state error {
+      RETRY -> generating
+        ? (= @entity.status error)
+        (set @entity.status generating)
+        (set @entity.error "")
+        (agent/generate @entity.prompt)
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.error "")
+    }
+    emits {
+      SHOW internal { response: string }
+    }
+    listens {
+      * GENERATED -> GENERATED
+    }
+  }
+  page "/completion" -> ReviewCompletionFlow
+}
+orbital ReviewNavOrbital {
+  entity ReviewNav [runtime] {
+    id : string!
+    target : string
+    category : string
+    issues : string
+    suggestions : string
+    score : number
+    reviewStatus : string
+    error : string
+  }
+  trait ReviewerTabs = Tabs.traits.TabContentTabs -> Review {
+    on INIT {
+        (fetch Review)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-search", size: "lg" }, { type: "typography", content: "Code Reviewer", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Input", value: "input" }, { label: "Analysis", value: "analysis" }, { label: "Review", value: "review" }], defaultActiveTab: "input", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "Review", emptyIcon: "inbox", emptyTitle: "No reviews yet", emptyDescription: "Add reviews to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.target" }, { type: "typography", variant: "caption", color: "muted", content: "@item.input" }] }] }] }] })
+    }
+    on SELECT_TAB {
+        (fetch Review)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-search", size: "lg" }, { type: "typography", content: "Code Reviewer", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Input", value: "input" }, { label: "Analysis", value: "analysis" }, { label: "Review", value: "review" }], defaultActiveTab: "input", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "Review", emptyIcon: "inbox", emptyTitle: "No reviews yet", emptyDescription: "Add reviews to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.target" }, { type: "typography", variant: "caption", color: "muted", content: "@item.input" }] }] }] }] })
+    }
+  }
+  page "/reviewer/nav" -> ReviewerTabs
+}
+orbital ReviewIssueOrbital {
+  entity ReviewIssue [runtime] {
+    id : string!
+    description : string
+    severity : string
+    line : number
+  }
+  trait IssuesBrowse = Browse.traits.BrowseItemBrowse -> ReviewIssue {
+    on INIT {
+        (ref ReviewIssue)
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Issues", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ReviewIssue", emptyIcon: "inbox", emptyTitle: "No issues found", emptyDescription: "The review found no issues.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "description", label: "Description", variant: "h4", icon: "alert-triangle" }, { name: "severity", label: "Severity", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }] }, { type: "floating-action-button", icon: "plus", event: "INIT", label: "Create", tooltip: "Create" }] }] })
+    }
+  }
+  page "/issues" -> IssuesBrowse
+}

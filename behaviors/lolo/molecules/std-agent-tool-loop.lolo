@@ -1,0 +1,206 @@
+;; app std-agent-tool-loop
+
+orbital AgentToolLoopOrbital {
+  uses AgentCompletion from "std/behaviors/std-agent-completion"
+  uses AgentContextWindow from "std/behaviors/std-agent-context-window"
+  uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
+  uses AgentToolCall from "std/behaviors/std-agent-tool-call"
+
+  entity AgentToolLoop [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    task : string
+    plan : string
+    iterations : number
+    maxIterations : number
+    result : string
+    currentTool : string
+    lastToolResult : string
+    error : string
+    currentStep : number
+    totalSteps : number
+    steps : string
+    toolName : string
+    args : string
+    prompt : string
+    response : string
+    provider : string
+    model : string
+    tokenCount : number
+    maxTokens : number
+    usage : number
+    current : number
+    max : number
+    threshold : number
+    lastCompactedAt : string
+    action : string
+    detail : string
+    timestamp : string
+    duration : number
+  }
+  trait AgentToolLoopLoop -> AgentToolLoop [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: "AgentToolLoop", mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] })
+      EXECUTE -> planning
+        (set @entity.status planning)
+        (set @entity.iterations 0)
+        (agent/generate (str/concat "Task: " @entity.task "\n\nAvailable tools: " (str/join (agent/tools) ", ") "\n\nGenerate a step-by-step plan. Return the first tool to call and its arguments."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "Planning execution...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "typography", content: "@entity.task", variant: "caption" }] })
+    }
+    state planning {
+      PLAN_GENERATED -> executing
+        (set @entity.plan @payload.plan)
+        (set @entity.currentTool @payload.toolName)
+        (set @entity.iterations (+ @entity.iterations 1))
+        (agent/invoke @payload.toolName @payload.toolArgs)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool", size: "lg" }, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"], "/", ["str/concat", "@entity.maxIterations"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner", size: "md" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] })
+      FAILED -> failed
+        (set @entity.error @payload.error)
+        (set @entity.status failed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Iterations Used", value: "@entity.iterations", icon: "repeat" }, { type: "stat-display", label: "Max Allowed", value: "@entity.maxIterations", icon: "shield" }] }, { type: "button", label: "Retry", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state executing {
+      TOOL_RESULT -> checking
+        (set @entity.lastToolResult @payload.output)
+        (agent/generate (str/concat "Task: " @entity.task "\nPlan: " @entity.plan "\nTool output: " @payload.output "\n\nIs the task complete? If yes, provide the final result. If no, specify the next tool and arguments."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "eye", size: "lg" }, { type: "typography", content: "Checking result...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"]] }] })
+      FAILED -> failed
+        (set @entity.error @payload.error)
+        (set @entity.status failed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Iterations Used", value: "@entity.iterations", icon: "repeat" }, { type: "stat-display", label: "Max Allowed", value: "@entity.maxIterations", icon: "shield" }] }, { type: "button", label: "Retry", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state checking {
+      CHECK_PASSED -> completed
+        (set @entity.result @payload.result)
+        (set @entity.status completed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Loop Complete", variant: "h2" }] }, { type: "button", label: "New Task", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Iterations", value: "@entity.iterations", icon: "repeat" }, { type: "stat-display", label: "Status", value: "@entity.status", icon: "check" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Task", variant: "caption" }, { type: "typography", content: "@entity.task", variant: "body" }, { type: "divider" }, { type: "typography", content: "Result", variant: "caption" }, { type: "typography", content: "@entity.result", variant: "body" }] }] }] })
+      CHECK_NEEDS_MORE -> executing
+        (set @entity.currentTool @payload.toolName)
+        (set @entity.iterations (+ @entity.iterations 1))
+        (if (>= (agent/context-usage) 0.8) (agent/compact hybrid) (log "Context below compact threshold"))
+        (agent/invoke @payload.toolName @payload.toolArgs)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "tool", size: "lg" }, { type: "typography", content: "Executing Tool", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Iteration ", ["str/concat", "@entity.iterations"], "/", ["str/concat", "@entity.maxIterations"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Current Tool", variant: "caption" }, { type: "typography", content: "@entity.currentTool", variant: "h4" }, { type: "spinner", size: "md" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Plan", variant: "caption" }, { type: "typography", content: "@entity.plan", variant: "body" }] }] }] })
+      MAX_ITERATIONS -> failed
+        (set @entity.error @payload.error)
+        (set @entity.status failed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Iterations Used", value: "@entity.iterations", icon: "repeat" }, { type: "stat-display", label: "Max Allowed", value: "@entity.maxIterations", icon: "shield" }] }, { type: "button", label: "Retry", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state completed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.task "")
+        (set @entity.plan "")
+        (set @entity.result "")
+        (set @entity.currentTool "")
+        (set @entity.lastToolResult "")
+        (set @entity.iterations 0)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: "AgentToolLoop", mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] })
+    }
+    state failed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.task "")
+        (set @entity.plan "")
+        (set @entity.result "")
+        (set @entity.currentTool "")
+        (set @entity.lastToolResult "")
+        (set @entity.iterations 0)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: "AgentToolLoop", mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] })
+    }
+  }
+  trait ToolLoopStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> AgentToolLoop {
+    on INIT {
+        (fetch AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    on START {
+        (set @entity.status in_progress)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    on ADVANCE {
+        (set @entity.currentStep (+ @entity.currentStep 1))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    on COMPLETE {
+        (set @entity.status completed)
+        (set @entity.currentStep @entity.totalSteps)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }, { type: "badge", label: "Completed", variant: "success" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.totalSteps", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "alert", variant: "success", message: "All steps completed successfully." }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    on FAIL {
+        (set @entity.status failed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }, { type: "badge", label: "Failed", variant: "destructive" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "alert", variant: "error", message: "Pipeline failed at the current step." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "stat-display", label: "Failed At Step", value: "@entity.currentStep" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    on RESET {
+        (set @entity.status idle)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait ToolLoopCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentToolLoop {
+    on INIT {
+        (ref AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on GENERATE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "AgentToolLoop", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "AgentToolLoop", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentToolLoop @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentToolLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait ToolLoopToolCallFlow = AgentToolCall.traits.AgentToolCallModal -> AgentToolLoop {
+    on INIT {
+        (ref AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on INVOKE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench", size: "md" }, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentToolLoop", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentToolLoop @payload.data)
+        (render-ui modal null)
+        (emit INVOKED)
+        (ref AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait ToolLoopContextMonitor = AgentContextWindow.traits.AgentContextWindowGauge -> AgentToolLoop {
+    on INIT {
+        (fetch AgentToolLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  page "/agenttoolloops" -> AgentToolLoopLoop, ToolLoopStepProgress, ToolLoopCompletionFlow, ToolLoopToolCallFlow, ToolLoopContextMonitor
+}

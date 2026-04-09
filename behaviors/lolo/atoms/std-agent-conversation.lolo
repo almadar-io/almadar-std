@@ -1,0 +1,89 @@
+;; app std-agent-conversation
+
+orbital AgentConversationOrbital {
+  entity AgentConversation [persistent: agentconversations] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    messages : [string]
+    turnCount : number
+    lastMessage : string
+    tokenCount : number
+    role : string
+    content : string
+    timestamp : string
+    toolName : string
+  }
+  trait AgentConversationThread -> AgentConversation [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentConversation)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+      COMPOSE -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus", disabled: true }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", title: "Compose Message", children: [{ type: "textarea", label: "Message", bind: "@entity.content", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", event: "SEND", variant: "primary", icon: "send" }] }] }] })
+      CLEAR -> idle
+        (persist delete AgentConversation)
+        (fetch AgentConversation)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+    }
+    state composing {
+      SEND -> idle
+        (set @entity.content @payload.content)
+        (set @entity.role user)
+        (set @entity.timestamp @now)
+        (set @entity.status sent)
+        (persist create AgentConversation { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
+        (emit SEND_MESSAGE)
+        (fetch AgentConversation)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+      CLEAR -> idle
+        (persist delete AgentConversation)
+        (fetch AgentConversation)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentConversation Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentConversation", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+    }
+    emits {
+      SEND_MESSAGE internal { content: string }
+    }
+  }
+  trait AgentConversationAgent -> AgentConversation [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentConversation)
+        (render-ui main { type: "empty-state", icon: "message-circle", title: "Conversation", description: "Conversation is ready" })
+      SEND_MESSAGE -> active
+        (set @entity.lastMessage @payload.content)
+        (set @entity.turnCount (+ @entity.turnCount 1))
+        (agent/generate @payload.content)
+        (emit TOKEN_UPDATE)
+    }
+    state active {
+      SEND_MESSAGE -> active
+        (set @entity.lastMessage @payload.content)
+        (set @entity.turnCount (+ @entity.turnCount 1))
+        (agent/generate @payload.content)
+        (emit TOKEN_UPDATE)
+      PAUSE -> paused
+      CLEAR -> idle
+        (set @entity.messages [])
+        (set @entity.turnCount 0)
+        (set @entity.lastMessage "")
+        (set @entity.tokenCount 0)
+    }
+    state paused {
+      RESUME -> active
+      CLEAR -> idle
+        (set @entity.messages [])
+        (set @entity.turnCount 0)
+        (set @entity.lastMessage "")
+        (set @entity.tokenCount 0)
+    }
+    emits {
+      TOKEN_UPDATE internal { tokenCount: number }
+    }
+  }
+  page "/agentconversations" -> AgentConversationThread, AgentConversationAgent
+}

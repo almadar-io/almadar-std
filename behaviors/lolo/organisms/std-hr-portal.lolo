@@ -1,0 +1,338 @@
+;; app std-hr-portal
+
+orbital EmployeeOrbital {
+  entity Employee [runtime] {
+    id : string!
+    name : string
+    email : string
+    department : string
+    role : string
+    startDate : datetime
+  }
+  trait EmployeeBrowse -> Employee [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Employee)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Employees", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Employee", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Employee", emptyIcon: "inbox", emptyTitle: "No employees yet", emptyDescription: "Add employees to your organization.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "user" }, { name: "department", variant: "badge" }, { name: "role", variant: "body" }, { name: "email", variant: "caption" }, { name: "startDate", label: "Joined", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      ONBOARD external { id: string }
+    }
+    listens {
+      * EMPLOYEE_CREATED -> INIT
+      * EMPLOYEE_UPDATED -> INIT
+      * EMPLOYEE_DELETED -> INIT
+    }
+  }
+  trait EmployeeCreate -> Employee [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Employee)
+      CREATE -> open
+        (fetch Employee)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New Employee", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Employee", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "email", "department", "role", "startDate"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Employee @payload.data)
+        (render-ui modal null)
+        (emit EMPLOYEE_CREATED)
+    }
+    emits {
+      SAVE
+      EMPLOYEE_CREATED
+    }
+  }
+  trait EmployeeEdit -> Employee [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Employee)
+      EDIT -> open
+        (fetch Employee { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Employee", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Employee", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "email", "department", "role", "startDate"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Employee @payload.data)
+        (render-ui modal null)
+        (emit EMPLOYEE_UPDATED)
+    }
+    emits {
+      SAVE
+      EMPLOYEE_UPDATED
+    }
+  }
+  trait EmployeeView -> Employee [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Employee)
+      VIEW -> open
+        (fetch Employee { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Department" }, { type: "typography", variant: "body", content: "@entity.department" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Role" }, { type: "typography", variant: "body", content: "@entity.role" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait EmployeeDelete -> Employee [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Employee)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Employee { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Employee", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Employee @entity.pendingId)
+        (render-ui modal null)
+        (ref Employee)
+        (emit EMPLOYEE_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Employee)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Employee)
+    }
+    emits {
+      CONFIRM_DELETE
+      EMPLOYEE_DELETED
+    }
+  }
+  page "/employees" -> EmployeeBrowse, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete
+}
+orbital OnboardingOrbital {
+  entity Onboarding [runtime] {
+    id : string!
+    employeeName : string
+    department : string
+    manager : string
+    equipmentReady : boolean
+    accessGranted : boolean
+  }
+  trait OnboardingWizard -> Onboarding [interaction] {
+    initial: step1
+    state step1 {
+      INIT -> step1
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Employee Details", variant: "h3" }, { type: "form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["employeeName", "department"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      NEXT -> step2
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Manager Assignment", variant: "h3" }, { type: "form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["manager"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    state step2 {
+      NEXT -> step3
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Setup Checklist", variant: "h3" }, { type: "repeatable-form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["equipmentReady", "accessGranted"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      PREV -> step1
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Employee Details", variant: "h3" }, { type: "form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["employeeName", "department"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    state step3 {
+      NEXT -> review
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "badge", label: "Review" }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 3 }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "sm", entity: "Onboarding", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Employee Name" }, { type: "typography", variant: "body", content: "@entity.employeeName" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Department" }, { type: "typography", variant: "body", content: "@entity.department" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Manager" }, { type: "typography", variant: "body", content: "@entity.manager" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Equipment Ready" }, { type: "typography", variant: "body", content: "@entity.equipmentReady" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Access Granted" }, { type: "typography", variant: "body", content: "@entity.accessGranted" }] }] }, { type: "wizard-navigation", currentStep: 3, totalSteps: 4, showBack: true, showComplete: true, showNext: false }] }] })
+      PREV -> step2
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 1 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 1 }, { type: "divider" }, { type: "typography", content: "Manager Assignment", variant: "h3" }, { type: "form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["manager"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    state review {
+      PREV -> step3
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 2 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 2 }, { type: "divider" }, { type: "typography", content: "Setup Checklist", variant: "h3" }, { type: "repeatable-form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "PREV", fields: ["equipmentReady", "accessGranted"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back", event: "PREV", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      COMPLETE -> complete
+        (persist create Onboarding @payload.data)
+        (notify success "Onboarding created successfully")
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Onboarding Complete!", variant: "h2" }, { type: "typography", content: "The new employee has been fully onboarded.", variant: "body" }, { type: "button", label: "Start New", event: "RESTART", variant: "primary", icon: "refresh-cw" }] }] })
+    }
+    state complete {
+      RESTART -> step1
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Employee Details", variant: "h3" }, { type: "form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["employeeName", "department"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+      INIT -> step1
+        (fetch Onboarding)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-check", size: "lg" }, { type: "typography", content: "Employee Onboarding", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Employee Details", "Manager Assignment", "Setup Checklist"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Employee Details", variant: "h3" }, { type: "form-section", entity: "Onboarding", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["employeeName", "department"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] }] })
+    }
+    listens {
+      * ONBOARD -> INIT
+    }
+  }
+  page "/onboarding" -> OnboardingWizard
+}
+orbital TimeOffOrbital {
+  entity TimeOff [runtime] {
+    id : string!
+    employeeName : string
+    leaveType : string
+    startDate : datetime
+    endDate : datetime
+    status : string
+  }
+  trait TimeOffBrowse -> TimeOff [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref TimeOff)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "calendar", size: "lg" }, { type: "typography", content: "Time Off Requests", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Request Time Off", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "TimeOff", emptyIcon: "inbox", emptyTitle: "No time-off requests", emptyDescription: "Submit a request when you need time off.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "employeeName", label: "Employee", variant: "h3", icon: "calendar" }, { name: "leaveType", label: "Type", variant: "badge" }, { name: "status", variant: "badge" }, { name: "startDate", label: "From", variant: "body", format: "date" }, { name: "endDate", label: "To", variant: "body", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      APPROVE_LEAVE external { id: string }
+    }
+    listens {
+      * TIME_OFF_CREATED -> INIT
+      * TIME_OFF_UPDATED -> INIT
+      * TIME_OFF_DELETED -> INIT
+    }
+  }
+  trait TimeOffCreate -> TimeOff [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref TimeOff)
+      CREATE -> open
+        (fetch TimeOff)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New Time Off Request", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "TimeOff", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["employeeName", "leaveType", "startDate", "endDate", "status"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create TimeOff @payload.data)
+        (render-ui modal null)
+        (emit TIME_OFF_CREATED)
+    }
+    emits {
+      SAVE
+      TIME_OFF_CREATED
+    }
+  }
+  trait TimeOffEdit -> TimeOff [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref TimeOff)
+      EDIT -> open
+        (fetch TimeOff { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit TimeOff", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "TimeOff", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["employeeName", "leaveType", "startDate", "endDate", "status"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update TimeOff @payload.data)
+        (render-ui modal null)
+        (emit TIME_OFF_UPDATED)
+    }
+    emits {
+      SAVE
+      TIME_OFF_UPDATED
+    }
+  }
+  trait TimeOffView -> TimeOff [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref TimeOff)
+      VIEW -> open
+        (fetch TimeOff { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.employeeName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Employee Name" }, { type: "typography", variant: "body", content: "@entity.employeeName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Leave Type" }, { type: "typography", variant: "body", content: "@entity.leaveType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Start Date" }, { type: "typography", variant: "body", content: "@entity.startDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "End Date" }, { type: "typography", variant: "body", content: "@entity.endDate" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait TimeOffDelete -> TimeOff [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref TimeOff)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch TimeOff { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete TimeOff", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete TimeOff @entity.pendingId)
+        (render-ui modal null)
+        (ref TimeOff)
+        (emit TIME_OFF_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref TimeOff)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref TimeOff)
+    }
+    emits {
+      CONFIRM_DELETE
+      TIME_OFF_DELETED
+    }
+  }
+  page "/timeoff" -> TimeOffBrowse, TimeOffCreate, TimeOffEdit, TimeOffView, TimeOffDelete
+}
+orbital OrgChartOrbital {
+  entity OrgChart [runtime] {
+    id : string!
+    totalEmployees : number
+    departments : number
+    openPositions : number
+    avgTenure : string
+    headcount : number
+  }
+  trait OrgChartDisplay -> OrgChart [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch OrgChart)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Org Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "git-branch", size: "lg" }, { type: "typography", content: "Org Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalEmployees", value: ["object/get", ["array/first", "@entity"], "totalEmployees"] }, { type: "stat-display", label: "Departments", value: ["object/get", ["array/first", "@entity"], "departments"] }, { type: "stat-display", label: "OpenPositions", value: ["object/get", ["array/first", "@entity"], "openPositions"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgTenure" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgTenure"] }] }] }, { type: "stat-display", label: "Headcount", value: ["object/get", ["array/first", "@entity"], "headcount"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch OrgChart)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Org Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "git-branch", size: "lg" }, { type: "typography", content: "Org Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalEmployees", value: ["object/get", ["array/first", "@entity"], "totalEmployees"] }, { type: "stat-display", label: "Departments", value: ["object/get", ["array/first", "@entity"], "departments"] }, { type: "stat-display", label: "OpenPositions", value: ["object/get", ["array/first", "@entity"], "openPositions"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgTenure" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgTenure"] }] }] }, { type: "stat-display", label: "Headcount", value: ["object/get", ["array/first", "@entity"], "headcount"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch OrgChart)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Org Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "git-branch", size: "lg" }, { type: "typography", content: "Org Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalEmployees", value: ["object/get", ["array/first", "@entity"], "totalEmployees"] }, { type: "stat-display", label: "Departments", value: ["object/get", ["array/first", "@entity"], "departments"] }, { type: "stat-display", label: "OpenPositions", value: ["object/get", ["array/first", "@entity"], "openPositions"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgTenure" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgTenure"] }] }] }, { type: "stat-display", label: "Headcount", value: ["object/get", ["array/first", "@entity"], "headcount"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch OrgChart)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Org Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "git-branch", size: "lg" }, { type: "typography", content: "Org Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalEmployees", value: ["object/get", ["array/first", "@entity"], "totalEmployees"] }, { type: "stat-display", label: "Departments", value: ["object/get", ["array/first", "@entity"], "departments"] }, { type: "stat-display", label: "OpenPositions", value: ["object/get", ["array/first", "@entity"], "openPositions"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgTenure" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgTenure"] }] }] }, { type: "stat-display", label: "Headcount", value: ["object/get", ["array/first", "@entity"], "headcount"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch OrgChart)
+        (render-ui main { type: "dashboard-layout", appName: "HRPortal", navItems: [{ label: "Employees", href: "/employees", icon: "users" }, { label: "Onboarding", href: "/onboarding", icon: "layout-list" }, { label: "Time Off", href: "/timeoff", icon: "calendar" }, { label: "Org Chart", href: "/org-chart", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Org Chart" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "git-branch", size: "lg" }, { type: "typography", content: "Org Chart", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalEmployees", value: ["object/get", ["array/first", "@entity"], "totalEmployees"] }, { type: "stat-display", label: "Departments", value: ["object/get", ["array/first", "@entity"], "departments"] }, { type: "stat-display", label: "OpenPositions", value: ["object/get", ["array/first", "@entity"], "openPositions"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgTenure" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgTenure"] }] }] }, { type: "stat-display", label: "Headcount", value: ["object/get", ["array/first", "@entity"], "headcount"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    listens {
+      * APPROVE_LEAVE -> INIT
+    }
+  }
+  page "/org-chart" -> OrgChartDisplay
+}

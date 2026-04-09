@@ -1,0 +1,92 @@
+;; app std-service-payment-flow
+
+orbital ServicePaymentFlowOrbital {
+  entity ServicePaymentFlow [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    amount : number
+    currency : string
+    paymentIntentId : string
+    clientSecret : string
+    paymentStatus : string
+    to : string
+    subject : string
+    body : string
+    sendStatus : string
+    error : string
+  }
+  trait ServicePaymentFlowPayment -> ServicePaymentFlow [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServicePaymentFlow)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+      CREATE_PAYMENT -> creating
+        (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
+        (call-service stripe "createPaymentIntent" { amount: "@entity.amount", currency: "@entity.currency" })
+    }
+    state creating {
+      PAYMENT_CREATED -> confirming
+        (set @entity.paymentIntentId @payload.id)
+        (set @entity.clientSecret @payload.clientSecret)
+        (render-ui main { type: "loading-state", title: "Confirming payment...", message: "Processing your payment." })
+        (call-service stripe "confirmPayment" { paymentIntentId: "@entity.paymentIntentId" })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state confirming {
+      PAYMENT_CONFIRMED -> succeeded
+        (set @entity.paymentStatus succeeded)
+        (emit SEND_RECEIPT)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Payment successful! Sending receipt..." }, { type: "typography", variant: "body", color: "muted", content: "@entity.paymentIntentId" }, { type: "button", label: "New Payment", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Payment Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state succeeded {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
+    }
+    emits {
+      SEND_RECEIPT
+    }
+  }
+  trait ServicePaymentFlowReceipt -> ServicePaymentFlow [interaction] {
+    initial: waiting
+    state waiting {
+      INIT -> waiting
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "mail", size: "md" }, { type: "typography", content: "Receipt will be sent after payment.", variant: "body", color: "muted" }] })
+      SEND_RECEIPT -> sending
+        (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+    }
+    state sending {
+      SENT -> sent
+        (set @entity.sendStatus sent)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "check-circle", size: "md" }, { type: "alert", variant: "success", message: "Receipt sent successfully" }] })
+      FAILED -> receiptError
+        (set @entity.sendStatus error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "error-state", title: "Receipt Failed", message: "Could not send receipt email.", onRetry: "RETRY_RECEIPT" }, { type: "button", label: "Retry", event: "RETRY_RECEIPT", variant: "primary", icon: "refresh-cw" }] })
+    }
+    state sent {}
+    state receiptError {
+      RETRY_RECEIPT -> sending
+        (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+    }
+    listens {
+      * SEND_RECEIPT -> SEND_RECEIPT
+    }
+  }
+  page "/servicepaymentflows" -> ServicePaymentFlowPayment, ServicePaymentFlowReceipt
+}

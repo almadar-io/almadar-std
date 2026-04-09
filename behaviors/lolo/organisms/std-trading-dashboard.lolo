@@ -1,0 +1,189 @@
+;; app std-trading-dashboard
+
+orbital PortfolioOrbital {
+  entity Portfolio [runtime] {
+    id : string!
+    totalValue : number
+    dailyChange : number
+    positions : number
+    cashBalance : number
+  }
+  trait PortfolioDisplay -> Portfolio [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch Portfolio)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up", size: "lg" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch Portfolio)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up", size: "lg" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch Portfolio)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up", size: "lg" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch Portfolio)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up", size: "lg" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch Portfolio)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up", size: "lg" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+  }
+  page "/portfolio" -> PortfolioDisplay
+}
+orbital TradeOrderOrbital {
+  entity TradeOrder [persistent: tradeorders] {
+    id : string!
+    symbol : string!
+    side : string!
+    quantity : number!
+    price : number
+  }
+  trait TradeOrderBrowse -> TradeOrder [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref TradeOrder)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "shopping-cart", size: "lg" }, { type: "typography", content: "Trade Orders", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create TradeOrder", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "TradeOrder", emptyIcon: "inbox", emptyTitle: "No orders yet", emptyDescription: "Place your first trade.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "symbol", variant: "h3", icon: "trending-up" }, { name: "side", variant: "badge" }, { name: "quantity", variant: "body", format: "number" }, { name: "price", variant: "h4", format: "currency" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * TRADE_ORDER_CREATED -> INIT
+      * TRADE_ORDER_UPDATED -> INIT
+      * TRADE_ORDER_DELETED -> INIT
+    }
+  }
+  trait TradeOrderCreate -> TradeOrder [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref TradeOrder)
+      CREATE -> open
+        (fetch TradeOrder)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "TradeOrder", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create TradeOrder @payload.data)
+        (render-ui modal null)
+        (emit TRADE_ORDER_CREATED)
+    }
+    emits {
+      SAVE
+      TRADE_ORDER_CREATED
+    }
+  }
+  trait TradeOrderEdit -> TradeOrder [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref TradeOrder)
+      EDIT -> open
+        (fetch TradeOrder { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "TradeOrder", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["symbol", "side", "quantity", "price"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update TradeOrder @payload.data)
+        (render-ui modal null)
+        (emit TRADE_ORDER_UPDATED)
+    }
+    emits {
+      SAVE
+      TRADE_ORDER_UPDATED
+    }
+  }
+  trait TradeOrderView -> TradeOrder [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref TradeOrder)
+      VIEW -> open
+        (fetch TradeOrder { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.symbol" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Symbol" }, { type: "typography", variant: "body", content: "@entity.symbol" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Side" }, { type: "typography", variant: "body", content: "@entity.side" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Quantity" }, { type: "typography", variant: "body", content: "@entity.quantity" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Price" }, { type: "typography", variant: "body", content: "@entity.price" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait TradeOrderDelete -> TradeOrder [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref TradeOrder)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch TradeOrder { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete TradeOrder", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete TradeOrder @entity.pendingId)
+        (render-ui modal null)
+        (ref TradeOrder)
+        (emit TRADE_ORDER_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref TradeOrder)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref TradeOrder)
+    }
+    emits {
+      CONFIRM_DELETE
+      TRADE_ORDER_DELETED
+    }
+  }
+  page "/orders" -> TradeOrderBrowse, TradeOrderCreate, TradeOrderEdit, TradeOrderView, TradeOrderDelete
+}
+orbital MarketFeedOrbital {
+  entity MarketFeed [runtime] {
+    id : string!
+    symbol : string!
+    price : number!
+    change : number
+    volume : number
+  }
+  trait MarketFeedAsync -> MarketFeed [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch MarketFeed)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "MarketFeed", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start marketfeed operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
+      START -> loading
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Connecting to market feed...", message: "Processing marketfeed..." }, { type: "skeleton", variant: "text" }] }] })
+    }
+    state loading {
+      LOADED -> success
+        (persist create MarketFeed @payload.data)
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Market feed connected." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
+      FAILED -> error
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Operation Failed", message: "Market feed disconnected.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", event: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
+    }
+    state success {
+      RESET -> idle
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "MarketFeed", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start marketfeed operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
+    }
+    state error {
+      RESET -> idle
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "MarketFeed", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start marketfeed operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
+      RETRY -> loading
+        (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Connecting to market feed...", message: "Processing marketfeed..." }, { type: "skeleton", variant: "text" }] }] })
+    }
+  }
+  page "/market" -> MarketFeedAsync
+}

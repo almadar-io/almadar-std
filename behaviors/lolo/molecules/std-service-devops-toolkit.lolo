@@ -1,0 +1,133 @@
+;; app std-service-devops-toolkit
+
+orbital ServiceDevopsToolkitOrbital {
+  entity ServiceDevopsToolkit [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    title : string
+    body : string
+    head : string
+    base : string
+    prUrl : string
+    cacheKey : string
+    cacheValue : string
+    bucket : string
+    fileKey : string
+    result : string
+    toolStatus : string
+    activeTab : string
+    error : string
+  }
+  trait ServiceDevopsToolkitGithub -> ServiceDevopsToolkit [interaction] {
+    initial: ghIdle
+    state ghIdle {
+      INIT -> ghIdle
+        (fetch ServiceDevopsToolkit)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "GitHub: Create PR", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Title", bind: "@entity.title", placeholder: "PR title" }, { type: "textarea", label: "Body", bind: "@entity.body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", bind: "@entity.head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", bind: "@entity.base", placeholder: "main" }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+      CREATE_PR -> creatingPR
+        (render-ui main { type: "loading-state", title: "Creating pull request...", message: "Submitting your PR to GitHub." })
+        (call-service github "createPR" { title: "@entity.title", body: "@entity.body", head: "@entity.head", base: "@entity.base" })
+    }
+    state creatingPR {
+      PR_CREATED -> prCreated
+        (set @entity.prUrl @payload.url)
+        (set @entity.toolStatus pr-created)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Pull request created!" }, { type: "typography", variant: "body", color: "muted", content: "@entity.prUrl" }, { type: "button", label: "Create Another", event: "GH_RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      GH_FAILED -> ghError
+        (set @entity.error @payload.error)
+        (set @entity.toolStatus error)
+        (render-ui main { type: "error-state", title: "PR Creation Failed", message: "@entity.error", onRetry: "GH_RETRY" })
+    }
+    state prCreated {
+      GH_RESET -> ghIdle
+        (set @entity.toolStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "GitHub: Create PR", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Title", bind: "@entity.title", placeholder: "PR title" }, { type: "textarea", label: "Body", bind: "@entity.body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", bind: "@entity.head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", bind: "@entity.base", placeholder: "main" }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+    }
+    state ghError {
+      GH_RETRY -> ghIdle
+        (set @entity.toolStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "GitHub: Create PR", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Title", bind: "@entity.title", placeholder: "PR title" }, { type: "textarea", label: "Body", bind: "@entity.body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", bind: "@entity.head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", bind: "@entity.base", placeholder: "main" }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+    }
+  }
+  trait ServiceDevopsToolkitRedis -> ServiceDevopsToolkit [interaction] {
+    initial: redisIdle
+    state redisIdle {
+      INIT -> redisIdle
+        (fetch ServiceDevopsToolkit)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Key", bind: "@entity.cacheKey", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.cacheValue", placeholder: "cache-value" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+      GET_KEY -> redisExecuting
+        (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
+        (call-service redis get { key: "@entity.cacheKey" })
+      SET_KEY -> redisExecuting
+        (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
+        (call-service redis set { key: "@entity.cacheKey", value: "@entity.cacheValue" })
+      DELETE_KEY -> redisExecuting
+        (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
+        (call-service redis delete { key: "@entity.cacheKey" })
+    }
+    state redisExecuting {
+      REDIS_DONE -> redisComplete
+        (set @entity.result @payload.data)
+        (set @entity.toolStatus redis-complete)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Redis operation complete" }, { type: "typography", variant: "body", color: "muted", content: "@entity.result" }, { type: "button", label: "Reset", event: "REDIS_RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      REDIS_FAILED -> redisError
+        (set @entity.error @payload.error)
+        (set @entity.toolStatus error)
+        (render-ui main { type: "error-state", title: "Redis Error", message: "@entity.error", onRetry: "REDIS_RETRY" })
+    }
+    state redisComplete {
+      REDIS_RESET -> redisIdle
+        (set @entity.toolStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Key", bind: "@entity.cacheKey", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.cacheValue", placeholder: "cache-value" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+    }
+    state redisError {
+      REDIS_RETRY -> redisIdle
+        (set @entity.toolStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Key", bind: "@entity.cacheKey", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.cacheValue", placeholder: "cache-value" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+    }
+  }
+  trait ServiceDevopsToolkitStorage -> ServiceDevopsToolkit [interaction] {
+    initial: storageIdle
+    state storageIdle {
+      INIT -> storageIdle
+        (fetch ServiceDevopsToolkit)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Storage Files", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] })
+      UPLOAD -> storageExecuting
+        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
+        (call-service storage upload { bucket: "@entity.bucket", key: "@entity.fileKey" })
+      DOWNLOAD -> storageExecuting
+        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
+        (call-service storage download { bucket: "@entity.bucket", key: "@entity.fileKey" })
+      LIST -> storageExecuting
+        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
+        (call-service storage list { bucket: "@entity.bucket" })
+      DELETE_FILE -> storageExecuting
+        (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
+        (call-service storage delete { bucket: "@entity.bucket", key: "@entity.fileKey" })
+    }
+    state storageExecuting {
+      STORAGE_DONE -> storageComplete
+        (set @entity.result @payload.data)
+        (set @entity.toolStatus storage-complete)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Storage operation complete" }, { type: "typography", variant: "body", color: "muted", content: "@entity.result" }, { type: "button", label: "Back", event: "STORAGE_RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      STORAGE_FAILED -> storageError
+        (set @entity.error @payload.error)
+        (set @entity.toolStatus error)
+        (render-ui main { type: "error-state", title: "Storage Error", message: "@entity.error", onRetry: "STORAGE_RETRY" })
+    }
+    state storageComplete {
+      STORAGE_RESET -> storageIdle
+        (set @entity.toolStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Storage Files", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] })
+    }
+    state storageError {
+      STORAGE_RETRY -> storageIdle
+        (set @entity.toolStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Storage Files", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] })
+    }
+  }
+  page "/servicedevopstoolkits" -> ServiceDevopsToolkitGithub, ServiceDevopsToolkitRedis, ServiceDevopsToolkitStorage
+}

@@ -1,0 +1,191 @@
+;; app std-api-gateway
+
+orbital RouteOrbital {
+  entity Route [persistent: routes] {
+    id : string!
+    path : string!
+    method : string!
+    backend : string!
+    rateLimit : number
+  }
+  trait RouteBrowse -> Route [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Route)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "git-branch", size: "lg" }, { type: "typography", content: "Routes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Route", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Route", emptyIcon: "inbox", emptyTitle: "No routes configured", emptyDescription: "Add API routes to your gateway.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "method", variant: "badge" }, { name: "path", variant: "h3", icon: "git-branch" }, { name: "backend", variant: "body" }, { name: "rateLimit", label: "Rate Limit", variant: "caption", format: "number" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * ROUTE_CREATED -> INIT
+      * ROUTE_UPDATED -> INIT
+      * ROUTE_DELETED -> INIT
+    }
+  }
+  trait RouteCreate -> Route [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Route)
+      CREATE -> open
+        (fetch Route)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Route", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Route @payload.data)
+        (render-ui modal null)
+        (emit ROUTE_CREATED)
+    }
+    emits {
+      SAVE
+      ROUTE_CREATED
+    }
+  }
+  trait RouteEdit -> Route [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Route)
+      EDIT -> open
+        (fetch Route { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Route", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Route", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["path", "method", "backend", "rateLimit"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Route @payload.data)
+        (render-ui modal null)
+        (emit ROUTE_UPDATED)
+    }
+    emits {
+      SAVE
+      ROUTE_UPDATED
+    }
+  }
+  trait RouteView -> Route [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Route)
+      VIEW -> open
+        (fetch Route { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.path" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Path" }, { type: "typography", variant: "body", content: "@entity.path" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Method" }, { type: "typography", variant: "body", content: "@entity.method" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Backend" }, { type: "typography", variant: "body", content: "@entity.backend" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Rate Limit" }, { type: "typography", variant: "body", content: "@entity.rateLimit" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait RouteDelete -> Route [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Route)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Route { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Route", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Route @entity.pendingId)
+        (render-ui modal null)
+        (ref Route)
+        (emit ROUTE_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Route)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Route)
+    }
+    emits {
+      CONFIRM_DELETE
+      ROUTE_DELETED
+    }
+  }
+  page "/routes" -> RouteBrowse, RouteCreate, RouteEdit, RouteView, RouteDelete
+}
+orbital BackendOrbital {
+  entity Backend [runtime] {
+    id : string!
+    name : string!
+    url : string!
+    status : string
+    latency : number
+    failureCount : number
+    successCount : number
+    threshold : number
+  }
+  trait BackendCircuitBreaker -> Backend [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (fetch Backend)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+      FAILURE -> open
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "error", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      SUCCESS -> closed
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+    }
+    state open {
+      TIMEOUT -> halfOpen
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Circuit Half-Open" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests are being allowed through." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }] }] })
+      RESET -> closed
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+    }
+    state halfOpen {
+      SUCCESS -> closed
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+      FAILURE -> open
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "error", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      RESET -> closed
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "Backend", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+    }
+  }
+  page "/backends" -> BackendCircuitBreaker
+}
+orbital AnalyticsOrbital {
+  entity Analytics [runtime] {
+    id : string!
+    totalRequests : number!
+    errorRate : number!
+    avgLatency : number
+    uptime : string
+  }
+  trait AnalyticsDisplay -> Analytics [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch Analytics)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalRequests", value: ["object/get", ["array/first", "@entity"], "totalRequests"] }, { type: "stat-display", label: "ErrorRate", value: ["object/get", ["array/first", "@entity"], "errorRate"] }, { type: "stat-display", label: "AvgLatency", value: ["object/get", ["array/first", "@entity"], "avgLatency"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "uptime"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch Analytics)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalRequests", value: ["object/get", ["array/first", "@entity"], "totalRequests"] }, { type: "stat-display", label: "ErrorRate", value: ["object/get", ["array/first", "@entity"], "errorRate"] }, { type: "stat-display", label: "AvgLatency", value: ["object/get", ["array/first", "@entity"], "avgLatency"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "uptime"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch Analytics)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalRequests", value: ["object/get", ["array/first", "@entity"], "totalRequests"] }, { type: "stat-display", label: "ErrorRate", value: ["object/get", ["array/first", "@entity"], "errorRate"] }, { type: "stat-display", label: "AvgLatency", value: ["object/get", ["array/first", "@entity"], "avgLatency"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "uptime"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch Analytics)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalRequests", value: ["object/get", ["array/first", "@entity"], "totalRequests"] }, { type: "stat-display", label: "ErrorRate", value: ["object/get", ["array/first", "@entity"], "errorRate"] }, { type: "stat-display", label: "AvgLatency", value: ["object/get", ["array/first", "@entity"], "avgLatency"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "uptime"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch Analytics)
+        (render-ui main { type: "dashboard-layout", appName: "API Gateway", navItems: [{ label: "Routes", href: "/routes", icon: "git-branch" }, { label: "Backends", href: "/backends", icon: "server" }, { label: "Analytics", href: "/analytics", icon: "bar-chart-2" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Analytics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Analytics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalRequests", value: ["object/get", ["array/first", "@entity"], "totalRequests"] }, { type: "stat-display", label: "ErrorRate", value: ["object/get", ["array/first", "@entity"], "errorRate"] }, { type: "stat-display", label: "AvgLatency", value: ["object/get", ["array/first", "@entity"], "avgLatency"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Uptime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "uptime"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+  }
+  page "/analytics" -> AnalyticsDisplay
+}

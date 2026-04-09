@@ -1,0 +1,108 @@
+;; app std-agent-tool-call
+
+orbital AgentToolCallOrbital {
+  entity AgentToolCall [persistent: agenttoolcalls] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    toolName : string
+    args : string
+    result : string
+    error : string
+    duration : number
+    action : string
+    detail : string
+    timestamp : string
+  }
+  trait AgentToolCallModal -> AgentToolCall [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref AgentToolCall)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+      INVOKE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench", size: "md" }, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentToolCall", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentToolCall)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+      SAVE -> closed
+        (persist create AgentToolCall @payload.data)
+        (render-ui modal null)
+        (emit INVOKED)
+        (ref AgentToolCall)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    emits {
+      SAVE
+      INVOKED
+    }
+  }
+  trait AgentToolCallAgent -> AgentToolCall [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentToolCall)
+        (render-ui main { type: "empty-state", icon: "wrench", title: "Tool Call", description: "Tool Call is ready" })
+      DO_INVOKE -> executing
+        (set @entity.toolName @payload.data.toolName)
+        (set @entity.args @payload.data.args)
+        (set @entity.status executing)
+        (emit TOOL_STARTED)
+        (emit LOG_ENTRY)
+        (agent/invoke @payload.data.toolName @payload.data.args)
+      INVOKED -> executing
+        (set @entity.status executing)
+        (emit TOOL_STARTED)
+        (emit LOG_ENTRY)
+        (agent/invoke @entity.toolName @entity.args)
+    }
+    state executing {
+      DO_INVOKE -> completed
+        (set @entity.status completed)
+        (set @entity.result @payload.data.result)
+        (emit TOOL_COMPLETED)
+        (emit LOG_ENTRY)
+      CANCEL -> failed
+        ? (= @entity.status executing)
+        (set @entity.status failed)
+        (set @entity.error Cancelled)
+        (emit TOOL_COMPLETED)
+      CANCEL -> idle
+        (set @entity.status idle)
+        (emit TOOL_COMPLETED)
+    }
+    state completed {
+      DO_INVOKE -> executing
+        (set @entity.toolName @payload.data.toolName)
+        (set @entity.args @payload.data.args)
+        (set @entity.status executing)
+        (emit TOOL_STARTED)
+        (emit LOG_ENTRY)
+        (agent/invoke @payload.data.toolName @payload.data.args)
+    }
+    state failed {
+      DO_INVOKE -> executing
+        (set @entity.toolName @payload.data.toolName)
+        (set @entity.args @payload.data.args)
+        (set @entity.status executing)
+        (emit TOOL_STARTED)
+        (emit LOG_ENTRY)
+        (agent/invoke @payload.data.toolName @payload.data.args)
+    }
+    emits {
+      TOOL_STARTED internal { toolName: string }
+      TOOL_COMPLETED internal { toolName: string, result: string }
+      LOG_ENTRY internal { action: string, detail: string, status: string }
+    }
+    listens {
+      * INVOKED -> INVOKED
+    }
+  }
+  page "/agenttoolcalls" -> AgentToolCallModal, AgentToolCallAgent
+}

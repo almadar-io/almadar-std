@@ -1,0 +1,81 @@
+;; app std-cart
+
+orbital CartItemOrbital {
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Modal from "std/behaviors/std-modal"
+
+  entity CartItem [persistent: cartitems] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    pendingId : string
+  }
+  trait CartItemCartBrowse -> CartItem [interaction] {
+    initial: browsing
+    state browsing {
+      INIT -> browsing
+        (ref CartItem)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "shopping-cart", size: "lg" }, { type: "typography", content: "Shopping Cart", variant: "h2" }] }, { type: "button", label: "Add Item", event: "ADD_ITEM", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Items", value: ["array/len", "@entity"], icon: "package" }, { type: "stat-display", label: "Subtotal", value: ["array/len", "@entity"], icon: "dollar-sign" }, { type: "stat-display", label: "Total", value: ["array/len", "@entity"], icon: "receipt" }] }, { type: "divider" }, { type: "data-grid", entity: "CartItem", emptyIcon: "inbox", emptyTitle: "Your cart is empty", emptyDescription: "Add items to get started.", itemActions: [{ label: "Remove", event: "REQUEST_REMOVE", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "shopping-cart" }, { name: "description", label: "Description", variant: "caption", format: "currency" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "button", label: "Proceed to Checkout", event: "PROCEED_CHECKOUT", variant: "primary", icon: "arrow-right" }] })
+      PROCEED_CHECKOUT -> checkout
+        (ref CartItem)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Checkout", variant: "h2" }] }, { type: "divider" }, { type: "data-grid", entity: "CartItem", emptyIcon: "inbox", emptyTitle: "Your cart is empty", emptyDescription: "Add items to get started.", itemActions: [{ label: "Remove", event: "REQUEST_REMOVE", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "shopping-cart" }, { name: "description", label: "Description", variant: "caption", format: "currency" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Cart", event: "BACK_TO_CART", variant: "ghost", icon: "arrow-left" }, { type: "button", label: "Confirm Order", event: "CONFIRM_ORDER", variant: "primary", icon: "check" }] }] })
+    }
+    state checkout {
+      BACK_TO_CART -> browsing
+        (ref CartItem)
+      CONFIRM_ORDER -> browsing
+        (ref CartItem)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Order Confirmed", variant: "h2" }, { type: "typography", content: "Your order has been placed successfully.", variant: "body" }, { type: "button", label: "Continue Shopping", event: "INIT", variant: "primary" }] })
+    }
+  }
+  trait CartItemAddItem = Modal.traits.ModalRecordModal -> CartItem {
+    events {
+      OPEN: ADD_ITEM
+    }
+    on INIT {
+        (ref CartItem)
+    }
+    on ADD_ITEM {
+        (fetch CartItem)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Add Item", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "CartItem", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on SAVE {
+        (persist create CartItem @payload.data)
+        (render-ui modal null)
+    }
+  }
+  trait CartItemRemoveConfirm = Confirmation.traits.ConfirmActionConfirmation -> CartItem {
+    events {
+      REQUEST: REQUEST_REMOVE
+      CONFIRM: CONFIRM_REMOVE
+    }
+    on INIT {
+        (ref CartItem)
+    }
+    on REQUEST_REMOVE {
+        (set @entity.pendingId @payload.id)
+        (fetch CartItem { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Remove Item", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure you want to remove this item from your cart?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Remove", event: "CONFIRM_REMOVE", variant: "danger", icon: "check" }] }] })
+    }
+    on CONFIRM_REMOVE {
+        (persist delete CartItem @entity.pendingId)
+        (render-ui modal null)
+        (ref CartItem)
+    }
+    on CANCEL {
+        (render-ui modal null)
+        (ref CartItem)
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (ref CartItem)
+    }
+  }
+  page "/cart" -> CartItemCartBrowse, CartItemAddItem, CartItemRemoveConfirm
+}

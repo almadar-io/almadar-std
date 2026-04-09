@@ -1,0 +1,49 @@
+;; app std-service-custom-noauth
+
+orbital ServiceCustomNoauthOrbital {
+  entity ServiceCustomNoauth [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    endpoint : string
+    method : string
+    requestBody : string
+    responseData : string
+    statusCode : number
+    callStatus : string
+    error : string
+  }
+  trait ServiceCustomNoauthCustomNoauth -> ServiceCustomNoauth [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceCustomNoauth)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Public API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] })
+      CALL_API -> calling
+        (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomnoauth endpoint..." })
+        (call-service custom-noauth-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+    }
+    state calling {
+      API_RESPONSE -> complete
+        (set @entity.responseData @payload.data)
+        (set @entity.statusCode @payload.statusCode)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Response", variant: "h2" }, { type: "badge", content: "@entity.statusCode", variant: "info" }, { type: "code", content: "@entity.responseData", language: "json" }, { type: "button", label: "New Request", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Request Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state complete {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Public API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Public API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] })
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Public API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] })
+    }
+  }
+  page "/servicecustomnoauths" -> ServiceCustomNoauthCustomNoauth
+}

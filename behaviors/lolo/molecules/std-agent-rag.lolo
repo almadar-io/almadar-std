@@ -1,0 +1,130 @@
+;; app std-agent-rag
+
+orbital AgentRagOrbital {
+  uses AgentCompletion from "std/behaviors/std-agent-completion"
+  uses AgentMemory from "std/behaviors/std-agent-memory"
+  uses AgentSearch from "std/behaviors/std-agent-search"
+  uses Tabs from "std/behaviors/std-tabs"
+
+  entity AgentRag [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    query : string
+    context : string
+    response : string
+    memoryHits : number
+    searchHits : number
+    error : string
+    content : string
+    category : string
+    scope : string
+    strength : number
+    pinned : boolean
+    language : string
+    resultCount : number
+    results : string
+    prompt : string
+    provider : string
+    model : string
+  }
+  trait AgentRagRag -> AgentRag [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: "AgentRag", mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] })
+      GENERATE -> retrieving
+        (set @entity.status retrieving)
+        (agent/recall @entity.query 5)
+        (agent/search-code @entity.query)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Retrieving context...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "Recalling memories" }, { type: "badge", label: "Searching code" }] }] })
+    }
+    state retrieving {
+      RETRIEVAL_DONE -> generating
+        (set @entity.context @payload.context)
+        (set @entity.memoryHits @payload.memoryHits)
+        (set @entity.searchHits @payload.searchHits)
+        (set @entity.status generating)
+        (agent/generate (str/concat "Context:\n" @entity.context "\n\nQuery: " @entity.query "\n\nProvide a comprehensive answer based on the retrieved context."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Generating response...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: ["str/concat", ["str/concat", "@entity.memoryHits"], " memories"] }, { type: "badge", label: ["str/concat", ["str/concat", "@entity.searchHits"], " code hits"] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "RAG Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state generating {
+      GENERATION_DONE -> completed
+        (set @entity.response @payload.response)
+        (set @entity.status completed)
+        (agent/memorize (str/concat "RAG query: " @entity.query) pattern-affinity)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "RAG Complete", variant: "h2" }] }, { type: "button", label: "New Query", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Memory Hits", value: "@entity.memoryHits", icon: "brain" }, { type: "stat-display", label: "Code Hits", value: "@entity.searchHits", icon: "code" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Query", variant: "caption" }, { type: "typography", content: "@entity.query", variant: "body" }, { type: "divider" }, { type: "typography", content: "Response", variant: "caption" }, { type: "typography", content: "@entity.response", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Retrieved Context", variant: "caption" }, { type: "typography", content: "@entity.context", variant: "body" }] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "RAG Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state completed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.response "")
+        (set @entity.context "")
+        (set @entity.memoryHits 0)
+        (set @entity.searchHits 0)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: "AgentRag", mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] })
+    }
+  }
+  trait RagTabs = Tabs.traits.TabContentTabs -> AgentRag {
+    on INIT {
+        (fetch AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "AgentRag", emptyIcon: "inbox", emptyTitle: "No agentrags yet", emptyDescription: "Add agentrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] })
+    }
+    on SELECT_TAB {
+        (fetch AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "AgentRag", emptyIcon: "inbox", emptyTitle: "No agentrags yet", emptyDescription: "Add agentrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] })
+    }
+  }
+  trait RagMemoryLifecycle = AgentMemory.traits.AgentMemoryBrowse -> AgentRag {
+    on INIT {
+        (ref AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "AgentRag Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentRag", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait RagSearchLifecycle = AgentSearch.traits.AgentSearchBrowse -> AgentRag {
+    on INIT {
+        (ref AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "AgentRag", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Search", event: "SEARCH", variant: "primary", icon: "search" }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentRag", emptyIcon: "inbox", emptyTitle: "No search results", emptyDescription: "Enter a query to search the codebase.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "query", label: "Query", variant: "h4", icon: "search" }, { name: "language", label: "Language", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "resultCount", label: "Result Count", variant: "caption" }] }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait RagCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentRag {
+    on INIT {
+        (ref AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentRag", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on GENERATE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "AgentRag", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "AgentRag", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentRag", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentRag @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref AgentRag)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentRag", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  page "/agentrags" -> AgentRagRag, RagTabs, RagMemoryLifecycle, RagSearchLifecycle, RagCompletionFlow
+}

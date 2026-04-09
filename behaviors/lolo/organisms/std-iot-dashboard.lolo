@@ -1,0 +1,191 @@
+;; app std-iot-dashboard
+
+orbital SensorReadingOrbital {
+  entity SensorReading [runtime] {
+    id : string!
+    sensorId : string!
+    value : number!
+    unit : string
+    timestamp : string
+  }
+  trait SensorReadingDisplay -> SensorReading [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch SensorReading)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer", size: "lg" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "sensorId"] }] }] }, { type: "stat-display", label: "Value", value: ["object/get", ["array/first", "@entity"], "value"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "unit"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "timestamp"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch SensorReading)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer", size: "lg" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "sensorId"] }] }] }, { type: "stat-display", label: "Value", value: ["object/get", ["array/first", "@entity"], "value"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "unit"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "timestamp"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch SensorReading)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer", size: "lg" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "sensorId"] }] }] }, { type: "stat-display", label: "Value", value: ["object/get", ["array/first", "@entity"], "value"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "unit"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "timestamp"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch SensorReading)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer", size: "lg" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "sensorId"] }] }] }, { type: "stat-display", label: "Value", value: ["object/get", ["array/first", "@entity"], "value"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "unit"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "timestamp"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch SensorReading)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Sensor Readings" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "thermometer", size: "lg" }, { type: "typography", content: "Sensor Readings", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "SensorId" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "sensorId"] }] }] }, { type: "stat-display", label: "Value", value: ["object/get", ["array/first", "@entity"], "value"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Unit" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "unit"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "timestamp"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+  }
+  page "/sensors" -> SensorReadingDisplay
+}
+orbital DeviceOrbital {
+  entity Device [persistent: devices] {
+    id : string!
+    name : string!
+    type : string!
+    status : string
+    lastSeen : datetime
+  }
+  trait DeviceBrowse -> Device [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Device)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Devices", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Device", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Device", emptyIcon: "inbox", emptyTitle: "No devices registered", emptyDescription: "Connect a device to start monitoring.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "cpu" }, { name: "status", variant: "badge" }, { name: "type", variant: "body" }, { name: "lastSeen", label: "Last Seen", variant: "caption", format: "date" }], cols: 3, gap: "md" }] }] })
+    }
+    listens {
+      * DEVICE_CREATED -> INIT
+      * DEVICE_UPDATED -> INIT
+      * DEVICE_DELETED -> INIT
+    }
+  }
+  trait DeviceCreate -> Device [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Device)
+      CREATE -> open
+        (fetch Device)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Device", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Device", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "status", "lastSeen"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Device @payload.data)
+        (render-ui modal null)
+        (emit DEVICE_CREATED)
+    }
+    emits {
+      SAVE
+      DEVICE_CREATED
+    }
+  }
+  trait DeviceEdit -> Device [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Device)
+      EDIT -> open
+        (fetch Device { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Device", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Device", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "status", "lastSeen"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Device @payload.data)
+        (render-ui modal null)
+        (emit DEVICE_UPDATED)
+    }
+    emits {
+      SAVE
+      DEVICE_UPDATED
+    }
+  }
+  trait DeviceView -> Device [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Device)
+      VIEW -> open
+        (fetch Device { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Type" }, { type: "typography", variant: "body", content: "@entity.type" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Last Seen" }, { type: "typography", variant: "body", content: "@entity.lastSeen" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait DeviceDelete -> Device [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Device)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Device { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Device", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Device @entity.pendingId)
+        (render-ui modal null)
+        (ref Device)
+        (emit DEVICE_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Device)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Device)
+    }
+    emits {
+      CONFIRM_DELETE
+      DEVICE_DELETED
+    }
+  }
+  page "/devices" -> DeviceBrowse, DeviceCreate, DeviceEdit, DeviceView, DeviceDelete
+}
+orbital DeviceAlertOrbital {
+  entity DeviceAlert [runtime] {
+    id : string!
+    deviceId : string!
+    severity : string!
+    message : string
+    acknowledged : boolean
+    failureCount : number
+    successCount : number
+    threshold : number
+  }
+  trait DeviceAlertCircuitBreaker -> DeviceAlert [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (fetch DeviceAlert)
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+      FAILURE -> open
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "error", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      SUCCESS -> closed
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+    }
+    state open {
+      TIMEOUT -> halfOpen
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "warning", pulse: true, label: "Circuit Half-Open" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Testing recovery. Limited requests are being allowed through." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }] }] })
+      RESET -> closed
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+    }
+    state halfOpen {
+      SUCCESS -> closed
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+      FAILURE -> open
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "error", pulse: true, label: "Circuit Open" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Circuit is open. Requests are being rejected to prevent cascading failures." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      RESET -> closed
+        (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "DeviceAlert", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
+    }
+  }
+  page "/alerts" -> DeviceAlertCircuitBreaker
+}

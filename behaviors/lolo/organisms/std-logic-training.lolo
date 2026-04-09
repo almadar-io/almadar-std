@@ -1,0 +1,95 @@
+;; app std-logic-training
+
+orbital DebugChallengeOrbital {
+  entity DebugChallenge [runtime] {
+    id : string!
+    title : string!
+    bugType : string
+    score : number
+    solved : boolean
+    level : number
+  }
+  trait DebugChallengeDebuggerGame -> DebugChallenge [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch DebugChallenge)
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Debug Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
+      START -> playing
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "debugger-board", entity: "DebugChallenge", completeEvent: "COMPLETE" }] }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      COMPLETE -> complete
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-over-screen", title: "Well Done!", menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }] }] })
+    }
+    state complete {
+      RESTART -> menu
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Debug Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
+    }
+  }
+  page "/debugger" -> DebugChallengeDebuggerGame
+}
+orbital NegotiateChallengeOrbital {
+  entity NegotiateChallenge [runtime] {
+    id : string!
+    title : string!
+    scenario : string
+    score : number
+    outcome : string
+    level : number
+  }
+  trait NegotiateChallengeNegotiatorGame -> NegotiateChallenge [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch NegotiateChallenge)
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Negotiate Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
+      START -> playing
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "negotiator-board", entity: "NegotiateChallenge", completeEvent: "COMPLETE" }] }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      COMPLETE -> complete
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-over-screen", title: "Well Done!", menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }] }] })
+    }
+    state complete {
+      RESTART -> menu
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Negotiate Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
+    }
+  }
+  page "/negotiator" -> NegotiateChallengeNegotiatorGame
+}
+orbital TrainingScoreOrbital {
+  entity TrainingScore [runtime] {
+    id : string!
+    playerName : string!
+    score : number!
+    category : string
+    completedAt : string
+    highScore : number
+    combo : number
+    multiplier : number
+    level : number
+  }
+  trait TrainingScoreScoreBoard -> TrainingScore [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch TrainingScore)
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      ADD_SCORE -> idle
+        (set @entity.score (+ @entity.score @payload.points))
+        (set @entity.combo (+ @entity.combo 1))
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      COMBO -> idle
+        (set @entity.multiplier @payload.multiplier)
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      RESET -> idle
+        (set @entity.score 0)
+        (set @entity.combo 0)
+        (set @entity.multiplier 1)
+        (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+    }
+  }
+  page "/scores" -> TrainingScoreScoreBoard
+}

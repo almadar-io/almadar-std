@@ -1,0 +1,30 @@
+;; app std-combat-log
+
+orbital CombatLogEntryOrbital {
+  entity CombatLogEntry [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    type : string
+    message : string
+    timestamp : number
+    actorName : string
+    targetName : string
+    value : number
+    turn : number
+  }
+  trait CombatLogEntryCombatLog -> CombatLogEntry [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch CombatLogEntry)
+        (render-ui main { type: "combat-log", events: "@CombatLogEntry", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
+      LOG_EVENT -> idle
+        (render-ui main { type: "combat-log", events: "@CombatLogEntry", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
+      CLEAR -> idle
+        (render-ui main { type: "combat-log", events: "@CombatLogEntry", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
+    }
+  }
+  page "/combatlogentrys" -> CombatLogEntryCombatLog
+}

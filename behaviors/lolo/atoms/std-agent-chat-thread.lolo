@@ -1,0 +1,48 @@
+;; app std-agent-chat-thread
+
+orbital AgentChatThreadOrbital {
+  entity AgentChatThread [persistent: agentchatthreads] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    role : string
+    content : string
+    timestamp : string
+    toolName : string
+  }
+  trait AgentChatThreadThread -> AgentChatThread [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentChatThread)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentChatThread Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentChatThread", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+      COMPOSE -> composing
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentChatThread Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus", disabled: true }] }, { type: "divider" }, { type: "data-list", entity: "AgentChatThread", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", title: "Compose Message", children: [{ type: "textarea", label: "Message", bind: "@entity.content", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", event: "SEND", variant: "primary", icon: "send" }] }] }] })
+      CLEAR -> idle
+        (persist delete AgentChatThread)
+        (fetch AgentChatThread)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentChatThread Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentChatThread", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+    }
+    state composing {
+      SEND -> idle
+        (set @entity.content @payload.content)
+        (set @entity.role user)
+        (set @entity.timestamp @now)
+        (set @entity.status sent)
+        (persist create AgentChatThread { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
+        (emit SEND_MESSAGE)
+        (fetch AgentChatThread)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentChatThread Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentChatThread", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+      CLEAR -> idle
+        (persist delete AgentChatThread)
+        (fetch AgentChatThread)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "AgentChatThread Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "AgentChatThread", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] })
+    }
+    emits {
+      SEND_MESSAGE internal { content: string }
+    }
+  }
+  page "/agentchatthreads" -> AgentChatThreadThread
+}

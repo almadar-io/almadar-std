@@ -1,0 +1,65 @@
+;; app std-service-oauth
+
+orbital ServiceOauthOrbital {
+  entity ServiceOauth [runtime] {
+    id : string!
+    provider : string
+    authUrl : string
+    accessToken : string
+    refreshToken : string
+    authStatus : string
+    error : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait ServiceOauthOauth -> ServiceOauth [interaction] {
+    initial: unauthenticated
+    state unauthenticated {
+      INIT -> unauthenticated
+        (fetch ServiceOauth)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock", size: "lg" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", label: "Provider", field: "provider", bind: "@entity.provider", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", event: "LOGIN", variant: "primary", icon: "log-in" }] })
+      LOGIN -> authorizing
+        (render-ui main { type: "loading-state", title: "Authorizing...", message: "Redirecting to provider for authorization." })
+        (call-service oauth authorize { provider: "@entity.provider", scopes: ["openid", "email"] })
+    }
+    state authorizing {
+      AUTH_URL_RECEIVED -> authorizing
+        (set @entity.authUrl @payload.authUrl)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "external-link", size: "lg" }, { type: "typography", content: "Authorization Required", variant: "h2" }, { type: "typography", content: "@entity.authUrl", variant: "body", color: "muted" }, { type: "input", label: "Authorization Code", field: "code", placeholder: "Paste authorization code here" }, { type: "button", label: "Submit", event: "CALLBACK", variant: "primary", icon: "check" }] })
+      CALLBACK -> authenticated
+        (call-service oauth token { code: "@payload.code" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", event: "REFRESH", variant: "outline", icon: "refresh-cw" }, { type: "button", label: "Logout", event: "LOGOUT", variant: "ghost", icon: "log-out" }] }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Authentication Failed", message: "@entity.error", onRetry: "RETRY" }, { type: "button", label: "Try Again", event: "RETRY", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state authenticated {
+      TOKEN_RECEIVED -> authenticated
+        (set @entity.accessToken @payload.accessToken)
+        (set @entity.refreshToken @payload.refreshToken)
+        (set @entity.authStatus authenticated)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", event: "REFRESH", variant: "outline", icon: "refresh-cw" }, { type: "button", label: "Logout", event: "LOGOUT", variant: "ghost", icon: "log-out" }] }] })
+      REFRESH -> refreshing
+        (render-ui main { type: "loading-state", title: "Refreshing token...", message: "Obtaining a new access token." })
+        (call-service oauth refresh { refreshToken: "@entity.refreshToken" })
+      LOGOUT -> unauthenticated
+        (set @entity.authStatus unauthenticated)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock", size: "lg" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", label: "Provider", field: "provider", bind: "@entity.provider", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", event: "LOGIN", variant: "primary", icon: "log-in" }] })
+    }
+    state refreshing {
+      TOKEN_REFRESHED -> authenticated
+        (set @entity.accessToken @payload.accessToken)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Authenticated successfully" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Refresh Token", event: "REFRESH", variant: "outline", icon: "refresh-cw" }, { type: "button", label: "Logout", event: "LOGOUT", variant: "ghost", icon: "log-out" }] }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Authentication Failed", message: "@entity.error", onRetry: "RETRY" }, { type: "button", label: "Try Again", event: "RETRY", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state error {
+      RETRY -> unauthenticated
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock", size: "lg" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", label: "Provider", field: "provider", bind: "@entity.provider", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", event: "LOGIN", variant: "primary", icon: "log-in" }] })
+    }
+  }
+  page "/serviceoauths" -> ServiceOauthOauth
+}

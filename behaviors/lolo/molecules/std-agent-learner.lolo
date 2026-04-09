@@ -1,0 +1,167 @@
+;; app std-agent-learner
+
+orbital AgentLearnerOrbital {
+  uses AgentCompletion from "std/behaviors/std-agent-completion"
+  uses AgentMemory from "std/behaviors/std-agent-memory"
+  uses AgentProvider from "std/behaviors/std-agent-provider"
+  uses Browse from "std/behaviors/std-browse"
+
+  entity AgentLearner [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    outcome : string
+    category : string
+    impact : string
+    memoryId : string
+    isSuccess : boolean
+    provider : string
+    consecutiveFailures : number
+    totalSuccesses : number
+    totalFailures : number
+    error : string
+    content : string
+    scope : string
+    strength : number
+    pinned : boolean
+    prompt : string
+    response : string
+    model : string
+    currentProvider : string
+    currentModel : string
+    fallbackProvider : string
+    requestCount : number
+    action : string
+    detail : string
+    timestamp : string
+    duration : number
+    icon : string
+  }
+  trait AgentLearnerLearner -> AgentLearner [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.provider (agent/provider))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+      TASK_SUCCEEDED -> recording
+        (set @entity.outcome @payload.outcome)
+        (set @entity.category @payload.category)
+        (set @entity.isSuccess true)
+        (set @entity.consecutiveFailures 0)
+        (set @entity.totalSuccesses (+ @entity.totalSuccesses 1))
+        (set @entity.status recording)
+        (agent/memorize (str/concat "Success: " @payload.outcome) @payload.category)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "save", size: "lg" }, { type: "typography", content: "Recording outcome...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "badge", label: "@entity.outcome" }] })
+      TASK_FAILED -> recording
+        (set @entity.outcome @payload.outcome)
+        (set @entity.category @payload.category)
+        (set @entity.isSuccess false)
+        (set @entity.consecutiveFailures (+ @entity.consecutiveFailures 1))
+        (set @entity.totalFailures (+ @entity.totalFailures 1))
+        (set @entity.status recording)
+        (agent/memorize (str/concat "Failure: " @payload.outcome) @payload.category)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "save", size: "lg" }, { type: "typography", content: "Recording outcome...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "badge", label: "@entity.outcome" }] })
+      RESET -> idle
+        (set @entity.provider (agent/provider))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+    }
+    state recording {
+      RECORDED -> analyzing
+        (set @entity.memoryId @payload.memoryId)
+        (if @entity.isSuccess (agent/reinforce @payload.memoryId) (agent/decay))
+        (if (>= @entity.consecutiveFailures 3) (agent/switch-provider anthropic) (log "No provider switch needed"))
+        (set @entity.status analyzing)
+        (agent/generate (str/concat "Outcome: " @entity.outcome "\n" "Category: " @entity.category "\n" "Result: " (if @entity.isSuccess success failure) "\n" "Consecutive failures: " (str/concat @entity.consecutiveFailures) "\n\n" "Analyze the impact of this outcome. What should be learned? Keep it to 1-2 sentences."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Analyzing impact...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }, { type: "badge", label: ["if", "@entity.isSuccess", "Success", "Failure"] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+    }
+    state analyzing {
+      ANALYSIS_DONE -> idle
+        (set @entity.impact @payload.impact)
+        (set @entity.status idle)
+        (set @entity.provider (agent/provider))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Outcome Learner", variant: "h2" }] }, { type: "divider" }, { type: "simple-grid", cols: 3, children: [{ type: "stat-display", label: "Successes", value: "@entity.totalSuccesses", icon: "check-circle" }, { type: "stat-display", label: "Failures", value: "@entity.totalFailures", icon: "x-circle" }, { type: "stat-display", label: "Current Provider", value: "@entity.provider", icon: "cpu" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Listening for task outcomes...", variant: "body" }, { type: "typography", content: "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.", variant: "caption" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Outcome", variant: "caption" }, { type: "typography", content: "@entity.outcome", variant: "body" }, { type: "typography", content: "Impact Analysis", variant: "caption" }, { type: "typography", content: "@entity.impact", variant: "body" }] }] }] })
+    }
+    emits {
+      TASK_SUCCEEDED external { outcome: string, category: string }
+      TASK_FAILED external { outcome: string, category: string }
+    }
+    listens {
+      * TASK_SUCCEEDED -> TASK_SUCCEEDED
+      * TASK_FAILED -> TASK_FAILED
+    }
+  }
+  trait LearnerRecordsBrowse = Browse.traits.BrowseItemBrowse -> AgentLearner {
+    on INIT {
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Learning Records", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentLearner", emptyIcon: "inbox", emptyTitle: "No records yet", emptyDescription: "Task outcomes will appear here as they are recorded.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "outcome", label: "Outcome", variant: "h4", icon: "graduation-cap" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", event: "INIT", label: "Create", tooltip: "Create" }] })
+    }
+  }
+  trait LearnerMemoryLifecycle = AgentMemory.traits.AgentMemoryBrowse -> AgentLearner {
+    on INIT {
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "AgentLearner Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentLearner", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait LearnerCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentLearner {
+    on INIT {
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentLearner", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on GENERATE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "AgentLearner", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "AgentLearner", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentLearner", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentLearner @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentLearner", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait LearnerProviderManager = AgentProvider.traits.AgentProviderModal -> AgentLearner {
+    on INIT {
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SWITCH {
+        (fetch AgentLearner)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "repeat", size: "md" }, { type: "typography", content: "Switch Provider", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current:" }, { type: "badge", label: "@entity.currentProvider" }, { type: "badge", label: "@entity.currentModel" }] }, { type: "form-section", entity: "AgentLearner", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["currentProvider", "currentModel"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist update AgentLearner @payload.data)
+        (render-ui modal null)
+        (emit SWITCHED)
+        (ref AgentLearner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  page "/agentlearners" -> AgentLearnerLearner, LearnerRecordsBrowse, LearnerMemoryLifecycle, LearnerCompletionFlow, LearnerProviderManager
+}

@@ -1,0 +1,28 @@
+;; app std-gallery
+
+orbital GalleryItemOrbital {
+  entity GalleryItem [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    imageUrl : string
+  }
+  trait GalleryItemGallery -> GalleryItem [interaction] {
+    initial: browsing
+    state browsing {
+      INIT -> browsing
+        (fetch GalleryItem)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image", size: "lg" }, { type: "typography", content: "GalleryItems Gallery", variant: "h2" }] }, { type: "typography", variant: "caption", color: "muted", content: "Click any image to view full size" }] }, { type: "divider" }, { type: "data-grid", entity: "GalleryItem", cols: 3, gap: "md", imageField: "imageUrl", emptyIcon: "image", emptyTitle: "No images yet", emptyDescription: "Add images to your gallery.", itemActions: [{ label: "View", event: "VIEW", icon: "maximize" }], columns: [{ name: "name", label: "Title", variant: "h4" }, { name: "status", label: "Status", variant: "badge" }] }] })
+      VIEW -> viewing
+        (render-ui modal { type: "lightbox", isOpen: true, closeAction: "CLOSE", images: [{ src: "https://picsum.photos/seed/gallery1/800/600", alt: "Mountain landscape", caption: "Mountain landscape" }, { src: "https://picsum.photos/seed/gallery2/800/600", alt: "Ocean sunset", caption: "Ocean sunset" }, { src: "https://picsum.photos/seed/gallery3/800/600", alt: "Forest trail", caption: "Forest trail" }], currentIndex: 0, showCounter: true })
+    }
+    state viewing {
+      CLOSE -> browsing
+        (render-ui modal null)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image", size: "lg" }, { type: "typography", content: "GalleryItems Gallery", variant: "h2" }] }, { type: "typography", variant: "caption", color: "muted", content: "Click any image to view full size" }] }, { type: "divider" }, { type: "data-grid", entity: "GalleryItem", cols: 3, gap: "md", imageField: "imageUrl", emptyIcon: "image", emptyTitle: "No images yet", emptyDescription: "Add images to your gallery.", itemActions: [{ label: "View", event: "VIEW", icon: "maximize" }], columns: [{ name: "name", label: "Title", variant: "h4" }, { name: "status", label: "Status", variant: "badge" }] }] })
+    }
+  }
+  page "/galleryitems/gallery" -> GalleryItemGallery
+}

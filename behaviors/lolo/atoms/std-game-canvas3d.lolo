@@ -1,0 +1,35 @@
+;; app std-game-canvas3d
+
+orbital Canvas3dSceneOrbital {
+  entity Canvas3dScene [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    tiles : [string]
+    units : [string]
+    features : [string]
+  }
+  trait Canvas3dSceneGameCanvas3d -> Canvas3dScene [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch Canvas3dScene)
+        (render-ui main { type: "game-canvas-3d", tiles: ["object/get", ["array/first", "@Canvas3dScene"], "tiles"], units: ["object/get", ["array/first", "@Canvas3dScene"], "units"], features: ["object/get", ["array/first", "@Canvas3dScene"], "features"], orientation: "isometric", cameraMode: "orbital", showGrid: true, shadows: true, backgroundColor: "#1a1a2e", tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK" })
+      TILE_CLICK -> active
+        (render-ui main { type: "game-canvas-3d", tiles: ["object/get", ["array/first", "@Canvas3dScene"], "tiles"], units: ["object/get", ["array/first", "@Canvas3dScene"], "units"], features: ["object/get", ["array/first", "@Canvas3dScene"], "features"], orientation: "isometric", cameraMode: "orbital", showGrid: true, shadows: true, backgroundColor: "#1a1a2e", tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK" })
+      UNIT_CLICK -> active
+        (render-ui main { type: "game-canvas-3d", tiles: ["object/get", ["array/first", "@Canvas3dScene"], "tiles"], units: ["object/get", ["array/first", "@Canvas3dScene"], "units"], features: ["object/get", ["array/first", "@Canvas3dScene"], "features"], orientation: "isometric", cameraMode: "orbital", showGrid: true, shadows: true, backgroundColor: "#1a1a2e", tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK" })
+      CAMERA_CHANGE -> idle
+    }
+    state active {
+      TILE_CLICK -> active
+        (render-ui main { type: "game-canvas-3d", tiles: ["object/get", ["array/first", "@Canvas3dScene"], "tiles"], units: ["object/get", ["array/first", "@Canvas3dScene"], "units"], features: ["object/get", ["array/first", "@Canvas3dScene"], "features"], orientation: "isometric", cameraMode: "orbital", showGrid: true, shadows: true, backgroundColor: "#1a1a2e", tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK" })
+      UNIT_CLICK -> active
+        (render-ui main { type: "game-canvas-3d", tiles: ["object/get", ["array/first", "@Canvas3dScene"], "tiles"], units: ["object/get", ["array/first", "@Canvas3dScene"], "units"], features: ["object/get", ["array/first", "@Canvas3dScene"], "features"], orientation: "isometric", cameraMode: "orbital", showGrid: true, shadows: true, backgroundColor: "#1a1a2e", tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK" })
+      CAMERA_CHANGE -> active
+    }
+  }
+  page "/canvas3dscenes" -> Canvas3dSceneGameCanvas3d
+}

@@ -1,0 +1,94 @@
+;; app std-agent-memory
+
+orbital AgentMemoryOrbital {
+  entity AgentMemory [persistent: agentmemorys] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    content : string
+    category : string
+    strength : number
+    pinned : boolean
+    scope : string
+    lastAccessedAt : string
+  }
+  trait AgentMemoryBrowse -> AgentMemory [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref AgentMemory)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "AgentMemory Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentMemory", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] })
+    }
+    listens {
+      * MEMORIZED -> INIT
+      * PINNED -> INIT
+      * FORGOT -> INIT
+      * REINFORCED -> INIT
+      * DECAYED -> INIT
+    }
+  }
+  trait AgentMemoryCreate -> AgentMemory [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref AgentMemory)
+      MEMORIZE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Memorize", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentMemory", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["content", "category", "scope"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create AgentMemory @payload.data)
+        (render-ui modal null)
+        (emit MEMORIZED)
+    }
+    emits {
+      SAVE
+      MEMORIZED
+    }
+  }
+  trait AgentMemoryAgent -> AgentMemory [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentMemory)
+        (render-ui main { type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" })
+      DO_MEMORIZE -> active
+        (agent/memorize @payload.data.content @payload.data.category)
+        (persist create AgentMemory @payload.data)
+      DECAY -> idle
+        (agent/decay)
+        (emit DECAYED)
+      MEMORIZED -> active
+        (fetch AgentMemory)
+    }
+    state active {
+      RECALL -> active
+        (agent/recall @payload.query)
+      PIN -> active
+        ? (not (agent/is-pinned @payload.id))
+        (agent/pin @payload.id)
+        (set @entity.pinned true)
+        (emit PINNED)
+      FORGET -> idle
+        (agent/forget @payload.id)
+        (emit FORGOT)
+      REINFORCE -> active
+        (agent/reinforce @payload.id)
+        (emit REINFORCED)
+      DECAY -> active
+        (agent/decay)
+        (emit DECAYED)
+    }
+    emits {
+      FORGOT external { id: string }
+      REINFORCED external { id: string }
+      DECAYED external { id: string }
+      PINNED external { id: string }
+    }
+  }
+  page "/agentmemorys" -> AgentMemoryBrowse, AgentMemoryCreate, AgentMemoryAgent
+}

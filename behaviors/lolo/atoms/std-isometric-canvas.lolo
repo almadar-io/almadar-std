@@ -1,0 +1,39 @@
+;; app std-isometric-canvas
+
+orbital IsometricWorldOrbital {
+  entity IsometricWorld [singleton] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    tiles : [string]
+    units : [string]
+    features : [string]
+  }
+  trait IsometricWorldIsometricCanvas -> IsometricWorld [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch IsometricWorld)
+        (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
+      TILE_CLICK -> active
+        (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
+      UNIT_CLICK -> active
+        (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
+      TILE_HOVER -> idle
+      TILE_LEAVE -> idle
+    }
+    state active {
+      TILE_CLICK -> active
+        (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
+      UNIT_CLICK -> active
+        (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
+      TILE_HOVER -> active
+      TILE_LEAVE -> active
+      DESELECT -> idle
+        (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
+    }
+  }
+  page "/isometricworlds" -> IsometricWorldIsometricCanvas
+}

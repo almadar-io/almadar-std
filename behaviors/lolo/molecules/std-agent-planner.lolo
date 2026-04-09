@@ -1,0 +1,178 @@
+;; app std-agent-planner
+
+orbital AgentPlannerOrbital {
+  uses AgentClassifier from "std/behaviors/std-agent-classifier"
+  uses AgentCompletion from "std/behaviors/std-agent-completion"
+  uses AgentMemory from "std/behaviors/std-agent-memory"
+  uses Modal from "std/behaviors/std-modal"
+
+  entity AgentPlanner [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    task : string
+    category : string
+    steps : string
+    confidence : number
+    relevantMemories : string
+    memoryCount : number
+    error : string
+    input : string
+    prompt : string
+    response : string
+    provider : string
+    model : string
+    content : string
+    scope : string
+    strength : number
+    pinned : boolean
+    action : string
+    detail : string
+    timestamp : string
+    duration : number
+    icon : string
+  }
+  trait AgentPlannerPlanner -> AgentPlanner [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "Task Planner", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to plan", variant: "body" }, { type: "form-section", entity: "AgentPlanner", mode: "edit", submitEvent: "PLAN", fields: ["task"] }] }] }] })
+      PLAN -> classifying
+        (set @entity.status classifying)
+        (agent/generate (str/concat "Classify this task into exactly one category.\n" "Categories: " "code, schema, design, debug, deploy" "\n" "Task: " @entity.task "\n" "Return only the category name."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "Classifying task...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "typography", content: "@entity.task", variant: "caption" }] })
+    }
+    state classifying {
+      CLASSIFIED -> recalling
+        (set @entity.category @payload.category)
+        (set @entity.status recalling)
+        (agent/recall (str/concat @entity.category " " @entity.task) 5)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "Recalling relevant experience...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Planning Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state recalling {
+      MEMORIES_LOADED -> planning
+        (set @entity.relevantMemories @payload.memories)
+        (set @entity.memoryCount @payload.count)
+        (set @entity.status planning)
+        (agent/generate (str/concat "Task: " @entity.task "\n" "Category: " @entity.category "\n" "Relevant experience:\n" @entity.relevantMemories "\n\n" "Generate a numbered step-by-step execution plan. " "Include a confidence score (0-100) for how likely this plan will succeed."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Generating plan...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: ["str/concat", "Category: ", "@entity.category"] }, { type: "badge", label: ["str/concat", ["str/concat", "@entity.memoryCount"], " memories loaded"] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Planning Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state planning {
+      PLAN_GENERATED -> ready
+        (set @entity.steps @payload.steps)
+        (set @entity.confidence @payload.confidence)
+        (set @entity.status ready)
+        (agent/memorize (str/concat "Plan for " @entity.category " task: " @entity.task) pattern-affinity)
+        (emit PLAN_READY)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Plan Ready", variant: "h2" }] }, { type: "button", label: "New Plan", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Category", value: "@entity.category", icon: "tag" }, { type: "stat-display", label: "Confidence", value: ["str/concat", ["str/concat", "@entity.confidence"], "%"], icon: "target" }, { type: "stat-display", label: "Memories Used", value: "@entity.memoryCount", icon: "brain" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Task", variant: "caption" }, { type: "typography", content: "@entity.task", variant: "body" }, { type: "divider" }, { type: "typography", content: "Execution Plan", variant: "caption" }, { type: "typography", content: "@entity.steps", variant: "body" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Relevant Memories", variant: "caption" }, { type: "typography", content: "@entity.relevantMemories", variant: "body" }] }] }] })
+      FAILED -> idle
+        (set @entity.error @payload.error)
+        (set @entity.status error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Planning Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state ready {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.task "")
+        (set @entity.category "")
+        (set @entity.steps "")
+        (set @entity.confidence 0)
+        (set @entity.relevantMemories "")
+        (set @entity.memoryCount 0)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "Task Planner", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to plan", variant: "body" }, { type: "form-section", entity: "AgentPlanner", mode: "edit", submitEvent: "PLAN", fields: ["task"] }] }] }] })
+    }
+    emits {
+      PLAN_READY external { plan: string, category: string }
+    }
+    listens {
+      * PLAN_READY -> INIT
+    }
+  }
+  trait PlannerTaskInput = Modal.traits.ModalRecordModal -> AgentPlanner {
+    events {
+      OPEN: NEW_TASK
+      SAVE: PLAN
+    }
+    on INIT {
+        (ref AgentPlanner)
+    }
+    on NEW_TASK {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "icon", name: "map", size: "md" }, { type: "typography", content: "Describe the task to plan", variant: "h3" }, { type: "divider" }, { type: "form-section", entity: "AgentPlanner", mode: "edit", submitEvent: "PLAN", cancelEvent: "CLOSE", fields: ["task"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on PLAN {
+        (render-ui modal null)
+    }
+  }
+  trait PlannerClassifierFlow = AgentClassifier.traits.AgentClassifierModal -> AgentPlanner {
+    on INIT {
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentPlanner", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on CLASSIFY {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag", size: "md" }, { type: "typography", content: "AgentPlanner", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "code", variant: "secondary" }, { type: "badge", label: "schema", variant: "secondary" }, { type: "badge", label: "design", variant: "secondary" }, { type: "badge", label: "debug", variant: "secondary" }, { type: "badge", label: "deploy", variant: "secondary" }] }, { type: "form-section", entity: "AgentPlanner", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentPlanner", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentPlanner @payload.data)
+        (render-ui modal null)
+        (emit CLASSIFIED)
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentPlanner", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait PlannerCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentPlanner {
+    on INIT {
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentPlanner", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on GENERATE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "AgentPlanner", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "AgentPlanner", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentPlanner", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentPlanner @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentPlanner", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait PlannerMemoryLifecycle = AgentMemory.traits.AgentMemoryBrowse -> AgentPlanner {
+    on INIT {
+        (ref AgentPlanner)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "AgentPlanner Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentPlanner", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  page "/agentplanners" -> AgentPlannerPlanner, PlannerTaskInput, PlannerClassifierFlow, PlannerCompletionFlow, PlannerMemoryLifecycle
+}

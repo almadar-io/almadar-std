@@ -1,0 +1,176 @@
+;; app std-agent-context-window
+
+orbital AgentContextWindowOrbital {
+  entity AgentContextWindow [persistent: agentcontextwindows] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    tokenCount : number
+    maxTokens : number
+    usage : number
+    lastCompactedAt : string
+    current : number
+    max : number
+    threshold : number
+    message : string
+    notificationType : string
+  }
+  trait AgentContextWindowGauge -> AgentContextWindow [interaction] {
+    initial: normal
+    state normal {
+      INIT -> normal
+        (fetch AgentContextWindow)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      UPDATE -> normal
+        ? (< (/ @payload.current @entity.max) 0.85)
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      UPDATE -> warning
+        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      UPDATE -> critical
+        ? (>= (/ @payload.current @entity.max) 0.95)
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      COMPACT -> normal
+        (agent/compact)
+        (set @entity.lastCompactedAt @now)
+        (agent/token-count)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      RESET -> normal
+        (set @entity.current 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    state warning {
+      UPDATE -> warning
+        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      UPDATE -> critical
+        ? (>= (/ @payload.current @entity.max) 0.95)
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      UPDATE -> normal
+        ? (< (/ @payload.current @entity.max) 0.85)
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      COMPACT -> normal
+        (agent/compact)
+        (set @entity.lastCompactedAt @now)
+        (agent/token-count)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      RESET -> normal
+        (set @entity.current 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    state critical {
+      UPDATE -> critical
+        ? (>= (/ @payload.current @entity.max) 0.95)
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      UPDATE -> warning
+        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      UPDATE -> normal
+        ? (< (/ @payload.current @entity.max) 0.85)
+        (set @entity.current @payload.current)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      COMPACT -> normal
+        (agent/compact)
+        (set @entity.lastCompactedAt @now)
+        (agent/token-count)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      RESET -> normal
+        (set @entity.current 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+  }
+  trait AgentContextWindowNotification -> AgentContextWindow [interaction] {
+    initial: hidden
+    state hidden {
+      INIT -> hidden
+        (fetch AgentContextWindow)
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Context Window Alert", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
+    }
+    state visible {
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Context Window Alert", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
+      HIDE -> hidden
+        (set @entity.message "")
+    }
+  }
+  trait AgentContextWindowAgent -> AgentContextWindow [interaction] {
+    initial: normal
+    state normal {
+      INIT -> normal
+        (fetch AgentContextWindow)
+        (agent/token-count)
+        (agent/context-usage)
+        (render-ui main { type: "empty-state", icon: "layers", title: "Context Window", description: "Context Window is ready" })
+      UPDATE_TOKENS -> normal
+        ? (< (/ @entity.tokenCount @entity.maxTokens) 0.85)
+        (agent/token-count)
+        (agent/context-usage)
+        (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
+        (set @entity.current @entity.tokenCount)
+        (emit UPDATE)
+      UPDATE_TOKENS -> approaching_limit
+        ? (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
+        (agent/token-count)
+        (agent/context-usage)
+        (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
+        (set @entity.current @entity.tokenCount)
+        (emit UPDATE)
+        (emit SHOW)
+    }
+    state approaching_limit {
+      UPDATE_TOKENS -> at_limit
+        ? (>= (/ @entity.tokenCount @entity.maxTokens) 1)
+        (agent/token-count)
+        (agent/context-usage)
+        (set @entity.usage 100)
+        (set @entity.current @entity.tokenCount)
+        (emit UPDATE)
+        (emit SHOW)
+      COMPACT -> normal
+        (agent/compact)
+        (agent/token-count)
+        (agent/context-usage)
+        (set @entity.lastCompactedAt @now)
+        (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
+        (set @entity.current @entity.tokenCount)
+        (emit UPDATE)
+      UPDATE_TOKENS -> approaching_limit
+        ? (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
+        (agent/token-count)
+        (agent/context-usage)
+        (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
+        (set @entity.current @entity.tokenCount)
+        (emit UPDATE)
+    }
+    state at_limit {
+      COMPACT -> normal
+        (agent/compact)
+        (agent/token-count)
+        (agent/context-usage)
+        (set @entity.lastCompactedAt @now)
+        (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
+        (set @entity.current @entity.tokenCount)
+        (emit UPDATE)
+    }
+    emits {
+      SHOW internal { tokenCount: number, usage: number }
+      UPDATE internal { current: number, max: number }
+    }
+  }
+  page "/agentcontextwindows" -> AgentContextWindowGauge, AgentContextWindowNotification, AgentContextWindowAgent
+}

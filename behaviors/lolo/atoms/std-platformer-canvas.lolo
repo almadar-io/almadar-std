@@ -1,0 +1,31 @@
+;; app std-platformer-canvas
+
+orbital PlatformerWorldOrbital {
+  entity PlatformerWorld [singleton] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    platforms : [string]
+    player : object
+  }
+  trait PlatformerWorldPlatformerCanvas -> PlatformerWorld [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch PlatformerWorld)
+        (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
+      START -> running
+        (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
+    }
+    state running {
+      LEFT -> running
+      RIGHT -> running
+      JUMP -> running
+      STOP -> idle
+        (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
+    }
+  }
+  page "/platformerworlds" -> PlatformerWorldPlatformerCanvas
+}

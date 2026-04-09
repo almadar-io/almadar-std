@@ -1,0 +1,63 @@
+;; app std-service-custom-api-tester
+
+orbital ServiceCustomApiTesterOrbital {
+  entity ServiceCustomApiTester [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    endpoint : string
+    method : string
+    requestBody : string
+    responseData : string
+    statusCode : number
+    authType : string
+    callStatus : string
+    error : string
+  }
+  trait ServiceCustomApiTesterApiTester -> ServiceCustomApiTester [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceCustomApiTester)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Unified API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "Request body (JSON)", bind: "@entity.requestBody" }, { type: "divider" }, { type: "typography", content: "Select Auth Type", variant: "h4" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Header API Key", event: "CALL_HEADER_API", variant: "primary", icon: "key" }, { type: "button", label: "Bearer Token", event: "CALL_BEARER_API", variant: "primary", icon: "shield" }, { type: "button", label: "Query Param", event: "CALL_QUERY_API", variant: "primary", icon: "search" }, { type: "button", label: "No Auth", event: "CALL_NOAUTH_API", variant: "primary", icon: "unlock" }] }] })
+      CALL_HEADER_API -> calling
+        (set @entity.authType header)
+        (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
+        (call-service custom-header-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+      CALL_BEARER_API -> calling
+        (set @entity.authType bearer)
+        (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
+        (call-service custom-bearer-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+      CALL_QUERY_API -> calling
+        (set @entity.authType query)
+        (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
+        (call-service custom-query-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+      CALL_NOAUTH_API -> calling
+        (set @entity.authType noauth)
+        (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomapitester endpoint..." })
+        (call-service custom-noauth-api execute { endpoint: "@entity.endpoint", method: "@entity.method", body: "@entity.requestBody" })
+    }
+    state calling {
+      API_RESPONSE -> complete
+        (set @entity.responseData @payload.data)
+        (set @entity.statusCode @payload.statusCode)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Response", variant: "h2" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "badge", content: "@entity.authType", variant: "info" }, { type: "badge", content: "@entity.statusCode", variant: "info" }] }, { type: "code", content: "@entity.responseData", language: "json" }, { type: "button", label: "New Request", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Request Failed", message: "@entity.error", onRetry: "RETRY" })
+    }
+    state complete {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Unified API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "Request body (JSON)", bind: "@entity.requestBody" }, { type: "divider" }, { type: "typography", content: "Select Auth Type", variant: "h4" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Header API Key", event: "CALL_HEADER_API", variant: "primary", icon: "key" }, { type: "button", label: "Bearer Token", event: "CALL_BEARER_API", variant: "primary", icon: "shield" }, { type: "button", label: "Query Param", event: "CALL_QUERY_API", variant: "primary", icon: "search" }, { type: "button", label: "No Auth", event: "CALL_NOAUTH_API", variant: "primary", icon: "unlock" }] }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Unified API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "Request body (JSON)", bind: "@entity.requestBody" }, { type: "divider" }, { type: "typography", content: "Select Auth Type", variant: "h4" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Header API Key", event: "CALL_HEADER_API", variant: "primary", icon: "key" }, { type: "button", label: "Bearer Token", event: "CALL_BEARER_API", variant: "primary", icon: "shield" }, { type: "button", label: "Query Param", event: "CALL_QUERY_API", variant: "primary", icon: "search" }, { type: "button", label: "No Auth", event: "CALL_NOAUTH_API", variant: "primary", icon: "unlock" }] }] })
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Unified API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "Request body (JSON)", bind: "@entity.requestBody" }, { type: "divider" }, { type: "typography", content: "Select Auth Type", variant: "h4" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Header API Key", event: "CALL_HEADER_API", variant: "primary", icon: "key" }, { type: "button", label: "Bearer Token", event: "CALL_BEARER_API", variant: "primary", icon: "shield" }, { type: "button", label: "Query Param", event: "CALL_QUERY_API", variant: "primary", icon: "search" }, { type: "button", label: "No Auth", event: "CALL_NOAUTH_API", variant: "primary", icon: "unlock" }] }] })
+    }
+  }
+  page "/servicecustomapitesters" -> ServiceCustomApiTesterApiTester
+}

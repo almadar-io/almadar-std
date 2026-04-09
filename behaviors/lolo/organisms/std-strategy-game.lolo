@@ -1,0 +1,122 @@
+;; app std-strategy-game
+
+orbital ArmyBattleOrbital {
+  entity ArmyBattle [runtime] {
+    id : string!
+    turn : number
+    score : number
+    armySize : number
+    morale : number
+  }
+  trait ArmyBattleBattleFlow -> ArmyBattle [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch ArmyBattle)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-menu", title: "Army Battle", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
+      START -> playing
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      END_TURN -> playing
+        (set @entity.turn (+ @entity.turn 1))
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      PAUSE -> paused
+        (render-ui modal { type: "game-menu", title: "Paused", menuItems: [{ label: "Resume", event: "RESUME", variant: "primary" }, { label: "Quit", event: "RESTART", variant: "ghost" }] })
+      GAME_OVER -> gameover
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-over-screen", title: "Battle Over", stats: [{ label: "Turns", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }], menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }, { label: "Main Menu", event: "RESTART", variant: "secondary" }] }] })
+    }
+    state paused {
+      NAVIGATE -> paused
+      RESUME -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      CLOSE -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] }] })
+      RESTART -> menu
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-menu", title: "Army Battle", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
+    }
+    state gameover {
+      RESTART -> menu
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "game-menu", title: "Army Battle", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] }] })
+    }
+  }
+  trait ArmyBattleCombatLog -> ArmyBattle [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch ArmyBattle)
+      LOG_EVENT -> idle
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "combat-log", events: "@ArmyBattle", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
+      CLEAR -> idle
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "combat-log", events: "@ArmyBattle", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
+    }
+  }
+  page "/battle" -> ArmyBattleBattleFlow, ArmyBattleCombatLog
+}
+orbital TerritoryOrbital {
+  entity Territory [runtime] {
+    id : string!
+    name : string!
+    owner : string
+    defense : number
+    explored : boolean
+  }
+  trait TerritoryNavigation -> Territory [interaction] {
+    initial: exploring
+    state exploring {
+      INIT -> exploring
+        (fetch Territory)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "Territory Map", variant: "h2" }] }, { type: "status-dot", status: "active", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "Territory", emptyIcon: "compass", emptyTitle: "No territorys discovered", emptyDescription: "Explore to discover new territorys.", itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }] }] })
+      TRAVEL -> transitioning
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "Traveling...", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Traveling to the destination territorys map.", variant: "body" }] }] })
+    }
+    state transitioning {
+      ARRIVE -> entered
+        (fetch Territory)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "Territorys Map", variant: "h2" }] }, { type: "status-dot", status: "success", label: "Entered" }] }, { type: "divider" }, { type: "data-grid", entity: "Territory", emptyIcon: "inbox", emptyTitle: "Nothing here", emptyDescription: "This zone is empty.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Back to Map", event: "BACK", variant: "ghost", icon: "arrow-left" }] }] }] })
+    }
+    state entered {
+      BACK -> exploring
+        (fetch Territory)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "Territory Map", variant: "h2" }] }, { type: "status-dot", status: "active", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "Territory", emptyIcon: "compass", emptyTitle: "No territorys discovered", emptyDescription: "Explore to discover new territorys.", itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.owner" }] }, { type: "typography", variant: "caption", content: "@item.defense" }] }] }] }] })
+    }
+  }
+  page "/map" -> TerritoryNavigation
+}
+orbital ResourceOrbital {
+  entity Resource [runtime] {
+    id : string!
+    gold : number
+    food : number
+    wood : number
+    iron : number
+  }
+  trait ResourceDisplay -> Resource [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch Resource)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Resources" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Resources", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Gold", value: ["object/get", ["array/first", "@entity"], "gold"] }, { type: "stat-display", label: "Food", value: ["object/get", ["array/first", "@entity"], "food"] }, { type: "stat-display", label: "Wood", value: ["object/get", ["array/first", "@entity"], "wood"] }, { type: "stat-display", label: "Iron", value: ["object/get", ["array/first", "@entity"], "iron"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch Resource)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Resources" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Resources", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Gold", value: ["object/get", ["array/first", "@entity"], "gold"] }, { type: "stat-display", label: "Food", value: ["object/get", ["array/first", "@entity"], "food"] }, { type: "stat-display", label: "Wood", value: ["object/get", ["array/first", "@entity"], "wood"] }, { type: "stat-display", label: "Iron", value: ["object/get", ["array/first", "@entity"], "iron"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch Resource)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Resources" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Resources", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Gold", value: ["object/get", ["array/first", "@entity"], "gold"] }, { type: "stat-display", label: "Food", value: ["object/get", ["array/first", "@entity"], "food"] }, { type: "stat-display", label: "Wood", value: ["object/get", ["array/first", "@entity"], "wood"] }, { type: "stat-display", label: "Iron", value: ["object/get", ["array/first", "@entity"], "iron"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch Resource)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Resources" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Resources", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Gold", value: ["object/get", ["array/first", "@entity"], "gold"] }, { type: "stat-display", label: "Food", value: ["object/get", ["array/first", "@entity"], "food"] }, { type: "stat-display", label: "Wood", value: ["object/get", ["array/first", "@entity"], "wood"] }, { type: "stat-display", label: "Iron", value: ["object/get", ["array/first", "@entity"], "iron"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch Resource)
+        (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Resources" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Resources", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "Gold", value: ["object/get", ["array/first", "@entity"], "gold"] }, { type: "stat-display", label: "Food", value: ["object/get", ["array/first", "@entity"], "food"] }, { type: "stat-display", label: "Wood", value: ["object/get", ["array/first", "@entity"], "wood"] }, { type: "stat-display", label: "Iron", value: ["object/get", ["array/first", "@entity"], "iron"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+  }
+  page "/resources" -> ResourceDisplay
+}

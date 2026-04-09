@@ -1,0 +1,51 @@
+;; app std-service-redis
+
+orbital ServiceRedisOrbital {
+  entity ServiceRedis [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    key : string
+    value : string
+    ttl : number
+    result : string
+    redisStatus : string
+    error : string
+  }
+  trait ServiceRedisRedis -> ServiceRedis [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceRedis)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Key", bind: "@entity.key", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.value", placeholder: "cache-value" }, { type: "input", label: "TTL (seconds)", bind: "@entity.ttl", inputType: "number", placeholder: "3600" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+      GET_KEY -> executing
+        (render-ui main { type: "loading-state", title: "Executing...", message: "Running redis operation..." })
+        (call-service redis get { key: "@entity.key" })
+      SET_KEY -> executing
+        (render-ui main { type: "loading-state", title: "Executing...", message: "Running redis operation..." })
+        (call-service redis set { key: "@entity.key", value: "@entity.value", ttl: "@entity.ttl" })
+      DELETE_KEY -> executing
+        (render-ui main { type: "loading-state", title: "Executing...", message: "Running redis operation..." })
+        (call-service redis delete { key: "@entity.key" })
+    }
+    state executing {
+      EXECUTED -> complete
+        (set @entity.result @payload.data)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Operation complete" }, { type: "typography", variant: "body", color: "muted", content: "@entity.result" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (render-ui main { type: "error-state", title: "Redis Error", message: "@entity.error", onRetry: "RESET" })
+    }
+    state complete {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Key", bind: "@entity.key", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.value", placeholder: "cache-value" }, { type: "input", label: "TTL (seconds)", bind: "@entity.ttl", inputType: "number", placeholder: "3600" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+    }
+    state error {
+      RESET -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Key", bind: "@entity.key", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.value", placeholder: "cache-value" }, { type: "input", label: "TTL (seconds)", bind: "@entity.ttl", inputType: "number", placeholder: "3600" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+    }
+  }
+  page "/servicerediss" -> ServiceRedisRedis
+}

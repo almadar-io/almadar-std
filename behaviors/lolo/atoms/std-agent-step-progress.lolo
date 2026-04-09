@@ -1,0 +1,69 @@
+;; app std-agent-step-progress
+
+orbital AgentStepProgressOrbital {
+  entity AgentStepProgress [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    currentStep : number
+    totalSteps : number
+  }
+  trait AgentStepProgressProgress -> AgentStepProgress [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentStepProgress)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+      START -> in_progress
+        (set @entity.status in_progress)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    state in_progress {
+      ADVANCE -> in_progress
+        ? (< @entity.currentStep @entity.totalSteps)
+        (set @entity.currentStep (+ @entity.currentStep 1))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+      COMPLETE -> completed
+        (set @entity.status completed)
+        (set @entity.currentStep @entity.totalSteps)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Completed", variant: "success" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.totalSteps", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "alert", variant: "success", message: "All steps completed successfully." }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAIL -> failed
+        (set @entity.status failed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Failed", variant: "destructive" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "alert", variant: "error", message: "Pipeline failed at the current step." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "stat-display", label: "Failed At Step", value: "@entity.currentStep" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    state completed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    state failed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentStepProgress", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Initialize" }, { id: "1", title: "Process" }, { id: "2", title: "Validate" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    emits {
+      ADVANCE external { step: number }
+      COMPLETE external { totalSteps: number }
+      FAIL external { step: number }
+    }
+    listens {
+      * ADVANCE -> ADVANCE
+      * COMPLETE -> COMPLETE
+      * FAIL -> FAIL
+    }
+  }
+  page "/agentstepprogresss" -> AgentStepProgressProgress
+}

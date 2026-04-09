@@ -1,0 +1,44 @@
+;; app std-input
+
+orbital TextInputOrbital {
+  entity TextInput [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    value : string
+    inputStatus : string
+  }
+  trait TextInputInput -> TextInput [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Type to enter a value.", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "typography", variant: "caption", color: "muted", content: ["object/get", ["array/first", "@entity"], "value"] }] })
+      FOCUS -> focused
+        (set @entity.inputStatus focused)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Type to enter a value.", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "typography", variant: "caption", color: "muted", content: ["object/get", ["array/first", "@entity"], "value"] }] })
+    }
+    state focused {
+      CHANGE -> focused
+        (set @entity.value @payload.value)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Type to enter a value.", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "typography", variant: "caption", color: "muted", content: ["object/get", ["array/first", "@entity"], "value"] }] })
+      BLUR -> idle
+        (set @entity.inputStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Type to enter a value.", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "typography", variant: "caption", color: "muted", content: ["object/get", ["array/first", "@entity"], "value"] }] })
+      VALIDATE -> validating
+        (set @entity.inputStatus validating)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Validating...", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "alert", variant: "info", message: "Validating input..." }] })
+      INIT -> focused
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Type to enter a value.", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "typography", variant: "caption", color: "muted", content: ["object/get", ["array/first", "@entity"], "value"] }] })
+    }
+    state validating {
+      BLUR -> idle
+        (set @entity.inputStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Type to enter a value.", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "typography", variant: "caption", color: "muted", content: ["object/get", ["array/first", "@entity"], "value"] }] })
+      INIT -> validating
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "text-cursor-input", size: "lg" }, { type: "typography", content: "TextInput", variant: "h2" }] }, { type: "divider" }, { type: "form-field", label: "TextInput", hint: "Validating...", children: [{ type: "input", placeholder: "Enter textinput...", event: "CHANGE" }] }, { type: "alert", variant: "info", message: "Validating input..." }] })
+    }
+  }
+  page "/textinputs/input" -> TextInputInput
+}

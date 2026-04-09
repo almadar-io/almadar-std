@@ -1,0 +1,54 @@
+;; app std-service-twilio
+
+orbital ServiceTwilioOrbital {
+  entity ServiceTwilio [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    to : string
+    messageBody : string
+    channel : string
+    messageSid : string
+    sendStatus : string
+    error : string
+  }
+  trait ServiceTwilioTwilio -> ServiceTwilio [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch ServiceTwilio)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "To", bind: "@entity.to", placeholder: "+1234567890" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", event: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+      SEND_SMS -> sending
+        (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering servicetwilio message..." })
+        (call-service twilio "sendSMS" { to: "@entity.to", body: "@entity.messageBody" })
+      SEND_WHATSAPP -> sending
+        (render-ui main { type: "loading-state", title: "Sending message...", message: "Delivering servicetwilio message..." })
+        (call-service twilio "sendWhatsApp" { to: "@entity.to", body: "@entity.messageBody" })
+    }
+    state sending {
+      SENT -> sent
+        (set @entity.sendStatus sent)
+        (set @entity.messageSid @payload.messageSid)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "alert", variant: "success", message: "Message sent successfully" }, { type: "button", label: "Send Another", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+      FAILED -> error
+        (set @entity.sendStatus error)
+        (set @entity.error @payload.error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "error-state", title: "Send Failed", message: "Could not deliver the message.", onRetry: "RETRY" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Retry", event: "RETRY", variant: "primary", icon: "refresh-cw" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    state sent {
+      RESET -> idle
+        (set @entity.sendStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "To", bind: "@entity.to", placeholder: "+1234567890" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", event: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+    }
+    state error {
+      RETRY -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "To", bind: "@entity.to", placeholder: "+1234567890" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", event: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+      RESET -> idle
+        (set @entity.sendStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "ServiceTwilio Messaging", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "To", bind: "@entity.to", placeholder: "+1234567890" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Send SMS", event: "SEND_SMS", variant: "primary", icon: "message-circle" }, { type: "button", label: "Send WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
+    }
+  }
+  page "/servicetwilios" -> ServiceTwilioTwilio
+}

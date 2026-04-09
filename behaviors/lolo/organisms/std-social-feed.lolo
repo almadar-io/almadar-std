@@ -1,0 +1,128 @@
+;; app std-social-feed
+
+orbital PostOrbital {
+  entity Post [runtime] {
+    id : string!
+    title : string
+    content : string
+    author : string
+    createdAt : datetime
+    likes : number
+  }
+  trait PostBrowse -> Post [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Post)
+        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rss", size: "lg" }, { type: "typography", content: "Feed", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Post", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Post", emptyIcon: "inbox", emptyTitle: "No posts yet", emptyDescription: "Share your first post.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "rss" }, { name: "likes", variant: "badge", format: "number" }, { name: "author", variant: "body" }, { name: "content", variant: "body" }, { name: "createdAt", label: "Posted", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      COMMENT external { id: string }
+    }
+    listens {
+      * SAVE -> INIT
+    }
+  }
+  trait PostCreate -> Post [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Post)
+      CREATE -> open
+        (fetch Post)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Post", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Post", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "content", "author", "likes"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Post @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait PostView -> Post [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Post)
+      VIEW -> open
+        (fetch Post { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Likes" }, { type: "typography", variant: "body", content: "@entity.likes" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/feed" -> PostBrowse, PostCreate, PostView
+}
+orbital CommentOrbital {
+  entity Comment [runtime] {
+    id : string!
+    body : string
+    author : string
+    postId : string
+    createdAt : datetime
+  }
+  trait CommentBrowse -> Comment [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Comment)
+        (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "Comment", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * SEND -> INIT
+      * COMMENT -> INIT
+    }
+  }
+  trait CommentCompose -> Comment [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Comment)
+      COMPOSE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "New Comment", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Comment", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["body", "author", "postId"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SEND -> closed
+        (persist create Comment @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SEND
+    }
+  }
+  trait CommentView -> Comment [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Comment)
+      VIEW -> open
+        (fetch Comment { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.body" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Post ID" }, { type: "typography", variant: "body", content: "@entity.postId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/messages" -> CommentBrowse, CommentCompose, CommentView
+}

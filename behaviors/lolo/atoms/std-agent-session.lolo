@@ -1,0 +1,108 @@
+;; app std-agent-session
+
+orbital AgentSessionOrbital {
+  entity AgentSession [persistent: agentsessions] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    sessionId : string
+    parentId : string
+    label : string
+  }
+  trait AgentSessionBrowse -> AgentSession [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref AgentSession)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal", size: "lg" }, { type: "typography", content: "AgentSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", event: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", event: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", event: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentSession", emptyIcon: "inbox", emptyTitle: "No sessions yet", emptyDescription: "Start a new session to begin.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] })
+    }
+    listens {
+      * FORKED -> INIT
+      * LABELED -> INIT
+      * ENDED -> INIT
+    }
+  }
+  trait AgentSessionLabel -> AgentSession [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref AgentSession)
+      LABEL -> open
+        (fetch AgentSession)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag", size: "md" }, { type: "typography", content: "Label Session", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Session:" }, { type: "badge", label: "@entity.sessionId" }] }, { type: "form-section", entity: "AgentSession", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["label"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update AgentSession @payload.data)
+        (render-ui modal null)
+        (emit LABELED)
+    }
+    emits {
+      SAVE
+      LABELED
+    }
+  }
+  trait AgentSessionAgent -> AgentSession [interaction] {
+    initial: active
+    state active {
+      INIT -> active
+        (fetch AgentSession)
+        (agent/session-id)
+        (set @entity.createdAt @now)
+        (render-ui main { type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" })
+      FORK -> forked
+        (set @entity.parentId @entity.sessionId)
+        (agent/fork)
+        (agent/session-id)
+        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" })
+        (emit FORKED)
+      DO_LABEL -> active
+        (agent/label @payload.data.label)
+        (set @entity.label @payload.data.label)
+      LABELED -> active
+        (agent/label @entity.label)
+        (fetch AgentSession)
+      END -> ended
+        (set @entity.status ended)
+        (emit ENDED)
+    }
+    state forked {
+      FORK -> forked
+        (set @entity.parentId @entity.sessionId)
+        (agent/fork)
+        (agent/session-id)
+        (persist create AgentSession { sessionId: "@entity.sessionId", parentId: "@entity.parentId", status: "forked", createdAt: "@now" })
+        (emit FORKED)
+      DO_LABEL -> forked
+        (agent/label @payload.data.label)
+        (set @entity.label @payload.data.label)
+      LABELED -> forked
+        (agent/label @entity.label)
+        (fetch AgentSession)
+      END -> ended
+        (set @entity.status ended)
+        (emit ENDED)
+    }
+    state ended {
+      INIT -> active
+        (fetch AgentSession)
+        (agent/session-id)
+        (set @entity.createdAt @now)
+        (set @entity.status active)
+        (render-ui main { type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" })
+    }
+    emits {
+      ENDED external { sessionId: string }
+      FORKED external { sessionId: string }
+    }
+    listens {
+      * ENDED -> INIT
+      * FORKED -> INIT
+    }
+  }
+  page "/agentsessions" -> AgentSessionBrowse, AgentSessionLabel, AgentSessionAgent
+}

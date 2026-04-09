@@ -1,0 +1,36 @@
+;; app std-dialogue-box
+
+orbital DialogueNodeOrbital {
+  entity DialogueNode [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    speaker : string
+    text : string
+  }
+  trait DialogueNodeDialogue -> DialogueNode [interaction] {
+    initial: talking
+    state talking {
+      INIT -> talking
+        (fetch DialogueNode)
+        (set @entity.speaker Narrator)
+        (set @entity.text "Welcome, adventurer. Your journey begins here.")
+        (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
+      ADVANCE -> talking
+        (fetch DialogueNode)
+        (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
+      CHOICE -> talking
+        (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
+      COMPLETE -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "typography", content: "Dialogue complete", variant: "caption" }, { type: "button", label: "New Dialogue", event: "START_DIALOGUE", variant: "primary", icon: "message-circle" }] })
+    }
+    state idle {
+      START_DIALOGUE -> talking
+        (fetch DialogueNode)
+        (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
+    }
+  }
+  page "/dialoguenodes" -> DialogueNodeDialogue
+}

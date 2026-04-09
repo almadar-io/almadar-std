@@ -1,0 +1,76 @@
+;; app std-service-content-pipeline
+
+orbital ServiceContentPipelineOrbital {
+  entity ServiceContentPipeline [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    query : string
+    videoTitle : string
+    videoDescription : string
+    summary : string
+    pipelineStatus : string
+    error : string
+  }
+  trait ServiceContentPipelinePipeline -> ServiceContentPipeline [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
+      SEARCH -> searching
+        (set @entity.pipelineStatus searching)
+        (call-service youtube search { query: "@entity.query", maxResults: 5, type: "video" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Searching YouTube...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "typography", content: "@entity.query", variant: "caption" }] })
+    }
+    state searching {
+      SEARCH_COMPLETE -> results
+        (set @entity.pipelineStatus results)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video", size: "lg" }, { type: "typography", content: "Search Results", variant: "h2" }] }, { type: "button", label: "New Search", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "data-grid", entity: "ServiceContentPipeline", emptyIcon: "inbox", emptyTitle: "No results found", emptyDescription: "Try a different search query.", itemActions: [{ label: "Summarize", event: "SELECT_AND_SUMMARIZE", variant: "primary", size: "sm" }], columns: [{ name: "videoTitle", label: "Title", variant: "h4", icon: "video" }, { name: "videoDescription", label: "Description", variant: "caption" }] }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (set @entity.pipelineStatus error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state results {
+      SELECT_AND_SUMMARIZE -> summarizing
+        (set @entity.pipelineStatus summarizing)
+        (call-service youtube "getVideo" { videoId: "@payload.videoId" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Fetching & summarizing...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "typography", content: "@entity.videoTitle", variant: "caption" }] })
+      RESET -> idle
+        (set @entity.pipelineStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
+    }
+    state summarizing {
+      VIDEO_FETCHED -> summarizing
+        (set @entity.videoTitle @payload.title)
+        (set @entity.videoDescription @payload.description)
+        (call-service llm summarize { text: "@entity.videoDescription" })
+      SUMMARY_COMPLETE -> complete
+        (set @entity.summary @payload.content)
+        (set @entity.pipelineStatus complete)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Research Complete", variant: "h2" }] }, { type: "button", label: "New Search", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "video", size: "sm" }, { type: "typography", content: "@entity.videoTitle", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "Summary", variant: "caption" }, { type: "typography", content: "@entity.summary", variant: "body" }] }] }] })
+      FAILED -> error
+        (set @entity.error @payload.error)
+        (set @entity.pipelineStatus error)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Pipeline Error", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "button", label: "Try Again", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state complete {
+      RESET -> idle
+        (set @entity.pipelineStatus idle)
+        (set @entity.error "")
+        (set @entity.summary "")
+        (set @entity.videoTitle "")
+        (set @entity.videoDescription "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
+    }
+    state error {
+      RESET -> idle
+        (set @entity.pipelineStatus idle)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "ServiceContentPipeline", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] })
+    }
+  }
+  page "/servicecontentpipelines" -> ServiceContentPipelinePipeline
+}

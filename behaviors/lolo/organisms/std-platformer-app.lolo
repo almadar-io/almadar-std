@@ -1,0 +1,194 @@
+;; app std-platformer-app
+
+orbital PlatLevelOrbital {
+  entity PlatLevel [runtime] {
+    id : string!
+    level : number
+    score : number
+    lives : number
+    time : number
+    player : string
+    platforms : string
+  }
+  trait PlatLevelPlatformerFlow -> PlatLevel [interaction] {
+    initial: menu
+    state menu {
+      INIT -> menu
+        (fetch PlatLevel)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
+      START -> playing
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
+      NAVIGATE -> menu
+    }
+    state playing {
+      LEFT -> playing
+      RIGHT -> playing
+      JUMP -> playing
+      STOP -> playing
+      PAUSE -> paused
+        (render-ui modal { type: "game-menu", title: "Paused", menuItems: [{ label: "Resume", event: "RESUME", variant: "primary" }, { label: "Quit", event: "RESTART", variant: "ghost" }] })
+      GAME_OVER -> gameover
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-over-screen", title: "Game Over", stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }], menuItems: [{ label: "Play Again", event: "RESTART", variant: "primary" }, { label: "Main Menu", event: "RESTART", variant: "secondary" }] }] })
+    }
+    state paused {
+      NAVIGATE -> paused
+      RESUME -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
+      CLOSE -> playing
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
+      RESTART -> menu
+        (render-ui modal null)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
+    }
+    state gameover {
+      RESTART -> menu
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
+    }
+  }
+  trait PlatLevelPlatformerCanvas -> PlatLevel [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch PlatLevel)
+      START -> running
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
+    }
+    state running {
+      LEFT -> running
+      RIGHT -> running
+      JUMP -> running
+      STOP -> idle
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
+    }
+  }
+  page "/game" -> PlatLevelPlatformerFlow, PlatLevelPlatformerCanvas
+}
+orbital PlatScoreOrbital {
+  entity PlatScore [runtime] {
+    id : string!
+    playerName : string!
+    score : number!
+    level : number
+    completedAt : string
+    highScore : number
+    combo : number
+    multiplier : number
+  }
+  trait PlatScoreScoreBoard -> PlatScore [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch PlatScore)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      ADD_SCORE -> idle
+        (set @entity.score (+ @entity.score @payload.points))
+        (set @entity.combo (+ @entity.combo 1))
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      COMBO -> idle
+        (set @entity.multiplier @payload.multiplier)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+      RESET -> idle
+        (set @entity.score 0)
+        (set @entity.combo 0)
+        (set @entity.multiplier 1)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+    }
+  }
+  page "/scores" -> PlatScoreScoreBoard
+}
+orbital CollectibleOrbital {
+  entity Collectible [persistent: collectibles] {
+    id : string!
+    name : string!
+    type : string!
+    quantity : number
+    rarity : string
+    pendingId : string
+  }
+  trait CollectibleBrowse -> Collectible [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Collectible)
+        (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package", size: "lg" }, { type: "typography", content: "Collectibles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Collectible", event: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Collectible", emptyIcon: "inbox", emptyTitle: "No items yet", emptyDescription: "Add your first item to get started.", itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost", size: "sm" }, { label: "Drop", event: "DROP", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
+    }
+    listens {
+      * ITEM_ADDED -> INIT
+      * ITEM_USED -> INIT
+      * CONFIRM_DROP -> INIT
+    }
+  }
+  trait CollectibleAdd -> Collectible [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Collectible)
+      ADD_ITEM -> open
+        (fetch Collectible)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Add Collectible", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Collectible", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "quantity", "rarity"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Collectible @payload.data)
+        (render-ui modal null)
+        (emit ITEM_ADDED)
+    }
+    emits {
+      SAVE
+      ITEM_ADDED
+    }
+  }
+  trait CollectibleUse -> Collectible [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Collectible)
+      USE_ITEM -> open
+        (fetch Collectible { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap", size: "md" }, { type: "typography", content: "Use Collectible", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", event: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", event: "SAVE", variant: "primary", icon: "check" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Collectible @payload.data)
+        (render-ui modal null)
+        (emit ITEM_USED)
+    }
+    emits {
+      SAVE
+      ITEM_USED
+    }
+  }
+  trait CollectibleDrop -> Collectible [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Collectible)
+      DROP -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Collectible { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Drop Collectible", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure you want to drop this collectible?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Drop", event: "CONFIRM_DROP", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DROP -> idle
+        (persist delete Collectible @entity.pendingId)
+        (render-ui modal null)
+        (ref Collectible)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Collectible)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Collectible)
+    }
+    emits {
+      CONFIRM_DROP
+    }
+  }
+  page "/collectibles" -> CollectibleBrowse, CollectibleAdd, CollectibleUse, CollectibleDrop
+}

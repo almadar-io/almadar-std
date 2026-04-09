@@ -1,0 +1,111 @@
+;; app std-list
+
+orbital ListItemOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Modal from "std/behaviors/std-modal"
+
+  entity ListItem [persistent: listitems] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait ListItemBrowse = Browse.traits.BrowseItemBrowse -> ListItem {
+    on INIT {
+        (ref ListItem)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "ListItems", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create ListItem", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ListItem", emptyIcon: "inbox", emptyTitle: "No listitems yet", emptyDescription: "Create your first listitem to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }] })
+    }
+  }
+  trait ListItemCreate = Modal.traits.ModalRecordModal -> ListItem {
+    events {
+      OPEN: CREATE
+    }
+    on INIT {
+        (ref ListItem)
+    }
+    on CREATE {
+        (fetch ListItem)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create ListItem", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ListItem", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on SAVE {
+        (persist create ListItem @payload.data)
+        (render-ui modal null)
+        (emit LIST_ITEM_CREATED)
+    }
+  }
+  trait ListItemEdit = Modal.traits.ModalRecordModal -> ListItem {
+    events {
+      OPEN: EDIT
+    }
+    on INIT {
+        (ref ListItem)
+    }
+    on EDIT {
+        (fetch ListItem { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit ListItem", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ListItem", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "status"], entityId: "@entity.id" }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on SAVE {
+        (persist update ListItem @payload.data)
+        (render-ui modal null)
+        (emit LIST_ITEM_UPDATED)
+    }
+  }
+  trait ListItemView = Modal.traits.ModalRecordModal -> ListItem {
+    events {
+      OPEN: VIEW
+    }
+    on INIT {
+        (ref ListItem)
+    }
+    on VIEW {
+        (fetch ListItem { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on SAVE {
+        (render-ui modal null)
+    }
+  }
+  trait ListItemDelete = Confirmation.traits.ConfirmActionConfirmation -> ListItem {
+    events {
+      REQUEST: DELETE
+      CONFIRM: CONFIRM_DELETE
+    }
+    on INIT {
+        (ref ListItem)
+    }
+    on DELETE {
+        (set @entity.pendingId @payload.id)
+        (fetch ListItem { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete ListItem", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    on CONFIRM_DELETE {
+        (persist delete ListItem @entity.pendingId)
+        (render-ui modal null)
+        (ref ListItem)
+        (emit LIST_ITEM_DELETED)
+    }
+    on CANCEL {
+        (render-ui modal null)
+        (ref ListItem)
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (ref ListItem)
+    }
+  }
+  page "/listitems" -> ListItemBrowse, ListItemCreate, ListItemEdit, ListItemView, ListItemDelete
+}

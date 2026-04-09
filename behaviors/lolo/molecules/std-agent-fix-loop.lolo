@@ -1,0 +1,228 @@
+;; app std-agent-fix-loop
+
+orbital AgentFixLoopOrbital {
+  uses AgentCompletion from "std/behaviors/std-agent-completion"
+  uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
+  uses AgentToolCall from "std/behaviors/std-agent-tool-call"
+  uses Browse from "std/behaviors/std-browse"
+
+  entity AgentFixLoop [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    target : string
+    validationErrors : string
+    fixAttempts : number
+    maxAttempts : number
+    currentFix : string
+    errorCount : number
+    error : string
+    currentStep : number
+    totalSteps : number
+    steps : string
+    toolName : string
+    args : string
+    result : string
+    prompt : string
+    response : string
+    provider : string
+    model : string
+  }
+  trait AgentFixLoopCycle -> AgentFixLoop [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: "AgentFixLoop", mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] })
+      FIX -> validating
+        (set @entity.status validating)
+        (set @entity.fixAttempts 0)
+        (set @entity.validationErrors "")
+        (set @entity.errorCount 0)
+        (agent/invoke validate-schema { target: "@entity.target" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check", size: "lg" }, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: ["str/concat", "Attempt ", ["str/concat", "@entity.fixAttempts"], "/", ["str/concat", "@entity.maxAttempts"]] }] }] })
+    }
+    state validating {
+      VALIDATION_PASSED -> succeeded
+        (set @entity.status succeeded)
+        (emit FIX_SUCCEEDED)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Validation Passed", variant: "h2" }] }, { type: "button", label: "New Target", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }, { type: "divider" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Fix Attempts", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Status", value: "Passed", icon: "check" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Target", variant: "caption" }, { type: "typography", content: "@entity.target", variant: "body" }] }] }] })
+      VALIDATION_ERRORS -> fixing
+        (set @entity.validationErrors @payload.errors)
+        (set @entity.errorCount @payload.count)
+        (set @entity.fixAttempts (+ @entity.fixAttempts 1))
+        (set @entity.status fixing)
+        (agent/generate (str/concat "Target: " @entity.target "\n\nValidation errors:\n" @payload.errors "\n\nGenerate a fix that resolves these errors. Return only the fix content."))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Generating fix...", variant: "h2" }] }, { type: "badge", label: ["str/concat", "Attempt ", ["str/concat", "@entity.fixAttempts"]] }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Validation Errors", variant: "caption" }, { type: "alert", variant: "error", message: "@entity.validationErrors" }] }] }, { type: "spinner", size: "lg" }] })
+      EXCEEDED_ATTEMPTS -> failed
+        (set @entity.status failed)
+        (set @entity.error @payload.error)
+        (emit FIX_FAILED)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Fix Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Attempts Used", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Remaining Errors", value: "@entity.errorCount", icon: "alert-triangle" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Validation Errors", variant: "caption" }, { type: "typography", content: "@entity.validationErrors", variant: "body" }] }] }, { type: "button", label: "Retry", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state fixing {
+      FIX_GENERATED -> applying
+        (set @entity.currentFix @payload.fix)
+        (set @entity.status applying)
+        (agent/invoke apply-fix { target: "@entity.target", fix: "@payload.fix" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "tool", size: "lg" }, { type: "typography", content: "Applying fix...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Proposed Fix", variant: "caption" }, { type: "typography", content: "@entity.currentFix", variant: "body" }] }] }] })
+      FAILED -> failed
+        (set @entity.error @payload.error)
+        (set @entity.status failed)
+        (emit FIX_FAILED)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Fix Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Attempts Used", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Remaining Errors", value: "@entity.errorCount", icon: "alert-triangle" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Validation Errors", variant: "caption" }, { type: "typography", content: "@entity.validationErrors", variant: "body" }] }] }, { type: "button", label: "Retry", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state applying {
+      FIX_APPLIED -> validating
+        (set @entity.status validating)
+        (agent/invoke validate-schema { target: "@entity.target" })
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield-check", size: "lg" }, { type: "typography", content: "Validating...", variant: "h3" }, { type: "spinner", size: "lg" }, { type: "stack", direction: "horizontal", gap: "md", justify: "center", children: [{ type: "badge", label: "@entity.target" }, { type: "badge", label: ["str/concat", "Attempt ", ["str/concat", "@entity.fixAttempts"], "/", ["str/concat", "@entity.maxAttempts"]] }] }] })
+      FAILED -> failed
+        (set @entity.error @payload.error)
+        (set @entity.status failed)
+        (emit FIX_FAILED)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "Fix Loop Failed", variant: "h2" }, { type: "alert", variant: "error", message: "@entity.error" }, { type: "simple-grid", cols: 2, children: [{ type: "stat-display", label: "Attempts Used", value: "@entity.fixAttempts", icon: "wrench" }, { type: "stat-display", label: "Remaining Errors", value: "@entity.errorCount", icon: "alert-triangle" }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", content: "Last Validation Errors", variant: "caption" }, { type: "typography", content: "@entity.validationErrors", variant: "body" }] }] }, { type: "button", label: "Retry", event: "RESET", variant: "primary", icon: "rotate-ccw" }] })
+    }
+    state succeeded {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.target "")
+        (set @entity.validationErrors "")
+        (set @entity.currentFix "")
+        (set @entity.fixAttempts 0)
+        (set @entity.errorCount 0)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: "AgentFixLoop", mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] })
+    }
+    state failed {
+      RESET -> idle
+        (set @entity.status idle)
+        (set @entity.target "")
+        (set @entity.validationErrors "")
+        (set @entity.currentFix "")
+        (set @entity.fixAttempts 0)
+        (set @entity.errorCount 0)
+        (set @entity.error "")
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Validation-Fix Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter the target to validate and auto-fix", variant: "body" }, { type: "form-section", entity: "AgentFixLoop", mode: "edit", submitEvent: "FIX", fields: ["target"] }] }] }] })
+    }
+    emits {
+      FIX_SUCCEEDED external { target: string }
+      FIX_FAILED external { target: string, error: string }
+    }
+    listens {
+      * FIX_SUCCEEDED -> INIT
+      * FIX_FAILED -> INIT
+    }
+  }
+  trait FixLoopStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> AgentFixLoop {
+    on INIT {
+        (fetch AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    on START {
+        (set @entity.status in_progress)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    on ADVANCE {
+        (set @entity.currentStep (+ @entity.currentStep 1))
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
+    }
+    on COMPLETE {
+        (set @entity.status completed)
+        (set @entity.currentStep @entity.totalSteps)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "Completed", variant: "success" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.totalSteps", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "alert", variant: "success", message: "All steps completed successfully." }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    on FAIL {
+        (set @entity.status failed)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "x-circle", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "Failed", variant: "destructive" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "alert", variant: "error", message: "Pipeline failed at the current step." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "stat-display", label: "Failed At Step", value: "@entity.currentStep" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
+    }
+    on RESET {
+        (set @entity.status idle)
+        (set @entity.currentStep 0)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait FixLoopErrorsBrowse = Browse.traits.BrowseItemBrowse -> AgentFixLoop {
+    on INIT {
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Validation Errors", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentFixLoop", emptyIcon: "inbox", emptyTitle: "No errors", emptyDescription: "All validations passed.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "target", label: "Target", variant: "h4", icon: "alert-triangle" }, { name: "errorCount", label: "Error Count", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", event: "INIT", label: "Create", tooltip: "Create" }] })
+    }
+  }
+  trait FixLoopValidateCall = AgentToolCall.traits.AgentToolCallModal -> AgentFixLoop {
+    on INIT {
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on INVOKE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench", size: "md" }, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentFixLoop", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentFixLoop @payload.data)
+        (render-ui modal null)
+        (emit INVOKED)
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait FixLoopFixCall = AgentToolCall.traits.AgentToolCallModal -> AgentFixLoop {
+    on INIT {
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on INVOKE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "wrench", size: "md" }, { type: "typography", content: "Invoke Tool", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentFixLoop", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["toolName", "args"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentFixLoop @payload.data)
+        (render-ui modal null)
+        (emit INVOKED)
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  trait FixLoopCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentFixLoop {
+    on INIT {
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on GENERATE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "sparkles", size: "md" }, { type: "typography", content: "AgentFixLoop", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "badge", label: "@entity.provider" }, { type: "badge", label: "@entity.model" }] }, { type: "form-section", entity: "AgentFixLoop", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["prompt"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    on SAVE {
+        (persist create AgentFixLoop @payload.data)
+        (render-ui modal null)
+        (emit GENERATED)
+        (ref AgentFixLoop)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    listens {}
+    emitsScope internal
+  }
+  page "/agentfixloops" -> AgentFixLoopCycle, FixLoopStepProgress, FixLoopErrorsBrowse, FixLoopValidateCall, FixLoopFixCall, FixLoopCompletionFlow
+}

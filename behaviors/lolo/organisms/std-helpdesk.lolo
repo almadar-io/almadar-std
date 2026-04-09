@@ -1,0 +1,224 @@
+;; app std-helpdesk
+
+orbital TicketOrbital {
+  entity Ticket [runtime] {
+    id : string!
+    subject : string
+    description : string
+    priority : string
+    status : string
+    assignee : string
+  }
+  trait TicketBrowse -> Ticket [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Ticket)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "inbox", size: "lg" }, { type: "typography", content: "Tickets", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "New Ticket", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", columns: 1, children: [{ type: "stat-display", label: "Open Tickets", value: ["array/len", "@entity"], icon: "inbox" }] }, { type: "divider" }, { type: "data-list", entity: "Ticket", emptyIcon: "inbox", emptyTitle: "No tickets filed", emptyDescription: "Your support queue is clear.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "subject", variant: "h3", icon: "inbox" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "description", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      ASSIGN external { id: string }
+    }
+    listens {
+      * TICKET_CREATED -> INIT
+      * TICKET_UPDATED -> INIT
+      * TICKET_DELETED -> INIT
+    }
+  }
+  trait TicketCreate -> Ticket [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Ticket)
+      CREATE -> open
+        (fetch Ticket)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Ticket", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Ticket @payload.data)
+        (render-ui modal null)
+        (emit TICKET_CREATED)
+    }
+    emits {
+      SAVE
+      TICKET_CREATED
+    }
+  }
+  trait TicketEdit -> Ticket [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Ticket)
+      EDIT -> open
+        (fetch Ticket { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Ticket", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Ticket", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["subject", "description", "priority", "status", "assignee"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Ticket @payload.data)
+        (render-ui modal null)
+        (emit TICKET_UPDATED)
+    }
+    emits {
+      SAVE
+      TICKET_UPDATED
+    }
+  }
+  trait TicketView -> Ticket [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Ticket)
+      VIEW -> open
+        (fetch Ticket { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.subject" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Priority" }, { type: "typography", variant: "body", content: "@entity.priority" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Assignee" }, { type: "typography", variant: "body", content: "@entity.assignee" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait TicketDelete -> Ticket [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Ticket)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Ticket { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Ticket", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Ticket @entity.pendingId)
+        (render-ui modal null)
+        (ref Ticket)
+        (emit TICKET_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Ticket)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Ticket)
+    }
+    emits {
+      CONFIRM_DELETE
+      TICKET_DELETED
+    }
+  }
+  page "/tickets" -> TicketBrowse, TicketCreate, TicketEdit, TicketView, TicketDelete
+}
+orbital ResponseOrbital {
+  entity Response [runtime] {
+    id : string!
+    ticketId : string
+    body : string
+    author : string
+    createdAt : datetime
+  }
+  trait ResponseBrowse -> Response [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Response)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Responses", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "Response", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      RESOLVE external { id: string }
+    }
+    listens {
+      * SEND -> INIT
+      * ASSIGN -> INIT
+    }
+  }
+  trait ResponseCompose -> Response [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Response)
+      COMPOSE -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "New Response", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Response", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["ticketId", "body", "author"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SEND -> closed
+        (persist create Response @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SEND
+    }
+  }
+  trait ResponseView -> Response [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Response)
+      VIEW -> open
+        (fetch Response { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.ticketId" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Ticket ID" }, { type: "typography", variant: "body", content: "@entity.ticketId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/responses" -> ResponseBrowse, ResponseCompose, ResponseView
+}
+orbital SupportMetricsOrbital {
+  entity SupportMetrics [runtime] {
+    id : string!
+    openTickets : number
+    resolvedTickets : number
+    avgResponseTime : string
+    satisfactionScore : number
+    activeAgents : number
+  }
+  trait SupportMetricsDisplay -> SupportMetrics [interaction] {
+    initial: loading
+    state loading {
+      INIT -> displaying
+        (fetch SupportMetrics)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "OpenTickets", value: ["object/get", ["array/first", "@entity"], "openTickets"] }, { type: "stat-display", label: "ResolvedTickets", value: ["object/get", ["array/first", "@entity"], "resolvedTickets"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgResponseTime"] }] }] }, { type: "stat-display", label: "SatisfactionScore", value: ["object/get", ["array/first", "@entity"], "satisfactionScore"] }, { type: "stat-display", label: "ActiveAgents", value: ["object/get", ["array/first", "@entity"], "activeAgents"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      LOADED -> displaying
+        (fetch SupportMetrics)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "OpenTickets", value: ["object/get", ["array/first", "@entity"], "openTickets"] }, { type: "stat-display", label: "ResolvedTickets", value: ["object/get", ["array/first", "@entity"], "resolvedTickets"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgResponseTime"] }] }] }, { type: "stat-display", label: "SatisfactionScore", value: ["object/get", ["array/first", "@entity"], "satisfactionScore"] }, { type: "stat-display", label: "ActiveAgents", value: ["object/get", ["array/first", "@entity"], "activeAgents"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state displaying {
+      INIT -> displaying
+        (fetch SupportMetrics)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "OpenTickets", value: ["object/get", ["array/first", "@entity"], "openTickets"] }, { type: "stat-display", label: "ResolvedTickets", value: ["object/get", ["array/first", "@entity"], "resolvedTickets"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgResponseTime"] }] }] }, { type: "stat-display", label: "SatisfactionScore", value: ["object/get", ["array/first", "@entity"], "satisfactionScore"] }, { type: "stat-display", label: "ActiveAgents", value: ["object/get", ["array/first", "@entity"], "activeAgents"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+      REFRESH -> refreshing
+        (fetch SupportMetrics)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "OpenTickets", value: ["object/get", ["array/first", "@entity"], "openTickets"] }, { type: "stat-display", label: "ResolvedTickets", value: ["object/get", ["array/first", "@entity"], "resolvedTickets"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgResponseTime"] }] }] }, { type: "stat-display", label: "SatisfactionScore", value: ["object/get", ["array/first", "@entity"], "satisfactionScore"] }, { type: "stat-display", label: "ActiveAgents", value: ["object/get", ["array/first", "@entity"], "activeAgents"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    state refreshing {
+      REFRESHED -> displaying
+        (fetch SupportMetrics)
+        (render-ui main { type: "dashboard-layout", appName: "Helpdesk", navItems: [{ label: "Tickets", href: "/tickets", icon: "inbox" }, { label: "Responses", href: "/responses", icon: "message-circle" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Support Metrics" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Support Metrics", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "OpenTickets", value: ["object/get", ["array/first", "@entity"], "openTickets"] }, { type: "stat-display", label: "ResolvedTickets", value: ["object/get", ["array/first", "@entity"], "resolvedTickets"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "AvgResponseTime" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avgResponseTime"] }] }] }, { type: "stat-display", label: "SatisfactionScore", value: ["object/get", ["array/first", "@entity"], "satisfactionScore"] }, { type: "stat-display", label: "ActiveAgents", value: ["object/get", ["array/first", "@entity"], "activeAgents"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    listens {
+      * RESOLVE -> INIT
+    }
+  }
+  page "/metrics" -> SupportMetricsDisplay
+}

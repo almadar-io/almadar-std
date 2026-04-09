@@ -1,0 +1,22 @@
+;; app std-game-hud
+
+orbital HudStateOrbital {
+  entity HudState [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait HudStateHud -> HudState [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch HudState)
+        (render-ui main { type: "game-hud", position: "top-left", size: "md", transparent: false, stats: [{ label: "Name", value: "@entity.name" }, { label: "Description", value: "@entity.description" }, { label: "Status", value: "@entity.status" }, { label: "CreatedAt", value: "@entity.createdAt" }] })
+      REFRESH -> idle
+        (fetch HudState)
+        (render-ui main { type: "game-hud", position: "top-left", size: "md", transparent: false, stats: [{ label: "Name", value: "@entity.name" }, { label: "Description", value: "@entity.description" }, { label: "Status", value: "@entity.status" }, { label: "CreatedAt", value: "@entity.createdAt" }] })
+    }
+  }
+  page "/hudstates" -> HudStateHud
+}

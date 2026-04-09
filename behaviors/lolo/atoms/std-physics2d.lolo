@@ -1,0 +1,42 @@
+;; app std-physics2d
+
+orbital PhysicsBodyOrbital {
+  entity PhysicsBody [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    x : number
+    y : number
+    vx : number
+    vy : number
+    forceX : number
+    forceY : number
+    physicsStatus : string
+  }
+  trait PhysicsBodyPhysics -> PhysicsBody [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: false, speed: 1 }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+      START -> simulating
+        (set @entity.physicsStatus simulating)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: true, speed: 1 }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Apply Force", event: "APPLY_FORCE", variant: "secondary", icon: "move" }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
+    }
+    state simulating {
+      TICK -> simulating
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: true, speed: 1 }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Apply Force", event: "APPLY_FORCE", variant: "secondary", icon: "move" }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
+      APPLY_FORCE -> simulating
+        (set @entity.forceX @payload.forceX)
+        (set @entity.forceY @payload.forceY)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: true, speed: 1 }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Apply Force", event: "APPLY_FORCE", variant: "secondary", icon: "move" }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
+      STOP -> idle
+        (set @entity.physicsStatus idle)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: false, speed: 1 }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
+      INIT -> simulating
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: true, speed: 1 }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Apply Force", event: "APPLY_FORCE", variant: "secondary", icon: "move" }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
+    }
+  }
+  page "/physicsbodys/physics" -> PhysicsBodyPhysics
+}

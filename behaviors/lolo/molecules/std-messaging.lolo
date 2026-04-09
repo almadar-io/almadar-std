@@ -1,0 +1,60 @@
+;; app std-messaging
+
+orbital ChatMessageOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Modal from "std/behaviors/std-modal"
+
+  entity ChatMessage [persistent: chatmessages] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+  }
+  trait ChatMessageBrowse = Browse.traits.BrowseItemBrowse -> ChatMessage {
+    on INIT {
+        (ref ChatMessage)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "ChatMessages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ChatMessage", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "message-circle" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "caption", format: "date" }], variant: "compact" }] })
+    }
+  }
+  trait ChatMessageCompose = Modal.traits.ModalRecordModal -> ChatMessage {
+    events {
+      OPEN: COMPOSE
+      SAVE: SEND
+    }
+    on INIT {
+        (ref ChatMessage)
+    }
+    on COMPOSE {
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "New ChatMessage", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "ChatMessage", mode: "create", submitEvent: "SEND", cancelEvent: "CLOSE", fields: ["name", "description", "status"] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on SEND {
+        (persist create ChatMessage @payload.data)
+        (render-ui modal null)
+    }
+  }
+  trait ChatMessageView = Modal.traits.ModalRecordModal -> ChatMessage {
+    events {
+      OPEN: VIEW
+    }
+    on INIT {
+        (ref ChatMessage)
+    }
+    on VIEW {
+        (fetch ChatMessage { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on SAVE {
+        (render-ui modal null)
+    }
+  }
+  page "/chatmessages" -> ChatMessageBrowse, ChatMessageCompose, ChatMessageView
+}

@@ -1,0 +1,70 @@
+;; app std-geospatial
+
+orbital LocationOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Confirmation from "std/behaviors/std-confirmation"
+  uses Modal from "std/behaviors/std-modal"
+
+  entity Location [persistent: locations] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    pendingId : string
+  }
+  trait LocationBrowse = Browse.traits.BrowseItemBrowse -> Location {
+    on INIT {
+        (ref Location)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "lg" }, { type: "typography", content: "Locations Picker", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Location", emptyIcon: "inbox", emptyTitle: "No locations found", emptyDescription: "No locations are available to select.", itemActions: [{ label: "Select Location", event: "SELECT", variant: "ghost", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "map-pin" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", event: "INIT", label: "Create", tooltip: "Create" }] })
+    }
+  }
+  trait LocationSelect = Modal.traits.ModalRecordModal -> Location {
+    events {
+      OPEN: SELECT
+      SAVE: CONFIRM_SELECT
+    }
+    on INIT {
+        (ref Location)
+    }
+    on SELECT {
+        (fetch Location { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Pending ID" }, { type: "typography", variant: "body", content: "@entity.pendingId" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Selection", event: "CONFIRM_SELECT", variant: "primary", icon: "check" }] }] })
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (notify Cancelled info)
+    }
+    on CONFIRM_SELECT {
+        (render-ui modal null)
+    }
+  }
+  trait LocationConfirmSelect = Confirmation.traits.ConfirmActionConfirmation -> Location {
+    events {
+      REQUEST: CONFIRM_SELECT
+      CONFIRM: CONFIRMED
+    }
+    on INIT {
+        (ref Location)
+    }
+    on CONFIRM_SELECT {
+        (set @entity.pendingId @payload.id)
+        (fetch Location { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Confirm Location Selection", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure you want to select this location?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Confirm", event: "CONFIRMED", variant: "danger", icon: "check" }] }] })
+    }
+    on CONFIRMED {
+        (fetch Location)
+        (render-ui modal null)
+        (ref Location)
+    }
+    on CANCEL {
+        (render-ui modal null)
+        (ref Location)
+    }
+    on CLOSE {
+        (render-ui modal null)
+        (ref Location)
+    }
+  }
+  page "/locations" -> LocationBrowse, LocationSelect, LocationConfirmSelect
+}

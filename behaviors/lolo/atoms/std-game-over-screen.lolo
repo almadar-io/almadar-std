@@ -1,0 +1,27 @@
+;; app std-game-over-screen
+
+orbital GameOverStateOrbital {
+  entity GameOverState [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    currentScore : number
+    highScore : number
+  }
+  trait GameOverStateGameOver -> GameOverState [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch GameOverState)
+        (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
+      NAVIGATE -> idle
+      RESTART -> idle
+      RETRY -> idle
+        (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
+      QUIT -> idle
+        (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
+    }
+  }
+  page "/gameoverstates" -> GameOverStateGameOver
+}

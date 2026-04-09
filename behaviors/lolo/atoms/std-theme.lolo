@@ -1,0 +1,26 @@
+;; app std-theme
+
+orbital ThemePreferenceOrbital {
+  entity ThemePreference [runtime] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    mode : string
+    colorScheme : string
+  }
+  trait ThemePreferenceTheme -> ThemePreference [interaction] {
+    state idle {
+      INIT -> idle
+        (fetch ThemePreference)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "palette", size: "lg" }, { type: "typography", content: "Theme Settings", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Quick Toggle" }, { type: "typography", variant: "caption", color: "muted", content: "Switch between light and dark mode" }, { type: "theme-toggle" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Theme Palette" }, { type: "typography", variant: "caption", color: "muted", content: "Choose from available color schemes" }, { type: "simple-grid", columns: 3, children: [{ type: "button", label: "Almadar", event: "SELECT", variant: "secondary" }, { type: "button", label: "Ocean", event: "SELECT", variant: "secondary" }, { type: "button", label: "Forest", event: "SELECT", variant: "secondary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current mode:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "mode"] }, { type: "typography", variant: "caption", content: "Scheme:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "colorScheme"] }] }] })
+      TOGGLE -> idle
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "palette", size: "lg" }, { type: "typography", content: "Theme Settings", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Quick Toggle" }, { type: "typography", variant: "caption", color: "muted", content: "Switch between light and dark mode" }, { type: "theme-toggle" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Theme Palette" }, { type: "typography", variant: "caption", color: "muted", content: "Choose from available color schemes" }, { type: "simple-grid", columns: 3, children: [{ type: "button", label: "Almadar", event: "SELECT", variant: "secondary" }, { type: "button", label: "Ocean", event: "SELECT", variant: "secondary" }, { type: "button", label: "Forest", event: "SELECT", variant: "secondary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current mode:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "mode"] }, { type: "typography", variant: "caption", content: "Scheme:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "colorScheme"] }] }] })
+      SELECT -> idle
+        (set @entity.colorScheme @payload.theme)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "palette", size: "lg" }, { type: "typography", content: "Theme Settings", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Quick Toggle" }, { type: "typography", variant: "caption", color: "muted", content: "Switch between light and dark mode" }, { type: "theme-toggle" }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "h4", content: "Theme Palette" }, { type: "typography", variant: "caption", color: "muted", content: "Choose from available color schemes" }, { type: "simple-grid", columns: 3, children: [{ type: "button", label: "Almadar", event: "SELECT", variant: "secondary" }, { type: "button", label: "Ocean", event: "SELECT", variant: "secondary" }, { type: "button", label: "Forest", event: "SELECT", variant: "secondary" }] }] }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current mode:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "mode"] }, { type: "typography", variant: "caption", content: "Scheme:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "colorScheme"] }] }] })
+    }
+  }
+  page "/themepreferences/theme" -> ThemePreferenceTheme
+}

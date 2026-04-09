@@ -1,0 +1,93 @@
+;; app std-agent-classifier
+
+orbital AgentClassifierOrbital {
+  entity AgentClassifier [persistent: agentclassifiers] {
+    id : string
+    name : string
+    description : string
+    status : string
+    createdAt : string
+    input : string
+    category : string
+    confidence : number
+    model : string
+    message : string
+    notificationType : string
+  }
+  trait AgentClassifierModal -> AgentClassifier [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref AgentClassifier)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentClassifier", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+      CLASSIFY -> open
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag", size: "md" }, { type: "typography", content: "AgentClassifier", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Categories:" }, { type: "badge", label: "positive", variant: "secondary" }, { type: "badge", label: "negative", variant: "secondary" }, { type: "badge", label: "neutral", variant: "secondary" }] }, { type: "form-section", entity: "AgentClassifier", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["input"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+        (ref AgentClassifier)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentClassifier", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+      SAVE -> closed
+        (persist create AgentClassifier @payload.data)
+        (render-ui modal null)
+        (emit CLASSIFIED)
+        (ref AgentClassifier)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentClassifier", variant: "h2" }] }, { type: "button", label: "Open", event: "CLASSIFY", variant: "primary", icon: "tag" }] }, { type: "divider" }, { type: "empty-state", icon: "tag", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
+    }
+    emits {
+      SAVE
+      CLASSIFIED
+    }
+  }
+  trait AgentClassifierNotification -> AgentClassifier [interaction] {
+    initial: hidden
+    state hidden {
+      INIT -> hidden
+        (fetch AgentClassifier)
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentClassifier Result", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
+    }
+    state visible {
+      SHOW -> visible
+        (set @entity.message @payload.message)
+        (set @entity.notificationType @payload.notificationType)
+        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "tag", size: "lg" }, { type: "typography", content: "AgentClassifier Result", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
+      HIDE -> hidden
+        (set @entity.message "")
+    }
+  }
+  trait AgentClassifierAgent -> AgentClassifier [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (fetch AgentClassifier)
+        (render-ui main { type: "empty-state", icon: "tag", title: "Classifier", description: "Classifier is ready" })
+      DO_CLASSIFY -> classifying
+        (agent/generate (str/concat "Classify the following text into one of these categories: " "positive, negative, neutral" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
+      CLASSIFIED -> classifying
+        (agent/generate (str/concat "Classify the following text into one of these categories: " "positive, negative, neutral" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
+    }
+    state classifying {
+      DO_CLASSIFY -> classified
+        (set @entity.category @payload.data.input)
+        (emit SHOW)
+    }
+    state classified {
+      RESET -> idle
+        (set @entity.input "")
+        (set @entity.category "")
+        (set @entity.confidence 0)
+    }
+    emits {
+      SHOW internal { category: string, confidence: number }
+    }
+    listens {
+      * CLASSIFIED -> CLASSIFIED
+    }
+  }
+  page "/agentclassifiers" -> AgentClassifierModal, AgentClassifierNotification, AgentClassifierAgent
+}

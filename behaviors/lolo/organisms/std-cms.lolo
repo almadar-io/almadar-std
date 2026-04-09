@@ -1,0 +1,306 @@
+;; app std-cms
+
+orbital ArticleOrbital {
+  entity Article [persistent: articles] {
+    id : string!
+    title : string!
+    slug : string!
+    content : string
+    author : string
+    status : string
+    publishedAt : datetime
+  }
+  trait ArticleBrowse -> Article [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Article)
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "Articles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Article", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Article", emptyIcon: "inbox", emptyTitle: "No articles yet", emptyDescription: "Write your first article.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "status", variant: "badge" }, { name: "author", variant: "body" }, { name: "slug", variant: "caption" }, { name: "publishedAt", label: "Published", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
+    }
+    emits {
+      PUBLISH external { id: string }
+      CATEGORIZE external { id: string }
+    }
+    listens {
+      * ARTICLE_CREATED -> INIT
+      * ARTICLE_UPDATED -> INIT
+      * ARTICLE_DELETED -> INIT
+    }
+  }
+  trait ArticleCreate -> Article [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Article)
+      CREATE -> open
+        (fetch Article)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Article", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Article", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "slug", "content", "author", "status", "publishedAt"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Article @payload.data)
+        (render-ui modal null)
+        (emit ARTICLE_CREATED)
+    }
+    emits {
+      SAVE
+      ARTICLE_CREATED
+    }
+  }
+  trait ArticleEdit -> Article [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Article)
+      EDIT -> open
+        (fetch Article { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Article", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Article", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "slug", "content", "author", "status", "publishedAt"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Article @payload.data)
+        (render-ui modal null)
+        (emit ARTICLE_UPDATED)
+    }
+    emits {
+      SAVE
+      ARTICLE_UPDATED
+    }
+  }
+  trait ArticleView -> Article [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Article)
+      VIEW -> open
+        (fetch Article { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Slug" }, { type: "typography", variant: "body", content: "@entity.slug" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Published At" }, { type: "typography", variant: "body", content: "@entity.publishedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait ArticleDelete -> Article [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Article)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Article { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Article", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Article @entity.pendingId)
+        (render-ui modal null)
+        (ref Article)
+        (emit ARTICLE_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Article)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Article)
+    }
+    emits {
+      CONFIRM_DELETE
+      ARTICLE_DELETED
+    }
+  }
+  page "/articles" -> ArticleBrowse, ArticleCreate, ArticleEdit, ArticleView, ArticleDelete
+}
+orbital MediaAssetOrbital {
+  entity MediaAsset [persistent: mediaassets] {
+    id : string!
+    fileName : string!
+    fileType : string!
+    fileSize : number
+    url : string
+    altText : string
+    uploadedAt : datetime
+  }
+  trait MediaAssetBrowse -> MediaAsset [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref MediaAsset)
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image", size: "lg" }, { type: "typography", content: "Media Library", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create MediaAsset", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "MediaAsset", emptyIcon: "inbox", emptyTitle: "No media assets", emptyDescription: "Upload media to build your library.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "fileName", label: "File", variant: "h3", icon: "image" }, { name: "fileType", label: "Type", variant: "badge" }, { name: "fileSize", label: "Size", variant: "body", format: "number" }, { name: "altText", label: "Alt Text", variant: "caption" }], cols: 3, gap: "md" }] }] })
+    }
+    listens {
+      * SAVE -> INIT
+      * PUBLISH -> INIT
+    }
+  }
+  trait MediaAssetCreate -> MediaAsset [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref MediaAsset)
+      CREATE -> open
+        (fetch MediaAsset)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New MediaAsset", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "MediaAsset", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["fileName", "fileType", "fileSize", "url", "altText", "uploadedAt"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create MediaAsset @payload.data)
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait MediaAssetView -> MediaAsset [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref MediaAsset)
+      VIEW -> open
+        (fetch MediaAsset { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.fileName" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Name" }, { type: "typography", variant: "body", content: "@entity.fileName" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Type" }, { type: "typography", variant: "body", content: "@entity.fileType" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "File Size" }, { type: "typography", variant: "body", content: "@entity.fileSize" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Url" }, { type: "typography", variant: "body", content: "@entity.url" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Alt Text" }, { type: "typography", variant: "body", content: "@entity.altText" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Uploaded At" }, { type: "typography", variant: "body", content: "@entity.uploadedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  page "/media" -> MediaAssetBrowse, MediaAssetCreate, MediaAssetView
+}
+orbital CategoryOrbital {
+  entity Category [persistent: categorys] {
+    id : string!
+    name : string!
+    slug : string!
+    description : string
+    parentCategory : string
+    articleCount : number
+  }
+  trait CategoryBrowse -> Category [interaction] {
+    state browsing {
+      INIT -> browsing
+        (ref Category)
+        (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "folder", size: "lg" }, { type: "typography", content: "Categories", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Category", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Category", emptyIcon: "inbox", emptyTitle: "No categories yet", emptyDescription: "Create categories to organize your content.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "folder" }, { name: "articleCount", label: "Articles", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "slug", variant: "caption" }], variant: "card", gap: "sm" }] }] })
+    }
+    listens {
+      * CATEGORY_CREATED -> INIT
+      * CATEGORY_UPDATED -> INIT
+      * CATEGORY_DELETED -> INIT
+      * CATEGORIZE -> INIT
+    }
+  }
+  trait CategoryCreate -> Category [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Category)
+      CREATE -> open
+        (fetch Category)
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Category", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Category", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "slug", "description", "parentCategory", "articleCount"] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist create Category @payload.data)
+        (render-ui modal null)
+        (emit CATEGORY_CREATED)
+    }
+    emits {
+      SAVE
+      CATEGORY_CREATED
+    }
+  }
+  trait CategoryEdit -> Category [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Category)
+      EDIT -> open
+        (fetch Category { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Category", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Category", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "slug", "description", "parentCategory", "articleCount"], entityId: "@entity.id" }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (persist update Category @payload.data)
+        (render-ui modal null)
+        (emit CATEGORY_UPDATED)
+    }
+    emits {
+      SAVE
+      CATEGORY_UPDATED
+    }
+  }
+  trait CategoryView -> Category [interaction] {
+    initial: closed
+    state closed {
+      INIT -> closed
+        (ref Category)
+      VIEW -> open
+        (fetch Category { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Slug" }, { type: "typography", variant: "body", content: "@entity.slug" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Parent Category" }, { type: "typography", variant: "body", content: "@entity.parentCategory" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Article Count" }, { type: "typography", variant: "body", content: "@entity.articleCount" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
+    }
+    state open {
+      CLOSE -> closed
+        (render-ui modal null)
+        (notify Cancelled info)
+      SAVE -> closed
+        (render-ui modal null)
+    }
+    emits {
+      SAVE
+    }
+  }
+  trait CategoryDelete -> Category [interaction] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (ref Category)
+      DELETE -> confirming
+        (set @entity.pendingId @payload.id)
+        (fetch Category { id: "@payload.id" })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Category", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
+    }
+    state confirming {
+      CONFIRM_DELETE -> idle
+        (persist delete Category @entity.pendingId)
+        (render-ui modal null)
+        (ref Category)
+        (emit CATEGORY_DELETED)
+      CANCEL -> idle
+        (render-ui modal null)
+        (ref Category)
+      CLOSE -> idle
+        (render-ui modal null)
+        (ref Category)
+    }
+    emits {
+      CONFIRM_DELETE
+      CATEGORY_DELETED
+    }
+  }
+  page "/categories" -> CategoryBrowse, CategoryCreate, CategoryEdit, CategoryView, CategoryDelete
+}
