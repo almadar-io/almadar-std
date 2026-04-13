@@ -191,7 +191,7 @@ function planningView(): unknown {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
           { type: 'badge', label: ['str/concat', 'Category: ', '@entity.category'] },
-          { type: 'badge', label: ['str/concat', ['str/concat', '@entity.memoryCount'], ' memories loaded'] },
+          { type: 'badge', label: ['str/concat', '@entity.memoryCount', ' memories loaded'] },
         ],
       },
     ],
@@ -220,7 +220,7 @@ function readyView(entityName: string): unknown {
         type: 'simple-grid', columns: 3,
         children: [
           { type: 'stat-display', label: 'Category', value: `@entity.category`, icon: 'tag' },
-          { type: 'stat-display', label: 'Confidence', value: ['str/concat', ['str/concat', '@entity.confidence'], '%'], icon: 'target' },
+          { type: 'stat-display', label: 'Confidence', value: ['str/concat', '@entity.confidence', '%'], icon: 'target' },
           { type: 'stat-display', label: 'Memories Used', value: `@entity.memoryCount`, icon: 'brain' },
         ],
       },

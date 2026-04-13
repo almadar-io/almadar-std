@@ -224,7 +224,9 @@ export function stdGeospatial(params: StdGeospatialParams): OrbitalSchema {
   }));
 
   // 2. Shared entity
-  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
+  // pendingId needed by the confirmation trait's REQUEST → CONFIRM flow
+  const entityFields = fields.some(f => f.name === 'pendingId') ? fields : [...fields, { name: 'pendingId', type: 'string' as const, default: '' }];
+  const entity = makeEntity({ name: entityName, fields: entityFields, persistence: c.persistence, collection: c.collection });
 
   // 3. Page references all traits
   const page: Page = {

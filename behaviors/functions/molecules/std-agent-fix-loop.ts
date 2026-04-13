@@ -166,7 +166,7 @@ function validatingView(): unknown {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
           { type: 'badge', label: `@entity.target` },
-          { type: 'badge', label: ['str/concat', 'Attempt ', ['str/concat', '@entity.fixAttempts'], '/', ['str/concat', '@entity.maxAttempts']] },
+          { type: 'badge', label: ['str/concat', 'Attempt ', '@entity.fixAttempts', '/', '@entity.maxAttempts'] },
         ],
       },
     ],
@@ -187,7 +187,7 @@ function fixingView(): unknown {
               { type: 'typography', content: 'Generating fix...', variant: 'h2' },
             ],
           },
-          { type: 'badge', label: ['str/concat', 'Attempt ', ['str/concat', '@entity.fixAttempts']] },
+          { type: 'badge', label: ['str/concat', 'Attempt ', '@entity.fixAttempts'] },
         ],
       },
       { type: 'divider' },

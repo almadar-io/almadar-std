@@ -183,8 +183,8 @@ function generatingView(): unknown {
       {
         type: 'stack', direction: 'horizontal', gap: 'md', justify: 'center',
         children: [
-          { type: 'badge', label: ['str/concat', ['str/concat', '@entity.memoryHits'], ' memories'] },
-          { type: 'badge', label: ['str/concat', ['str/concat', '@entity.searchHits'], ' code hits'] },
+          { type: 'badge', label: ['str/concat', '@entity.memoryHits', ' memories'] },
+          { type: 'badge', label: ['str/concat', '@entity.searchHits', ' code hits'] },
         ],
       },
     ],

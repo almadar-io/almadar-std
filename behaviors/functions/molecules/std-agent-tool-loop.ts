@@ -188,7 +188,7 @@ function executingView(): unknown {
               { type: 'typography', content: 'Executing Tool', variant: 'h2' },
             ],
           },
-          { type: 'badge', label: ['str/concat', 'Iteration ', ['str/concat', '@entity.iterations'], '/', ['str/concat', '@entity.maxIterations']] },
+          { type: 'badge', label: ['str/concat', 'Iteration ', '@entity.iterations', '/', '@entity.maxIterations'] },
         ],
       },
       { type: 'divider' },
@@ -224,7 +224,7 @@ function checkingView(): unknown {
       { type: 'icon', name: 'eye', size: 'lg' },
       { type: 'typography', content: 'Checking result...', variant: 'h3' },
       { type: 'spinner', size: 'lg' },
-      { type: 'badge', label: ['str/concat', 'Iteration ', ['str/concat', '@entity.iterations']] },
+      { type: 'badge', label: ['str/concat', 'Iteration ', '@entity.iterations'] },
     ],
   };
 }

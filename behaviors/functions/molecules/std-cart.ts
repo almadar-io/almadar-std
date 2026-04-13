@@ -279,7 +279,9 @@ export function stdCart(params: StdCartParams): OrbitalSchema {
     confirmEffects: [['persist', 'delete', entityName, '@entity.pendingId']],
   }));
 
-  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection });
+  // pendingId needed by the confirmation trait's REQUEST → CONFIRM flow
+  const entityFields = fields.some(f => f.name === 'pendingId') ? fields : [...fields, { name: 'pendingId', type: 'string' as const, default: '' }];
+  const entity = makeEntity({ name: entityName, fields: entityFields, persistence: c.persistence, collection: c.collection });
 
   const page: Page = {
     name: c.pageName, path: c.pagePath,

@@ -256,7 +256,9 @@ export function stdInventory(params: StdInventoryParams): OrbitalSchema {
     { id: 'item-2', name: 'Iron Sword', description: 'A sturdy blade', status: 'active', pendingId: '' },
     { id: 'item-3', name: 'Wooden Shield', description: 'Basic protection', status: 'active', pendingId: '' },
   ];
-  const entity = makeEntity({ name: entityName, fields, persistence: c.persistence, collection: c.collection, instances });
+  // pendingId needed by the confirmation trait's REQUEST → CONFIRM flow
+  const entityFields = fields.some(f => f.name === 'pendingId') ? fields : [...fields, { name: 'pendingId', type: 'string' as const, default: '' }];
+  const entity = makeEntity({ name: entityName, fields: entityFields, persistence: c.persistence, collection: c.collection, instances });
 
   // 3. Page references all traits
   const page: Page = {

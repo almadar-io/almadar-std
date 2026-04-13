@@ -327,7 +327,7 @@ function buildTrait(c: LearnerConfig): Trait {
               'Outcome: ', '@entity.outcome', '\n',
               'Category: ', '@entity.category', '\n',
               'Result: ', ['if', '@entity.isSuccess', 'success', 'failure'], '\n',
-              'Consecutive failures: ', ['str/concat', '@entity.consecutiveFailures'], '\n\n',
+              'Consecutive failures: ', '@entity.consecutiveFailures', '\n\n',
               'Analyze the impact of this outcome. What should be learned? Keep it to 1-2 sentences.',
             ]],
             ['render-ui', 'main', analyzingView()],
