@@ -29,8 +29,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, extractTrait, makeSchema, } from '@almadar/core/builders';
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
 import { humanizeLabel, SYSTEM_FIELDS } from '../utils.js';
@@ -140,7 +140,7 @@ export function stdDetailPage(params: StdDetailParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdDetail(params: StdDetailParams): OrbitalDefinition {
+export function stdDetail(params: StdDetailParams): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields, formFields, detailFields } = c;
 
@@ -229,10 +229,10 @@ export function stdDetail(params: StdDetailParams): OrbitalDefinition {
     traits: [{ ref: browseTrait.name }, { ref: createTrait.name }, { ref: viewTrait.name }],
   } as Page;
 
-  return {
+  return makeSchema(`${entityName}Orbital`, {
     name: `${entityName}Orbital`,
     entity,
     traits: [browseTrait, createTrait, viewTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

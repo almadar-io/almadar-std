@@ -31,8 +31,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, extractTrait, makeSchema, } from '@almadar/core/builders';
 import { stdScoreBoard } from '../atoms/std-score-board.js';
 
 // ============================================================================
@@ -349,7 +349,7 @@ export function stdPuzzleGamePage(params: StdPuzzleGameParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdPuzzleGame(params: StdPuzzleGameParams): OrbitalDefinition {
+export function stdPuzzleGame(params: StdPuzzleGameParams): OrbitalSchema {
   const c = resolve(params);
 
   const flowTrait = buildPuzzleFlowTrait(c);
@@ -357,10 +357,10 @@ export function stdPuzzleGame(params: StdPuzzleGameParams): OrbitalDefinition {
   const entity = buildEntity(c);
   const page = buildPage(c);
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits: [flowTrait, scoreTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

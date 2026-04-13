@@ -17,8 +17,8 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -260,7 +260,7 @@ export function stdAutoregressivePage(params: StdAutoregressiveParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdAutoregressive(params: StdAutoregressiveParams): OrbitalDefinition {
+export function stdAutoregressive(params: StdAutoregressiveParams): OrbitalSchema {
   const c = resolve(params);
 
   const entity = makeEntity({ name: c.entityName, fields: c.fields, persistence: 'runtime' });
@@ -272,10 +272,10 @@ export function stdAutoregressive(params: StdAutoregressiveParams): OrbitalDefin
     traits: [{ ref: trait.name }],
   } as Page;
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits: [trait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

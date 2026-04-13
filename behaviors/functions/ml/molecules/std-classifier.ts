@@ -15,8 +15,8 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 import { stdForward } from '../atoms/std-forward.js';
 
 // ============================================================================
@@ -254,7 +254,7 @@ export function stdClassifierPage(params: StdClassifierParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdClassifier(params: StdClassifierParams): OrbitalDefinition {
+export function stdClassifier(params: StdClassifierParams): OrbitalSchema {
   const c = resolve(params);
 
   const entity = makeEntity({ name: c.entityName, fields: c.fields, persistence: 'runtime' });
@@ -265,10 +265,10 @@ export function stdClassifier(params: StdClassifierParams): OrbitalDefinition {
     traits: [{ ref: trait.name }],
   } as Page;
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits: [trait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

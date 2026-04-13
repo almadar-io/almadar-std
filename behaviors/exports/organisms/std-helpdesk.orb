@@ -1,7 +1,6 @@
 {
-  "name": "std-helpdesk",
+  "name": "Helpdesk",
   "version": "1.0.0",
-  "description": "Helpdesk organism. Composes molecules via compose: - stdList(Ticket): CRUD list of support tickets - stdMessaging(Response): messaging thread for ticket responses - stdDisplay(SupportMetrics): read-only metrics dashboard",
   "orbitals": [
     {
       "name": "TicketOrbital",
@@ -463,6 +462,10 @@
                   [
                     "emit",
                     "TICKET_CREATED"
+                  ],
+                  [
+                    "notify",
+                    "Ticket created successfully"
                   ]
                 ]
               }
@@ -631,6 +634,10 @@
                   [
                     "emit",
                     "TICKET_UPDATED"
+                  ],
+                  [
+                    "notify",
+                    "Ticket updated successfully"
                   ]
                 ]
               }
@@ -1050,6 +1057,10 @@
                   [
                     "emit",
                     "TICKET_DELETED"
+                  ],
+                  [
+                    "notify",
+                    "Ticket deleted successfully"
                   ]
                 ]
               },
@@ -1474,6 +1485,10 @@
                     "render-ui",
                     "modal",
                     null
+                  ],
+                  [
+                    "notify",
+                    "Response created successfully"
                   ]
                 ]
               }
@@ -3303,5 +3318,6 @@
         }
       ]
     }
-  ]
+  ],
+  "description": "Helpdesk organism. Composes molecules via compose: - stdList(Ticket): CRUD list of support tickets - stdMessaging(Response): messaging thread for ticket responses - stdDisplay(SupportMetrics): read-only metrics dashboard Pages: /tickets (initial), /responses, /metrics Connections: ASSIGN (tickets->responses), RESOLVE (responses->metrics) (2026-04-08). The canonical source for std behaviors is now the registry `.orb` file at `packages/almadar-std/behaviors/registry/<level>/<name>.orb`, which is generated from this TS source by `tools/almadar-behavior-ts-to-orb/` and consumed by the compiler's embedded loader. Consumers should import behaviors via `.lolo`/`.orb` `uses` declarations and reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying overrides at the call site (`linkedEntity`, `name`, `events`, `effects`, `listens`, `emitsScope`). The TS `*Params` interface and the exported factory functions remain ONLY as the authoring path for the converter; they are NOT a stable public API and may change without notice. See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and `docs/LOLO_Gaps.md` for the migration plan."
 }

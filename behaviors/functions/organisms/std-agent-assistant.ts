@@ -40,7 +40,7 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalSchema, Trait, EntityField } from '@almadar/core/types';
+import type { OrbitalSchema, OrbitalDefinition, Trait, EntityField } from '@almadar/core/types';
 import { makeEntity, makeOrbital, makePage, ensureIdField, extractTrait, compose } from '@almadar/core/builders';
 import type { ComposePage, ComposeConnection } from '@almadar/core/builders';
 import { stdAgentConversation } from '../atoms/std-agent-conversation.js';
@@ -95,7 +95,8 @@ export function stdAgentAssistant(params: StdAgentAssistantParams = {}): Orbital
     isInitial: true,
   });
   // Rename trait for cross-orbital wiring
-  const convTrait = (conversationOrbital.traits as Trait[])[0];
+  const convDef = conversationOrbital.orbitals[0] as OrbitalDefinition;
+  const convTrait = (convDef.traits as Trait[])[0];
   convTrait.name = 'AssistantConversation';
   convTrait.emits = [
     ...(convTrait.emits ?? []),
@@ -120,7 +121,8 @@ export function stdAgentAssistant(params: StdAgentAssistantParams = {}): Orbital
     pageName: 'ContextPage',
     pagePath: '/context',
   });
-  const ctxTrait = (contextOrbital.traits as Trait[])[0];
+  const ctxDef = contextOrbital.orbitals[0] as OrbitalDefinition;
+  const ctxTrait = (ctxDef.traits as Trait[])[0];
   ctxTrait.name = 'AssistantContextMonitor';
 
   // 4. Provider management from atom
@@ -131,7 +133,8 @@ export function stdAgentAssistant(params: StdAgentAssistantParams = {}): Orbital
     pageName: 'SettingsPage',
     pagePath: '/settings',
   });
-  const provTrait = (providerOrbital.traits as Trait[])[0];
+  const provDef = providerOrbital.orbitals[0] as OrbitalDefinition;
+  const provTrait = (provDef.traits as Trait[])[0];
   provTrait.name = 'ProviderManager';
   provTrait.emits = [
     ...(provTrait.emits ?? []),

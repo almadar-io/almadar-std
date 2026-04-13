@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -287,7 +287,7 @@ export function stdServiceCustomQueryPage(params: StdServiceCustomQueryParams): 
 // Composed Orbital
 // ============================================================================
 
-export function stdServiceCustomQuery(params: StdServiceCustomQueryParams): OrbitalDefinition {
+export function stdServiceCustomQuery(params: StdServiceCustomQueryParams): OrbitalSchema {
   const c = resolve(params);
   const orbital = makeOrbital(
     `${c.entityName}Orbital`,
@@ -296,7 +296,7 @@ export function stdServiceCustomQuery(params: StdServiceCustomQueryParams): Orbi
     [buildPage(c)],
   );
   // Attach custom service declaration with query-string API key auth
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     ...orbital,
     services: [{
       name: 'custom-query-api',
@@ -309,5 +309,5 @@ export function stdServiceCustomQuery(params: StdServiceCustomQueryParams): Orbi
         secretEnv: c.secretEnvVar,
       },
     }],
-  };
+  } as OrbitalDefinition);
 }

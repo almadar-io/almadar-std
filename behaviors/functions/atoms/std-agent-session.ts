@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdBrowse } from './std-browse.js';
 import { stdModal } from './std-modal.js';
 
@@ -258,7 +258,7 @@ export function stdAgentSessionPage(params: StdAgentSessionParams = {}): Page {
   } as Page;
 }
 
-export function stdAgentSession(params: StdAgentSessionParams = {}): OrbitalDefinition {
+export function stdAgentSession(params: StdAgentSessionParams = {}): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields } = c;
 
@@ -329,5 +329,5 @@ export function stdAgentSession(params: StdAgentSessionParams = {}): OrbitalDefi
     ],
   } as Page;
 
-  return makeOrbital(`${c.entityName}Orbital`, entity, [browseTrait, labelTrait, agentTrait], [page]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, entity, [browseTrait, labelTrait, agentTrait], [page]));
 }

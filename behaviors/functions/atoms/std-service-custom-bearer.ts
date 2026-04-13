@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -282,7 +282,7 @@ export function stdServiceCustomBearerPage(params: StdServiceCustomBearerParams)
 // Composed Orbital
 // ============================================================================
 
-export function stdServiceCustomBearer(params: StdServiceCustomBearerParams): OrbitalDefinition {
+export function stdServiceCustomBearer(params: StdServiceCustomBearerParams): OrbitalSchema {
   const c = resolve(params);
   const orbital = makeOrbital(
     `${c.entityName}Orbital`,
@@ -291,7 +291,7 @@ export function stdServiceCustomBearer(params: StdServiceCustomBearerParams): Or
     [buildPage(c)],
   );
   // Attach custom service declaration with bearer auth
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     ...orbital,
     services: [{
       name: 'custom-bearer-api',
@@ -302,5 +302,5 @@ export function stdServiceCustomBearer(params: StdServiceCustomBearerParams): Or
         secretEnv: c.secretEnvVar,
       },
     }],
-  };
+  } as OrbitalDefinition);
 }

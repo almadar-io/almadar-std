@@ -1,20 +1,9 @@
 {
-  "name": "std-agent-builder",
+  "name": "Schema Builder",
   "version": "1.0.0",
-  "description": "Schema builder agent organism. Full build cycle that plans, generates, validates, and fixes .orb programs. Composes planner + tool-loop + fix-loop molecules with session management and tabbed views.",
   "orbitals": [
     {
       "name": "BuildPlanOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-agent-step-progress",
-          "as": "AgentStepProgress"
-        },
-        {
-          "from": "std/behaviors/std-tabs",
-          "as": "Tabs"
-        }
-      ],
       "entity": {
         "name": "BuildPlan",
         "persistence": "runtime",
@@ -1726,6 +1715,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildPlan created successfully"
                   ]
                 ]
               }
@@ -2126,6 +2119,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildPlan created successfully"
                   ]
                 ]
               }
@@ -5477,6 +5474,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildLoop created successfully"
                   ]
                 ]
               }
@@ -5863,6 +5864,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildLoop created successfully"
                   ]
                 ]
               }
@@ -10971,6 +10976,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildFix created successfully"
                   ]
                 ]
               }
@@ -11357,6 +11366,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildFix created successfully"
                   ]
                 ]
               }
@@ -11757,6 +11770,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "BuildFix created successfully"
                   ]
                 ]
               }
@@ -12192,6 +12209,10 @@
                   [
                     "emit",
                     "LABELED"
+                  ],
+                  [
+                    "notify",
+                    "BuildSession updated successfully"
                   ]
                 ]
               }
@@ -12379,6 +12400,10 @@
                   [
                     "emit",
                     "FORKED"
+                  ],
+                  [
+                    "notify",
+                    "BuildSession created successfully"
                   ]
                 ]
               },
@@ -12412,6 +12437,10 @@
                   [
                     "emit",
                     "FORKED"
+                  ],
+                  [
+                    "notify",
+                    "BuildSession created successfully"
                   ]
                 ]
               },
@@ -12637,234 +12666,146 @@
       },
       "traits": [
         {
-          "ref": "Tabs.traits.TabContentTabs",
           "name": "BuilderTabs",
           "linkedEntity": "BuildTask",
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "BuildTask"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
-                  ],
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "hammer",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Schema Builder",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "tabs",
-                          "tabs": [
-                            {
-                              "label": "Plan",
-                              "value": "plan"
-                            },
-                            {
-                              "label": "Build",
-                              "value": "build"
-                            },
-                            {
-                              "label": "Validate",
-                              "value": "validate"
-                            },
-                            {
-                              "label": "Fix",
-                              "value": "fix"
-                            }
-                          ],
-                          "defaultActiveTab": "plan",
-                          "onTabChange": "SELECT_TAB"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "BuildTask",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No buildtasks yet",
-                          "emptyDescription": "Add buildtasks to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.prompt"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.plan"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
             ],
-            "SELECT_TAB": [
-              [
-                "fetch",
-                "BuildTask"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_TAB",
+                "name": "Select Tab",
+                "payload": [
+                  {
+                    "name": "tab",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BuildTask"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "hammer",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Schema Builder",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "tabs",
-                          "tabs": [
-                            {
-                              "label": "Plan",
-                              "value": "plan"
-                            },
-                            {
-                              "label": "Build",
-                              "value": "build"
-                            },
-                            {
-                              "label": "Validate",
-                              "value": "validate"
-                            },
-                            {
-                              "label": "Fix",
-                              "value": "fix"
-                            }
-                          ],
-                          "defaultActiveTab": "plan",
-                          "activeTab": "@payload.tab",
-                          "onTabChange": "SELECT_TAB"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "BuildTask",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No buildtasks yet",
-                          "emptyDescription": "Add buildtasks to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
                               "type": "stack",
-                              "direction": "vertical",
+                              "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.prompt"
+                                  "type": "icon",
+                                  "name": "hammer",
+                                  "size": "lg"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.plan"
+                                  "content": "Schema Builder",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Plan",
+                                  "value": "plan"
+                                },
+                                {
+                                  "label": "Build",
+                                  "value": "build"
+                                },
+                                {
+                                  "label": "Validate",
+                                  "value": "validate"
+                                },
+                                {
+                                  "label": "Fix",
+                                  "value": "fix"
+                                }
+                              ],
+                              "defaultActiveTab": "plan",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "BuildTask",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No buildtasks yet",
+                              "emptyDescription": "Add buildtasks to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.prompt"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.plan"
+                                    }
+                                  ]
                                 }
                               ]
                             }
@@ -12873,8 +12814,131 @@
                       ]
                     }
                   ]
-                }
-              ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_TAB",
+                "effects": [
+                  [
+                    "fetch",
+                    "BuildTask"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "hammer",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "Schema Builder",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Plan",
+                                  "value": "plan"
+                                },
+                                {
+                                  "label": "Build",
+                                  "value": "build"
+                                },
+                                {
+                                  "label": "Validate",
+                                  "value": "validate"
+                                },
+                                {
+                                  "label": "Fix",
+                                  "value": "fix"
+                                }
+                              ],
+                              "defaultActiveTab": "plan",
+                              "activeTab": "@payload.tab",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "BuildTask",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No buildtasks yet",
+                              "emptyDescription": "Add buildtasks to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.prompt"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.plan"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
             ]
           }
         }
@@ -12926,366 +12990,593 @@
       },
       "traits": [
         {
-          "ref": "AgentStepProgress.traits.AgentStepProgressProgress",
           "name": "BuildStepProgress",
           "linkedEntity": "BuildProgress",
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "BuildProgress"
-              ],
-              [
-                "render-ui",
-                "main",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "ADVANCE",
+              "scope": "external",
+              "payload": [
                 {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
-                  ],
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "list-ordered",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "BuildProgress",
-                              "variant": "h2"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Idle",
-                              "variant": "default"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Generate"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Validate"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Fix"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Start",
-                          "event": "START",
-                          "variant": "primary",
-                          "icon": "play"
-                        }
-                      ]
-                    }
-                  ]
+                  "name": "step",
+                  "type": "number"
                 }
               ]
-            ],
-            "START": [
-              [
-                "set",
-                "@entity.status",
-                "in_progress"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                0
-              ],
-              [
-                "render-ui",
-                "main",
+            },
+            {
+              "event": "COMPLETE",
+              "scope": "external",
+              "payload": [
                 {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
+                  "name": "totalSteps",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "FAIL",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "step",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "ADVANCE",
+              "triggers": "ADVANCE",
+              "scope": "external"
+            },
+            {
+              "event": "COMPLETE",
+              "triggers": "COMPLETE",
+              "scope": "external"
+            },
+            {
+              "event": "FAIL",
+              "triggers": "FAIL",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "in_progress"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "failed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start Pipeline"
+              },
+              {
+                "key": "ADVANCE",
+                "name": "Advance Step"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete Pipeline"
+              },
+              {
+                "key": "FAIL",
+                "name": "Pipeline Failed"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset Pipeline"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BuildProgress"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "loader",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "BuildProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "In Progress",
-                              "variant": "warning"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
-                            {
-                              "id": "1",
-                              "title": "Generate"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Validate"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Fix"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Current Step",
-                              "value": "@entity.currentStep"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Total Steps",
-                              "value": "@entity.totalSteps"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
                             {
                               "type": "button",
-                              "label": "Advance",
-                              "event": "ADVANCE",
+                              "label": "Start",
+                              "event": "START",
                               "variant": "primary",
-                              "icon": "chevron-right"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "icon": "play"
                             }
                           ]
                         }
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "ADVANCE": [
-              [
-                "set",
-                "@entity.currentStep",
-                [
-                  "+",
-                  "@entity.currentStep",
-                  1
                 ]
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
+              },
+              {
+                "from": "idle",
+                "to": "in_progress",
+                "event": "START",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "in_progress"
                   ],
-                  "children": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "loader",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "loader",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "In Progress",
+                                  "variant": "warning"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "BuildProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "In Progress",
-                              "variant": "warning"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Current Step",
+                                  "value": "@entity.currentStep"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Total Steps",
+                                  "value": "@entity.totalSteps"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Advance",
+                                  "event": "ADVANCE",
+                                  "variant": "primary",
+                                  "icon": "chevron-right"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reset",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
                             }
                           ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "in_progress",
+                "event": "ADVANCE",
+                "guard": [
+                  "<",
+                  "@entity.currentStep",
+                  "@entity.totalSteps"
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    [
+                      "+",
+                      "@entity.currentStep",
+                      1
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
                         },
                         {
-                          "type": "divider"
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
                         },
                         {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Generate"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Validate"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Fix"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
+                      "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Current Step",
-                              "value": "@entity.currentStep"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "loader",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "In Progress",
+                                  "variant": "warning"
+                                }
+                              ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Total Steps",
-                              "value": "@entity.totalSteps"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Current Step",
+                                  "value": "@entity.currentStep"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Total Steps",
+                                  "value": "@entity.totalSteps"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Advance",
+                                  "event": "ADVANCE",
+                                  "variant": "primary",
+                                  "icon": "chevron-right"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reset",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
                             }
                           ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "completed",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@entity.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
                         },
                         {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
+                      "children": [
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Advance",
-                              "event": "ADVANCE",
-                              "variant": "primary",
-                              "icon": "chevron-right"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "check-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Completed",
+                                  "variant": "success"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.totalSteps",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "success",
+                              "message": "All steps completed successfully."
                             },
                             {
                               "type": "button",
@@ -13299,340 +13590,570 @@
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "COMPLETE": [
-              [
-                "set",
-                "@entity.status",
-                "completed"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                "@entity.totalSteps"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "failed",
+                "event": "FAIL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "check-circle",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "x-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Failed",
+                                  "variant": "destructive"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "BuildProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "Completed",
-                              "variant": "success"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "error",
+                              "message": "Pipeline failed at the current step."
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Failed At Step",
+                                  "value": "@entity.currentStep"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.totalSteps",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Generate"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Validate"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Fix"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "success",
-                          "message": "All steps completed successfully."
-                        },
-                        {
-                          "type": "button",
-                          "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
                         }
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "FAIL": [
-              [
-                "set",
-                "@entity.status",
-                "failed"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
                   ],
-                  "children": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "x-circle",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "BuildProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "Failed",
-                              "variant": "destructive"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Generate"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Validate"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Fix"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "error",
-                          "message": "Pipeline failed at the current step."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Failed At Step",
-                              "value": "@entity.currentStep"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
                         }
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "RESET": [
-              [
-                "set",
-                "@entity.status",
-                "idle"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                0
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Schema Builder",
-                  "navItems": [
-                    {
-                      "label": "Plan",
-                      "href": "/plan",
-                      "icon": "clipboard-list"
-                    },
-                    {
-                      "label": "Build",
-                      "href": "/build",
-                      "icon": "hammer"
-                    },
-                    {
-                      "label": "Fix",
-                      "href": "/fix",
-                      "icon": "wrench"
-                    }
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
                   ],
-                  "children": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "list-ordered",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "BuildProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "Idle",
-                              "variant": "default"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
                             }
                           ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Generate"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Validate"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Fix"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Start",
-                          "event": "START",
-                          "variant": "primary",
-                          "icon": "play"
                         }
                       ]
                     }
                   ]
-                }
-              ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "failed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Schema Builder",
+                      "navItems": [
+                        {
+                          "label": "Plan",
+                          "href": "/plan",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Build",
+                          "href": "/build",
+                          "icon": "hammer"
+                        },
+                        {
+                          "label": "Fix",
+                          "href": "/fix",
+                          "icon": "wrench"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "BuildProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Generate"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Validate"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Fix"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
             ]
           }
         }
@@ -13649,5 +14170,6 @@
         }
       ]
     }
-  ]
+  ],
+  "description": "Schema builder agent organism. Full build cycle that plans, generates, validates, and fixes .orb programs. Composes planner + tool-loop + fix-loop molecules with session management and tabbed views. Composed from: - stdAgentPlanner (molecule): task planning with classification and memory - stdAgentToolLoop (molecule): iterative tool execution - stdAgentFixLoop (molecule): validation-fix cycle - stdAgentSession: session forking and checkpointing - stdTabs: Plan / Build / Validate / Fix tab navigation - stdAgentStepProgress: overall build pipeline progress indicator Cross-trait events: - PLAN_READY (Planner -> ToolLoop): plan complete, begin building - TOOL_LOOP_DONE (ToolLoop -> FixLoop): schema generated, validate it - FIX_SUCCEEDED (FixLoop -> Memory): record successful fix pattern Pages: /plan (initial), /build, /validate, /fix (2026-04-08). The canonical source for std behaviors is now the registry `.orb` file at `packages/almadar-std/behaviors/registry/<level>/<name>.orb`, which is generated from this TS source by `tools/almadar-behavior-ts-to-orb/` and consumed by the compiler's embedded loader. Consumers should import behaviors via `.lolo`/`.orb` `uses` declarations and reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying overrides at the call site (`linkedEntity`, `name`, `events`, `effects`, `listens`, `emitsScope`). The TS `*Params` interface and the exported factory functions remain ONLY as the authoring path for the converter; they are NOT a stable public API and may change without notice. See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and `docs/LOLO_Gaps.md` for the migration plan."
 }

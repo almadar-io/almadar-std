@@ -15,8 +15,8 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -358,7 +358,7 @@ export function stdRlAgentPage(params: StdRlAgentParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdRlAgent(params: StdRlAgentParams): OrbitalDefinition {
+export function stdRlAgent(params: StdRlAgentParams): OrbitalSchema {
   const c = resolve(params);
 
   const entity = makeEntity({ name: c.entityName, fields: c.fields, persistence: 'runtime' });
@@ -377,10 +377,10 @@ export function stdRlAgent(params: StdRlAgentParams): OrbitalDefinition {
     ],
   } as Page;
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits: [policyTrait, collectorTrait, trainTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

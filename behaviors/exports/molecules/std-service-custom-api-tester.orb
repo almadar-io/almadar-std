@@ -1,7 +1,6 @@
 {
-  "name": "std-service-custom-api-tester",
+  "name": "custom-header-api",
   "version": "1.0.0",
-  "description": "Unified API tester molecule that exercises all 4 custom REST auth patterns (header API key, bearer token, query param API key, no auth) with a tab selector. Single entity, single trait, 4 call events. Pure function: params in, OrbitalDefinition out.",
   "orbitals": [
     {
       "name": "ServiceCustomApiTesterOrbital",
@@ -817,7 +816,46 @@
             }
           ]
         }
+      ],
+      "services": [
+        {
+          "name": "custom-header-api",
+          "type": "rest",
+          "baseUrl": "https://api.example.com/v1",
+          "auth": {
+            "type": "api-key",
+            "keyName": "X-API-Key",
+            "location": "header",
+            "secretEnv": "CUSTOM_API_SECRET"
+          }
+        },
+        {
+          "name": "custom-bearer-api",
+          "type": "rest",
+          "baseUrl": "https://api.example.com/v2",
+          "auth": {
+            "type": "bearer",
+            "secretEnv": "CUSTOM_BEARER_TOKEN"
+          }
+        },
+        {
+          "name": "custom-query-api",
+          "type": "rest",
+          "baseUrl": "https://api.example.com/v3",
+          "auth": {
+            "type": "api-key",
+            "keyName": "api_key",
+            "location": "query",
+            "secretEnv": "CUSTOM_QUERY_KEY"
+          }
+        },
+        {
+          "name": "custom-noauth-api",
+          "type": "rest",
+          "baseUrl": "https://api.example.com/v4"
+        }
       ]
     }
-  ]
+  ],
+  "description": "Unified API tester molecule that exercises all 4 custom REST auth patterns (header API key, bearer token, query param API key, no auth) with a tab selector. Single entity, single trait, 4 call events. Pure function: params in, OrbitalDefinition out. (2026-04-08). The canonical source for std behaviors is now the registry `.orb` file at `packages/almadar-std/behaviors/registry/<level>/<name>.orb`, which is generated from this TS source by `tools/almadar-behavior-ts-to-orb/` and consumed by the compiler's embedded loader. Consumers should import behaviors via `.lolo`/`.orb` `uses` declarations and reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying overrides at the call site (`linkedEntity`, `name`, `events`, `effects`, `listens`, `emitsScope`). The TS `*Params` interface and the exported factory functions remain ONLY as the authoring path for the converter; they are NOT a stable public API and may change without notice. See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and `docs/LOLO_Gaps.md` for the migration plan."
 }

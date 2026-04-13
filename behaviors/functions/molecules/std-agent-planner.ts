@@ -34,8 +34,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdAgentClassifier } from '../atoms/std-agent-classifier.js';
 import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
 import { stdAgentMemory } from '../atoms/std-agent-memory.js';
@@ -454,7 +454,7 @@ export function stdAgentPlannerPage(params: StdAgentPlannerParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinition {
+export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields } = c;
 
@@ -527,10 +527,10 @@ export function stdAgentPlanner(params: StdAgentPlannerParams): OrbitalDefinitio
     ],
   } as Page;
 
-  return makeOrbital(
+  return makeSchema(`${entityName}Orbital`, makeOrbital(
     `${entityName}Orbital`,
     entity,
     [plannerTrait, modalTrait, classifierTrait, completionTrait, memoryTrait],
     [page],
-  );
+  ));
 }

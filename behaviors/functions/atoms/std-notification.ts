@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -253,12 +253,12 @@ export function stdNotificationPage(params: StdNotificationParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdNotification(params: StdNotificationParams): OrbitalDefinition {
+export function stdNotification(params: StdNotificationParams): OrbitalSchema {
   const c = resolve(params);
-  return makeOrbital(
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(
     `${c.entityName}Orbital`,
     buildEntity(c),
     [buildTrait(c)],
     [buildPage(c)],
-  );
+  ));
 }

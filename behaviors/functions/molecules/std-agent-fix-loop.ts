@@ -33,8 +33,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdAgentToolCall } from '../atoms/std-agent-tool-call.js';
 import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
 import { stdAgentStepProgress } from '../atoms/std-agent-step-progress.js';
@@ -502,7 +502,7 @@ export function stdAgentFixLoopPage(params: StdAgentFixLoopParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdAgentFixLoop(params: StdAgentFixLoopParams): OrbitalDefinition {
+export function stdAgentFixLoop(params: StdAgentFixLoopParams): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields } = c;
 
@@ -576,10 +576,10 @@ export function stdAgentFixLoop(params: StdAgentFixLoopParams): OrbitalDefinitio
     ],
   } as Page;
 
-  return makeOrbital(
+  return makeSchema(`${entityName}Orbital`, makeOrbital(
     `${entityName}Orbital`,
     entity,
     [fixTrait, stepProgressTrait, errorsBrowseTrait, validateCallTrait, fixCallTrait, completionTrait],
     [page],
-  );
+  ));
 }

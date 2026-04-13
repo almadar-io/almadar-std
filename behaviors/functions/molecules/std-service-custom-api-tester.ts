@@ -27,8 +27,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -335,7 +335,7 @@ export function stdServiceCustomApiTesterPage(params: StdServiceCustomApiTesterP
 // Composed Orbital
 // ============================================================================
 
-export function stdServiceCustomApiTester(params: StdServiceCustomApiTesterParams): OrbitalDefinition {
+export function stdServiceCustomApiTester(params: StdServiceCustomApiTesterParams): OrbitalSchema {
   const c = resolve(params);
   const orbital = makeOrbital(
     `${c.entityName}Orbital`,
@@ -343,7 +343,7 @@ export function stdServiceCustomApiTester(params: StdServiceCustomApiTesterParam
     [buildTrait(c)],
     [buildPage(c)],
   );
-  return {
+  return makeSchema(`custom-header-api`, {
     ...orbital,
     services: [
       {
@@ -383,5 +383,5 @@ export function stdServiceCustomApiTester(params: StdServiceCustomApiTesterParam
         baseUrl: c.noauthBaseUrl,
       },
     ],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

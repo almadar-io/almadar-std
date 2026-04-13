@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -175,7 +175,7 @@ export function stdGameCanvas3dEntity(params: StdGameCanvas3dParams): Entity { r
 export function stdGameCanvas3dTrait(params: StdGameCanvas3dParams): Trait { return buildTrait(resolve(params)); }
 export function stdGameCanvas3dPage(params: StdGameCanvas3dParams): Page { return buildPage(resolve(params)); }
 
-export function stdGameCanvas3d(params: StdGameCanvas3dParams): OrbitalDefinition {
+export function stdGameCanvas3d(params: StdGameCanvas3dParams): OrbitalSchema {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]));
 }

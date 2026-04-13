@@ -452,7 +452,8 @@ export function stdAgentTutor(params: StdAgentTutorParams = {}): OrbitalSchema {
     pagePath: '/teach',
     isInitial: true,
   });
-  const convTrait = (conversationOrbital.traits as Trait[])[0];
+  const convDef = conversationOrbital.orbitals[0] as OrbitalDefinition;
+  const convTrait = (convDef.traits as Trait[])[0];
   convTrait.name = 'TutorConversation';
 
   // 4. Memory atom for concept tracking
@@ -472,7 +473,8 @@ export function stdAgentTutor(params: StdAgentTutorParams = {}): OrbitalSchema {
     pageName: 'AssessmentPage',
     pagePath: '/assessment',
   });
-  const clsTrait = (classifierOrbital.traits as Trait[])[0];
+  const clsDef = classifierOrbital.orbitals[0] as OrbitalDefinition;
+  const clsTrait = (clsDef.traits as Trait[])[0];
   clsTrait.name = 'LevelClassifier';
 
   // 6. UI: tabs for Teach / Quiz / Progress navigation

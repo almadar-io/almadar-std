@@ -94,7 +94,8 @@ export function stdAgentBuilder(params: StdAgentBuilderParams = {}): OrbitalSche
     isInitial: true,
     categories: ['schema', 'component', 'trait', 'page', 'behavior'],
   });
-  const plannerTrait = (plannerOrbital.traits as Trait[])[0];
+  const plannerDef = plannerOrbital.orbitals[0] as OrbitalDefinition;
+  const plannerTrait = (plannerDef.traits as Trait[])[0];
   plannerTrait.name = 'BuildPlanner';
 
   // 2. Tool loop molecule (executes build steps with tools)
@@ -106,7 +107,8 @@ export function stdAgentBuilder(params: StdAgentBuilderParams = {}): OrbitalSche
     maxIterations: 10,
     compactThreshold: 0.8,
   });
-  const toolLoopTrait = (toolLoopOrbital.traits as Trait[])[0];
+  const toolLoopDef = toolLoopOrbital.orbitals[0] as OrbitalDefinition;
+  const toolLoopTrait = (toolLoopDef.traits as Trait[])[0];
   toolLoopTrait.name = 'SchemaBuilder';
 
   // 3. Fix loop molecule (validates and fixes schema)
@@ -120,7 +122,8 @@ export function stdAgentBuilder(params: StdAgentBuilderParams = {}): OrbitalSche
     validateTool: 'validate-schema',
     fixTool: 'apply-fix',
   });
-  const fixLoopTrait = (fixLoopOrbital.traits as Trait[])[0];
+  const fixLoopDef = fixLoopOrbital.orbitals[0] as OrbitalDefinition;
+  const fixLoopTrait = (fixLoopDef.traits as Trait[])[0];
   fixLoopTrait.name = 'FixLoop';
 
   // 4. Session atom (forking and checkpoints)
@@ -130,7 +133,8 @@ export function stdAgentBuilder(params: StdAgentBuilderParams = {}): OrbitalSche
     pageName: 'SessionPage',
     pagePath: '/session',
   });
-  const sessionTrait = (sessionOrbital.traits as Trait[])[0];
+  const sessionDef = sessionOrbital.orbitals[0] as OrbitalDefinition;
+  const sessionTrait = (sessionDef.traits as Trait[])[0];
   sessionTrait.name = 'BuildSessionManager';
 
   // 5. UI: tabs for Plan / Build / Validate / Fix navigation

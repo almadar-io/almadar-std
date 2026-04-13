@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdAgentChatThread } from './std-agent-chat-thread.js';
 
 // ============================================================================
@@ -214,7 +214,7 @@ export function stdAgentConversationPage(params: StdAgentConversationParams = {}
   } as Page;
 }
 
-export function stdAgentConversation(params: StdAgentConversationParams = {}): OrbitalDefinition {
+export function stdAgentConversation(params: StdAgentConversationParams = {}): OrbitalSchema {
   const c = resolve(params);
   const { entityName } = c;
 
@@ -238,5 +238,5 @@ export function stdAgentConversation(params: StdAgentConversationParams = {}): O
     ],
   } as Page;
 
-  return makeOrbital(`${c.entityName}Orbital`, entity, [chatThreadTrait, agentTrait], [page]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, entity, [chatThreadTrait, agentTrait], [page]));
 }

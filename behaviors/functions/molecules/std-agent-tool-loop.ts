@@ -33,8 +33,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdAgentCompletion } from '../atoms/std-agent-completion.js';
 import { stdAgentToolCall } from '../atoms/std-agent-tool-call.js';
 import { stdAgentContextWindow } from '../atoms/std-agent-context-window.js';
@@ -506,7 +506,7 @@ export function stdAgentToolLoopPage(params: StdAgentToolLoopParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinition {
+export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields } = c;
 
@@ -566,10 +566,10 @@ export function stdAgentToolLoop(params: StdAgentToolLoopParams): OrbitalDefinit
     ],
   } as Page;
 
-  return makeOrbital(
+  return makeSchema(`${entityName}Orbital`, makeOrbital(
     `${entityName}Orbital`,
     entity,
     [loopTrait, stepProgressTrait, completionTrait, toolCallTrait, contextTrait],
     [page],
-  );
+  ));
 }

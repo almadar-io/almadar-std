@@ -1,20 +1,9 @@
 {
-  "name": "std-agent-tutor",
+  "name": "AI Tutor",
   "version": "1.0.0",
-  "description": "Teaching assistant organism. Composes conversation + memory + classifier atoms with tabbed views and a concept browse list. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength.",
   "orbitals": [
     {
       "name": "TutorSessionOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        },
-        {
-          "from": "std/behaviors/std-tabs",
-          "as": "Tabs"
-        }
-      ],
       "entity": {
         "name": "TutorSession",
         "persistence": "runtime",
@@ -2156,6 +2145,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "TutorChat created successfully"
                   ]
                 ]
               },
@@ -2289,6 +2282,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "TutorChat deleted successfully"
                   ]
                 ]
               },
@@ -2422,6 +2419,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "TutorChat deleted successfully"
                   ]
                 ]
               }
@@ -3129,6 +3130,10 @@
                   [
                     "emit",
                     "MEMORIZED"
+                  ],
+                  [
+                    "notify",
+                    "Concept created successfully"
                   ]
                 ]
               }
@@ -3327,6 +3332,10 @@
                     "create",
                     "Concept",
                     "@payload.data"
+                  ],
+                  [
+                    "notify",
+                    "Concept created successfully"
                   ]
                 ]
               },
@@ -3918,6 +3927,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "StudentAssessment created successfully"
                   ]
                 ]
               }
@@ -4495,226 +4508,142 @@
       },
       "traits": [
         {
-          "ref": "Tabs.traits.TabContentTabs",
           "name": "TutorTabs",
           "linkedEntity": "TutorSession",
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "TutorSession"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "AI Tutor",
-                  "navItems": [
-                    {
-                      "label": "Teach",
-                      "href": "/teach",
-                      "icon": "book-open"
-                    },
-                    {
-                      "label": "Quiz",
-                      "href": "/quiz",
-                      "icon": "help-circle"
-                    },
-                    {
-                      "label": "Concepts",
-                      "href": "/concepts",
-                      "icon": "brain"
-                    }
-                  ],
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "graduation-cap",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AI Tutor",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "tabs",
-                          "tabs": [
-                            {
-                              "label": "Teach",
-                              "value": "teach"
-                            },
-                            {
-                              "label": "Quiz",
-                              "value": "quiz"
-                            },
-                            {
-                              "label": "Progress",
-                              "value": "progress"
-                            }
-                          ],
-                          "defaultActiveTab": "teach",
-                          "onTabChange": "SELECT_TAB"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "TutorSession",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tutorsessions yet",
-                          "emptyDescription": "Add tutorsessions to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.topic"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.teach"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
             ],
-            "SELECT_TAB": [
-              [
-                "fetch",
-                "TutorSession"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "AI Tutor",
-                  "navItems": [
-                    {
-                      "label": "Teach",
-                      "href": "/teach",
-                      "icon": "book-open"
-                    },
-                    {
-                      "label": "Quiz",
-                      "href": "/quiz",
-                      "icon": "help-circle"
-                    },
-                    {
-                      "label": "Concepts",
-                      "href": "/concepts",
-                      "icon": "brain"
-                    }
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SELECT_TAB",
+                "name": "Select Tab",
+                "payload": [
+                  {
+                    "name": "tab",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorSession"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "graduation-cap",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "AI Tutor",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "tabs",
-                          "tabs": [
-                            {
-                              "label": "Teach",
-                              "value": "teach"
-                            },
-                            {
-                              "label": "Quiz",
-                              "value": "quiz"
-                            },
-                            {
-                              "label": "Progress",
-                              "value": "progress"
-                            }
-                          ],
-                          "defaultActiveTab": "teach",
-                          "activeTab": "@payload.tab",
-                          "onTabChange": "SELECT_TAB"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "TutorSession",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tutorsessions yet",
-                          "emptyDescription": "Add tutorsessions to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
                               "type": "stack",
-                              "direction": "vertical",
+                              "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.topic"
+                                  "type": "icon",
+                                  "name": "graduation-cap",
+                                  "size": "lg"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.teach"
+                                  "content": "AI Tutor",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Teach",
+                                  "value": "teach"
+                                },
+                                {
+                                  "label": "Quiz",
+                                  "value": "quiz"
+                                },
+                                {
+                                  "label": "Progress",
+                                  "value": "progress"
+                                }
+                              ],
+                              "defaultActiveTab": "teach",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "TutorSession",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tutorsessions yet",
+                              "emptyDescription": "Add tutorsessions to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.topic"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.teach"
+                                    }
+                                  ]
                                 }
                               ]
                             }
@@ -4723,8 +4652,127 @@
                       ]
                     }
                   ]
-                }
-              ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "SELECT_TAB",
+                "effects": [
+                  [
+                    "fetch",
+                    "TutorSession"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "graduation-cap",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "AI Tutor",
+                                  "variant": "h2"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "tabs",
+                              "tabs": [
+                                {
+                                  "label": "Teach",
+                                  "value": "teach"
+                                },
+                                {
+                                  "label": "Quiz",
+                                  "value": "quiz"
+                                },
+                                {
+                                  "label": "Progress",
+                                  "value": "progress"
+                                }
+                              ],
+                              "defaultActiveTab": "teach",
+                              "activeTab": "@payload.tab",
+                              "onTabChange": "SELECT_TAB"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "data-grid",
+                              "entity": "TutorSession",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No tutorsessions yet",
+                              "emptyDescription": "Add tutorsessions to see them here.",
+                              "className": "transition-shadow hover:shadow-md cursor-pointer",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "type": "stack",
+                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "@item.topic"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "color": "muted",
+                                      "content": "@item.teach"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
             ]
           }
         }
@@ -4772,134 +4820,168 @@
       },
       "traits": [
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
           "name": "ConceptsBrowse",
           "linkedEntity": "Concept",
-          "effects": {
-            "INIT": [
-              [
-                "ref",
-                "Concept"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "AI Tutor",
-                  "navItems": [
-                    {
-                      "label": "Teach",
-                      "href": "/teach",
-                      "icon": "book-open"
-                    },
-                    {
-                      "label": "Quiz",
-                      "href": "/quiz",
-                      "icon": "help-circle"
-                    },
-                    {
-                      "label": "Concepts",
-                      "href": "/concepts",
-                      "icon": "brain"
-                    }
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "browsing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "VIEW",
+                "name": "VIEW",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "browsing",
+                "to": "browsing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "Concept"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "dashboard-layout",
+                      "appName": "AI Tutor",
+                      "navItems": [
+                        {
+                          "label": "Teach",
+                          "href": "/teach",
+                          "icon": "book-open"
+                        },
+                        {
+                          "label": "Quiz",
+                          "href": "/quiz",
+                          "icon": "help-circle"
+                        },
+                        {
+                          "label": "Concepts",
+                          "href": "/concepts",
+                          "icon": "brain"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
+                              "gap": "md",
+                              "justify": "space-between",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Learned Concepts",
-                                  "variant": "h2"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "name": "brain",
+                                      "size": "lg"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "content": "Learned Concepts",
+                                      "variant": "h2"
+                                    }
+                                  ]
                                 }
                               ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "Concept",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No concepts yet",
-                          "emptyDescription": "Complete lessons and quizzes to build your concept library.",
-                          "itemActions": [
-                            {
-                              "label": "View",
-                              "event": "VIEW",
-                              "variant": "ghost",
-                              "size": "sm"
-                            }
-                          ],
-                          "columns": [
-                            {
-                              "name": "content",
-                              "label": "Content",
-                              "variant": "h4",
-                              "icon": "brain"
                             },
                             {
-                              "name": "category",
-                              "label": "Category",
-                              "variant": "badge",
-                              "colorMap": {
-                                "active": "success",
-                                "completed": "success",
-                                "done": "success",
-                                "pending": "warning",
-                                "draft": "warning",
-                                "scheduled": "warning",
-                                "inactive": "neutral",
-                                "archived": "neutral",
-                                "disabled": "neutral",
-                                "error": "destructive",
-                                "cancelled": "destructive",
-                                "failed": "destructive"
-                              }
+                              "type": "divider"
                             },
                             {
-                              "name": "strength",
-                              "label": "Strength",
-                              "variant": "caption"
+                              "type": "data-grid",
+                              "entity": "Concept",
+                              "emptyIcon": "inbox",
+                              "emptyTitle": "No concepts yet",
+                              "emptyDescription": "Complete lessons and quizzes to build your concept library.",
+                              "itemActions": [
+                                {
+                                  "label": "View",
+                                  "event": "VIEW",
+                                  "variant": "ghost",
+                                  "size": "sm"
+                                }
+                              ],
+                              "columns": [
+                                {
+                                  "name": "content",
+                                  "label": "Content",
+                                  "variant": "h4",
+                                  "icon": "brain"
+                                },
+                                {
+                                  "name": "category",
+                                  "label": "Category",
+                                  "variant": "badge",
+                                  "colorMap": {
+                                    "active": "success",
+                                    "completed": "success",
+                                    "done": "success",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "scheduled": "warning",
+                                    "inactive": "neutral",
+                                    "archived": "neutral",
+                                    "disabled": "neutral",
+                                    "error": "destructive",
+                                    "cancelled": "destructive",
+                                    "failed": "destructive"
+                                  }
+                                },
+                                {
+                                  "name": "strength",
+                                  "label": "Strength",
+                                  "variant": "caption"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "floating-action-button",
+                              "icon": "plus",
+                              "event": "INIT",
+                              "label": "Create",
+                              "tooltip": "Create"
                             }
                           ]
-                        },
-                        {
-                          "type": "floating-action-button",
-                          "icon": "plus",
-                          "event": "INIT",
-                          "label": "Create",
-                          "tooltip": "Create"
                         }
                       ]
                     }
                   ]
-                }
-              ]
+                ]
+              }
             ]
           }
         }
@@ -4916,5 +4998,6 @@
         }
       ]
     }
-  ]
+  ],
+  "description": "Teaching assistant organism. Composes conversation + memory + classifier atoms with tabbed views and a concept browse list. Classifies student level, recalls prior learning from memory, generates explanations with context-aware difficulty, and tracks concept strength. Composed from: - stdAgentConversation: multi-turn teaching interaction - stdAgentMemory: tracks concept strength per student topic - stdAgentClassifier: classifies student level - stdTabs: Teach / Quiz / Progress tab navigation - stdBrowse: browsable concepts list with strength tracking Cross-trait events: - ASSESSMENT_DONE (Teaching -> Quiz): student assessed, generate quiz - QUIZ_GRADED (Quiz -> Memory): reinforce or decay concept based on answer Pages: /teach (initial), /quiz, /concepts (2026-04-08). The canonical source for std behaviors is now the registry `.orb` file at `packages/almadar-std/behaviors/registry/<level>/<name>.orb`, which is generated from this TS source by `tools/almadar-behavior-ts-to-orb/` and consumed by the compiler's embedded loader. Consumers should import behaviors via `.lolo`/`.orb` `uses` declarations and reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying overrides at the call site (`linkedEntity`, `name`, `events`, `effects`, `listens`, `emitsScope`). The TS `*Params` interface and the exported factory functions remain ONLY as the authoring path for the converter; they are NOT a stable public API and may change without notice. See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and `docs/LOLO_Gaps.md` for the migration plan."
 }

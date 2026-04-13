@@ -33,8 +33,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, extractTrait, makeSchema, } from '@almadar/core/builders';
 import { stdCombatLog } from '../atoms/std-combat-log.js';
 
 // ============================================================================
@@ -355,7 +355,7 @@ export function stdTurnBasedBattlePage(params: StdTurnBasedBattleParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdTurnBasedBattle(params: StdTurnBasedBattleParams): OrbitalDefinition {
+export function stdTurnBasedBattle(params: StdTurnBasedBattleParams): OrbitalSchema {
   const c = resolve(params);
 
   const battleFlowTrait = buildBattleFlowTrait(c);
@@ -363,10 +363,10 @@ export function stdTurnBasedBattle(params: StdTurnBasedBattleParams): OrbitalDef
   const entity = buildEntity(c);
   const page = buildPage(c);
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits: [battleFlowTrait, battleLogTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

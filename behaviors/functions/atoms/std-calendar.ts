@@ -25,8 +25,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -215,7 +215,7 @@ export function stdCalendarEntity(params: StdCalendarParams): Entity { return bu
 export function stdCalendarTrait(params: StdCalendarParams): Trait { return buildTrait(resolve(params)); }
 export function stdCalendarPage(params: StdCalendarParams): Page { return buildPage(resolve(params)); }
 
-export function stdCalendar(params: StdCalendarParams): OrbitalDefinition {
+export function stdCalendar(params: StdCalendarParams): OrbitalSchema {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]));
 }

@@ -27,8 +27,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -48,7 +48,7 @@ export interface StdValidateOnSaveParams {
 // Builder
 // ============================================================================
 
-export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): OrbitalDefinition {
+export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): OrbitalSchema {
   const {
     entityName = 'ValidationResult',
     glob = '**/*.orb',
@@ -335,7 +335,7 @@ export function stdValidateOnSave(params: StdValidateOnSaveParams = {}): Orbital
     }),
   ];
 
-  return makeOrbital('ValidateOnSave', entity, [trait], pages);
+  return makeSchema('ValidateOnSave', makeOrbital('ValidateOnSave', entity, [trait], pages));
 }
 
 export default stdValidateOnSave;

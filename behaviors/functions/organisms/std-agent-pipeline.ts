@@ -91,7 +91,8 @@ export function stdAgentPipeline(params: StdAgentPipelineParams = {}): OrbitalSc
     isInitial: true,
     categories: ['data', 'transform', 'validate', 'deploy', 'test'],
   });
-  const plannerTrait = (plannerOrbital.traits as Trait[])[0];
+  const plannerDef = plannerOrbital.orbitals[0] as OrbitalDefinition;
+  const plannerTrait = (plannerDef.traits as Trait[])[0];
   plannerTrait.name = 'PipelinePlanner';
   plannerTrait.emits = [
     ...(plannerTrait.emits ?? []),
@@ -108,7 +109,8 @@ export function stdAgentPipeline(params: StdAgentPipelineParams = {}): OrbitalSc
     maxIterations: 20,
     compactThreshold: 0.8,
   });
-  const toolLoopTrait = (toolLoopOrbital.traits as Trait[])[0];
+  const toolLoopDef = toolLoopOrbital.orbitals[0] as OrbitalDefinition;
+  const toolLoopTrait = (toolLoopDef.traits as Trait[])[0];
   toolLoopTrait.name = 'PipelineExecutor';
   toolLoopTrait.emits = [
     ...(toolLoopTrait.emits ?? []),
@@ -125,7 +127,8 @@ export function stdAgentPipeline(params: StdAgentPipelineParams = {}): OrbitalSc
     pageName: 'SessionPage',
     pagePath: '/session',
   });
-  const sessionTrait = (sessionOrbital.traits as Trait[])[0];
+  const sessionDef = sessionOrbital.orbitals[0] as OrbitalDefinition;
+  const sessionTrait = (sessionDef.traits as Trait[])[0];
   sessionTrait.name = 'PipelineSessionManager';
 
   // 4. Memory atom for execution logs

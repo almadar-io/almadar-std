@@ -30,8 +30,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, extractTrait, makeSchema, } from '@almadar/core/builders';
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
 import { stdConfirmation } from '../atoms/std-confirmation.js';
@@ -177,7 +177,7 @@ export function stdGeospatialPage(params: StdGeospatialParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdGeospatial(params: StdGeospatialParams): OrbitalDefinition {
+export function stdGeospatial(params: StdGeospatialParams): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields, detailFields } = c;
 
@@ -238,10 +238,10 @@ export function stdGeospatial(params: StdGeospatialParams): OrbitalDefinition {
   } as Page;
 
   // 4. One orbital, multiple traits, shared event bus
-  return {
+  return makeSchema(`${entityName}Orbital`, {
     name: `${entityName}Orbital`,
     entity,
     traits: [browseTrait, selectTrait, confirmTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

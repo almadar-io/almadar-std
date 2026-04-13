@@ -27,8 +27,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdAgentTokenGauge } from './std-agent-token-gauge.js';
 import { stdNotification } from './std-notification.js';
 
@@ -256,7 +256,7 @@ export function stdAgentContextWindowPage(params: StdAgentContextWindowParams = 
   } as Page;
 }
 
-export function stdAgentContextWindow(params: StdAgentContextWindowParams = {}): OrbitalDefinition {
+export function stdAgentContextWindow(params: StdAgentContextWindowParams = {}): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields } = c;
 
@@ -289,5 +289,5 @@ export function stdAgentContextWindow(params: StdAgentContextWindowParams = {}):
     ],
   } as Page;
 
-  return makeOrbital(`${c.entityName}Orbital`, entity, [gaugeTrait, notifTrait, agentTrait], [page]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, entity, [gaugeTrait, notifTrait, agentTrait], [page]));
 }

@@ -220,4 +220,4 @@ export { stdServiceCustomNoauth, stdServiceCustomNoauthEntity, stdServiceCustomN
 // Composition (re-export from core)
 // ============================================================================
 
-export { connect, compose, pipe, makeEntity, makePage, makeOrbital, mergeOrbitals, wire, extractTrait, ensureIdField, plural } from '@almadar/core/builders';
+export { connect, compose, pipe, makeEntity, makePage, makeOrbital, makeSchema, mergeOrbitals, wire, extractTrait, ensureIdField, plural } from '@almadar/core/builders';

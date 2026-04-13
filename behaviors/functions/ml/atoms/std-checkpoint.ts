@@ -10,8 +10,8 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -231,12 +231,12 @@ export function stdCheckpointPage(params: StdCheckpointParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdCheckpoint(params: StdCheckpointParams): OrbitalDefinition {
+export function stdCheckpoint(params: StdCheckpointParams): OrbitalSchema {
   const c = resolve(params);
-  return makeOrbital(
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(
     `${c.entityName}Orbital`,
     buildEntity(c),
     [buildTrait(c)],
     [buildPage(c)],
-  );
+  ));
 }

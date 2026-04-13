@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -277,7 +277,7 @@ export function stdServiceCustomNoauthPage(params: StdServiceCustomNoauthParams)
 // Composed Orbital
 // ============================================================================
 
-export function stdServiceCustomNoauth(params: StdServiceCustomNoauthParams): OrbitalDefinition {
+export function stdServiceCustomNoauth(params: StdServiceCustomNoauthParams): OrbitalSchema {
   const c = resolve(params);
   const orbital = makeOrbital(
     `${c.entityName}Orbital`,
@@ -286,12 +286,12 @@ export function stdServiceCustomNoauth(params: StdServiceCustomNoauthParams): Or
     [buildPage(c)],
   );
   // Attach custom service declaration with no auth
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     ...orbital,
     services: [{
       name: 'custom-noauth-api',
       type: 'rest' as const,
       baseUrl: c.baseUrl,
     }],
-  };
+  } as OrbitalDefinition);
 }

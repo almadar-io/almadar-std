@@ -25,8 +25,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -214,7 +214,7 @@ export function stdTextEffectsEntity(params: StdTextEffectsParams): Entity { ret
 export function stdTextEffectsTrait(params: StdTextEffectsParams): Trait { return buildTrait(resolve(params)); }
 export function stdTextEffectsPage(params: StdTextEffectsParams): Page { return buildPage(resolve(params)); }
 
-export function stdTextEffects(params: StdTextEffectsParams): OrbitalDefinition {
+export function stdTextEffects(params: StdTextEffectsParams): OrbitalSchema {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]));
 }

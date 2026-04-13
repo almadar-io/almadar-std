@@ -31,8 +31,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, extractTrait, makeSchema, } from '@almadar/core/builders';
 import { stdPlatformerCanvas } from '../atoms/std-platformer-canvas.js';
 
 // ============================================================================
@@ -363,7 +363,7 @@ export function stdPlatformerGamePage(params: StdPlatformerGameParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdPlatformerGame(params: StdPlatformerGameParams): OrbitalDefinition {
+export function stdPlatformerGame(params: StdPlatformerGameParams): OrbitalSchema {
   const c = resolve(params);
 
   const flowTrait = buildPlatformerFlowTrait(c);
@@ -371,10 +371,10 @@ export function stdPlatformerGame(params: StdPlatformerGameParams): OrbitalDefin
   const entity = buildEntity(c);
   const page = buildPage(c);
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits: [flowTrait, canvasTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

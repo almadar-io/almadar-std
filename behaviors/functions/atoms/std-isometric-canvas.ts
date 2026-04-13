@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
-import { makeEntity, makePage, makeOrbital, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField, EntityRow } from '@almadar/core/types';
+import { makeEntity, makePage, makeOrbital, makeSchema, ensureIdField, plural } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -198,7 +198,7 @@ export function stdIsometricCanvasEntity(params: StdIsometricCanvasParams): Enti
 export function stdIsometricCanvasTrait(params: StdIsometricCanvasParams): Trait { return buildTrait(resolve(params)); }
 export function stdIsometricCanvasPage(params: StdIsometricCanvasParams): Page { return buildPage(resolve(params)); }
 
-export function stdIsometricCanvas(params: StdIsometricCanvasParams): OrbitalDefinition {
+export function stdIsometricCanvas(params: StdIsometricCanvasParams): OrbitalSchema {
   const c = resolve(params);
-  return makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, buildEntity(c), [buildTrait(c)], [buildPage(c)]));
 }

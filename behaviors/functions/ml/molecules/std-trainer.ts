@@ -15,8 +15,8 @@
  * @packageDocumentation
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, makeSchema, } from '@almadar/core/builders';
 
 // ============================================================================
 // Params
@@ -380,7 +380,7 @@ export function stdTrainerPage(params: StdTrainerParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdTrainer(params: StdTrainerParams): OrbitalDefinition {
+export function stdTrainer(params: StdTrainerParams): OrbitalSchema {
   const c = resolve(params);
 
   const entity = makeEntity({ name: c.entityName, fields: c.fields, persistence: 'runtime' });
@@ -405,10 +405,10 @@ export function stdTrainer(params: StdTrainerParams): OrbitalDefinition {
     traits: traits.map(t => ({ ref: t.name })),
   } as Page;
 
-  return {
+  return makeSchema(`${c.entityName}Orbital`, {
     name: `${c.entityName}Orbital`,
     entity,
     traits,
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }

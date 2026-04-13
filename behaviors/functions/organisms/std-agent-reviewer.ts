@@ -282,7 +282,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams = {}): OrbitalSc
     pageName: 'AnalysisPage',
     pagePath: '/analysis',
   });
-  const classifierTrait = (classifierOrbital.traits as Trait[])[0];
+  const classifierDef = classifierOrbital.orbitals[0] as OrbitalDefinition;
+  const classifierTrait = (classifierDef.traits as Trait[])[0];
   classifierTrait.name = 'InputClassifier';
   classifierTrait.emits = [
     { event: 'CLASSIFIED', description: 'Input has been classified', scope: 'internal' as const, payload: [{ name: 'category', type: 'string' }] },
@@ -295,7 +296,8 @@ export function stdAgentReviewer(params: StdAgentReviewerParams = {}): OrbitalSc
     pageName: 'CompletionPage',
     pagePath: '/completion',
   });
-  const completionTrait = (completionOrbital.traits as Trait[])[0];
+  const completionDef = completionOrbital.orbitals[0] as OrbitalDefinition;
+  const completionTrait = (completionDef.traits as Trait[])[0];
   completionTrait.name = 'ReviewCompletionFlow';
 
   // 5. UI: tabs for Input / Analysis / Review

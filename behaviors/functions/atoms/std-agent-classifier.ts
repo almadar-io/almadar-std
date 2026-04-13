@@ -26,8 +26,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, makeOrbital, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, makeOrbital, makeSchema, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
 import { stdModal } from './std-modal.js';
 import { stdNotification } from './std-notification.js';
 
@@ -216,7 +216,7 @@ export function stdAgentClassifierPage(params: StdAgentClassifierParams = {}): P
   } as Page;
 }
 
-export function stdAgentClassifier(params: StdAgentClassifierParams = {}): OrbitalDefinition {
+export function stdAgentClassifier(params: StdAgentClassifierParams = {}): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields, categories } = c;
 
@@ -278,5 +278,5 @@ export function stdAgentClassifier(params: StdAgentClassifierParams = {}): Orbit
     ],
   } as Page;
 
-  return makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, notifTrait, agentTrait], [page]);
+  return makeSchema(`${c.entityName}Orbital`, makeOrbital(`${c.entityName}Orbital`, entity, [modalTrait, notifTrait, agentTrait], [page]));
 }

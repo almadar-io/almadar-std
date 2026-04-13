@@ -1,20 +1,9 @@
 {
-  "name": "std-agent-pipeline",
+  "name": "Agent Pipeline",
   "version": "1.0.0",
-  "description": "Multi-step pipeline organism. Composes planner + tool-loop molecules with session management, step progress tracking, and a session tree drawer.",
   "orbitals": [
     {
       "name": "PipelinePlanOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-agent-step-progress",
-          "as": "AgentStepProgress"
-        },
-        {
-          "from": "std/behaviors/std-drawer",
-          "as": "Drawer"
-        }
-      ],
       "entity": {
         "name": "PipelinePlan",
         "persistence": "runtime",
@@ -1731,6 +1720,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "PipelinePlan created successfully"
                   ]
                 ]
               }
@@ -2131,6 +2124,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "PipelinePlan created successfully"
                   ]
                 ]
               }
@@ -5509,6 +5506,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "PipelineExec created successfully"
                   ]
                 ]
               }
@@ -5895,6 +5896,10 @@
                         }
                       ]
                     }
+                  ],
+                  [
+                    "notify",
+                    "PipelineExec created successfully"
                   ]
                 ]
               }
@@ -8246,6 +8251,10 @@
                   [
                     "emit",
                     "LABELED"
+                  ],
+                  [
+                    "notify",
+                    "PipelineSession updated successfully"
                   ]
                 ]
               }
@@ -8433,6 +8442,10 @@
                   [
                     "emit",
                     "FORKED"
+                  ],
+                  [
+                    "notify",
+                    "PipelineSession created successfully"
                   ]
                 ]
               },
@@ -8466,6 +8479,10 @@
                   [
                     "emit",
                     "FORKED"
+                  ],
+                  [
+                    "notify",
+                    "PipelineSession created successfully"
                   ]
                 ]
               },
@@ -9094,6 +9111,10 @@
                   [
                     "emit",
                     "MEMORIZED"
+                  ],
+                  [
+                    "notify",
+                    "ExecutionLog created successfully"
                   ]
                 ]
               }
@@ -9292,6 +9313,10 @@
                     "create",
                     "ExecutionLog",
                     "@payload.data"
+                  ],
+                  [
+                    "notify",
+                    "ExecutionLog created successfully"
                   ]
                 ]
               },
@@ -9466,366 +9491,593 @@
       },
       "traits": [
         {
-          "ref": "AgentStepProgress.traits.AgentStepProgressProgress",
           "name": "PipelineStepProgress",
           "linkedEntity": "PipelineProgress",
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "PipelineProgress"
-              ],
-              [
-                "render-ui",
-                "main",
+          "category": "interaction",
+          "emits": [
+            {
+              "event": "ADVANCE",
+              "scope": "external",
+              "payload": [
                 {
-                  "type": "dashboard-layout",
-                  "appName": "Agent Pipeline",
-                  "navItems": [
-                    {
-                      "label": "Pipeline",
-                      "href": "/pipeline",
-                      "icon": "git-branch"
-                    },
-                    {
-                      "label": "Execution",
-                      "href": "/execution",
-                      "icon": "play"
-                    },
-                    {
-                      "label": "Logs",
-                      "href": "/logs",
-                      "icon": "terminal"
-                    }
+                  "name": "step",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "COMPLETE",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "totalSteps",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "FAIL",
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "step",
+                  "type": "number"
+                }
+              ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "ADVANCE",
+              "triggers": "ADVANCE",
+              "scope": "external"
+            },
+            {
+              "event": "COMPLETE",
+              "triggers": "COMPLETE",
+              "scope": "external"
+            },
+            {
+              "event": "FAIL",
+              "triggers": "FAIL",
+              "scope": "external"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "in_progress"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "failed"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start Pipeline"
+              },
+              {
+                "key": "ADVANCE",
+                "name": "Advance Step"
+              },
+              {
+                "key": "COMPLETE",
+                "name": "Complete Pipeline"
+              },
+              {
+                "key": "FAIL",
+                "name": "Pipeline Failed"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset Pipeline"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "PipelineProgress"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "list-ordered",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "PipelineProgress",
-                              "variant": "h2"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Idle",
-                              "variant": "default"
-                            }
-                          ]
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Execute"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Checkpoint"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Verify"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Start",
-                          "event": "START",
-                          "variant": "primary",
+                          "label": "Execution",
+                          "href": "/execution",
                           "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
                         }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ],
-            "START": [
-              [
-                "set",
-                "@entity.status",
-                "in_progress"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                0
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Agent Pipeline",
-                  "navItems": [
-                    {
-                      "label": "Pipeline",
-                      "href": "/pipeline",
-                      "icon": "git-branch"
-                    },
-                    {
-                      "label": "Execution",
-                      "href": "/execution",
-                      "icon": "play"
-                    },
-                    {
-                      "label": "Logs",
-                      "href": "/logs",
-                      "icon": "terminal"
-                    }
-                  ],
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "loader",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "PipelineProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "In Progress",
-                              "variant": "warning"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
                             },
-                            {
-                              "id": "1",
-                              "title": "Execute"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Checkpoint"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Verify"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Current Step",
-                              "value": "@entity.currentStep"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Total Steps",
-                              "value": "@entity.totalSteps"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
                             {
                               "type": "button",
-                              "label": "Advance",
-                              "event": "ADVANCE",
+                              "label": "Start",
+                              "event": "START",
                               "variant": "primary",
-                              "icon": "chevron-right"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "icon": "play"
                             }
                           ]
                         }
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "ADVANCE": [
-              [
-                "set",
-                "@entity.currentStep",
-                [
-                  "+",
-                  "@entity.currentStep",
-                  1
                 ]
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Agent Pipeline",
-                  "navItems": [
-                    {
-                      "label": "Pipeline",
-                      "href": "/pipeline",
-                      "icon": "git-branch"
-                    },
-                    {
-                      "label": "Execution",
-                      "href": "/execution",
-                      "icon": "play"
-                    },
-                    {
-                      "label": "Logs",
-                      "href": "/logs",
-                      "icon": "terminal"
-                    }
+              },
+              {
+                "from": "idle",
+                "to": "in_progress",
+                "event": "START",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "in_progress"
                   ],
-                  "children": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "loader",
-                              "size": "lg"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "loader",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "In Progress",
+                                  "variant": "warning"
+                                }
+                              ]
                             },
                             {
-                              "type": "typography",
-                              "content": "PipelineProgress",
-                              "variant": "h2"
+                              "type": "divider"
                             },
                             {
-                              "type": "badge",
-                              "label": "In Progress",
-                              "variant": "warning"
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Current Step",
+                                  "value": "@entity.currentStep"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Total Steps",
+                                  "value": "@entity.totalSteps"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Advance",
+                                  "event": "ADVANCE",
+                                  "variant": "primary",
+                                  "icon": "chevron-right"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reset",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
                             }
                           ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "in_progress",
+                "event": "ADVANCE",
+                "guard": [
+                  "<",
+                  "@entity.currentStep",
+                  "@entity.totalSteps"
+                ],
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    [
+                      "+",
+                      "@entity.currentStep",
+                      1
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
                         },
                         {
-                          "type": "divider"
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
                         },
                         {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Execute"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Checkpoint"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Verify"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Current Step",
-                              "value": "@entity.currentStep"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "loader",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "In Progress",
+                                  "variant": "warning"
+                                }
+                              ]
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Total Steps",
-                              "value": "@entity.totalSteps"
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Current Step",
+                                  "value": "@entity.currentStep"
+                                },
+                                {
+                                  "type": "stat-display",
+                                  "label": "Total Steps",
+                                  "value": "@entity.totalSteps"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "button",
+                                  "label": "Advance",
+                                  "event": "ADVANCE",
+                                  "variant": "primary",
+                                  "icon": "chevron-right"
+                                },
+                                {
+                                  "type": "button",
+                                  "label": "Reset",
+                                  "event": "RESET",
+                                  "variant": "ghost",
+                                  "icon": "rotate-ccw"
+                                }
+                              ]
                             }
                           ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "completed",
+                "event": "COMPLETE",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "completed"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@entity.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
                         },
                         {
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
+                        {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "direction": "vertical",
+                          "gap": "lg",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Advance",
-                              "event": "ADVANCE",
-                              "variant": "primary",
-                              "icon": "chevron-right"
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "check-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Completed",
+                                  "variant": "success"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.totalSteps",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "success",
+                              "message": "All steps completed successfully."
                             },
                             {
                               "type": "button",
@@ -9839,340 +10091,570 @@
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "COMPLETE": [
-              [
-                "set",
-                "@entity.status",
-                "completed"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                "@entity.totalSteps"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Agent Pipeline",
-                  "navItems": [
-                    {
-                      "label": "Pipeline",
-                      "href": "/pipeline",
-                      "icon": "git-branch"
-                    },
-                    {
-                      "label": "Execution",
-                      "href": "/execution",
-                      "icon": "play"
-                    },
-                    {
-                      "label": "Logs",
-                      "href": "/logs",
-                      "icon": "terminal"
-                    }
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "failed",
+                "event": "FAIL",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "failed"
                   ],
-                  "children": [
+                  [
+                    "render-ui",
+                    "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "check-circle",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "PipelineProgress",
-                              "variant": "h2"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Completed",
-                              "variant": "success"
-                            }
-                          ]
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
                         },
                         {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.totalSteps",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Execute"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Checkpoint"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Verify"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "success",
-                          "message": "All steps completed successfully."
-                        },
-                        {
-                          "type": "button",
-                          "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ],
-            "FAIL": [
-              [
-                "set",
-                "@entity.status",
-                "failed"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Agent Pipeline",
-                  "navItems": [
-                    {
-                      "label": "Pipeline",
-                      "href": "/pipeline",
-                      "icon": "git-branch"
-                    },
-                    {
-                      "label": "Execution",
-                      "href": "/execution",
-                      "icon": "play"
-                    },
-                    {
-                      "label": "Logs",
-                      "href": "/logs",
-                      "icon": "terminal"
-                    }
-                  ],
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "x-circle",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "PipelineProgress",
-                              "variant": "h2"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Failed",
-                              "variant": "destructive"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Execute"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Checkpoint"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Verify"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "error",
-                          "message": "Pipeline failed at the current step."
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Failed At Step",
-                              "value": "@entity.currentStep"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ],
-            "RESET": [
-              [
-                "set",
-                "@entity.status",
-                "idle"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                0
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "dashboard-layout",
-                  "appName": "Agent Pipeline",
-                  "navItems": [
-                    {
-                      "label": "Pipeline",
-                      "href": "/pipeline",
-                      "icon": "git-branch"
-                    },
-                    {
-                      "label": "Execution",
-                      "href": "/execution",
-                      "icon": "play"
-                    },
-                    {
-                      "label": "Logs",
-                      "href": "/logs",
-                      "icon": "terminal"
-                    }
-                  ],
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "list-ordered",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "PipelineProgress",
-                              "variant": "h2"
-                            },
-                            {
-                              "type": "badge",
-                              "label": "Idle",
-                              "variant": "default"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
-                          "steps": [
-                            {
-                              "id": "0",
-                              "title": "Plan"
-                            },
-                            {
-                              "id": "1",
-                              "title": "Execute"
-                            },
-                            {
-                              "id": "2",
-                              "title": "Checkpoint"
-                            },
-                            {
-                              "id": "3",
-                              "title": "Verify"
-                            },
-                            {
-                              "id": "4",
-                              "title": "Done"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Start",
-                          "event": "START",
-                          "variant": "primary",
+                          "label": "Execution",
+                          "href": "/execution",
                           "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "x-circle",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Failed",
+                                  "variant": "destructive"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "alert",
+                              "variant": "error",
+                              "message": "Pipeline failed at the current step."
+                            },
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "type": "stat-display",
+                                  "label": "Failed At Step",
+                                  "value": "@entity.currentStep"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Reset",
+                              "event": "RESET",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ]
                         }
                       ]
                     }
                   ]
-                }
-              ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "in_progress",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "completed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "failed",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "dashboard-layout",
+                      "appName": "Agent Pipeline",
+                      "navItems": [
+                        {
+                          "label": "Pipeline",
+                          "href": "/pipeline",
+                          "icon": "git-branch"
+                        },
+                        {
+                          "label": "Execution",
+                          "href": "/execution",
+                          "icon": "play"
+                        },
+                        {
+                          "label": "Logs",
+                          "href": "/logs",
+                          "icon": "terminal"
+                        }
+                      ],
+                      "children": [
+                        {
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "name": "list-ordered",
+                                  "size": "lg"
+                                },
+                                {
+                                  "type": "typography",
+                                  "content": "PipelineProgress",
+                                  "variant": "h2"
+                                },
+                                {
+                                  "type": "badge",
+                                  "label": "Idle",
+                                  "variant": "default"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "type": "wizard-progress",
+                              "currentStep": "@entity.currentStep",
+                              "steps": [
+                                {
+                                  "id": "0",
+                                  "title": "Plan"
+                                },
+                                {
+                                  "id": "1",
+                                  "title": "Execute"
+                                },
+                                {
+                                  "id": "2",
+                                  "title": "Checkpoint"
+                                },
+                                {
+                                  "id": "3",
+                                  "title": "Verify"
+                                },
+                                {
+                                  "id": "4",
+                                  "title": "Done"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "button",
+                              "label": "Start",
+                              "event": "START",
+                              "variant": "primary",
+                              "icon": "play"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
             ]
           }
         }
@@ -10219,217 +10701,252 @@
       },
       "traits": [
         {
-          "ref": "Drawer.traits.DrawerContentDrawer",
           "name": "SessionTreeDrawer",
           "linkedEntity": "SessionTree",
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "SessionTree"
-              ]
+          "category": "interaction",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "closed",
+                "isInitial": true
+              },
+              {
+                "name": "open"
+              }
             ],
-            "OPEN": [
-              [
-                "fetch",
-                "SessionTree"
-              ],
-              [
-                "render-ui",
-                "drawer",
-                {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "none",
-                  "children": [
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "OPEN",
+                "name": "Open"
+              },
+              {
+                "key": "CLOSE",
+                "name": "Close"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "closed",
+                "to": "closed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "SessionTree"
+                  ]
+                ]
+              },
+              {
+                "from": "closed",
+                "to": "open",
+                "event": "OPEN",
+                "effects": [
+                  [
+                    "fetch",
+                    "SessionTree"
+                  ],
+                  [
+                    "render-ui",
+                    "drawer",
                     {
-                      "type": "drawer",
-                      "title": "Session Tree",
-                      "isOpen": true,
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "none",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
+                          "type": "drawer",
+                          "title": "Session Tree",
+                          "isOpen": true,
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "md",
-                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "BranchId"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "BranchId"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "branchId"
+                                      ]
+                                    }
+                                  ]
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "branchId"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Label"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "label"
+                                      ]
+                                    }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Label"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "label"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "status"
+                                      ]
+                                    }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Status"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "status"
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "end",
-                              "children": [
+                                  "type": "divider"
+                                },
                                 {
-                                  "type": "button",
-                                  "label": "Close",
-                                  "event": "CLOSE",
-                                  "variant": "ghost"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "end",
+                                  "children": [
+                                    {
+                                      "type": "button",
+                                      "label": "Close",
+                                      "event": "CLOSE",
+                                      "variant": "ghost"
+                                    }
+                                  ]
                                 }
                               ]
                             }
                           ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "side-panel",
-                      "title": "Session Tree",
-                      "isOpen": true,
-                      "position": "right",
-                      "children": [
+                        },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
+                          "type": "side-panel",
+                          "title": "Session Tree",
+                          "isOpen": true,
+                          "position": "right",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
+                              "direction": "vertical",
                               "gap": "md",
-                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "BranchId"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "branchId"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "BranchId"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "branchId"
+                                      ]
+                                    }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Label"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "label"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Label"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "label"
+                                      ]
+                                    }
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Status"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "status"
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "caption",
+                                      "content": "Status"
+                                    },
+                                    {
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "content": [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@entity"
+                                        ],
+                                        "status"
+                                      ]
+                                    }
                                   ]
                                 }
                               ]
@@ -10439,19 +10956,24 @@
                       ]
                     }
                   ]
-                }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "drawer",
-                null
-              ],
-              [
-                "fetch",
-                "SessionTree"
-              ]
+                ]
+              },
+              {
+                "from": "open",
+                "to": "closed",
+                "event": "CLOSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "drawer",
+                    null
+                  ],
+                  [
+                    "fetch",
+                    "SessionTree"
+                  ]
+                ]
+              }
             ]
           }
         }
@@ -10468,5 +10990,6 @@
         }
       ]
     }
-  ]
+  ],
+  "description": "Multi-step pipeline organism. Composes planner + tool-loop molecules with session management, step progress tracking, and a session tree drawer. Composed from: - stdAgentPlanner (molecule): breaks goal into ordered steps - stdAgentToolLoop (molecule): executes steps with tool invocations - stdAgentSession: forks sessions at checkpoints, supports rollback - stdAgentStepProgress: visual pipeline step indicator - stdDrawer: session tree sidebar for navigating branches Cross-trait events: - PIPELINE_PLANNED (Planner -> ToolLoop): plan ready, start execution - STEP_COMPLETE (ToolLoop -> Session): checkpoint after each step - PIPELINE_FINISHED (ToolLoop -> Memory): pipeline done, archive results Pages: /pipeline (initial), /execution, /logs (2026-04-08). The canonical source for std behaviors is now the registry `.orb` file at `packages/almadar-std/behaviors/registry/<level>/<name>.orb`, which is generated from this TS source by `tools/almadar-behavior-ts-to-orb/` and consumed by the compiler's embedded loader. Consumers should import behaviors via `.lolo`/`.orb` `uses` declarations and reference them as `Alias.entity` / `Alias.traits.X` / `Alias.pages.X`, applying overrides at the call site (`linkedEntity`, `name`, `events`, `effects`, `listens`, `emitsScope`). The TS `*Params` interface and the exported factory functions remain ONLY as the authoring path for the converter; they are NOT a stable public API and may change without notice. See `docs/Almadar_Orb_Behaviors.md` for the orbital-as-function model and `docs/LOLO_Gaps.md` for the migration plan."
 }

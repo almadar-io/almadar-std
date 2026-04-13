@@ -36,8 +36,8 @@
  * `docs/LOLO_Gaps.md` for the migration plan.
  */
 
-import type { OrbitalDefinition, Entity, Page, Trait, EntityField } from '@almadar/core/types';
-import { makeEntity, ensureIdField, plural, extractTrait } from '@almadar/core/builders';
+import type { OrbitalDefinition, OrbitalSchema, Entity, Page, Trait, EntityField } from '@almadar/core/types';
+import { makeEntity, ensureIdField, plural, extractTrait, makeSchema, } from '@almadar/core/builders';
 import { stdBrowse } from '../atoms/std-browse.js';
 import { stdModal } from '../atoms/std-modal.js';
 import { stdConfirmation } from '../atoms/std-confirmation.js';
@@ -207,7 +207,7 @@ export function stdListPage(params: StdListParams): Page {
 // Composed Orbital
 // ============================================================================
 
-export function stdList(params: StdListParams): OrbitalDefinition {
+export function stdList(params: StdListParams): OrbitalSchema {
   const c = resolve(params);
   const { entityName, fields, formFields, detailFields } = c;
   const UPPER = entityName.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase();
@@ -317,10 +317,10 @@ export function stdList(params: StdListParams): OrbitalDefinition {
 
   // 4. One orbital, 5 traits, shared event bus. Each trait owns its own
   // state machine (clean atomic composition, no post-processing).
-  return {
+  return makeSchema(`${entityName}Orbital`, {
     name: `${entityName}Orbital`,
     entity,
     traits: [browseTrait, createTrait, editTrait, viewTrait, deleteTrait],
     pages: [page],
-  } as OrbitalDefinition;
+  } as OrbitalDefinition);
 }
