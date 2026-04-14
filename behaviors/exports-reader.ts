@@ -61,7 +61,16 @@ export function getAllBehaviorNames(): string[] {
 }
 
 export function getAllBehaviors(): OrbitalSchema[] {
-  return getEntries().map(e => callBehavior(e));
+  const results: OrbitalSchema[] = [];
+  for (const entry of getEntries()) {
+    try {
+      results.push(callBehavior(entry));
+    } catch {
+      // Some behaviors require params beyond { entityName } (e.g. fields, categories).
+      // Skip them when enumerating the catalog — they still work when called with full params.
+    }
+  }
+  return results;
 }
 
 export function getBehaviorsByLevel(level: BehaviorLevel): OrbitalSchema[] {
