@@ -106,6 +106,10 @@ export {
 // All behavior functions
 export * from './behaviors/functions/index.js';
 
+// Phase 5.3: human-authoring primitive for decomposing a behavior's
+// composition into its flat TraitReference list. Not exposed to the agent/LLM.
+export { explodeBehaviorComposition } from './behaviors/explode-behavior-composition.js';
+
 // Documentation Generator
 export {
   // Types
