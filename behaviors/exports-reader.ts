@@ -9,7 +9,7 @@
  */
 
 import * as behaviorFns from './functions/index.js';
-import type { OrbitalSchema } from '@almadar/core/types';
+import type { OrbitalDefinition, OrbitalSchema } from '@almadar/core/types';
 
 export type BehaviorLevel = 'atoms' | 'molecules' | 'organisms';
 
@@ -51,9 +51,14 @@ function getEntries(): BehaviorEntry[] {
 
 function callBehavior(entry: BehaviorEntry): OrbitalSchema {
   const result = entry.fn({ entityName: entry.name.replace(/^std-/, '') });
-  const schema = result as OrbitalSchema;
-  schema.name = entry.name;
-  return schema;
+  // Phase 4.2: std{X}() returns OrbitalDefinition; wrap it in an OrbitalSchema
+  // so the catalog surface stays stable for existing consumers (analyzer,
+  // compiler embedded loader, tests).
+  const orbital = result as OrbitalDefinition;
+  return {
+    name: entry.name,
+    orbitals: [orbital],
+  };
 }
 
 export function getAllBehaviorNames(): string[] {
