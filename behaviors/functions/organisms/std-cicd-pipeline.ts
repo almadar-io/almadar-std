@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/organisms/std-cicd-pipeline';
+const BEHAVIOR_PATH = 'std/behaviors/std-cicd-pipeline';
 const ALIAS = 'CicdPipeline';
 
 /**

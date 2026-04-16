@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/atoms/std-game-hud';
+const BEHAVIOR_PATH = 'std/behaviors/std-game-hud';
 const ALIAS = 'GameHud';
 
 /**

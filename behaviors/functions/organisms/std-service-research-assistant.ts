@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/organisms/std-service-research-assistant';
+const BEHAVIOR_PATH = 'std/behaviors/std-service-research-assistant';
 const ALIAS = 'ServiceResearchAssistant';
 
 /**

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/molecules/std-simulator-game';
+const BEHAVIOR_PATH = 'std/behaviors/std-simulator-game';
 const ALIAS = 'SimulatorGame';
 
 /**

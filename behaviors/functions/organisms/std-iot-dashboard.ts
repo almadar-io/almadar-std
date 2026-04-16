@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/organisms/std-iot-dashboard';
+const BEHAVIOR_PATH = 'std/behaviors/std-iot-dashboard';
 const ALIAS = 'IotDashboard';
 
 /**

@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/atoms/std-validate-on-save';
+const BEHAVIOR_PATH = 'std/behaviors/std-validate-on-save';
 const ALIAS = 'ValidateOnSave';
 
 /**

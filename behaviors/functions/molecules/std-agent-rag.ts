@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
-const BEHAVIOR_PATH = 'std/behaviors/molecules/std-agent-rag';
+const BEHAVIOR_PATH = 'std/behaviors/std-agent-rag';
 const ALIAS = 'AgentRag';
 
 /**
