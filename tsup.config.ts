@@ -19,9 +19,12 @@ export default defineConfig({
   splitting: false,
   treeshake: true,
   onSuccess: async () => {
-    // Copy golden .orb files so exports-reader.ts can find them at runtime.
-    cpSync('behaviors/exports', 'dist/behaviors/exports', { recursive: true });
-    cpSync('behaviors/exports', 'dist/exports', { recursive: true });
+    // Copy the canonical registry .orb files into dist/ so downstream consumers
+    // that walk `node_modules/@almadar/std/behaviors/registry/` find them.
+    // (Legacy copies under `dist/behaviors/exports/` and `dist/exports/` are
+    // intentionally not emitted anymore — the `behaviors/exports/` layout is
+    // retired as of 2026-04-17.)
+    cpSync('behaviors/registry', 'dist/behaviors/registry', { recursive: true });
     // Copy behaviors-registry.json so query.ts can find it at runtime.
     cpSync('behaviors/behaviors-registry.json', 'dist/behaviors/behaviors-registry.json');
     cpSync('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
