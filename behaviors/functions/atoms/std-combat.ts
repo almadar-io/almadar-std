@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-combat';
@@ -33,6 +33,9 @@ export interface StdCombatParams {
   entityName: string;
   /** Extra fields to add to the orbital-scoped entity clone. */
   fields?: EntityField[];
+  /** Entity persistence mode. Defaults to `persistent` when omitted.
+   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
+  persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
   /** Per-key event rename map (atom key → caller key). */
@@ -79,6 +82,7 @@ export function stdCombat(params: StdCombatParams): OrbitalDefinition {
   const entity: Entity = {
     name: params.entityName,
     fields: params.fields ?? [],
+    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
   };
   return makeOrbitalWithUses({
     name: 'CombatantOrbital',
