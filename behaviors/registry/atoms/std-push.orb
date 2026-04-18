@@ -1,0 +1,252 @@
+{
+  "name": "std-push",
+  "version": "1.0.0",
+  "description": "External-event subscription atom. Wraps os/watch-http with a lifecycle state machine (idle → subscribed ↔ reconnecting) using emit: config to turn incoming messages + failures into closed-circuit events.",
+  "orbitals": [
+    {
+      "name": "PushSubscriberOrbital",
+      "entity": {
+        "name": "PushSubscriber",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "PushSubscriberIndicator",
+          "category": "interaction",
+          "linkedEntity": "PushSubscriber",
+          "emits": [
+            {
+              "event": "PUSH_RECEIVED"
+            },
+            {
+              "event": "PUSH_DISCONNECTED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              },
+              {
+                "name": "subscribed"
+              },
+              {
+                "name": "reconnecting"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              },
+              {
+                "key": "PUSH_RECEIVED"
+              },
+              {
+                "key": "PUSH_DISCONNECTED"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "subscribed",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "os/watch-http",
+                    "wss://push.example.com",
+                    {
+                      "emit": {
+                        "on_message": "PUSH_RECEIVED",
+                        "failure": "PUSH_DISCONNECTED"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "horizontal",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "name": "wifi",
+                          "size": "sm",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Connecting…"
+                        }
+                      ],
+                      "gap": "sm"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "subscribed",
+                "to": "subscribed",
+                "event": "PUSH_RECEIVED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "subscribed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "horizontal",
+                      "align": "center",
+                      "children": [
+                        {
+                          "size": "sm",
+                          "name": "wifi",
+                          "color": "success",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Connected",
+                          "variant": "caption",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "subscribed",
+                "to": "reconnecting",
+                "event": "PUSH_DISCONNECTED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "reconnecting"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "wifi-off",
+                          "color": "warning",
+                          "size": "sm"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Reconnecting…"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "sm",
+                      "direction": "horizontal"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reconnecting",
+                "to": "subscribed",
+                "event": "PUSH_RECEIVED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "subscribed"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "size": "sm",
+                          "name": "wifi",
+                          "color": "success"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Connected",
+                          "variant": "caption"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "reconnecting",
+                "to": "reconnecting",
+                "event": "PUSH_DISCONNECTED",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "align": "center",
+                      "children": [
+                        {
+                          "size": "sm",
+                          "name": "wifi-off",
+                          "type": "icon",
+                          "color": "destructive"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Disconnected",
+                          "type": "typography"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Push",
+          "path": "/push",
+          "traits": [
+            {
+              "ref": "PushSubscriberIndicator"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

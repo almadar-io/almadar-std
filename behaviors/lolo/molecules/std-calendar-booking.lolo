@@ -1,0 +1,38 @@
+;; app std-calendar-booking
+;;
+;; Calendar view that opens a Modal on time-slot click and a Confirmation
+;; before committing. Only the Calendar frame is composed via @trait.X;
+;; Modal + Confirmation render to their own modal slots on their own events.
+
+orbital BookingOrbital {
+  uses Calendar     from "std/behaviors/std-calendar"
+  uses Modal        from "std/behaviors/std-modal"
+  uses Confirmation from "std/behaviors/std-confirmation"
+
+  entity Booking [persistent: bookings] {
+    id : string!
+    title : string
+    startsAt : string
+    status : string
+  }
+
+  trait BookingCalendar     = Calendar.traits.CalendarEventCalendar        -> Booking {}
+  trait BookingModal        = Modal.traits.ModalRecordModal                -> Booking {}
+  trait BookingConfirmation = Confirmation.traits.ConfirmActionConfirmation -> Booking {}
+
+  trait BookingLayout -> Booking [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "vertical",
+          gap: "md",
+          children: [
+            "@trait.BookingCalendar"
+          ]
+        })
+    }
+  }
+
+  page "/calendar" -> BookingLayout
+}

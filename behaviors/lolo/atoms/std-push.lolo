@@ -1,0 +1,57 @@
+;; app std-push
+;;
+;; External-event subscription atom. Wraps `os/watch-http` with a small
+;; lifecycle state machine (idle → subscribed ↔ reconnecting) using the
+;; §3.1 `emit:` config to turn incoming messages + failures into closed-
+;; circuit events on the orbital's bus.
+;;
+;; Intra-frame: embed `@trait.PushIndicator` in a layout to show a
+;; live connection status pill (see molecule `std-push-activity-log`).
+;; Inter-frame: any trait can `listens: [{ name: PUSH_RECEIVED }]` and
+;; react to incoming payloads.
+;;
+;; Consumers override via TraitReference:
+;;   - `effects:` on INIT → replace the os/watch-http URL and event names
+;;   - `events:` → rename PUSH_RECEIVED / PUSH_DISCONNECTED to domain events
+
+orbital PushSubscriberOrbital {
+  entity PushSubscriber [runtime] {
+    id : string!
+    status : string
+  }
+
+  trait PushSubscriberIndicator -> PushSubscriber [interaction] {
+    emits {
+      PUSH_RECEIVED
+      PUSH_DISCONNECTED
+    }
+    initial: idle
+    state idle {
+      INIT -> subscribed
+        (os/watch-http "wss://push.example.com" {
+          emit: {
+            on_message: "PUSH_RECEIVED",
+            failure: "PUSH_DISCONNECTED"
+          }
+        })
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi", size: "sm" }, { type: "typography", content: "Connecting…", variant: "caption" }] })
+    }
+    state subscribed {
+      PUSH_RECEIVED -> subscribed
+        (set @entity.status "subscribed")
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi", size: "sm", color: "success" }, { type: "typography", content: "Connected", variant: "caption" }] })
+      PUSH_DISCONNECTED -> reconnecting
+        (set @entity.status "reconnecting")
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi-off", size: "sm", color: "warning" }, { type: "typography", content: "Reconnecting…", variant: "caption" }] })
+    }
+    state reconnecting {
+      PUSH_RECEIVED -> subscribed
+        (set @entity.status "subscribed")
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi", size: "sm", color: "success" }, { type: "typography", content: "Connected", variant: "caption" }] })
+      PUSH_DISCONNECTED -> reconnecting
+        (render-ui main { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "wifi-off", size: "sm", color: "destructive" }, { type: "typography", content: "Disconnected", variant: "caption" }] })
+    }
+  }
+
+  page "/push" -> PushSubscriberIndicator
+}

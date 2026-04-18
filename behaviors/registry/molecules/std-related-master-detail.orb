@@ -1,0 +1,119 @@
+{
+  "name": "std-related-master-detail",
+  "version": "1.0.0",
+  "description": "Relation master-detail: Browse + Related walking a declared relation, composed via @trait.X.",
+  "orbitals": [
+    {
+      "name": "MasterDetailOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-related",
+          "as": "Related"
+        }
+      ],
+      "entity": {
+        "name": "MasterDetailItem",
+        "collection": "masterdetailitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "items",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "MasterDetailList",
+          "linkedEntity": "MasterDetailItem"
+        },
+        {
+          "ref": "Related.traits.RelatedItemList",
+          "name": "MasterDetailRelated",
+          "linkedEntity": "MasterDetailItem"
+        },
+        {
+          "name": "MasterDetailLayout",
+          "category": "interaction",
+          "linkedEntity": "MasterDetailItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "box",
+                          "children": [
+                            "@trait.MasterDetailList"
+                          ],
+                          "style": {
+                            "flex": "2"
+                          }
+                        },
+                        {
+                          "type": "box",
+                          "style": {
+                            "flex": "3"
+                          },
+                          "children": [
+                            "@trait.MasterDetailRelated"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "MasterDetail",
+          "path": "/master-detail",
+          "traits": [
+            {
+              "ref": "MasterDetailLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

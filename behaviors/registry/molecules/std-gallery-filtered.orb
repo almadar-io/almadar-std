@@ -1,0 +1,124 @@
+{
+  "name": "std-gallery-filtered",
+  "version": "1.0.0",
+  "description": "Filtered gallery: Search + Filter atop a Gallery, composed via @trait.X.",
+  "orbitals": [
+    {
+      "name": "GalleryFilteredOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-gallery",
+          "as": "Gallery"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        }
+      ],
+      "entity": {
+        "name": "GalleryFilteredItem",
+        "collection": "galleryfiltereditems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "imageUrl",
+            "type": "string"
+          },
+          {
+            "name": "tags",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "GalleryFilteredSearch",
+          "linkedEntity": "GalleryFilteredItem"
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "GalleryFilteredFilter",
+          "linkedEntity": "GalleryFilteredItem"
+        },
+        {
+          "ref": "Gallery.traits.GalleryItemGallery",
+          "name": "GalleryFilteredGallery",
+          "linkedEntity": "GalleryFilteredItem"
+        },
+        {
+          "name": "GalleryFilteredLayout",
+          "category": "interaction",
+          "linkedEntity": "GalleryFilteredItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "children": [
+                            "@trait.GalleryFilteredSearch",
+                            "@trait.GalleryFilteredFilter"
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        "@trait.GalleryFilteredGallery"
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Gallery",
+          "path": "/gallery",
+          "traits": [
+            {
+              "ref": "GalleryFilteredLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

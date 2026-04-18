@@ -1,0 +1,37 @@
+;; app std-related-master-detail
+;;
+;; The canonical @trait.X showcase for the new std-related atom:
+;; Browse (40%) on the left, Related (60%) on the right. Browse emits
+;; SELECT with @payload.id; Related's INIT listens, runs its fetch with
+;; include:, emits FETCH_OK, renders the populated children.
+
+orbital MasterDetailOrbital {
+  uses Browse  from "std/behaviors/std-browse"
+  uses Related from "std/behaviors/std-related"
+
+  entity MasterDetailItem [persistent: masterdetailitems] {
+    id : string!
+    name : string
+    items : string
+  }
+
+  trait MasterDetailList    = Browse.traits.BrowseItemBrowse    -> MasterDetailItem {}
+  trait MasterDetailRelated = Related.traits.RelatedItemList    -> MasterDetailItem {}
+
+  trait MasterDetailLayout -> MasterDetailItem [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "horizontal",
+          gap: "md",
+          children: [
+            { type: "box", style: { flex: "2" }, children: [ "@trait.MasterDetailList" ] },
+            { type: "box", style: { flex: "3" }, children: [ "@trait.MasterDetailRelated" ] }
+          ]
+        })
+    }
+  }
+
+  page "/master-detail" -> MasterDetailLayout
+}

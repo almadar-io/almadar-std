@@ -1,0 +1,126 @@
+{
+  "name": "std-dashboard-tabbed",
+  "version": "1.0.0",
+  "description": "Tabbed dashboard: Tabs over 3 Display panels composed via @trait.X (two-hop).",
+  "orbitals": [
+    {
+      "name": "DashboardTabbedOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-tabs",
+          "as": "Tabs"
+        },
+        {
+          "from": "std/behaviors/std-display",
+          "as": "Display"
+        }
+      ],
+      "entity": {
+        "name": "DashboardItem",
+        "collection": "dashboarditems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          },
+          {
+            "name": "tab",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Tabs.traits.TabContentTabs",
+          "name": "DashboardTabs",
+          "linkedEntity": "DashboardItem"
+        },
+        {
+          "ref": "Display.traits.DisplayItemDisplay",
+          "name": "DashboardSummary",
+          "linkedEntity": "DashboardItem"
+        },
+        {
+          "ref": "Display.traits.DisplayItemDisplay",
+          "name": "DashboardMetrics",
+          "linkedEntity": "DashboardItem"
+        },
+        {
+          "ref": "Display.traits.DisplayItemDisplay",
+          "name": "DashboardRecent",
+          "linkedEntity": "DashboardItem"
+        },
+        {
+          "name": "DashboardLayout",
+          "category": "interaction",
+          "linkedEntity": "DashboardItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        "@trait.DashboardTabs",
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "children": [
+                            "@trait.DashboardSummary",
+                            "@trait.DashboardMetrics",
+                            "@trait.DashboardRecent"
+                          ]
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Dashboard",
+          "path": "/dashboard",
+          "traits": [
+            {
+              "ref": "DashboardLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

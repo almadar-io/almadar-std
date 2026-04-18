@@ -1,0 +1,38 @@
+;; app std-wizard-form
+;;
+;; Multi-step form: Wizard drives the step flow, Input renders each step's
+;; field, ValidateOnSave gates the final submit. Two-hop @trait.X exercise —
+;; WizardEntryWizard embeds @trait.FormInput inside its own step render.
+
+orbital WizardFormOrbital {
+  uses Wizard   from "std/behaviors/std-wizard"
+  uses Input    from "std/behaviors/std-input"
+  uses Validate from "std/behaviors/std-validate-on-save"
+
+  entity WizardFormEntry [persistent: wizardformentries] {
+    id : string!
+    step : string
+    name : string
+    email : string
+  }
+
+  trait WizardFormWizard   = Wizard.traits.WizardEntryWizard      -> WizardFormEntry {}
+  trait WizardFormInput    = Input.traits.TextInputInput          -> WizardFormEntry {}
+  trait WizardFormValidate = Validate.traits.OrbFileWatcher       -> WizardFormEntry {}
+
+  trait WizardFormLayout -> WizardFormEntry [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "vertical",
+          gap: "md",
+          children: [
+            "@trait.WizardFormWizard"
+          ]
+        })
+    }
+  }
+
+  page "/wizard-form" -> WizardFormLayout
+}

@@ -1,0 +1,37 @@
+;; app std-push-activity-log
+;;
+;; The canonical @trait.X showcase for the new std-push atom:
+;; PushIndicator live status on top, ActivityLog below listing received
+;; messages. Push emits PUSH_RECEIVED; ActivityLog listens and appends.
+
+orbital PushActivityLogOrbital {
+  uses Push        from "std/behaviors/std-push"
+  uses ActivityLog from "std/behaviors/std-agent-activity-log"
+
+  entity PushActivityItem [persistent: pushactivityitems] {
+    id : string!
+    event : string
+    receivedAt : string
+    payload : string
+  }
+
+  trait PushActivityPush = Push.traits.PushSubscriberIndicator    -> PushActivityItem {}
+  trait PushActivityLog  = ActivityLog.traits.AgentActivityLogLog -> PushActivityItem {}
+
+  trait PushActivityLayout -> PushActivityItem [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "vertical",
+          gap: "md",
+          children: [
+            "@trait.PushActivityPush",
+            "@trait.PushActivityLog"
+          ]
+        })
+    }
+  }
+
+  page "/push-activity" -> PushActivityLayout
+}

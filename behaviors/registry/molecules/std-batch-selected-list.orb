@@ -1,0 +1,131 @@
+{
+  "name": "std-batch-selected-list",
+  "version": "1.0.0",
+  "description": "Batch-select list: Browse + Selection + Confirmation with a batch-action toolbar, composed via @trait.X.",
+  "orbitals": [
+    {
+      "name": "BatchListItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-selection",
+          "as": "Selection"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        }
+      ],
+      "entity": {
+        "name": "BatchListItem",
+        "collection": "batchlistitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "BatchItemBrowse",
+          "linkedEntity": "BatchListItem"
+        },
+        {
+          "ref": "Selection.traits.SelectableItemSelection",
+          "name": "BatchItemSelection",
+          "linkedEntity": "BatchListItem"
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "BatchItemConfirmation",
+          "linkedEntity": "BatchListItem"
+        },
+        {
+          "name": "BatchListLayout",
+          "category": "interaction",
+          "linkedEntity": "BatchListItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "justify": "end",
+                          "children": [
+                            {
+                              "icon": "trash-2",
+                              "type": "button",
+                              "event": "REQUEST",
+                              "variant": "danger",
+                              "label": "Delete selected"
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        "@trait.BatchItemSelection",
+                        "@trait.BatchItemBrowse"
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "BatchList",
+          "path": "/batch-list",
+          "traits": [
+            {
+              "ref": "BatchListLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

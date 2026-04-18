@@ -1,0 +1,123 @@
+{
+  "name": "std-drawer-master-list",
+  "version": "1.0.0",
+  "description": "Master-drawer: Browse left + Drawer right, composed via @trait.X.",
+  "orbitals": [
+    {
+      "name": "DrawerMasterOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-drawer",
+          "as": "Drawer"
+        }
+      ],
+      "entity": {
+        "name": "DrawerMasterItem",
+        "collection": "drawermasteritems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "DrawerMasterBrowse",
+          "linkedEntity": "DrawerMasterItem"
+        },
+        {
+          "ref": "Drawer.traits.DrawerContentDrawer",
+          "name": "DrawerMasterDrawer",
+          "linkedEntity": "DrawerMasterItem"
+        },
+        {
+          "name": "DrawerMasterLayout",
+          "category": "interaction",
+          "linkedEntity": "DrawerMasterItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "box",
+                          "style": {
+                            "flex": "3"
+                          },
+                          "children": [
+                            "@trait.DrawerMasterBrowse"
+                          ]
+                        },
+                        {
+                          "children": [
+                            "@trait.DrawerMasterDrawer"
+                          ],
+                          "type": "box",
+                          "style": {
+                            "flex": "2"
+                          }
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "DrawerMaster",
+          "path": "/drawer-master",
+          "traits": [
+            {
+              "ref": "DrawerMasterLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

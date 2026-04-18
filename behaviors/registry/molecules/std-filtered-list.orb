@@ -1,0 +1,135 @@
+{
+  "name": "std-filtered-list",
+  "version": "1.0.0",
+  "description": "Filtered list molecule composing Search + Filter + Browse + Pagination via @trait.X in a vstack. Showcases intra-frame composition.",
+  "orbitals": [
+    {
+      "name": "FilteredListItemOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-search",
+          "as": "Search"
+        },
+        {
+          "from": "std/behaviors/std-filter",
+          "as": "Filter"
+        },
+        {
+          "from": "std/behaviors/std-browse",
+          "as": "Browse"
+        },
+        {
+          "from": "std/behaviors/std-pagination",
+          "as": "Pagination"
+        }
+      ],
+      "entity": {
+        "name": "FilteredListItem",
+        "collection": "filteredlistitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Search.traits.SearchResultSearch",
+          "name": "FilteredItemSearch",
+          "linkedEntity": "FilteredListItem"
+        },
+        {
+          "ref": "Filter.traits.FilterTargetFilter",
+          "name": "FilteredItemFilter",
+          "linkedEntity": "FilteredListItem"
+        },
+        {
+          "ref": "Browse.traits.BrowseItemBrowse",
+          "name": "FilteredItemBrowse",
+          "linkedEntity": "FilteredListItem"
+        },
+        {
+          "ref": "Pagination.traits.PagedItemPagination",
+          "name": "FilteredItemPagination",
+          "linkedEntity": "FilteredListItem"
+        },
+        {
+          "name": "FilteredListLayout",
+          "category": "interaction",
+          "linkedEntity": "FilteredListItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "children": [
+                            "@trait.FilteredItemSearch",
+                            "@trait.FilteredItemFilter"
+                          ]
+                        },
+                        "@trait.FilteredItemBrowse",
+                        "@trait.FilteredItemPagination"
+                      ],
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "FilteredList",
+          "path": "/filtered-list",
+          "traits": [
+            {
+              "ref": "FilteredListLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

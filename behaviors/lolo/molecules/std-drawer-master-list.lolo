@@ -1,0 +1,36 @@
+;; app std-drawer-master-list
+;;
+;; Browse on the left (60%), Drawer on the right (40%) for selected-item
+;; detail. Browse emits SELECT; Drawer listens + fetches.
+
+orbital DrawerMasterOrbital {
+  uses Browse from "std/behaviors/std-browse"
+  uses Drawer from "std/behaviors/std-drawer"
+
+  entity DrawerMasterItem [persistent: drawermasteritems] {
+    id : string!
+    name : string
+    description : string
+    status : string
+  }
+
+  trait DrawerMasterBrowse = Browse.traits.BrowseItemBrowse    -> DrawerMasterItem {}
+  trait DrawerMasterDrawer = Drawer.traits.DrawerContentDrawer -> DrawerMasterItem {}
+
+  trait DrawerMasterLayout -> DrawerMasterItem [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "horizontal",
+          gap: "md",
+          children: [
+            { type: "box", style: { flex: "3" }, children: [ "@trait.DrawerMasterBrowse" ] },
+            { type: "box", style: { flex: "2" }, children: [ "@trait.DrawerMasterDrawer" ] }
+          ]
+        })
+    }
+  }
+
+  page "/drawer-master" -> DrawerMasterLayout
+}

@@ -1,0 +1,115 @@
+{
+  "name": "std-wizard-form",
+  "version": "1.0.0",
+  "description": "Wizard-driven form: Wizard + Input + ValidateOnSave composed via @trait.X (two-hop).",
+  "orbitals": [
+    {
+      "name": "WizardFormOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-wizard",
+          "as": "Wizard"
+        },
+        {
+          "from": "std/behaviors/std-input",
+          "as": "Input"
+        },
+        {
+          "from": "std/behaviors/std-validate-on-save",
+          "as": "Validate"
+        }
+      ],
+      "entity": {
+        "name": "WizardFormEntry",
+        "collection": "wizardformentries",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "step",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Wizard.traits.WizardEntryWizard",
+          "name": "WizardFormWizard",
+          "linkedEntity": "WizardFormEntry"
+        },
+        {
+          "ref": "Input.traits.TextInputInput",
+          "name": "WizardFormInput",
+          "linkedEntity": "WizardFormEntry"
+        },
+        {
+          "ref": "Validate.traits.OrbFileWatcher",
+          "name": "WizardFormValidate",
+          "linkedEntity": "WizardFormEntry"
+        },
+        {
+          "name": "WizardFormLayout",
+          "category": "interaction",
+          "linkedEntity": "WizardFormEntry",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        "@trait.WizardFormWizard"
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "WizardForm",
+          "path": "/wizard-form",
+          "traits": [
+            {
+              "ref": "WizardFormLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

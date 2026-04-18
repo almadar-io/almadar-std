@@ -1,0 +1,107 @@
+{
+  "name": "std-push-activity-log",
+  "version": "1.0.0",
+  "description": "Push + activity log: PushIndicator status + ActivityLog of received messages, composed via @trait.X.",
+  "orbitals": [
+    {
+      "name": "PushActivityLogOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-push",
+          "as": "Push"
+        },
+        {
+          "from": "std/behaviors/std-agent-activity-log",
+          "as": "ActivityLog"
+        }
+      ],
+      "entity": {
+        "name": "PushActivityItem",
+        "collection": "pushactivityitems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "event",
+            "type": "string"
+          },
+          {
+            "name": "receivedAt",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Push.traits.PushSubscriberIndicator",
+          "name": "PushActivityPush",
+          "linkedEntity": "PushActivityItem"
+        },
+        {
+          "ref": "ActivityLog.traits.AgentActivityLogLog",
+          "name": "PushActivityLog",
+          "linkedEntity": "PushActivityItem"
+        },
+        {
+          "name": "PushActivityLayout",
+          "category": "interaction",
+          "linkedEntity": "PushActivityItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        "@trait.PushActivityPush",
+                        "@trait.PushActivityLog"
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "PushActivity",
+          "path": "/push-activity",
+          "traits": [
+            {
+              "ref": "PushActivityLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "name": "std-related",
+  "version": "1.0.0",
+  "description": "Relation-rendering atom. Renders the linked entity as a data-list; consumers hydrate data via upstream fetch include: and rebind linkedEntity. Canonical @trait.X showcase in std-related-master-detail.",
+  "orbitals": [
+    {
+      "name": "RelatedItemOrbital",
+      "entity": {
+        "name": "RelatedItem",
+        "collection": "relateditems",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "RelatedItemList",
+          "category": "interaction",
+          "linkedEntity": "RelatedItem",
+          "emits": [
+            {
+              "event": "SELECT_RELATED"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loaded",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loaded",
+                "to": "loaded",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "ref",
+                    "RelatedItem"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "size": "md",
+                              "type": "icon",
+                              "name": "link"
+                            },
+                            {
+                              "variant": "h3",
+                              "content": "Related",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-list",
+                          "entity": "RelatedItem",
+                          "emptyTitle": "No related items",
+                          "emptyIcon": "inbox",
+                          "emptyDescription": "Nothing to show.",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "variant": "body",
+                                  "content": "@item.name"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "xs"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Related",
+          "path": "/related",
+          "traits": [
+            {
+              "ref": "RelatedItemList"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

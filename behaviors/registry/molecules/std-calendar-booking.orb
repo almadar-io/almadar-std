@@ -1,0 +1,115 @@
+{
+  "name": "std-calendar-booking",
+  "version": "1.0.0",
+  "description": "Calendar booking: Calendar view with Modal + Confirmation modals, Calendar composed via @trait.X.",
+  "orbitals": [
+    {
+      "name": "BookingOrbital",
+      "uses": [
+        {
+          "from": "std/behaviors/std-calendar",
+          "as": "Calendar"
+        },
+        {
+          "from": "std/behaviors/std-modal",
+          "as": "Modal"
+        },
+        {
+          "from": "std/behaviors/std-confirmation",
+          "as": "Confirmation"
+        }
+      ],
+      "entity": {
+        "name": "Booking",
+        "collection": "bookings",
+        "persistence": "persistent",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "startsAt",
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
+        ]
+      },
+      "traits": [
+        {
+          "ref": "Calendar.traits.CalendarEventCalendar",
+          "name": "BookingCalendar",
+          "linkedEntity": "Booking"
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "BookingModal",
+          "linkedEntity": "Booking"
+        },
+        {
+          "ref": "Confirmation.traits.ConfirmActionConfirmation",
+          "name": "BookingConfirmation",
+          "linkedEntity": "Booking"
+        },
+        {
+          "name": "BookingLayout",
+          "category": "interaction",
+          "linkedEntity": "Booking",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "composing",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "composing",
+                "to": "composing",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        "@trait.BookingCalendar"
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "pages": [
+        {
+          "name": "Calendar",
+          "path": "/calendar",
+          "traits": [
+            {
+              "ref": "BookingLayout"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

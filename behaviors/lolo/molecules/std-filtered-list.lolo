@@ -1,0 +1,56 @@
+;; app std-filtered-list
+;;
+;; Intra-frame composition via @trait.X: Search + Filter + Browse + Pagination
+;; stacked in one main slot. The LayoutTrait owns the render-ui tree; each
+;; imported atom keeps its own state machine and renders independently into
+;; its per-trait frame, which the layout picks up via `@trait.<Name>` in
+;; the children: array.
+;;
+;; Inter-frame: Search emits FILTER_CHANGED → Browse listens, re-fetches;
+;; Browse emits LOADED → Pagination listens, resets to page 1.
+
+orbital FilteredListItemOrbital {
+  uses Search     from "std/behaviors/std-search"
+  uses Filter     from "std/behaviors/std-filter"
+  uses Browse     from "std/behaviors/std-browse"
+  uses Pagination from "std/behaviors/std-pagination"
+
+  entity FilteredListItem [persistent: filteredlistitems] {
+    id : string!
+    name : string
+    description : string
+    status : string
+  }
+
+  trait FilteredItemSearch     = Search.traits.SearchResultSearch   -> FilteredListItem {}
+  trait FilteredItemFilter     = Filter.traits.FilterTargetFilter   -> FilteredListItem {}
+  trait FilteredItemBrowse     = Browse.traits.BrowseItemBrowse     -> FilteredListItem {}
+  trait FilteredItemPagination = Pagination.traits.PagedItemPagination -> FilteredListItem {}
+
+  trait FilteredListLayout -> FilteredListItem [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "vertical",
+          gap: "md",
+          className: "max-w-5xl mx-auto w-full",
+          children: [
+            {
+              type: "stack",
+              direction: "horizontal",
+              gap: "sm",
+              children: [
+                "@trait.FilteredItemSearch",
+                "@trait.FilteredItemFilter"
+              ]
+            },
+            "@trait.FilteredItemBrowse",
+            "@trait.FilteredItemPagination"
+          ]
+        })
+    }
+  }
+
+  page "/filtered-list" -> FilteredListLayout
+}

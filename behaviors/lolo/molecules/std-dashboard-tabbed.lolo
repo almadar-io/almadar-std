@@ -1,0 +1,48 @@
+;; app std-dashboard-tabbed
+;;
+;; Three Display panels switched by Tabs. Tabs owns the active-tab state;
+;; the layout composes both via @trait.X — Tabs on top, then the active
+;; Display below. Two-hop @trait.X exercise.
+
+orbital DashboardTabbedOrbital {
+  uses Tabs    from "std/behaviors/std-tabs"
+  uses Display from "std/behaviors/std-display"
+
+  entity DashboardItem [persistent: dashboarditems] {
+    id : string!
+    name : string
+    value : string
+    tab : string
+  }
+
+  trait DashboardTabs     = Tabs.traits.TabContentTabs       -> DashboardItem {}
+  trait DashboardSummary  = Display.traits.DisplayItemDisplay -> DashboardItem {}
+  trait DashboardMetrics  = Display.traits.DisplayItemDisplay -> DashboardItem {}
+  trait DashboardRecent   = Display.traits.DisplayItemDisplay -> DashboardItem {}
+
+  trait DashboardLayout -> DashboardItem [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "vertical",
+          gap: "md",
+          children: [
+            "@trait.DashboardTabs",
+            {
+              type: "stack",
+              direction: "horizontal",
+              gap: "md",
+              children: [
+                "@trait.DashboardSummary",
+                "@trait.DashboardMetrics",
+                "@trait.DashboardRecent"
+              ]
+            }
+          ]
+        })
+    }
+  }
+
+  page "/dashboard" -> DashboardLayout
+}

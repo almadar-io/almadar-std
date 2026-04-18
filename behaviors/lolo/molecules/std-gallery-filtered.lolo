@@ -1,0 +1,45 @@
+;; app std-gallery-filtered
+;;
+;; Gallery view with Search + Filter above it, stacked via @trait.X.
+
+orbital GalleryFilteredOrbital {
+  uses Gallery from "std/behaviors/std-gallery"
+  uses Filter  from "std/behaviors/std-filter"
+  uses Search  from "std/behaviors/std-search"
+
+  entity GalleryFilteredItem [persistent: galleryfiltereditems] {
+    id : string!
+    name : string
+    imageUrl : string
+    tags : string
+  }
+
+  trait GalleryFilteredSearch  = Search.traits.SearchResultSearch   -> GalleryFilteredItem {}
+  trait GalleryFilteredFilter  = Filter.traits.FilterTargetFilter   -> GalleryFilteredItem {}
+  trait GalleryFilteredGallery = Gallery.traits.GalleryItemGallery  -> GalleryFilteredItem {}
+
+  trait GalleryFilteredLayout -> GalleryFilteredItem [interaction] {
+    state composing {
+      INIT -> composing
+        (render-ui main {
+          type: "stack",
+          direction: "vertical",
+          gap: "md",
+          children: [
+            {
+              type: "stack",
+              direction: "horizontal",
+              gap: "sm",
+              children: [
+                "@trait.GalleryFilteredSearch",
+                "@trait.GalleryFilteredFilter"
+              ]
+            },
+            "@trait.GalleryFilteredGallery"
+          ]
+        })
+    }
+  }
+
+  page "/gallery" -> GalleryFilteredLayout
+}
