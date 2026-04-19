@@ -24,7 +24,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STD_OPERATORS, STD_OPERATORS_BY_MODULE } from '../registry.js';
-import type { StdOperatorMeta, StdModule } from '../types.js';
+import type { OperatorEffectMeta, StdOperatorMeta, StdModule } from '../types.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
@@ -81,6 +81,16 @@ interface CanonicalOperatorEntry {
     description: string;
     hasSideEffects?: boolean;
     module?: StdModule;
+    /**
+     * Schema v2 effect metadata (see docs/Almadar_Operators_Migration.md §"Proposed schema (v2)").
+     * Populated only when `hasSideEffects: true`. The Rust compiler reads this
+     * field to type-check `emit: { success: "X" }` configs at call sites
+     * (Almadar_Entity_V2_Plan.md P0.7/P0.8). Emitting is gated on
+     * `meta.effect` presence so pre-v2 operators omit the field entirely and
+     * the Rust deserializer's `#[serde(default)]` picks up the absence
+     * cleanly.
+     */
+    effect?: OperatorEffectMeta;
 }
 
 function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
@@ -93,6 +103,7 @@ function toCanonicalEntry(meta: StdOperatorMeta): CanonicalOperatorEntry {
         module: meta.module,
     };
     if (meta.hasSideEffects) entry.hasSideEffects = true;
+    if (meta.effect) entry.effect = meta.effect;
     return entry;
 }
 

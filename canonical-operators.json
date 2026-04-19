@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-04-19T16:13:09.351Z",
+  "generated": "2026-04-19T17:37:20.920Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -897,7 +897,11 @@
       "returnType": "void",
       "description": "Invoke an external service action",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "call-service",
+        "produces": "any"
+      }
     },
     "despawn": {
       "category": "effect",
@@ -906,7 +910,10 @@
       "returnType": "void",
       "description": "Despawn an entity instance (games)",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "despawn"
+      }
     },
     "do": {
       "category": "control",
@@ -923,7 +930,20 @@
       "returnType": "void",
       "description": "Emit an event onto the bus",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "emit",
+        "produces": {
+          "kind": "object",
+          "fields": {
+            "event": {
+              "kind": "eventKey"
+            },
+            "payload": "any"
+          },
+          "open": true
+        }
+      }
     },
     "fetch": {
       "category": "effect",
@@ -932,7 +952,24 @@
       "returnType": "void",
       "description": "Fetch an entity (by id) or a collection (by filter) from persistence",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "fetch",
+        "produces": {
+          "kind": "union",
+          "of": [
+            {
+              "kind": "entity"
+            },
+            {
+              "kind": "array",
+              "of": {
+                "kind": "entity"
+              }
+            }
+          ]
+        }
+      }
     },
     "fn": {
       "category": "control",
@@ -1165,7 +1202,10 @@
       "returnType": "void",
       "description": "Navigate to a route",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "navigate"
+      }
     },
     "nn/batchnorm": {
       "category": "ml-arch",
@@ -1295,7 +1335,10 @@
       "returnType": "void",
       "description": "Show a notification (in-app, email, push, sms)",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "notify"
+      }
     },
     "object/clone": {
       "category": "std-object",
@@ -1536,7 +1579,38 @@
       "returnType": "void",
       "description": "Create, update, delete, clear, or batch entity records",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "persist",
+        "produces": {
+          "kind": "union",
+          "of": [
+            {
+              "kind": "entity"
+            },
+            {
+              "kind": "object",
+              "fields": {
+                "id": "string",
+                "deleted": "boolean"
+              },
+              "open": false
+            },
+            {
+              "kind": "object",
+              "fields": {
+                "operations": {
+                  "kind": "array",
+                  "of": "any"
+                },
+                "completedCount": "number",
+                "totalCount": "number"
+              },
+              "open": false
+            }
+          ]
+        }
+      }
     },
     "prob/beta": {
       "category": "std-prob",
@@ -1675,7 +1749,24 @@
       "returnType": "void",
       "description": "Reactive entity reference (deprecated, use fetch with listens in V2)",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "ref",
+        "produces": {
+          "kind": "union",
+          "of": [
+            {
+              "kind": "entity"
+            },
+            {
+              "kind": "array",
+              "of": {
+                "kind": "entity"
+              }
+            }
+          ]
+        }
+      }
     },
     "render-ui": {
       "category": "effect",
@@ -1684,7 +1775,10 @@
       "returnType": "void",
       "description": "Render a pattern into a UI slot",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "render-ui"
+      }
     },
     "set": {
       "category": "effect",
@@ -1693,7 +1787,38 @@
       "returnType": "void",
       "description": "Set a binding to a value",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "set",
+        "produces": "any",
+        "config": {
+          "operation": {
+            "kind": "union",
+            "of": [
+              {
+                "kind": "literal",
+                "value": "increment"
+              },
+              {
+                "kind": "literal",
+                "value": "decrement"
+              },
+              {
+                "kind": "literal",
+                "value": "multiply"
+              },
+              {
+                "kind": "literal",
+                "value": "append"
+              },
+              {
+                "kind": "literal",
+                "value": "remove"
+              }
+            ]
+          }
+        }
+      }
     },
     "spawn": {
       "category": "effect",
@@ -1702,7 +1827,10 @@
       "returnType": "void",
       "description": "Spawn a new entity instance (games)",
       "module": "core",
-      "hasSideEffects": true
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "spawn"
+      }
     },
     "str/camelCase": {
       "category": "std-str",
