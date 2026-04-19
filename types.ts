@@ -79,6 +79,7 @@ export interface OperatorMeta {
  * E.g., 'math' provides 'math/abs', 'math/clamp', etc.
  */
 export const STD_MODULES = [
+  'core',
   'math',
   'str',
   'array',
@@ -136,6 +137,55 @@ export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];
 // ============================================================================
 
 /**
+ * Structured parameter type reference (Schema v2).
+ *
+ * A plain string (e.g. `'number'`, `'string'`) is still accepted for
+ * backward compatibility with simple primitives. Richer shapes let effect
+ * operators declare literal unions, UI slots, event keys, and entity refs
+ * so compilers, LLM prompt generators, and validators can reason about the
+ * argument shape without string heuristics.
+ */
+export type OperatorTypeRef =
+  | string
+  | { kind: 'union'; of: OperatorTypeRef[] }
+  | { kind: 'literal'; value: string | number | boolean }
+  | { kind: 'array'; of: OperatorTypeRef }
+  | { kind: 'object'; fields: Record<string, OperatorTypeRef>; open?: boolean }
+  | { kind: 'entity'; collection?: string }
+  | { kind: 'entityRef' }
+  | { kind: 'eventKey'; scope?: 'internal' | 'external' }
+  | { kind: 'uiSlot' }
+  | { kind: 'patternType' }
+  | { kind: 'binding'; shape?: OperatorTypeRef }
+  | { kind: 'sexpr' };
+
+/**
+ * Effect-specific metadata (Schema v2).
+ * Populated only when `hasSideEffects: true`. Describes what the effect
+ * produces back onto the runtime bus or state tree so consumers (Rust
+ * validator, LLM skill gen, verify) can trace downstream reactions.
+ */
+export interface OperatorEffectMeta {
+  kind:
+    | 'emit'
+    | 'persist'
+    | 'fetch'
+    | 'render-ui'
+    | 'navigate'
+    | 'notify'
+    | 'spawn'
+    | 'despawn'
+    | 'set'
+    | 'call-service'
+    | 'log'
+    | 'custom';
+  /** What the effect puts onto the bus / state when it resolves. */
+  produces?: OperatorTypeRef;
+  /** Effect-specific config keys and their declared types. */
+  config?: Record<string, OperatorTypeRef>;
+}
+
+/**
  * Extended operator metadata for std library operators.
  * Adds parameter descriptions and examples.
  */
@@ -145,7 +195,7 @@ export interface StdOperatorMeta extends OperatorMeta {
   /** Parameter names and descriptions */
   params?: {
     name: string;
-    type: string;
+    type: OperatorTypeRef;
     description: string;
     optional?: boolean;
     defaultValue?: unknown;
@@ -158,6 +208,8 @@ export interface StdOperatorMeta extends OperatorMeta {
   lambdaArgPosition?: number;
   /** Compile-time operator (resolved during .lolo lowering, not at runtime) */
   compileTime?: boolean;
+  /** Schema v2: structured metadata for effect operators */
+  effect?: OperatorEffectMeta;
 }
 
 /**

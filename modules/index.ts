@@ -6,6 +6,7 @@
  * @packageDocumentation
  */
 
+export { CORE_OPERATORS, getCoreOperators } from './core.js';
 export { MATH_OPERATORS, getMathOperators } from './math.js';
 export { STR_OPERATORS, getStrOperators } from './str.js';
 export { ARRAY_OPERATORS, getArrayOperators, getLambdaArrayOperators } from './array.js';

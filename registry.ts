@@ -7,10 +7,10 @@
  * @packageDocumentation
  */
 
-import type { OperatorMeta } from '@almadar/core/types';
-import type { StdOperatorMeta, StdModule } from './types.js';
+import type { OperatorMeta, StdOperatorMeta, StdModule } from './types.js';
 import { isStdOperator, getModuleFromOperator, STD_MODULES } from './types.js';
 
+import { CORE_OPERATORS } from './modules/core.js';
 import { MATH_OPERATORS } from './modules/math.js';
 import { STR_OPERATORS } from './modules/str.js';
 import { ARRAY_OPERATORS } from './modules/array.js';
@@ -35,6 +35,7 @@ import { COMPOSITION_OPERATORS } from './modules/composition.js';
  * Combined registry of all standard library operators.
  */
 export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
+  ...CORE_OPERATORS,
   ...MATH_OPERATORS,
   ...STR_OPERATORS,
   ...ARRAY_OPERATORS,
@@ -55,7 +56,14 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
 /**
  * Module-specific operator registries.
  */
+/**
+ * Flat array of every operator name (core + std-module).
+ * Convenience const for grammar generators and validators.
+ */
+export const OPERATOR_NAMES: readonly string[] = Object.keys(STD_OPERATORS);
+
 export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorMeta>> = {
+  core: CORE_OPERATORS,
   math: MATH_OPERATORS,
   str: STR_OPERATORS,
   array: ARRAY_OPERATORS,

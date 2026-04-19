@@ -20,9 +20,15 @@
 
 // Types
 export {
+  type OperatorCategory,
+  type OperatorMeta,
+  type OperatorTypeRef,
+  type OperatorEffectMeta,
+  type BasicReturnType,
   type StdModule,
   type StdOperatorCategory,
   type StdOperatorMeta,
+  OPERATOR_CATEGORIES,
   STD_MODULES,
   STD_OPERATOR_CATEGORIES,
   isStdCategory,
@@ -36,15 +42,22 @@ export {
 export {
   STD_OPERATORS,
   STD_OPERATORS_BY_MODULE,
+  OPERATOR_NAMES,
+  // Aliases for the canonical registry, used by consumers migrated from
+  // the retired @almadar/operators package.
+  STD_OPERATORS as OPERATORS,
   getStdOperatorMeta,
   isKnownStdOperator,
+  isKnownStdOperator as isKnownOperator,
   getModuleOperators,
   getAllStdOperators,
+  getAllStdOperators as getAllOperatorNames,
   getStdOperatorsByModule,
   getLambdaOperators,
   getStdEffectOperators,
   getStdPureOperators,
   validateStdOperatorArity,
+  validateStdOperatorArity as validateOperatorArity,
   isStdGuardOperator,
   isStdEffectOperator,
   // Extended functions for integration with core operators
@@ -57,6 +70,7 @@ export {
 
 // Module operators (for direct access if needed)
 export {
+  CORE_OPERATORS,
   MATH_OPERATORS,
   STR_OPERATORS,
   ARRAY_OPERATORS,
@@ -65,6 +79,7 @@ export {
   VALIDATE_OPERATORS,
   FORMAT_OPERATORS,
   ASYNC_OPERATORS,
+  getCoreOperators,
 } from './modules/index.js';
 
 // Standard Behaviors (functions-based)

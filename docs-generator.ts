@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { StdOperatorMeta, StdModule } from './types.js';
+import type { StdOperatorMeta, StdModule, OperatorTypeRef } from './types.js';
 import type { BehaviorTrait } from './behaviors/types.js';
 import type { State, Event, Transition } from '@almadar/core/types';
 import { STD_MODULES } from './types.js';
@@ -22,6 +22,12 @@ import { getAllBehaviors } from './behaviors/exports-reader.js';
  * Human-friendly module descriptions
  */
 export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
+    core: {
+        name: 'Core',
+        displayName: 'Language Primitives',
+        description: 'Unnamespaced S-expression operators: arithmetic, comparison, logic, control flow, and effects. The core of the .orb language.',
+        icon: '⚙️',
+    },
     math: {
         name: 'Math',
         displayName: 'Mathematical Operations',
@@ -364,6 +370,42 @@ export function formatArity(minArity: number, maxArity: number | null): string {
 // ============================================================================
 
 /**
+ * Convert a Schema v2 OperatorTypeRef into a readable string for docs.
+ * Back-compat: plain string types pass through unchanged.
+ */
+function formatTypeRef(ref: OperatorTypeRef): string {
+    if (typeof ref === 'string') return ref;
+    switch (ref.kind) {
+        case 'literal':
+            return JSON.stringify(ref.value);
+        case 'union':
+            return ref.of.map(formatTypeRef).join(' | ');
+        case 'array':
+            return `${formatTypeRef(ref.of)}[]`;
+        case 'object': {
+            const fields = Object.entries(ref.fields)
+                .map(([k, v]) => `${k}: ${formatTypeRef(v)}`)
+                .join(', ');
+            return ref.open ? `{ ${fields}, ... }` : `{ ${fields} }`;
+        }
+        case 'entity':
+            return ref.collection ? `Entity<${ref.collection}>` : 'Entity';
+        case 'entityRef':
+            return 'EntityRef';
+        case 'eventKey':
+            return ref.scope ? `EventKey<${ref.scope}>` : 'EventKey';
+        case 'uiSlot':
+            return 'UISlot';
+        case 'patternType':
+            return 'PatternType';
+        case 'binding':
+            return ref.shape ? `Binding<${formatTypeRef(ref.shape)}>` : 'Binding';
+        case 'sexpr':
+            return 'SExpr';
+    }
+}
+
+/**
  * Generate documentation for a single operator
  */
 export function generateOperatorDoc(opName: string, meta: StdOperatorMeta): OperatorDoc {
@@ -372,7 +414,13 @@ export function generateOperatorDoc(opName: string, meta: StdOperatorMeta): Oper
         shortName: opName.split('/')[1] || opName,
         displayName: humanizeOperatorName(opName),
         description: meta.description,
-        params: meta.params || [],
+        params: (meta.params || []).map((p) => ({
+            name: p.name,
+            type: formatTypeRef(p.type),
+            description: p.description,
+            optional: p.optional,
+            defaultValue: p.defaultValue,
+        })),
         example: meta.example || '',
         returnType: meta.returnType || 'any',
         returnTypeHuman: humanizeReturnType(meta.returnType),
