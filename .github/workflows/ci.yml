@@ -35,7 +35,12 @@ jobs:
         run: pnpm build
 
       - name: Test
-        run: pnpm test --if-present
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+            pnpm test
+          else
+            echo "no test script; skipping"
+          fi
 
       - name: Lint
         run: pnpm exec eslint --no-warn-ignored --max-warnings 0 .
