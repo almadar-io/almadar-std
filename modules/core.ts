@@ -354,6 +354,10 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["set", "@entity.health", 100]',
     effect: {
       kind: 'set',
+      // success emit carries the written value; the evaluator coerces to the
+      // binding's declared type, so 'any' is the general shape. A future pass
+      // can narrow per-binding via resolveBinding.
+      produces: ANY,
       config: { operation: SET_OPERATION },
     },
   },
@@ -393,7 +397,35 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       { name: 'data', type: ENTITY_REF, description: 'Payload (create/update) or entity id (delete)', optional: true },
     ],
     example: '["persist", "create", "Task", { "title": "@payload.title" }]',
-    effect: { kind: 'persist' },
+    effect: {
+      kind: 'persist',
+      // Action-discriminated union. The compiler narrows at the call site
+      // based on the action arg literal to pick the right branch when
+      // checking the emit.success event's declared payload.
+      //   create/update -> the resulting entity record
+      //   delete/clear  -> { id, deleted }
+      //   batch         -> summary of operations
+      produces: {
+        kind: 'union',
+        of: [
+          { kind: 'entity' },
+          {
+            kind: 'object',
+            fields: { id: STRING, deleted: BOOLEAN },
+            open: false,
+          },
+          {
+            kind: 'object',
+            fields: {
+              operations: { kind: 'array', of: ANY },
+              completedCount: NUMBER,
+              totalCount: NUMBER,
+            },
+            open: false,
+          },
+        ],
+      },
+    },
   },
   navigate: {
     module: 'core',
@@ -464,6 +496,89 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     example: '["despawn", "@entity.id"]',
     effect: { kind: 'despawn' },
   },
+  fetch: {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description: 'Fetch an entity (by id) or a collection (by filter) from persistence',
+    hasSideEffects: true,
+    returnType: 'void',
+    params: [
+      { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
+      {
+        name: 'options',
+        type: {
+          kind: 'object',
+          fields: {
+            id: STRING,
+            filter: ANY,
+            limit: NUMBER,
+            offset: NUMBER,
+            include: { kind: 'array', of: STRING },
+            emit: { kind: 'object', fields: {}, open: true },
+          },
+          open: true,
+        },
+        description: 'Fetch options: id | filter | limit | offset | include | emit',
+        optional: true,
+      },
+    ],
+    example: '["fetch", "Task", { "id": "@payload.taskId", "emit": { "success": "TASK_LOADED" } }]',
+    effect: {
+      kind: 'fetch',
+      // Call-site-discriminated union: options.id present -> single entity;
+      // otherwise -> array of entity. The compiler narrows at the call site
+      // when checking emit.success against the declared event payload.
+      produces: {
+        kind: 'union',
+        of: [
+          { kind: 'entity' },
+          { kind: 'array', of: { kind: 'entity' } },
+        ],
+      },
+    },
+  },
+  ref: {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description: 'Reactive entity reference (deprecated, use fetch with listens in V2)',
+    hasSideEffects: true,
+    returnType: 'void',
+    params: [
+      { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
+      {
+        name: 'options',
+        type: {
+          kind: 'object',
+          fields: {
+            id: STRING,
+            filter: ANY,
+            include: { kind: 'array', of: STRING },
+            emit: { kind: 'object', fields: {}, open: true },
+          },
+          open: true,
+        },
+        description: 'Ref options: id | filter | include | emit',
+        optional: true,
+      },
+    ],
+    example: '["ref", "Task"]',
+    effect: {
+      kind: 'ref',
+      // Same call-site shape as fetch. Kept for the V2 transition period;
+      // scheduled for deprecation in a later phase (see Almadar_Entity_V2_Plan.md).
+      produces: {
+        kind: 'union',
+        of: [
+          { kind: 'entity' },
+          { kind: 'array', of: { kind: 'entity' } },
+        ],
+      },
+    },
+  },
   'call-service': {
     module: 'core',
     category: 'effect',
@@ -483,7 +598,13 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     ],
     example: '["call-service", "llm", "generate", { "userPrompt": "@entity.inputText" }]',
-    effect: { kind: 'call-service' },
+    effect: {
+      kind: 'call-service',
+      // TODO(entity-v2): narrow to the declared service return type once
+      // per-service return shapes live on the orbital services block.
+      // Today the emit.success payload is whatever the service adapter returns.
+      produces: ANY,
+    },
   },
   'render-ui': {
     module: 'core',

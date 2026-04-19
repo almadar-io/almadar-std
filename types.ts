@@ -170,6 +170,7 @@ export interface OperatorEffectMeta {
     | 'emit'
     | 'persist'
     | 'fetch'
+    | 'ref'
     | 'render-ui'
     | 'navigate'
     | 'notify'
