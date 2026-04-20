@@ -1,7 +1,7 @@
 {
   "name": "std-trading-dashboard",
   "version": "1.0.0",
-  "description": "Trading dashboard organism. Composes: stdDisplay(Portfolio) + stdList(TradeOrder) + stdAsync(MarketFeed)",
+  "description": "std-trading-dashboard as a Function",
   "orbitals": [
     {
       "name": "PortfolioOrbital",
@@ -17,30 +17,71 @@
           {
             "name": "totalValue",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "dailyChange",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "positions",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "cashBalance",
             "type": "number",
-            "default": 0
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
           "name": "PortfolioDisplay",
-          "linkedEntity": "Portfolio",
           "category": "interaction",
+          "linkedEntity": "Portfolio",
+          "emits": [
+            {
+              "event": "PortfolioLoaded",
+              "description": "Fired when Portfolio finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "totalValue",
+                  "type": "number"
+                },
+                {
+                  "name": "dailyChange",
+                  "type": "number"
+                },
+                {
+                  "name": "positions",
+                  "type": "number"
+                },
+                {
+                  "name": "cashBalance",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "PortfolioLoadFailed",
+              "description": "Fired when Portfolio fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -70,6 +111,20 @@
               {
                 "key": "REFRESHED",
                 "name": "Refreshed"
+              },
+              {
+                "key": "PortfolioLoaded",
+                "name": "Portfolio loaded"
+              },
+              {
+                "key": "PortfolioLoadFailed",
+                "name": "Portfolio load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -80,14 +135,18 @@
                 "effects": [
                   [
                     "fetch",
-                    "Portfolio"
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "success": "PortfolioLoaded",
+                        "failure": "PortfolioLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
                       "navItems": [
                         {
                           "label": "Portfolio",
@@ -95,31 +154,30 @@
                           "icon": "layout-list"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "icon": "clipboard-list",
+                          "label": "Orders"
                         },
                         {
                           "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "href": "/market"
                         }
                       ],
+                      "appName": "Trading Dashboard",
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Portfolio"
@@ -127,15 +185,13 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
+                                  "gap": "md",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "md",
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -143,31 +199,31 @@
                                           "size": "lg"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "Portfolio",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
                                       "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "type": "button",
+                                      "label": "Refresh"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
                                           "type": "stat-display",
@@ -183,7 +239,6 @@
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "DailyChange",
                                           "value": [
                                             "object/get",
                                             [
@@ -191,11 +246,10 @@
                                               "@entity"
                                             ],
                                             "dailyChange"
-                                          ]
+                                          ],
+                                          "label": "DailyChange"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Positions",
                                           "value": [
                                             "object/get",
                                             [
@@ -203,10 +257,11 @@
                                               "@entity"
                                             ],
                                             "positions"
-                                          ]
+                                          ],
+                                          "label": "Positions",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "CashBalance",
                                           "value": [
                                             "object/get",
@@ -215,39 +270,42 @@
                                               "@entity"
                                             ],
                                             "cashBalance"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
+                                  "type": "grid",
+                                  "columns": 2.0,
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
                                   ]
                                 },
@@ -255,28 +313,28 @@
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ],
                                   "xKey": "date",
@@ -284,7 +342,6 @@
                                   "title": "Trend"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -294,46 +351,50 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
                                   "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
-                                    }
-                                  ],
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "width": 400.0,
+                                  "height": 200.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "x": 50.0,
+                                      "label": "Start",
+                                      "y": 100.0
+                                    },
+                                    {
+                                      "x": 200.0,
+                                      "id": "b",
+                                      "label": "Process",
+                                      "y": 50.0
+                                    },
+                                    {
+                                      "label": "End",
+                                      "id": "c",
+                                      "y": 100.0,
+                                      "x": 350.0
+                                    }
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ]
                     }
@@ -347,98 +408,78 @@
                 "effects": [
                   [
                     "fetch",
-                    "Portfolio"
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Portfolio"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "trending-up",
+                                          "type": "icon",
                                           "size": "lg"
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "Portfolio",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "content": "Portfolio"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal",
+                                      "type": "stack"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "event": "REFRESH",
+                                      "type": "button",
+                                      "icon": "refresh-cw",
+                                      "label": "Refresh"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "TotalValue",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -461,8 +502,8 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Positions",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -484,125 +525,151 @@
                                             "cashBalance"
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid",
+                                      "columns": 3.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
+                                          "content": "Graph View",
                                           "variant": "caption",
-                                          "content": "Graph View"
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "columns": 2.0,
+                                  "type": "grid"
                                 },
                                 {
-                                  "type": "line-chart",
+                                  "xKey": "date",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ],
-                                  "xKey": "date",
                                   "yKey": "value",
-                                  "title": "Trend"
+                                  "title": "Trend",
+                                  "type": "line-chart"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
+                                  "height": 200.0,
                                   "nodes": [
                                     {
+                                      "x": 50.0,
+                                      "y": 100.0,
                                       "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "label": "Start"
                                     },
                                     {
+                                      "x": 200.0,
                                       "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "y": 50.0,
+                                      "label": "Process"
                                     },
                                     {
+                                      "y": 100.0,
                                       "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "x": 350.0,
+                                      "label": "End"
                                     }
                                   ],
+                                  "type": "graph-view",
+                                  "width": 400.0,
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "lg"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "appName": "Trading Dashboard",
+                      "navItems": [
+                        {
+                          "label": "Portfolio",
+                          "href": "/portfolio",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Orders",
+                          "href": "/orders",
+                          "icon": "clipboard-list"
+                        },
+                        {
+                          "label": "Market",
+                          "icon": "layout-list",
+                          "href": "/market"
+                        }
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -614,7 +681,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "Portfolio"
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "success": "PortfolioLoaded",
+                        "failure": "PortfolioLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -629,8 +702,8 @@
                           "icon": "layout-list"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
+                          "label": "Orders",
                           "icon": "clipboard-list"
                         },
                         {
@@ -645,8 +718,8 @@
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -661,10 +734,10 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "md",
                                   "justify": "space-between",
+                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
                                       "type": "stack",
@@ -684,11 +757,11 @@
                                       ]
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
                                       "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "type": "button",
+                                      "icon": "refresh-cw",
+                                      "label": "Refresh"
                                     }
                                   ]
                                 },
@@ -696,16 +769,14 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "TotalValue",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -728,8 +799,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Positions",
                                           "value": [
                                             "object/get",
                                             [
@@ -737,7 +806,9 @@
                                               "@entity"
                                             ],
                                             "positions"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "Positions"
                                         },
                                         {
                                           "type": "stat-display",
@@ -751,119 +822,121 @@
                                             "cashBalance"
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
+                                  "columns": 2.0,
                                   "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
                                   ]
                                 },
                                 {
                                   "type": "line-chart",
+                                  "yKey": "value",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  "title": "Trend",
+                                  "xKey": "date"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ]
                                 },
                                 {
                                   "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
-                                    }
-                                  ],
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "nodes": [
+                                    {
+                                      "y": 100.0,
+                                      "id": "a",
+                                      "x": 50.0,
+                                      "label": "Start"
+                                    },
+                                    {
+                                      "id": "b",
+                                      "y": 50.0,
+                                      "x": 200.0,
+                                      "label": "Process"
+                                    },
+                                    {
+                                      "x": 350.0,
+                                      "y": 100.0,
+                                      "label": "End",
+                                      "id": "c"
+                                    }
+                                  ],
+                                  "height": 200.0,
+                                  "width": 400.0
                                 }
                               ]
                             }
@@ -881,42 +954,42 @@
                 "effects": [
                   [
                     "fetch",
-                    "Portfolio"
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
                       "navItems": [
                         {
+                          "icon": "layout-list",
                           "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
+                          "href": "/portfolio"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
+                          "label": "Orders",
                           "icon": "clipboard-list"
                         },
                         {
                           "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "href": "/market"
                         }
                       ],
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -925,17 +998,14 @@
                                     {
                                       "label": "Portfolio"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
@@ -944,20 +1014,24 @@
                                           "size": "lg"
                                         },
                                         {
-                                          "type": "typography",
+                                          "variant": "h2",
                                           "content": "Portfolio",
-                                          "variant": "h2"
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal",
+                                      "type": "stack"
                                     },
                                     {
+                                      "icon": "refresh-cw",
                                       "type": "button",
-                                      "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "label": "Refresh",
+                                      "event": "REFRESH"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
@@ -967,12 +1041,11 @@
                                   "padding": "md",
                                   "children": [
                                     {
+                                      "columns": 3.0,
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
                                           "type": "stat-display",
-                                          "label": "TotalValue",
                                           "value": [
                                             "object/get",
                                             [
@@ -980,11 +1053,10 @@
                                               "@entity"
                                             ],
                                             "totalValue"
-                                          ]
+                                          ],
+                                          "label": "TotalValue"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "DailyChange",
                                           "value": [
                                             "object/get",
                                             [
@@ -992,11 +1064,11 @@
                                               "@entity"
                                             ],
                                             "dailyChange"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "DailyChange"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Positions",
                                           "value": [
                                             "object/get",
                                             [
@@ -1004,11 +1076,11 @@
                                               "@entity"
                                             ],
                                             "positions"
-                                          ]
+                                          ],
+                                          "label": "Positions",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "CashBalance",
                                           "value": [
                                             "object/get",
                                             [
@@ -1016,7 +1088,9 @@
                                               "@entity"
                                             ],
                                             "cashBalance"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "CashBalance"
                                         }
                                       ]
                                     }
@@ -1027,69 +1101,69 @@
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
+                                  "columns": 2.0,
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
                                           "variant": "caption",
                                           "content": "Graph View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "line-chart",
+                                  "yKey": "value",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
                                   "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  "title": "Trend",
+                                  "type": "line-chart"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
                                       "label": "Previous",
@@ -1101,42 +1175,47 @@
                                   "type": "graph-view",
                                   "nodes": [
                                     {
+                                      "y": 100.0,
                                       "id": "a",
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "x": 50.0
                                     },
                                     {
+                                      "x": 200.0,
+                                      "y": 50.0,
                                       "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "label": "Process"
                                     },
                                     {
                                       "id": "c",
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "x": 350.0,
+                                      "y": 100.0
                                     }
                                   ],
+                                  "height": 200.0,
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "width": 400.0
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "lg"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "appName": "Trading Dashboard",
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -1148,98 +1227,99 @@
                 "effects": [
                   [
                     "fetch",
-                    "Portfolio"
+                    "Portfolio",
+                    {
+                      "emit": {
+                        "failure": "PortfolioLoadFailed",
+                        "success": "PortfolioLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "Trading Dashboard",
                       "navItems": [
                         {
-                          "label": "Portfolio",
+                          "icon": "layout-list",
                           "href": "/portfolio",
-                          "icon": "layout-list"
+                          "label": "Portfolio"
                         },
                         {
+                          "icon": "clipboard-list",
                           "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
+                          "href": "/orders"
                         },
                         {
-                          "label": "Market",
                           "href": "/market",
+                          "label": "Market",
                           "icon": "layout-list"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Portfolio"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "trending-up",
+                                          "type": "icon",
                                           "size": "lg"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Portfolio",
-                                          "variant": "h2"
+                                          "content": "Portfolio"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "type": "button",
+                                      "icon": "refresh-cw",
+                                      "event": "REFRESH"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "justify": "space-between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "label": "TotalValue",
                                           "value": [
                                             "object/get",
                                             [
@@ -1247,7 +1327,9 @@
                                               "@entity"
                                             ],
                                             "totalValue"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "TotalValue"
                                         },
                                         {
                                           "type": "stat-display",
@@ -1262,8 +1344,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Positions",
                                           "value": [
                                             "object/get",
                                             [
@@ -1271,11 +1351,11 @@
                                               "@entity"
                                             ],
                                             "positions"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "Positions"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "CashBalance",
                                           "value": [
                                             "object/get",
                                             [
@@ -1283,76 +1363,79 @@
                                               "@entity"
                                             ],
                                             "cashBalance"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "CashBalance"
                                         }
-                                      ]
+                                      ],
+                                      "columns": 3.0
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
-                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "content": "Chart View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid",
+                                  "columns": 2.0,
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
+                                  "yKey": "value",
+                                  "title": "Trend",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  "xKey": "date"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -1362,46 +1445,48 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
-                                  "type": "graph-view",
+                                  "width": 400.0,
+                                  "height": 200.0,
                                   "nodes": [
                                     {
+                                      "y": 100.0,
+                                      "x": 50.0,
                                       "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "label": "Start"
                                     },
                                     {
-                                      "id": "b",
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "y": 50.0,
+                                      "id": "b",
+                                      "x": 200.0
                                     },
                                     {
                                       "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "x": 350.0,
+                                      "y": 100.0,
+                                      "label": "End"
                                     }
                                   ],
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "type": "graph-view"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ]
                     }
@@ -1409,14 +1494,14 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
           "name": "PortfolioPage",
           "path": "/portfolio",
-          "isInitial": true,
           "traits": [
             {
               "ref": "PortfolioDisplay"
@@ -1429,8 +1514,8 @@
       "name": "TradeOrderOrbital",
       "entity": {
         "name": "TradeOrder",
-        "persistence": "persistent",
         "collection": "tradeorders",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -1445,11 +1530,7 @@
           {
             "name": "side",
             "type": "string",
-            "required": true,
-            "values": [
-              "buy",
-              "sell"
-            ]
+            "required": true
           },
           {
             "name": "quantity",
@@ -1470,23 +1551,68 @@
       "traits": [
         {
           "name": "TradeOrderBrowse",
-          "linkedEntity": "TradeOrder",
           "category": "interaction",
+          "linkedEntity": "TradeOrder",
+          "emits": [
+            {
+              "event": "TradeOrderLoaded",
+              "description": "Fired when TradeOrder finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "symbol",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "side",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "price",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoadFailed",
+              "description": "Fired when TradeOrder fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "listens": [
             {
-              "event": "TRADE_ORDER_CREATED",
-              "triggers": "INIT",
-              "scope": "external"
+              "event": "*.TRADE_ORDER_CREATED",
+              "triggers": "INIT"
             },
             {
-              "event": "TRADE_ORDER_UPDATED",
-              "triggers": "INIT",
-              "scope": "external"
+              "event": "*.TRADE_ORDER_UPDATED",
+              "triggers": "INIT"
             },
             {
-              "event": "TRADE_ORDER_DELETED",
-              "triggers": "INIT",
-              "scope": "external"
+              "event": "*.TRADE_ORDER_DELETED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -1502,51 +1628,16 @@
                 "name": "Initialize"
               },
               {
-                "key": "CREATE",
-                "name": "CREATE"
+                "key": "TradeOrderLoaded",
+                "name": "TradeOrder loaded"
               },
               {
-                "key": "VIEW",
-                "name": "VIEW",
+                "key": "TradeOrderLoadFailed",
+                "name": "TradeOrder load failed",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "EDIT",
-                "name": "EDIT",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "DELETE",
-                "name": "DELETE",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -1565,43 +1656,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
                       "navItems": [
                         {
+                          "icon": "layout-list",
                           "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
+                          "href": "/portfolio"
                         },
                         {
-                          "label": "Orders",
+                          "icon": "clipboard-list",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "label": "Orders"
                         },
                         {
-                          "label": "Market",
                           "href": "/market",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "label": "Market"
                         }
                       ],
+                      "type": "dashboard-layout",
+                      "appName": "Trading Dashboard",
                       "children": [
                         {
+                          "className": "max-w-5xl mx-auto w-full",
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
                               "align": "center",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
                                   "align": "center",
                                   "children": [
                                     {
@@ -1610,66 +1695,71 @@
                                       "size": "lg"
                                     },
                                     {
-                                      "type": "typography",
                                       "content": "Trade Orders",
-                                      "variant": "h2"
+                                      "variant": "h2",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
                                   "gap": "sm",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Create TradeOrder",
                                       "event": "CREATE",
+                                      "label": "Create TradeOrder",
                                       "variant": "primary",
-                                      "icon": "plus"
+                                      "icon": "plus",
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "justify": "space-between",
+                              "gap": "md"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "data-list",
-                              "entity": "TradeOrder",
-                              "emptyIcon": "inbox",
                               "emptyTitle": "No orders yet",
-                              "emptyDescription": "Place your first trade.",
                               "itemActions": [
                                 {
-                                  "label": "View",
                                   "event": "VIEW",
                                   "variant": "ghost",
-                                  "size": "sm"
+                                  "size": "sm",
+                                  "label": "View"
                                 },
                                 {
                                   "label": "Edit",
                                   "event": "EDIT",
-                                  "variant": "ghost",
-                                  "size": "sm"
+                                  "size": "sm",
+                                  "variant": "ghost"
                                 },
                                 {
-                                  "label": "Delete",
-                                  "event": "DELETE",
                                   "variant": "danger",
-                                  "size": "sm"
+                                  "size": "sm",
+                                  "event": "DELETE",
+                                  "label": "Delete"
                                 }
                               ],
+                              "entity": "TradeOrder",
+                              "type": "data-list",
+                              "gap": "sm",
+                              "emptyDescription": "Place your first trade.",
                               "columns": [
                                 {
-                                  "name": "symbol",
                                   "variant": "h3",
-                                  "icon": "trending-up"
+                                  "icon": "trending-up",
+                                  "name": "symbol"
                                 },
                                 {
-                                  "name": "side",
-                                  "variant": "badge"
+                                  "variant": "badge",
+                                  "name": "side"
                                 },
                                 {
                                   "name": "quantity",
@@ -1678,14 +1768,15 @@
                                 },
                                 {
                                   "name": "price",
-                                  "variant": "h4",
-                                  "format": "currency"
+                                  "format": "currency",
+                                  "variant": "h4"
                                 }
                               ],
                               "variant": "card",
-                              "gap": "sm"
+                              "emptyIcon": "inbox"
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -1693,20 +1784,65 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "TradeOrderCreate",
-          "linkedEntity": "TradeOrder",
           "category": "interaction",
+          "linkedEntity": "TradeOrder",
           "emits": [
             {
-              "event": "SAVE",
-              "scope": "internal"
+              "event": "SAVE"
             },
             {
-              "event": "TRADE_ORDER_CREATED",
-              "scope": "external"
+              "event": "TRADE_ORDER_CREATED"
+            },
+            {
+              "event": "TradeOrderLoaded",
+              "description": "Fired when TradeOrder finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "symbol",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "side",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "price",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoadFailed",
+              "description": "Fired when TradeOrder fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -1726,7 +1862,7 @@
               },
               {
                 "key": "CREATE",
-                "name": "Open"
+                "name": "Create"
               },
               {
                 "key": "CLOSE",
@@ -1738,8 +1874,25 @@
                 "payload": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TRADE_ORDER_CREATED",
+                "name": "Trade Order Created"
+              },
+              {
+                "key": "TradeOrderLoaded",
+                "name": "TradeOrder loaded"
+              },
+              {
+                "key": "TradeOrderLoadFailed",
+                "name": "TradeOrder load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -1763,14 +1916,18 @@
                 "effects": [
                   [
                     "fetch",
-                    "TradeOrder"
+                    "TradeOrder",
+                    {
+                      "emit": {
+                        "success": "TradeOrderLoaded",
+                        "failure": "TradeOrderLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
@@ -1779,14 +1936,14 @@
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "plus-circle",
-                              "size": "md"
+                              "size": "md",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h3",
                               "content": "Create TradeOrder",
-                              "variant": "h3"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -1794,11 +1951,11 @@
                           "type": "divider"
                         },
                         {
+                          "cancelEvent": "CLOSE",
                           "type": "form-section",
+                          "submitEvent": "SAVE",
                           "entity": "TradeOrder",
                           "mode": "create",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
                           "fields": [
                             "symbol",
                             "side",
@@ -1806,7 +1963,9 @@
                             "price"
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1851,20 +2010,65 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "TradeOrderEdit",
-          "linkedEntity": "TradeOrder",
           "category": "interaction",
+          "linkedEntity": "TradeOrder",
           "emits": [
             {
-              "event": "SAVE",
-              "scope": "internal"
+              "event": "SAVE"
             },
             {
-              "event": "TRADE_ORDER_UPDATED",
-              "scope": "external"
+              "event": "TRADE_ORDER_UPDATED"
+            },
+            {
+              "event": "TradeOrderLoaded",
+              "description": "Fired when TradeOrder finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "symbol",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "side",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "price",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoadFailed",
+              "description": "Fired when TradeOrder fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -1884,12 +2088,11 @@
               },
               {
                 "key": "EDIT",
-                "name": "Open",
+                "name": "Edit",
                 "payload": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
@@ -1903,8 +2106,25 @@
                 "payload": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "TRADE_ORDER_UPDATED",
+                "name": "Trade Order Updated"
+              },
+              {
+                "key": "TradeOrderLoaded",
+                "name": "TradeOrder loaded"
+              },
+              {
+                "key": "TradeOrderLoadFailed",
+                "name": "TradeOrder load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -1930,6 +2150,10 @@
                     "fetch",
                     "TradeOrder",
                     {
+                      "emit": {
+                        "failure": "TradeOrderLoadFailed",
+                        "success": "TradeOrderLoaded"
+                      },
                       "id": "@payload.id"
                     }
                   ],
@@ -1937,45 +2161,45 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
+                              "size": "md",
                               "type": "icon",
-                              "name": "edit",
-                              "size": "md"
+                              "name": "edit"
                             },
                             {
                               "type": "typography",
                               "content": "Edit TradeOrder",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "entity": "TradeOrder",
-                          "mode": "edit",
-                          "submitEvent": "SAVE",
-                          "cancelEvent": "CLOSE",
                           "fields": [
                             "symbol",
                             "side",
                             "quantity",
                             "price"
                           ],
-                          "entityId": "@entity.id"
+                          "entityId": "@entity.id",
+                          "cancelEvent": "CLOSE",
+                          "type": "form-section",
+                          "entity": "TradeOrder",
+                          "mode": "edit",
+                          "submitEvent": "SAVE"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -2020,16 +2244,62 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "TradeOrderView",
-          "linkedEntity": "TradeOrder",
           "category": "interaction",
+          "linkedEntity": "TradeOrder",
           "emits": [
             {
-              "event": "SAVE",
-              "scope": "internal"
+              "event": "SAVE"
+            },
+            {
+              "event": "TradeOrderLoaded",
+              "description": "Fired when TradeOrder finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "symbol",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "side",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "price",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoadFailed",
+              "description": "Fired when TradeOrder fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -2049,12 +2319,11 @@
               },
               {
                 "key": "VIEW",
-                "name": "Open",
+                "name": "View",
                 "payload": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
@@ -2064,12 +2333,19 @@
               },
               {
                 "key": "SAVE",
-                "name": "Save",
+                "name": "Save"
+              },
+              {
+                "key": "TradeOrderLoaded",
+                "name": "TradeOrder loaded"
+              },
+              {
+                "key": "TradeOrderLoadFailed",
+                "name": "TradeOrder load failed",
                 "payload": [
                   {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -2095,21 +2371,25 @@
                     "fetch",
                     "TradeOrder",
                     {
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "emit": {
+                        "success": "TradeOrderLoaded",
+                        "failure": "TradeOrderLoadFailed"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
+                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
@@ -2119,8 +2399,8 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@entity.symbol"
+                              "content": "@entity.symbol",
+                              "variant": "h3"
                             }
                           ]
                         },
@@ -2128,25 +2408,25 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
+                              "content": "Symbol",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Symbol"
+                              "variant": "caption"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
-                              "content": "@entity.symbol"
+                              "content": "@entity.symbol",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
@@ -2155,69 +2435,69 @@
                               "content": "Side"
                             },
                             {
-                              "type": "typography",
+                              "content": "@entity.side",
                               "variant": "body",
-                              "content": "@entity.side"
+                              "type": "typography"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
+                              "content": "Quantity",
                               "variant": "caption",
-                              "content": "Quantity"
+                              "type": "typography"
                             },
                             {
+                              "content": "@entity.quantity",
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.quantity"
+                              "variant": "body"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
+                              "content": "Price",
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Price"
+                              "variant": "caption"
                             },
                             {
+                              "content": "@entity.price",
                               "type": "typography",
-                              "variant": "body",
-                              "content": "@entity.price"
+                              "variant": "body"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
                           "children": [
                             {
-                              "type": "button",
+                              "icon": "edit",
                               "label": "Edit",
-                              "event": "EDIT",
                               "variant": "primary",
-                              "icon": "edit"
+                              "event": "EDIT",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
-                              "label": "Close",
                               "event": "CLOSE",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "type": "button",
+                              "label": "Close"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -2254,20 +2534,65 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "TradeOrderDelete",
-          "linkedEntity": "TradeOrder",
           "category": "interaction",
+          "linkedEntity": "TradeOrder",
           "emits": [
             {
-              "event": "CONFIRM_DELETE",
-              "scope": "internal"
+              "event": "CONFIRM_DELETE"
             },
             {
-              "event": "TRADE_ORDER_DELETED",
-              "scope": "external"
+              "event": "TRADE_ORDER_DELETED"
+            },
+            {
+              "event": "TradeOrderLoaded",
+              "description": "Fired when TradeOrder finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "symbol",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "side",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "price",
+                  "type": "number"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TradeOrderLoadFailed",
+              "description": "Fired when TradeOrder fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -2287,18 +2612,17 @@
               },
               {
                 "key": "DELETE",
-                "name": "Request Confirmation",
+                "name": "Delete",
                 "payload": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
               {
                 "key": "CONFIRM_DELETE",
-                "name": "Confirm"
+                "name": "Confirm Delete"
               },
               {
                 "key": "CANCEL",
@@ -2307,6 +2631,24 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "TRADE_ORDER_DELETED",
+                "name": "Trade Order Deleted"
+              },
+              {
+                "key": "TradeOrderLoaded",
+                "name": "TradeOrder loaded"
+              },
+              {
+                "key": "TradeOrderLoadFailed",
+                "name": "TradeOrder load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -2335,65 +2677,69 @@
                     "fetch",
                     "TradeOrder",
                     {
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "emit": {
+                        "failure": "TradeOrderLoadFailed",
+                        "success": "TradeOrderLoaded"
+                      }
                     }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
+                              "size": "md",
                               "type": "icon",
-                              "name": "alert-triangle",
-                              "size": "md"
+                              "name": "alert-triangle"
                             },
                             {
                               "type": "typography",
                               "content": "Delete TradeOrder",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": "danger",
+                          "type": "alert",
                           "message": "This action cannot be undone."
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "justify": "end",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Cancel",
+                              "type": "button",
                               "event": "CANCEL",
                               "variant": "ghost"
                             },
                             {
-                              "type": "button",
                               "label": "Delete",
                               "event": "CONFIRM_DELETE",
+                              "icon": "check",
                               "variant": "danger",
-                              "icon": "check"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -2457,12 +2803,13 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "OrdersPage",
+          "name": "Orders",
           "path": "/orders",
           "traits": [
             {
@@ -2518,8 +2865,51 @@
       "traits": [
         {
           "name": "MarketFeedAsync",
-          "linkedEntity": "MarketFeed",
           "category": "interaction",
+          "linkedEntity": "MarketFeed",
+          "emits": [
+            {
+              "event": "MarketFeedLoaded",
+              "description": "Fired when MarketFeed finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "symbol",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "price",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "change",
+                  "type": "number"
+                },
+                {
+                  "name": "volume",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "MarketFeedLoadFailed",
+              "description": "Fired when MarketFeed fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -2551,29 +2941,35 @@
                 "payload": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
               {
                 "key": "FAILED",
-                "name": "Failed",
-                "payload": [
-                  {
-                    "name": "error",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
+                "name": "Failed"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
               },
               {
                 "key": "RETRY",
                 "name": "Retry"
               },
               {
-                "key": "RESET",
-                "name": "Reset"
+                "key": "MarketFeedLoaded",
+                "name": "MarketFeed loaded"
+              },
+              {
+                "key": "MarketFeedLoadFailed",
+                "name": "MarketFeed load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -2584,13 +2980,18 @@
                 "effects": [
                   [
                     "fetch",
-                    "MarketFeed"
+                    "MarketFeed",
+                    {
+                      "emit": {
+                        "success": "MarketFeedLoaded",
+                        "failure": "MarketFeedLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "Trading Dashboard",
                       "navItems": [
                         {
@@ -2599,26 +3000,24 @@
                           "icon": "layout-list"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "icon": "clipboard-list",
+                          "label": "Orders"
                         },
                         {
-                          "label": "Market",
+                          "icon": "layout-list",
                           "href": "/market",
-                          "icon": "layout-list"
+                          "label": "Market"
                         }
                       ],
+                      "type": "dashboard-layout",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "vertical",
                           "gap": "lg",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
                               "align": "center",
                               "children": [
@@ -2632,25 +3031,28 @@
                                   "content": "MarketFeed",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
+                              "content": "Ready to start marketfeed operation.",
                               "color": "muted",
-                              "content": "Ready to start marketfeed operation."
+                              "type": "typography"
                             },
                             {
-                              "type": "button",
                               "label": "Start",
+                              "type": "button",
                               "event": "START",
                               "variant": "primary",
                               "icon": "play"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ]
                     }
@@ -2666,8 +3068,26 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "Trading Dashboard",
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "type": "stack",
+                          "align": "center",
+                          "children": [
+                            {
+                              "message": "Processing marketfeed...",
+                              "type": "loading-state",
+                              "title": "Connecting to market feed..."
+                            },
+                            {
+                              "type": "skeleton",
+                              "variant": "text"
+                            }
+                          ],
+                          "direction": "vertical"
+                        }
+                      ],
                       "navItems": [
                         {
                           "label": "Portfolio",
@@ -2680,30 +3100,12 @@
                           "icon": "clipboard-list"
                         },
                         {
-                          "label": "Market",
                           "href": "/market",
-                          "icon": "layout-list"
+                          "icon": "layout-list",
+                          "label": "Market"
                         }
                       ],
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "loading-state",
-                              "title": "Connecting to market feed...",
-                              "message": "Processing marketfeed..."
-                            },
-                            {
-                              "type": "skeleton",
-                              "variant": "text"
-                            }
-                          ]
-                        }
-                      ]
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2723,18 +3125,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
                       "navItems": [
                         {
-                          "label": "Portfolio",
+                          "icon": "layout-list",
                           "href": "/portfolio",
-                          "icon": "layout-list"
+                          "label": "Portfolio"
                         },
                         {
-                          "label": "Orders",
                           "href": "/orders",
-                          "icon": "clipboard-list"
+                          "icon": "clipboard-list",
+                          "label": "Orders"
                         },
                         {
                           "label": "Market",
@@ -2742,41 +3142,43 @@
                           "icon": "layout-list"
                         }
                       ],
+                      "appName": "Trading Dashboard",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
                           "align": "center",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "check-circle",
-                              "size": "lg"
+                              "name": "check-circle"
                             },
                             {
-                              "type": "alert",
                               "variant": "success",
-                              "message": "Market feed connected."
+                              "message": "Market feed connected.",
+                              "type": "alert"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "center",
                               "children": [
                                 {
                                   "type": "button",
-                                  "label": "Reset",
-                                  "event": "RESET",
                                   "variant": "ghost",
-                                  "icon": "rotate-ccw"
+                                  "label": "Reset",
+                                  "icon": "rotate-ccw",
+                                  "event": "RESET"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "justify": "center"
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "type": "dashboard-layout"
                     }
                   ]
                 ]
@@ -2790,61 +3192,61 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
                       "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "type": "error-state",
                               "title": "Operation Failed",
-                              "message": "Market feed disconnected.",
-                              "onRetry": "RETRY"
+                              "onRetry": "RETRY",
+                              "message": "Market feed disconnected."
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
                               "justify": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "label": "Retry",
-                                  "event": "RETRY",
                                   "variant": "primary",
-                                  "icon": "refresh-cw"
+                                  "icon": "refresh-cw",
+                                  "event": "RETRY",
+                                  "type": "button",
+                                  "label": "Retry"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "Reset",
-                                  "event": "RESET",
                                   "variant": "ghost",
-                                  "icon": "rotate-ccw"
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "icon": "rotate-ccw",
+                                  "event": "RESET"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "align": "center"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "navItems": [
+                        {
+                          "href": "/portfolio",
+                          "label": "Portfolio",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "icon": "clipboard-list",
+                          "label": "Orders",
+                          "href": "/orders"
+                        },
+                        {
+                          "href": "/market",
+                          "icon": "layout-list",
+                          "label": "Market"
                         }
                       ]
                     }
@@ -2862,35 +3264,14 @@
                     {
                       "type": "dashboard-layout",
                       "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "vertical",
                           "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
-                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -2902,25 +3283,46 @@
                                   "content": "MarketFeed",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "color": "muted",
                               "type": "typography",
                               "variant": "body",
-                              "color": "muted",
                               "content": "Ready to start marketfeed operation."
                             },
                             {
-                              "type": "button",
-                              "label": "Start",
                               "event": "START",
+                              "label": "Start",
                               "variant": "primary",
+                              "type": "button",
                               "icon": "play"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "vertical"
+                        }
+                      ],
+                      "navItems": [
+                        {
+                          "icon": "layout-list",
+                          "href": "/portfolio",
+                          "label": "Portfolio"
+                        },
+                        {
+                          "icon": "clipboard-list",
+                          "label": "Orders",
+                          "href": "/orders"
+                        },
+                        {
+                          "label": "Market",
+                          "href": "/market",
+                          "icon": "layout-list"
                         }
                       ]
                     }
@@ -2936,37 +3338,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -2984,19 +3364,41 @@
                               "type": "divider"
                             },
                             {
+                              "color": "muted",
                               "type": "typography",
                               "variant": "body",
-                              "color": "muted",
                               "content": "Ready to start marketfeed operation."
                             },
                             {
-                              "type": "button",
-                              "label": "Start",
                               "event": "START",
+                              "label": "Start",
                               "variant": "primary",
+                              "type": "button",
                               "icon": "play"
                             }
-                          ]
+                          ],
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "align": "center"
+                        }
+                      ],
+                      "type": "dashboard-layout",
+                      "appName": "Trading Dashboard",
+                      "navItems": [
+                        {
+                          "href": "/portfolio",
+                          "label": "Portfolio",
+                          "icon": "layout-list"
+                        },
+                        {
+                          "label": "Orders",
+                          "icon": "clipboard-list",
+                          "href": "/orders"
+                        },
+                        {
+                          "label": "Market",
+                          "href": "/market",
+                          "icon": "layout-list"
                         }
                       ]
                     }
@@ -3013,54 +3415,55 @@
                     "main",
                     {
                       "type": "dashboard-layout",
-                      "appName": "Trading Dashboard",
-                      "navItems": [
-                        {
-                          "label": "Portfolio",
-                          "href": "/portfolio",
-                          "icon": "layout-list"
-                        },
-                        {
-                          "label": "Orders",
-                          "href": "/orders",
-                          "icon": "clipboard-list"
-                        },
-                        {
-                          "label": "Market",
-                          "href": "/market",
-                          "icon": "layout-list"
-                        }
-                      ],
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
                           "align": "center",
                           "children": [
                             {
-                              "type": "loading-state",
                               "title": "Connecting to market feed...",
+                              "type": "loading-state",
                               "message": "Processing marketfeed..."
                             },
                             {
                               "type": "skeleton",
                               "variant": "text"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "navItems": [
+                        {
+                          "label": "Portfolio",
+                          "icon": "layout-list",
+                          "href": "/portfolio"
+                        },
+                        {
+                          "icon": "clipboard-list",
+                          "label": "Orders",
+                          "href": "/orders"
+                        },
+                        {
+                          "icon": "layout-list",
+                          "label": "Market",
+                          "href": "/market"
+                        }
+                      ],
+                      "appName": "Trading Dashboard"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "MarketPage",
+          "name": "Market",
           "path": "/market",
           "traits": [
             {

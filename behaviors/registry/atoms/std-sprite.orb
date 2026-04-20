@@ -1,7 +1,7 @@
 {
   "name": "std-sprite",
   "version": "1.0.0",
-  "description": "Sprite renderer atom using the `sprite` pattern. Renders a single frame from a spritesheet with position and scale. Handles frame changes and click events.",
+  "description": "std-sprite as a Function",
   "orbitals": [
     {
       "name": "SpriteEntityOrbital",
@@ -38,17 +38,17 @@
           {
             "name": "x",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "y",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "frame",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "spritesheet",
@@ -60,8 +60,64 @@
       "traits": [
         {
           "name": "SpriteEntitySprite",
-          "linkedEntity": "SpriteEntity",
           "category": "interaction",
+          "linkedEntity": "SpriteEntity",
+          "emits": [
+            {
+              "event": "SpriteEntityLoaded",
+              "description": "Fired when SpriteEntity finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                },
+                {
+                  "name": "frame",
+                  "type": "number"
+                },
+                {
+                  "name": "spritesheet",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SpriteEntityLoadFailed",
+              "description": "Fired when SpriteEntity fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -88,6 +144,20 @@
               {
                 "key": "CLICK",
                 "name": "Click"
+              },
+              {
+                "key": "SpriteEntityLoaded",
+                "name": "SpriteEntity loaded"
+              },
+              {
+                "key": "SpriteEntityLoadFailed",
+                "name": "SpriteEntity load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -98,21 +168,21 @@
                 "effects": [
                   [
                     "fetch",
-                    "SpriteEntity"
+                    "SpriteEntity",
+                    {
+                      "emit": {
+                        "success": "SpriteEntityLoaded",
+                        "failure": "SpriteEntityLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -124,68 +194,74 @@
                               "content": "SpriteEntity Sprite",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "children": [
+                            {
+                              "spritesheet": "@SpriteEntity.spritesheet",
+                              "frameWidth": 64.0,
+                              "type": "sprite",
+                              "y": 64.0,
+                              "scale": 1.0,
+                              "frameHeight": 64.0,
+                              "x": 64.0,
+                              "frame": "@SpriteEntity.frame"
+                            }
+                          ],
                           "type": "box",
                           "className": "relative bg-gray-900 rounded-lg overflow-hidden",
                           "style": {
                             "width": "256px",
                             "height": "256px",
                             "margin": "0 auto"
-                          },
-                          "children": [
-                            {
-                              "type": "sprite",
-                              "spritesheet": "@SpriteEntity.spritesheet",
-                              "frameWidth": 64,
-                              "frameHeight": 64,
-                              "frame": "@SpriteEntity.frame",
-                              "x": 64,
-                              "y": 64,
-                              "scale": 1
-                            }
-                          ]
+                          }
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "justify": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "color": "muted",
                               "type": "typography",
                               "content": "Frame: ",
-                              "variant": "caption",
-                              "color": "muted"
+                              "variant": "caption"
                             },
                             {
+                              "variant": "default",
                               "type": "badge",
-                              "content": "@SpriteEntity.frame",
-                              "variant": "default"
+                              "content": "@SpriteEntity.frame"
                             },
                             {
-                              "type": "typography",
                               "content": "Position: ",
                               "variant": "caption",
-                              "color": "muted"
+                              "color": "muted",
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
+                              "variant": "default",
                               "content": [
-                                "str/concat",
+                                "concat",
                                 "@SpriteEntity.x",
                                 ",",
                                 "@SpriteEntity.y"
-                              ],
-                              "variant": "default"
+                              ]
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -200,23 +276,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "image",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "image"
                             },
                             {
-                              "type": "typography",
                               "content": "SpriteEntity Sprite",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ]
@@ -225,62 +299,64 @@
                           "type": "divider"
                         },
                         {
-                          "type": "box",
-                          "className": "relative bg-gray-900 rounded-lg overflow-hidden",
-                          "style": {
-                            "width": "256px",
-                            "height": "256px",
-                            "margin": "0 auto"
-                          },
                           "children": [
                             {
-                              "type": "sprite",
                               "spritesheet": "@SpriteEntity.spritesheet",
-                              "frameWidth": 64,
-                              "frameHeight": 64,
+                              "y": 64.0,
+                              "scale": 1.0,
                               "frame": "@SpriteEntity.frame",
-                              "x": 64,
-                              "y": 64,
-                              "scale": 1
+                              "x": 64.0,
+                              "frameWidth": 64.0,
+                              "type": "sprite",
+                              "frameHeight": 64.0
                             }
-                          ]
+                          ],
+                          "className": "relative bg-gray-900 rounded-lg overflow-hidden",
+                          "style": {
+                            "height": "256px",
+                            "margin": "0 auto",
+                            "width": "256px"
+                          },
+                          "type": "box"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "center",
                           "children": [
                             {
                               "type": "typography",
                               "content": "Frame: ",
-                              "variant": "caption",
-                              "color": "muted"
+                              "color": "muted",
+                              "variant": "caption"
                             },
                             {
-                              "type": "badge",
                               "content": "@SpriteEntity.frame",
-                              "variant": "default"
+                              "variant": "default",
+                              "type": "badge"
                             },
                             {
                               "type": "typography",
-                              "content": "Position: ",
                               "variant": "caption",
+                              "content": "Position: ",
                               "color": "muted"
                             },
                             {
+                              "variant": "default",
                               "type": "badge",
                               "content": [
-                                "str/concat",
+                                "concat",
                                 "@SpriteEntity.x",
                                 ",",
                                 "@SpriteEntity.y"
-                              ],
-                              "variant": "default"
+                              ]
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -288,11 +364,11 @@
               {
                 "from": "idle",
                 "to": "idle",
-                "event": "CLICK",
-                "effects": []
+                "event": "CLICK"
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

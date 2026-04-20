@@ -19,11 +19,14 @@ orbital ServicePaymentFlowOrbital {
     sendStatus : string = "idle"
     error : string
   }
-  trait ServicePaymentFlowPayment -> ServicePaymentFlow [interaction] {
+
+  type ServicePaymentFlowLoaded     = Event ServicePaymentFlow                  "Fired when ServicePaymentFlow finishes loading"
+  type ServicePaymentFlowLoadFailed = Event { message : string } "Fired when ServicePaymentFlow fails to load"
+  trait ServicePaymentFlowPayment -> ServicePaymentFlow [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ServicePaymentFlow)
+        (fetch ServicePaymentFlow { emit: { success: "ServicePaymentFlowLoaded", failure: "ServicePaymentFlowLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Payment", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Amount", field: "amount", inputType: "number", placeholder: "0.00" }, { type: "select", label: "Currency", field: "currency", options: [{ label: "USD", value: "usd" }, { label: "EUR", value: "eur" }, { label: "GBP", value: "gbp" }] }] }, { type: "button", label: "Pay", event: "CREATE_PAYMENT", variant: "primary", icon: "credit-card" }] })
       CREATE_PAYMENT -> creating
         (render-ui main { type: "loading-state", title: "Creating payment...", message: "Setting up your payment intent." })
@@ -64,9 +67,11 @@ orbital ServicePaymentFlowOrbital {
     listens {
       PAYMENT_CREATED { id : string!, clientSecret : string! }
       FAILED { error : string! }
+          ServicePaymentFlowLoadFailed { message : string }
     }
+    emits: [ServicePaymentFlowLoaded, ServicePaymentFlowLoadFailed]
   }
-  trait ServicePaymentFlowReceipt -> ServicePaymentFlow [interaction] {
+  trait ServicePaymentFlowReceipt -> ServicePaymentFlow [interaction, instance] {
     initial: waiting
     state waiting {
       INIT -> waiting

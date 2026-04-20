@@ -13,11 +13,14 @@ orbital PlatLevelOrbital {
     player : string = ""
     platforms : string = ""
   }
-  trait PlatLevelPlatformerFlow -> PlatLevel [interaction] {
+
+  type PlatLevelLoaded     = Event PlatLevel                  "Fired when PlatLevel finishes loading"
+  type PlatLevelLoadFailed = Event { message : string } "Fired when PlatLevel fails to load"
+  trait PlatLevelPlatformerFlow -> PlatLevel [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch PlatLevel)
+        (fetch PlatLevel { emit: { success: "PlatLevelLoaded", failure: "PlatLevelLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "platformer-canvas", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
@@ -49,12 +52,16 @@ orbital PlatLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })
     }
+    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    listens {
+      PlatLevelLoadFailed { message : string }
+    }
   }
-  trait PlatLevelPlatformerCanvas -> PlatLevel [interaction] {
+  trait PlatLevelPlatformerCanvas -> PlatLevel [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch PlatLevel)
+        (fetch PlatLevel { emit: { success: "PlatLevelLoaded", failure: "PlatLevelLoadFailed" } })
       START -> running
         (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
     }
@@ -64,6 +71,10 @@ orbital PlatLevelOrbital {
       JUMP -> running
       STOP -> idle
         (render-ui main { type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" })
+    }
+    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    listens {
+      PlatLevelLoadFailed { message : string }
     }
   }
   page "/platlevels" as PlatLevelPage -> PlatLevelPlatformerFlow, PlatLevelPlatformerCanvas

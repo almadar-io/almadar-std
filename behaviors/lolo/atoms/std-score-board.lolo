@@ -14,10 +14,13 @@ orbital ScoreBoardEntryOrbital {
     multiplier : number = 1
     level : number = 1
   }
-  trait ScoreBoardEntryScoreBoard -> ScoreBoardEntry [interaction] {
+
+  type ScoreBoardEntryLoaded     = Event ScoreBoardEntry                  "Fired when ScoreBoardEntry finishes loading"
+  type ScoreBoardEntryLoadFailed = Event { message : string } "Fired when ScoreBoardEntry fails to load"
+  trait ScoreBoardEntryScoreBoard -> ScoreBoardEntry [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch ScoreBoardEntry)
+        (fetch ScoreBoardEntry { emit: { success: "ScoreBoardEntryLoaded", failure: "ScoreBoardEntryLoadFailed" } })
         (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
@@ -35,7 +38,9 @@ orbital ScoreBoardEntryOrbital {
     listens {
       ADD_SCORE { points : number! }
       COMBO { multiplier : number! }
+          ScoreBoardEntryLoadFailed { message : string }
     }
+    emits: [ScoreBoardEntryLoaded, ScoreBoardEntryLoadFailed]
   }
   page "/scoreboardentrys" as ScoreBoardEntryScorePage -> ScoreBoardEntryScoreBoard
 }

@@ -15,12 +15,15 @@ orbital FormEntryOrbital {
     priority : "low" | "medium" | "high" | "critical" = "medium"
     categoryId : relation = ""
   }
-  trait FormEntryFormAdvanced -> FormEntry [interaction] {
+
+  type FormEntryLoaded     = Event FormEntry                  "Fired when FormEntry finishes loading"
+  type FormEntryLoadFailed = Event { message : string } "Fired when FormEntry fails to load"
+  trait FormEntryFormAdvanced -> FormEntry [interaction, instance] {
     initial: editing
     state editing {
       INIT -> editing
-        (fetch FormEntry { include: ["categoryId"] })
-        (fetch FormEntry)
+        (fetch FormEntry { emit: { success: "FormEntryLoaded", failure: "FormEntryLoadFailed" }  })
+        (fetch FormEntry { emit: { success: "FormEntryLoaded", failure: "FormEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "FormEntry Form", variant: "h2" }] }, { type: "divider" }, { type: "form-section", entity: "FormEntry", mode: "create", submitEvent: "SUBMIT", cancelEvent: "INIT", fields: [{ name: "name", label: "Name" }, { name: "description", label: "Description" }, { name: "status", label: "Status", type: "enum", values: ["active", "inactive", "pending"] }, { name: "notes", label: "Notes", type: "textarea" }, { name: "age", label: "Age", type: "number" }, { name: "isActive", label: "Is Active", type: "boolean" }, { name: "birthDate", label: "Birth Date", type: "date" }, { name: "priority", label: "Priority", type: "enum", values: ["low", "medium", "high", "critical"] }, { name: "categoryId", label: "Category ID", type: "relation", relation: { entity: "FormEntry", cardinality: "many-to-one" } }] }] })
       SUBMIT -> submitted
         (persist create FormEntry @payload.data)
@@ -28,13 +31,15 @@ orbital FormEntryOrbital {
     }
     state submitted {
       RESET -> editing
-        (fetch FormEntry { include: ["categoryId"] })
-        (fetch FormEntry)
+        (fetch FormEntry { emit: { success: "FormEntryLoaded", failure: "FormEntryLoadFailed" }  })
+        (fetch FormEntry { emit: { success: "FormEntryLoaded", failure: "FormEntryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "FormEntry Form", variant: "h2" }] }, { type: "divider" }, { type: "form-section", entity: "FormEntry", mode: "create", submitEvent: "SUBMIT", cancelEvent: "INIT", fields: [{ name: "name", label: "Name" }, { name: "description", label: "Description" }, { name: "status", label: "Status", type: "enum", values: ["active", "inactive", "pending"] }, { name: "notes", label: "Notes", type: "textarea" }, { name: "age", label: "Age", type: "number" }, { name: "isActive", label: "Is Active", type: "boolean" }, { name: "birthDate", label: "Birth Date", type: "date" }, { name: "priority", label: "Priority", type: "enum", values: ["low", "medium", "high", "critical"] }, { name: "categoryId", label: "Category ID", type: "relation", relation: { entity: "FormEntry", cardinality: "many-to-one" } }] }] })
     }
     listens {
       SUBMIT { data : object! }
+          FormEntryLoadFailed { message : string }
     }
+    emits: [FormEntryLoaded, FormEntryLoadFailed]
   }
   page "/formentrys/form" as FormEntryFormPage -> FormEntryFormAdvanced
 }

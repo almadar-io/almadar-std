@@ -11,11 +11,14 @@ orbital PlatLevelOrbital {
     player : string = ""
     platforms : string = ""
   }
-  trait PlatLevelPlatformerFlow -> PlatLevel [interaction] {
+
+  type PlatLevelLoaded     = Event PlatLevel                  "Fired when PlatLevel finishes loading"
+  type PlatLevelLoadFailed = Event { message : string } "Fired when PlatLevel fails to load"
+  trait PlatLevelPlatformerFlow -> PlatLevel [interaction, collection] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch PlatLevel)
+        (fetch PlatLevel { emit: { success: "PlatLevelLoaded", failure: "PlatLevelLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
@@ -47,12 +50,16 @@ orbital PlatLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "game-menu", title: "Platformer", subtitle: "Side-Scrolling Adventure", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
     }
+    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    listens {
+      PlatLevelLoadFailed { message : string }
+    }
   }
-  trait PlatLevelPlatformerCanvas -> PlatLevel [interaction] {
+  trait PlatLevelPlatformerCanvas -> PlatLevel [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch PlatLevel)
+        (fetch PlatLevel { emit: { success: "PlatLevelLoaded", failure: "PlatLevelLoadFailed" } })
       START -> running
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
     }
@@ -62,6 +69,10 @@ orbital PlatLevelOrbital {
       JUMP -> running
       STOP -> idle
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
+    }
+    emits: [PlatLevelLoaded, PlatLevelLoadFailed]
+    listens {
+      PlatLevelLoadFailed { message : string }
     }
   }
   page "/game" as GamePage -> PlatLevelPlatformerFlow, PlatLevelPlatformerCanvas
@@ -77,10 +88,13 @@ orbital PlatScoreOrbital {
     combo : number
     multiplier : number
   }
-  trait PlatScoreScoreBoard -> PlatScore [interaction] {
+
+  type PlatScoreLoaded     = Event PlatScore                  "Fired when PlatScore finishes loading"
+  type PlatScoreLoadFailed = Event { message : string } "Fired when PlatScore fails to load"
+  trait PlatScoreScoreBoard -> PlatScore [interaction, collection] {
     state idle {
       INIT -> idle
-        (fetch PlatScore)
+        (fetch PlatScore { emit: { success: "PlatScoreLoaded", failure: "PlatScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
@@ -95,6 +109,12 @@ orbital PlatScoreOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
     }
+    emits: [PlatScoreLoaded, PlatScoreLoadFailed]
+    listens {
+      PlatScoreLoadFailed { message : string }
+      ADD_SCORE { points : string }
+      COMBO { multiplier : string }
+    }
   }
   page "/scores" -> PlatScoreScoreBoard
 }
@@ -107,7 +127,10 @@ orbital CollectibleOrbital {
     rarity : string
     pendingId : string
   }
-  trait CollectibleBrowse -> Collectible [interaction] {
+
+  type CollectibleLoaded     = Event Collectible                  "Fired when Collectible finishes loading"
+  type CollectibleLoadFailed = Event { message : string } "Fired when Collectible fails to load"
+  trait CollectibleBrowse -> Collectible [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Collectible)
@@ -117,15 +140,17 @@ orbital CollectibleOrbital {
       * ITEM_ADDED -> INIT
       * ITEM_USED -> INIT
       * CONFIRM_DROP -> INIT
+          CollectibleLoadFailed { message : string }
     }
+    emits: [CollectibleLoaded, CollectibleLoadFailed]
   }
-  trait CollectibleAdd -> Collectible [interaction] {
+  trait CollectibleAdd -> Collectible [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Collectible)
       ADD_ITEM -> open
-        (fetch Collectible)
+        (fetch Collectible { emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Add Collectible", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Collectible", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "type", "quantity", "rarity"] }] })
     }
     state open {
@@ -141,14 +166,19 @@ orbital CollectibleOrbital {
       SAVE
       ITEM_ADDED
     }
+    emits: [CollectibleLoaded, CollectibleLoadFailed]
+    listens {
+      CollectibleLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait CollectibleUse -> Collectible [interaction] {
+  trait CollectibleUse -> Collectible [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Collectible)
       USE_ITEM -> open
-        (fetch Collectible { id: "@payload.id" })
+        (fetch Collectible { id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "zap", size: "md" }, { type: "typography", content: "Use Collectible", variant: "h3" }] }, { type: "divider" }, { type: "typography", content: "@entity.name", variant: "body" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Cancel", event: "CLOSE", variant: "ghost" }, { type: "button", label: "Confirm Use", event: "SAVE", variant: "primary", icon: "check" }] }] })
     }
     state open {
@@ -164,15 +194,21 @@ orbital CollectibleOrbital {
       SAVE
       ITEM_USED
     }
+    emits: [CollectibleLoaded, CollectibleLoadFailed]
+    listens {
+      CollectibleLoadFailed { message : string }
+      USE_ITEM { id : string }
+      SAVE { data : string }
+    }
   }
-  trait CollectibleDrop -> Collectible [interaction] {
+  trait CollectibleDrop -> Collectible [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (ref Collectible)
       DROP -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Collectible { id: "@payload.id" })
+        (fetch Collectible { id: "@payload.id" , emit: { success: "CollectibleLoaded", failure: "CollectibleLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Drop Collectible", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure you want to drop this collectible?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Drop", event: "CONFIRM_DROP", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
@@ -189,6 +225,11 @@ orbital CollectibleOrbital {
     }
     emits {
       CONFIRM_DROP
+    }
+    emits: [CollectibleLoaded, CollectibleLoadFailed]
+    listens {
+      CollectibleLoadFailed { message : string }
+      DROP { id : string }
     }
   }
   page "/collectibles" -> CollectibleBrowse, CollectibleAdd, CollectibleUse, CollectibleDrop

@@ -40,8 +40,48 @@
       "traits": [
         {
           "name": "DrawerContentDrawer",
-          "linkedEntity": "DrawerContent",
           "category": "interaction",
+          "linkedEntity": "DrawerContent",
+          "emits": [
+            {
+              "event": "DrawerContentLoaded",
+              "description": "Fired when DrawerContent finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "DrawerContentLoadFailed",
+              "description": "Fired when DrawerContent fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -64,6 +104,20 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "DrawerContentLoaded",
+                "name": "DrawerContent loaded"
+              },
+              {
+                "key": "DrawerContentLoadFailed",
+                "name": "DrawerContent load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -74,28 +128,26 @@
                 "effects": [
                   [
                     "fetch",
-                    "DrawerContent"
+                    "DrawerContent",
+                    {
+                      "emit": {
+                        "success": "DrawerContentLoaded",
+                        "failure": "DrawerContentLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "justify": "space-between",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -103,48 +155,56 @@
                                   "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Details",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "button",
                               "label": "Open",
                               "event": "OPEN",
                               "variant": "primary",
-                              "icon": "panel-right"
+                              "icon": "panel-right",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "emptyTitle": "No drawercontents yet",
                           "type": "data-grid",
                           "entity": "DrawerContent",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No drawercontents yet",
                           "emptyDescription": "Add drawercontents to see them here.",
+                          "emptyIcon": "inbox",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.name"
+                                  "content": "@item.name",
+                                  "variant": "h4"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "sm"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -156,40 +216,41 @@
                 "effects": [
                   [
                     "fetch",
-                    "DrawerContent"
+                    "DrawerContent",
+                    {
+                      "emit": {
+                        "success": "DrawerContentLoaded",
+                        "failure": "DrawerContentLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "drawer",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "none",
                       "children": [
                         {
-                          "type": "drawer",
-                          "title": "Details",
                           "isOpen": true,
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "type": "stack",
                                   "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
+                                      "content": "Name",
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "variant": "caption"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "body",
                                       "content": [
                                         "object/get",
                                         [
@@ -197,24 +258,21 @@
                                           "@entity"
                                         ],
                                         "name"
-                                      ]
+                                      ],
+                                      "variant": "body",
+                                      "type": "typography"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
+                                      "type": "typography",
                                       "content": "Description"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "body",
                                       "content": [
                                         "object/get",
                                         [
@@ -222,24 +280,29 @@
                                           "@entity"
                                         ],
                                         "description"
-                                      ]
+                                      ],
+                                      "variant": "body",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "stack",
+                                  "justify": "space-between",
                                   "direction": "horizontal",
                                   "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "typography",
+                                      "content": "Status",
                                       "variant": "caption",
-                                      "content": "Status"
+                                      "type": "typography"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "body",
+                                      "type": "typography",
                                       "content": [
                                         "object/get",
                                         [
@@ -253,14 +316,14 @@
                                 },
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "md",
                                   "justify": "space-between",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
+                                      "content": "CreatedAt",
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "CreatedAt"
+                                      "variant": "caption"
                                     },
                                     {
                                       "type": "typography",
@@ -280,47 +343,44 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "sm",
                                   "justify": "end",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "button",
+                                      "variant": "ghost",
                                       "label": "Close",
-                                      "event": "CLOSE",
-                                      "variant": "ghost"
+                                      "type": "button",
+                                      "event": "CLOSE"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "drawer",
+                          "title": "Details"
                         },
                         {
-                          "type": "side-panel",
                           "title": "Details",
                           "isOpen": true,
                           "position": "right",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
+                                      "content": "Name",
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "Name"
+                                      "variant": "caption"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "body",
                                       "content": [
                                         "object/get",
@@ -329,24 +389,23 @@
                                           "@entity"
                                         ],
                                         "name"
-                                      ]
+                                      ],
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "justify": "space-between"
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
-                                      "content": "Description"
+                                      "content": "Description",
+                                      "type": "typography"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "body",
                                       "content": [
                                         "object/get",
                                         [
@@ -354,14 +413,19 @@
                                           "@entity"
                                         ],
                                         "description"
-                                      ]
+                                      ],
+                                      "variant": "body",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "justify": "space-between",
+                                  "type": "stack",
+                                  "gap": "md"
                                 },
                                 {
+                                  "gap": "md",
                                   "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
@@ -370,8 +434,8 @@
                                       "content": "Status"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "body",
+                                      "type": "typography",
                                       "content": [
                                         "object/get",
                                         [
@@ -385,9 +449,6 @@
                                 },
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
                                       "type": "typography",
@@ -395,7 +456,6 @@
                                       "content": "CreatedAt"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "body",
                                       "content": [
                                         "object/get",
@@ -404,15 +464,21 @@
                                           "@entity"
                                         ],
                                         "createdAt"
-                                      ]
+                                      ],
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "side-panel"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -429,27 +495,26 @@
                   ],
                   [
                     "fetch",
-                    "DrawerContent"
+                    "DrawerContent",
+                    {
+                      "emit": {
+                        "failure": "DrawerContentLoadFailed",
+                        "success": "DrawerContentLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "align": "center",
                               "children": [
                                 {
@@ -462,50 +527,58 @@
                                   "content": "Details",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "button",
                               "label": "Open",
-                              "event": "OPEN",
                               "variant": "primary",
-                              "icon": "panel-right"
+                              "icon": "panel-right",
+                              "event": "OPEN",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "emptyDescription": "Add drawercontents to see them here.",
                           "type": "data-grid",
                           "entity": "DrawerContent",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No drawercontents yet",
-                          "emptyDescription": "Add drawercontents to see them here.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "h4",
-                                  "content": "@item.name"
+                                  "content": "@item.name",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "emptyIcon": "inbox"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

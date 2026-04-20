@@ -15,11 +15,14 @@ orbital TutorSessionOrbital {
     sessionStatus : string = "idle"
     error : string = ""
   }
-  trait TeachingSession -> TutorSession [interaction] {
+
+  type TutorSessionLoaded     = Event TutorSession                  "Fired when TutorSession finishes loading"
+  type TutorSessionLoadFailed = Event { message : string } "Fired when TutorSession fails to load"
+  trait TeachingSession -> TutorSession [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch TutorSession)
+        (fetch TutorSession { emit: { success: "TutorSessionLoaded", failure: "TutorSessionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "graduation-cap", size: "lg" }, { type: "typography", content: "Tutor", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "What topic would you like to learn about? The tutor will assess your level and guide you through it.", variant: "body" }, { type: "form-section", entity: "TutorSession", mode: "edit", submitEvent: "START_SESSION", fields: ["topic"] }] }] }] }] })
       START_SESSION -> assessing
         (set @entity.topic @payload.topic)
@@ -56,7 +59,9 @@ orbital TutorSessionOrbital {
     }
     listens {
       START_SESSION { topic : string! }
+          TutorSessionLoadFailed { message : string }
     }
+    emits: [TutorSessionLoaded, TutorSessionLoadFailed]
   }
   page "/teach" as TeachPage -> TeachingSession
 }
@@ -71,11 +76,14 @@ orbital QuizQuestionOrbital {
     feedback : string
     quizStatus : string
   }
-  trait QuizEngine -> QuizQuestion [interaction] {
+
+  type QuizQuestionLoaded     = Event QuizQuestion                  "Fired when QuizQuestion finishes loading"
+  type QuizQuestionLoadFailed = Event { message : string } "Fired when QuizQuestion fails to load"
+  trait QuizEngine -> QuizQuestion [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch QuizQuestion)
+        (fetch QuizQuestion { emit: { success: "QuizQuestionLoaded", failure: "QuizQuestionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle", size: "lg" }, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "typography", content: "Waiting for a quiz to start...", variant: "body" }] }] })
       GENERATE_QUESTION -> quizzing
         (set @entity.quizStatus generating)
@@ -110,7 +118,10 @@ orbital QuizQuestionOrbital {
     }
     listens {
       * ASSESSMENT_DONE -> GENERATE_QUESTION
+          QuizQuestionLoadFailed { message : string }
+          SUBMIT_ANSWER { studentAnswer : string }
     }
+    emits: [QuizQuestionLoaded, QuizQuestionLoadFailed]
   }
   page "/quiz" -> QuizEngine
 }
@@ -127,17 +138,20 @@ orbital TutorChatOrbital {
     toolName : string
     status : string
   }
-  trait TutorConversation -> TutorChat [interaction] {
+
+  type TutorChatLoaded     = Event TutorChat                  "Fired when TutorChat finishes loading"
+  type TutorChatLoadFailed = Event { message : string } "Fired when TutorChat fails to load"
+  trait TutorConversation -> TutorChat [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch TutorChat)
+        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
       COMPOSE -> composing
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus", disabled: true }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", title: "Compose Message", children: [{ type: "textarea", label: "Message", bind: "@entity.content", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", event: "SEND", variant: "primary", icon: "send" }] }] }] }] })
       CLEAR -> idle
         (persist delete TutorChat)
-        (fetch TutorChat)
+        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
     state composing {
@@ -148,22 +162,27 @@ orbital TutorChatOrbital {
         (set @entity.status sent)
         (persist create TutorChat { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
         (emit SEND_MESSAGE)
-        (fetch TutorChat)
+        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
       CLEAR -> idle
         (persist delete TutorChat)
-        (fetch TutorChat)
+        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "TutorChat Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "TutorChat", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
     emits {
       SEND_MESSAGE internal { content: string }
     }
+    emits: [TutorChatLoaded, TutorChatLoadFailed]
+    listens {
+      TutorChatLoadFailed { message : string }
+      SEND { content : string }
+    }
   }
-  trait TutorChatAgent -> TutorChat [interaction] {
+  trait TutorChatAgent -> TutorChat [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch TutorChat)
+        (fetch TutorChat { emit: { success: "TutorChatLoaded", failure: "TutorChatLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "message-circle", title: "Conversation", description: "Conversation is ready" }] })
       SEND_MESSAGE -> active
         (set @entity.lastMessage @payload.content)
@@ -195,6 +214,11 @@ orbital TutorChatOrbital {
     emits {
       TOKEN_UPDATE internal { tokenCount: number }
     }
+    emits: [TutorChatLoaded, TutorChatLoadFailed]
+    listens {
+      TutorChatLoadFailed { message : string }
+      SEND_MESSAGE { content : string }
+    }
   }
   page "/chat" -> TutorConversation
 }
@@ -209,7 +233,10 @@ orbital ConceptOrbital {
     lastAccessedAt : string
     createdAt : string
   }
-  trait ConceptBrowse -> Concept [interaction] {
+
+  type ConceptLoaded     = Event Concept                  "Fired when Concept finishes loading"
+  type ConceptLoadFailed = Event { message : string } "Fired when Concept fails to load"
+  trait ConceptBrowse -> Concept [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Concept)
@@ -221,9 +248,11 @@ orbital ConceptOrbital {
       * FORGOT -> INIT
       * REINFORCED -> INIT
       * DECAYED -> INIT
+          ConceptLoadFailed { message : string }
     }
+    emits: [ConceptLoaded, ConceptLoadFailed]
   }
-  trait ConceptCreate -> Concept [interaction] {
+  trait ConceptCreate -> Concept [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -244,12 +273,17 @@ orbital ConceptOrbital {
       SAVE
       MEMORIZED
     }
+    emits: [ConceptLoaded, ConceptLoadFailed]
+    listens {
+      ConceptLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ConceptAgent -> Concept [interaction] {
+  trait ConceptAgent -> Concept [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Concept)
+        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
@@ -258,7 +292,7 @@ orbital ConceptOrbital {
         (agent/decay)
         (emit DECAYED)
       MEMORIZED -> active
-        (fetch Concept)
+        (fetch Concept { emit: { success: "ConceptLoaded", failure: "ConceptLoadFailed" } })
     }
     state active {
       RECALL -> active
@@ -285,7 +319,14 @@ orbital ConceptOrbital {
     }
     listens {
       * QUIZ_GRADED -> REINFORCE
+          ConceptLoadFailed { message : string }
+          DO_MEMORIZE { data : string }
+          RECALL { query : string }
+          PIN { id : string }
+          FORGET { id : string }
+          REINFORCE { id : string }
     }
+    emits: [ConceptLoaded, ConceptLoadFailed]
   }
   page "/concepts" -> ConceptBrowse, ConceptCreate, ConceptAgent
 }
@@ -299,7 +340,10 @@ orbital StudentAssessmentOrbital {
     message : string
     notificationType : string
   }
-  trait LevelClassifier -> StudentAssessment [interaction] {
+
+  type StudentAssessmentLoaded     = Event StudentAssessment                  "Fired when StudentAssessment finishes loading"
+  type StudentAssessmentLoadFailed = Event { message : string } "Fired when StudentAssessment fails to load"
+  trait LevelClassifier -> StudentAssessment [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -325,12 +369,17 @@ orbital StudentAssessmentOrbital {
       SAVE
       CLASSIFIED
     }
+    emits: [StudentAssessmentLoaded, StudentAssessmentLoadFailed]
+    listens {
+      StudentAssessmentLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait StudentAssessmentNotification -> StudentAssessment [interaction] {
+  trait StudentAssessmentNotification -> StudentAssessment [interaction, collection] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch StudentAssessment)
+        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -344,12 +393,17 @@ orbital StudentAssessmentOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
+    emits: [StudentAssessmentLoaded, StudentAssessmentLoadFailed]
+    listens {
+      StudentAssessmentLoadFailed { message : string }
+      SHOW { message : string, notificationType : string }
+    }
   }
-  trait StudentAssessmentAgent -> StudentAssessment [interaction] {
+  trait StudentAssessmentAgent -> StudentAssessment [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch StudentAssessment)
+        (fetch StudentAssessment { emit: { success: "StudentAssessmentLoaded", failure: "StudentAssessmentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "AI Tutor", navItems: [{ label: "Teach", href: "/teach", icon: "book-open" }, { label: "Quiz", href: "/quiz", icon: "help-circle" }, { label: "Concepts", href: "/concepts", icon: "brain" }], children: [{ type: "empty-state", icon: "tag", title: "Classifier", description: "Classifier is ready" }] })
       DO_CLASSIFY -> classifying
         (agent/generate (str/concat "Classify the following text into one of these categories: " "beginner, intermediate, advanced, expert" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
@@ -372,11 +426,16 @@ orbital StudentAssessmentOrbital {
     }
     listens {
       * CLASSIFIED -> CLASSIFIED
+          StudentAssessmentLoadFailed { message : string }
+          DO_CLASSIFY { data : string }
     }
+    emits: [StudentAssessmentLoaded, StudentAssessmentLoadFailed]
   }
   page "/assessment" -> LevelClassifier
 }
 orbital TutorNavOrbital {
+  uses Tabs from "std/behaviors/std-tabs"
+
   entity TutorNav [runtime] {
     id : string!
     topic : string = ""
@@ -400,6 +459,8 @@ orbital TutorNavOrbital {
   page "/tutor/nav" -> TutorTabs
 }
 orbital ConceptViewOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
   entity ConceptView [persistent: conceptviews] {
     id : string!
     content : string

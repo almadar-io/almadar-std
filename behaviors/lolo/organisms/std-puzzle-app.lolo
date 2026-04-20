@@ -12,11 +12,14 @@ orbital PuzzleLevelOrbital {
     combo : number = 0
     multiplier : number = 1
   }
-  trait PuzzleLevelPuzzleFlow -> PuzzleLevel [interaction] {
+
+  type PuzzleLevelLoaded     = Event PuzzleLevel                  "Fired when PuzzleLevel finishes loading"
+  type PuzzleLevelLoadFailed = Event { message : string } "Fired when PuzzleLevel fails to load"
+  trait PuzzleLevelPuzzleFlow -> PuzzleLevel [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch PuzzleLevel)
+        (fetch PuzzleLevel { emit: { success: "PuzzleLevelLoaded", failure: "PuzzleLevelLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "game-menu", title: "Puzzle Challenge", subtitle: "Puzzle Challenge", menuItems: [{ label: "Start Puzzle", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "game-canvas-2d", width: 800, height: 600, fps: 60 }] })
@@ -48,11 +51,15 @@ orbital PuzzleLevelOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "game-menu", title: "Puzzle Challenge", subtitle: "Puzzle Challenge", menuItems: [{ label: "Start Puzzle", event: "START", variant: "primary" }] }] })
     }
+    emits: [PuzzleLevelLoaded, PuzzleLevelLoadFailed]
+    listens {
+      PuzzleLevelLoadFailed { message : string }
+    }
   }
-  trait PuzzleLevelPuzzleScore -> PuzzleLevel [interaction] {
+  trait PuzzleLevelPuzzleScore -> PuzzleLevel [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch PuzzleLevel)
+        (fetch PuzzleLevel { emit: { success: "PuzzleLevelLoaded", failure: "PuzzleLevelLoadFailed" } })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
         (set @entity.combo (+ @entity.combo 1))
@@ -69,7 +76,9 @@ orbital PuzzleLevelOrbital {
     listens {
       ADD_SCORE { points : number! }
       COMBO { multiplier : number! }
+          PuzzleLevelLoadFailed { message : string }
     }
+    emits: [PuzzleLevelLoaded, PuzzleLevelLoadFailed]
   }
   page "/puzzle" as PuzzlePage -> PuzzleLevelPuzzleFlow, PuzzleLevelPuzzleScore
 }
@@ -84,10 +93,13 @@ orbital PuzzleScoreOrbital {
     combo : number = 0
     multiplier : number = 1
   }
-  trait PuzzleScoreScoreBoard -> PuzzleScore [interaction] {
+
+  type PuzzleScoreLoaded     = Event PuzzleScore                  "Fired when PuzzleScore finishes loading"
+  type PuzzleScoreLoadFailed = Event { message : string } "Fired when PuzzleScore fails to load"
+  trait PuzzleScoreScoreBoard -> PuzzleScore [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch PuzzleScore)
+        (fetch PuzzleScore { emit: { success: "PuzzleScoreLoaded", failure: "PuzzleScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
@@ -101,6 +113,12 @@ orbital PuzzleScoreOrbital {
         (set @entity.combo 0)
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Puzzle App", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+    }
+    emits: [PuzzleScoreLoaded, PuzzleScoreLoadFailed]
+    listens {
+      PuzzleScoreLoadFailed { message : string }
+      ADD_SCORE { points : string }
+      COMBO { multiplier : string }
     }
   }
   page "/scores" -> PuzzleScoreScoreBoard

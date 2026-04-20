@@ -1,7 +1,7 @@
 {
   "name": "std-game-over-screen",
   "version": "1.0.0",
-  "description": "Game over screen atom using the `game-over-screen` pattern. Shows final score, high score, and retry/quit actions.",
+  "description": "std-game-over-screen as a Function",
   "orbitals": [
     {
       "name": "GameOverStateOrbital",
@@ -38,20 +38,68 @@
           {
             "name": "currentScore",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "highScore",
             "type": "number",
-            "default": 0
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
           "name": "GameOverStateGameOver",
-          "linkedEntity": "GameOverState",
           "category": "interaction",
+          "linkedEntity": "GameOverState",
+          "emits": [
+            {
+              "event": "GameOverStateLoaded",
+              "description": "Fired when GameOverState finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "currentScore",
+                  "type": "number"
+                },
+                {
+                  "name": "highScore",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "GameOverStateLoadFailed",
+              "description": "Fired when GameOverState fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -74,11 +122,25 @@
               },
               {
                 "key": "RETRY",
-                "name": "Play Again"
+                "name": "Retry"
               },
               {
                 "key": "QUIT",
-                "name": "Main Menu"
+                "name": "Quit"
+              },
+              {
+                "key": "GameOverStateLoaded",
+                "name": "GameOverState loaded"
+              },
+              {
+                "key": "GameOverStateLoadFailed",
+                "name": "GameOverState load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -89,27 +151,33 @@
                 "effects": [
                   [
                     "fetch",
-                    "GameOverState"
+                    "GameOverState",
+                    {
+                      "emit": {
+                        "success": "GameOverStateLoaded",
+                        "failure": "GameOverStateLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-over-screen",
-                      "title": "Game Over",
                       "message": "Better luck next time!",
                       "currentScore": "@entity.currentScore",
-                      "highScore": "@entity.highScore",
                       "menuItems": [
                         {
-                          "label": "Play Again",
-                          "action": "RETRY"
+                          "action": "RETRY",
+                          "label": "Play Again"
                         },
                         {
                           "label": "Main Menu",
                           "action": "QUIT"
                         }
-                      ]
+                      ],
+                      "highScore": "@entity.highScore",
+                      "title": "Game Over"
                     }
                   ]
                 ]
@@ -117,14 +185,12 @@
               {
                 "from": "idle",
                 "to": "idle",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "idle",
                 "to": "idle",
-                "event": "RESTART",
-                "effects": []
+                "event": "RESTART"
               },
               {
                 "from": "idle",
@@ -136,9 +202,6 @@
                     "main",
                     {
                       "type": "game-over-screen",
-                      "title": "Game Over",
-                      "message": "Better luck next time!",
-                      "currentScore": "@entity.currentScore",
                       "highScore": "@entity.highScore",
                       "menuItems": [
                         {
@@ -146,10 +209,13 @@
                           "action": "RETRY"
                         },
                         {
-                          "label": "Main Menu",
-                          "action": "QUIT"
+                          "action": "QUIT",
+                          "label": "Main Menu"
                         }
-                      ]
+                      ],
+                      "message": "Better luck next time!",
+                      "title": "Game Over",
+                      "currentScore": "@entity.currentScore"
                     }
                   ]
                 ]
@@ -163,11 +229,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-over-screen",
-                      "title": "Game Over",
-                      "message": "Better luck next time!",
                       "currentScore": "@entity.currentScore",
+                      "message": "Better luck next time!",
                       "highScore": "@entity.highScore",
+                      "type": "game-over-screen",
                       "menuItems": [
                         {
                           "label": "Play Again",
@@ -177,13 +242,15 @@
                           "label": "Main Menu",
                           "action": "QUIT"
                         }
-                      ]
+                      ],
+                      "title": "Game Over"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

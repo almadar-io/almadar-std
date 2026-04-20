@@ -1,7 +1,7 @@
 {
   "name": "std-builder-game",
   "version": "1.0.0",
-  "description": "Educational game molecule: menu -> playing -> complete. Uses the `builder-board` pattern for the playing state.",
+  "description": "std-builder-game as a Function",
   "orbitals": [
     {
       "name": "BuilderGameOrbital",
@@ -38,30 +38,68 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Builder Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "BuilderGameBuilderGame",
-          "linkedEntity": "BuilderGame",
           "category": "interaction",
+          "linkedEntity": "BuilderGame",
+          "emits": [
+            {
+              "event": "BuilderGameLoaded",
+              "description": "Fired when BuilderGame finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "BuilderGameLoadFailed",
+              "description": "Fired when BuilderGame fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -85,6 +123,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -93,8 +135,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "BuilderGameLoaded",
+                "name": "BuilderGame loaded"
+              },
+              {
+                "key": "BuilderGameLoadFailed",
+                "name": "BuilderGame load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,7 +157,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "BuilderGame"
+                    "BuilderGame",
+                    {
+                      "emit": {
+                        "failure": "BuilderGameLoadFailed",
+                        "success": "BuilderGameLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -115,9 +173,9 @@
                       "title": "Builder Challenge",
                       "menuItems": [
                         {
-                          "label": "Start",
                           "event": "START",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "label": "Start"
                         }
                       ]
                     }
@@ -133,9 +191,9 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "game-hud",
@@ -163,8 +221,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -179,9 +236,9 @@
                       "title": "Well Done!",
                       "menuItems": [
                         {
+                          "variant": "primary",
                           "label": "Play Again",
-                          "event": "RESTART",
-                          "variant": "primary"
+                          "event": "RESTART"
                         }
                       ]
                     }
@@ -197,21 +254,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
                       "title": "Builder Challenge",
                       "menuItems": [
                         {
                           "label": "Start",
-                          "event": "START",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "event": "START"
                         }
-                      ]
+                      ],
+                      "type": "game-menu"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

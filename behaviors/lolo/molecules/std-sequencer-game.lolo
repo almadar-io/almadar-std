@@ -11,11 +11,14 @@ orbital SequencerGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait SequencerGameSequencerGame -> SequencerGame [interaction] {
+
+  type SequencerGameLoaded     = Event SequencerGame                  "Fired when SequencerGame finishes loading"
+  type SequencerGameLoadFailed = Event { message : string } "Fired when SequencerGame fails to load"
+  trait SequencerGameSequencerGame -> SequencerGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch SequencerGame)
+        (fetch SequencerGame { emit: { success: "SequencerGameLoaded", failure: "SequencerGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Sequencer", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "sequencer-board", entity: "SequencerGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital SequencerGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Sequencer", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [SequencerGameLoaded, SequencerGameLoadFailed]
+    listens {
+      SequencerGameLoadFailed { message : string }
     }
   }
   page "/sequencergames" as SequencerGamePage -> SequencerGameSequencerGame

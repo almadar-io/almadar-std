@@ -45,8 +45,8 @@
       "traits": [
         {
           "name": "LoadableItemLoading",
-          "linkedEntity": "LoadableItem",
           "category": "interaction",
+          "linkedEntity": "LoadableItem",
           "stateMachine": {
             "states": [
               {
@@ -70,7 +70,7 @@
               },
               {
                 "key": "START",
-                "name": "Start Loading"
+                "name": "Start"
               },
               {
                 "key": "LOADED",
@@ -103,46 +103,46 @@
                       "type": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "type": "icon",
+                                  "name": "play-circle"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "LoadableItem",
+                                  "type": "typography"
+                                }
+                              ],
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "play-circle",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "LoadableItem",
-                                  "variant": "h2"
-                                }
-                              ]
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "typography",
-                              "variant": "body",
                               "color": "muted",
-                              "content": "Ready to load loadableitem. Click Start to begin."
+                              "variant": "body",
+                              "content": "Ready to load loadableitem. Click Start to begin.",
+                              "type": "typography"
                             },
                             {
-                              "type": "button",
+                              "icon": "play",
+                              "variant": "primary",
                               "label": "Start",
                               "event": "START",
-                              "variant": "primary",
-                              "icon": "play"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -163,9 +163,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
@@ -179,14 +178,15 @@
                         },
                         {
                           "type": "progress-bar",
-                          "value": 50,
+                          "value": 50.0,
                           "showPercentage": true
                         },
                         {
                           "type": "skeleton",
                           "variant": "text"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -205,28 +205,27 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
+                              "size": "lg",
                               "name": "check-circle",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "Success",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Success"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -237,13 +236,14 @@
                           "message": "Operation completed successfully."
                         },
                         {
+                          "event": "RESET",
                           "type": "button",
                           "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -265,144 +265,39 @@
                       "type": "error-boundary",
                       "children": [
                         {
+                          "align": "center",
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "error-state",
-                              "title": "Error",
                               "message": "Something went wrong. Please try again.",
+                              "title": "Error",
+                              "type": "error-state",
                               "onRetry": "START"
                             },
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "center",
                               "children": [
                                 {
                                   "type": "button",
                                   "label": "Retry",
-                                  "event": "START",
                                   "variant": "primary",
+                                  "event": "START",
                                   "icon": "rotate-ccw"
                                 },
                                 {
-                                  "type": "button",
+                                  "variant": "ghost",
                                   "label": "Reset",
-                                  "event": "RESET",
-                                  "variant": "ghost"
+                                  "type": "button",
+                                  "event": "RESET"
                                 }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "START",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.loadingStatus",
-                    "loading"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "loading-state",
-                          "title": "Loading",
-                          "message": "Loading loadableitem..."
-                        },
-                        {
-                          "type": "spinner",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "progress-bar",
-                          "value": 50,
-                          "showPercentage": true
-                        },
-                        {
-                          "type": "skeleton",
-                          "variant": "text"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "idle",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.loadingStatus",
-                    "idle"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "center",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
-                          "children": [
-                            {
+                              ],
+                              "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "play-circle",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "LoadableItem",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "color": "muted",
-                              "content": "Ready to load loadableitem. Click Start to begin."
-                            },
-                            {
-                              "type": "button",
-                              "label": "Start",
-                              "event": "START",
-                              "variant": "primary",
-                              "icon": "play"
+                              "justify": "center"
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -426,46 +321,151 @@
                       "type": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
+                                  "size": "lg",
                                   "name": "play-circle",
-                                  "size": "lg"
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "LoadableItem",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "typography",
                               "variant": "body",
                               "color": "muted",
-                              "content": "Ready to load loadableitem. Click Start to begin."
+                              "content": "Ready to load loadableitem. Click Start to begin.",
+                              "type": "typography"
                             },
                             {
+                              "event": "START",
+                              "icon": "play",
                               "type": "button",
                               "label": "Start",
-                              "event": "START",
-                              "variant": "primary",
-                              "icon": "play"
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "lg"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "START",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.loadingStatus",
+                    "loading"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "type": "loading-state",
+                          "title": "Loading",
+                          "message": "Loading loadableitem..."
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "value": 50.0,
+                          "showPercentage": true,
+                          "type": "progress-bar"
+                        },
+                        {
+                          "type": "skeleton",
+                          "variant": "text"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.loadingStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "center",
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "name": "play-circle",
+                                  "type": "icon"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "LoadableItem",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "variant": "body",
+                              "content": "Ready to load loadableitem. Click Start to begin.",
+                              "type": "typography",
+                              "color": "muted"
+                            },
+                            {
+                              "label": "Start",
+                              "variant": "primary",
+                              "type": "button",
+                              "icon": "play",
+                              "event": "START"
+                            }
+                          ],
+                          "type": "stack"
                         }
                       ]
                     }
@@ -473,7 +473,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

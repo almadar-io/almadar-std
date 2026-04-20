@@ -1,7 +1,7 @@
 {
   "name": "std-combat-log",
   "version": "1.0.0",
-  "description": "Scrollable combat event log atom using the `combat-log` pattern. Displays timestamped combat events with icons and colors. Supports appending new events and clearing the log.",
+  "description": "std-combat-log as a Function",
   "orbitals": [
     {
       "name": "CombatLogEntryOrbital",
@@ -56,7 +56,7 @@
           {
             "name": "timestamp",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "actorName",
@@ -69,91 +69,88 @@
           {
             "name": "value",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "turn",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "cl-1",
-            "name": "Attack log",
-            "description": "Warrior attacks Goblin",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "type": "attack",
-            "message": "Warrior strikes Goblin for 25 damage",
-            "timestamp": 1000,
-            "actorName": "Warrior",
-            "targetName": "Goblin",
-            "value": 25,
-            "turn": 1
-          },
-          {
-            "id": "cl-2",
-            "name": "Defend log",
-            "description": "Paladin raises shield",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "type": "defend",
-            "message": "Paladin raises shield, blocking 15 damage",
-            "timestamp": 2000,
-            "actorName": "Paladin",
-            "targetName": "Paladin",
-            "value": 15,
-            "turn": 1
-          },
-          {
-            "id": "cl-3",
-            "name": "Heal log",
-            "description": "Cleric heals Warrior",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "type": "heal",
-            "message": "Cleric heals Warrior for 30 HP",
-            "timestamp": 3000,
-            "actorName": "Cleric",
-            "targetName": "Warrior",
-            "value": 30,
-            "turn": 2
-          },
-          {
-            "id": "cl-4",
-            "name": "Special log",
-            "description": "Mage casts fireball",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "type": "special",
-            "message": "Mage casts Fireball dealing 40 AoE damage",
-            "timestamp": 4000,
-            "actorName": "Mage",
-            "targetName": "Goblin",
-            "value": 40,
-            "turn": 2
-          },
-          {
-            "id": "cl-5",
-            "name": "Move log",
-            "description": "Rogue moves to flank",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "type": "move",
-            "message": "Rogue moves to flanking position",
-            "timestamp": 5000,
-            "actorName": "Rogue",
-            "value": 0,
-            "turn": 3
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "CombatLogEntryCombatLog",
-          "linkedEntity": "CombatLogEntry",
           "category": "interaction",
+          "linkedEntity": "CombatLogEntry",
+          "emits": [
+            {
+              "event": "CombatLogEntryLoaded",
+              "description": "Fired when CombatLogEntry finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "type",
+                  "type": "string"
+                },
+                {
+                  "name": "message",
+                  "type": "string"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "number"
+                },
+                {
+                  "name": "actorName",
+                  "type": "string"
+                },
+                {
+                  "name": "targetName",
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "number"
+                },
+                {
+                  "name": "turn",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "CombatLogEntryLoadFailed",
+              "description": "Fired when CombatLogEntry fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -180,6 +177,20 @@
               {
                 "key": "CLEAR",
                 "name": "Clear"
+              },
+              {
+                "key": "CombatLogEntryLoaded",
+                "name": "CombatLogEntry loaded"
+              },
+              {
+                "key": "CombatLogEntryLoadFailed",
+                "name": "CombatLogEntry load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -190,18 +201,24 @@
                 "effects": [
                   [
                     "fetch",
-                    "CombatLogEntry"
+                    "CombatLogEntry",
+                    {
+                      "emit": {
+                        "failure": "CombatLogEntryLoadFailed",
+                        "success": "CombatLogEntryLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "combat-log",
-                      "events": "@CombatLogEntry",
-                      "maxVisible": 10,
                       "autoScroll": true,
+                      "type": "combat-log",
+                      "title": "Combat Log",
+                      "maxVisible": 10.0,
                       "showTimestamps": true,
-                      "title": "Combat Log"
+                      "events": "@CombatLogEntry"
                     }
                   ]
                 ]
@@ -215,9 +232,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "combat-log",
+                      "maxVisible": 10.0,
                       "events": "@CombatLogEntry",
-                      "maxVisible": 10,
+                      "type": "combat-log",
                       "autoScroll": true,
                       "showTimestamps": true,
                       "title": "Combat Log"
@@ -234,18 +251,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "combat-log",
-                      "events": "@CombatLogEntry",
-                      "maxVisible": 10,
                       "autoScroll": true,
+                      "title": "Combat Log",
+                      "events": "@CombatLogEntry",
                       "showTimestamps": true,
-                      "title": "Combat Log"
+                      "maxVisible": 10.0,
+                      "type": "combat-log"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

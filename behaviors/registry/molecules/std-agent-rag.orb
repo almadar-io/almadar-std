@@ -1,7 +1,7 @@
 {
   "name": "std-agent-rag",
   "version": "1.0.0",
-  "description": "std-agent-rag -- Retrieval-Augmented Generation",
+  "description": "std-agent-rag as a Function",
   "orbitals": [
     {
       "name": "AgentRagOrbital",
@@ -71,12 +71,12 @@
           {
             "name": "memoryHits",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "searchHits",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "error",
@@ -101,7 +101,7 @@
           {
             "name": "strength",
             "type": "number",
-            "default": 1
+            "default": 1.0
           },
           {
             "name": "pinned",
@@ -116,7 +116,7 @@
           {
             "name": "resultCount",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "results",
@@ -143,8 +143,8 @@
       "traits": [
         {
           "name": "AgentRagRag",
-          "linkedEntity": "AgentRag",
           "category": "interaction",
+          "linkedEntity": "AgentRag",
           "stateMachine": {
             "states": [
               {
@@ -192,22 +192,22 @@
                 ]
               },
               {
-                "key": "GENERATION_DONE",
-                "name": "Generation Done",
+                "key": "FAILED",
+                "name": "Failed",
                 "payload": [
                   {
-                    "name": "response",
+                    "name": "error",
                     "type": "string",
                     "required": true
                   }
                 ]
               },
               {
-                "key": "FAILED",
-                "name": "Failed",
+                "key": "GENERATION_DONE",
+                "name": "Generation Done",
                 "payload": [
                   {
-                    "name": "error",
+                    "name": "response",
                     "type": "string",
                     "required": true
                   }
@@ -228,20 +228,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "brain",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "brain"
                             },
                             {
                               "type": "typography",
@@ -257,29 +255,31 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Enter a query to retrieve context and generate a response",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "form-section",
-                                  "entity": "AgentRag",
-                                  "mode": "edit",
-                                  "submitEvent": "GENERATE",
                                   "fields": [
                                     "query"
-                                  ]
+                                  ],
+                                  "entity": "AgentRag",
+                                  "submitEvent": "GENERATE",
+                                  "mode": "edit",
+                                  "type": "form-section"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -297,7 +297,7 @@
                   [
                     "agent/recall",
                     "@entity.query",
-                    5
+                    5.0
                   ],
                   [
                     "agent/search-code",
@@ -307,10 +307,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
                           "type": "icon",
@@ -318,9 +314,9 @@
                           "size": "lg"
                         },
                         {
-                          "type": "typography",
                           "content": "Retrieving context...",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
                           "type": "spinner",
@@ -328,21 +324,25 @@
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "justify": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "badge",
                               "label": "Recalling memories"
                             },
                             {
-                              "type": "badge",
-                              "label": "Searching code"
+                              "label": "Searching code",
+                              "type": "badge"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -387,20 +387,19 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "cpu",
+                          "type": "icon",
                           "size": "lg"
                         },
                         {
+                          "variant": "h3",
                           "type": "typography",
-                          "content": "Generating response...",
-                          "variant": "h3"
+                          "content": "Generating response..."
                         },
                         {
                           "type": "spinner",
@@ -416,21 +415,79 @@
                               "type": "badge",
                               "label": [
                                 "str/concat",
-                                "@entity.memoryHits",
+                                [
+                                  "str/concat",
+                                  "@entity.memoryHits"
+                                ],
                                 " memories"
                               ]
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "str/concat",
-                                "@entity.searchHits",
+                                [
+                                  "str/concat",
+                                  "@entity.searchHits"
+                                ],
                                 " code hits"
-                              ]
+                              ],
+                              "type": "badge"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "retrieving",
+                "to": "idle",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "type": "icon",
+                          "size": "lg"
+                        },
+                        {
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "RAG Pipeline Error"
+                        },
+                        {
+                          "variant": "error",
+                          "type": "alert",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "label": "Try Again",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -463,64 +520,61 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "justify": "space-between",
+                          "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
+                                  "size": "lg",
                                   "name": "check-circle",
-                                  "size": "lg"
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "RAG Complete",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "RAG Complete"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "button",
                               "label": "New Query",
-                              "event": "RESET",
+                              "type": "button",
                               "variant": "ghost",
+                              "event": "RESET",
                               "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "simple-grid",
-                          "columns": 2,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "label": "Memory Hits",
+                              "icon": "brain",
                               "value": "@entity.memoryHits",
-                              "icon": "brain"
+                              "label": "Memory Hits",
+                              "type": "stat-display"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Code Hits",
+                              "type": "stat-display",
                               "value": "@entity.searchHits",
                               "icon": "code"
                             }
-                          ]
+                          ],
+                          "columns": 2.0
                         },
                         {
                           "type": "divider"
@@ -529,8 +583,6 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
                               "children": [
                                 {
@@ -547,16 +599,18 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Response",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.response",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ]
                         },
@@ -564,76 +618,28 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Retrieved Context",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.context",
-                                  "variant": "body"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "sm"
                             }
                           ]
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "retrieving",
-                "to": "idle",
-                "event": "FAILED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.error",
-                    "@payload.error"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "error"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
+                      ],
                       "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "RAG Pipeline Error",
-                          "variant": "h2"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "error",
-                          "message": "@entity.error"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Try Again",
-                          "event": "RESET",
-                          "variant": "primary",
-                          "icon": "rotate-ccw"
-                        }
-                      ]
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -657,15 +663,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -673,18 +677,20 @@
                           "variant": "h2"
                         },
                         {
-                          "type": "alert",
                           "variant": "error",
-                          "message": "@entity.error"
+                          "message": "@entity.error",
+                          "type": "alert"
                         },
                         {
                           "type": "button",
+                          "variant": "primary",
                           "label": "Try Again",
                           "event": "RESET",
-                          "variant": "primary",
                           "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -712,12 +718,12 @@
                   [
                     "set",
                     "@entity.memoryHits",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.searchHits",
-                    0
+                    0.0
                   ],
                   [
                     "set",
@@ -728,15 +734,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -744,11 +745,15 @@
                               "size": "lg"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "RAG Pipeline",
-                              "variant": "h2"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -757,35 +762,37 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Enter a query to retrieve context and generate a response",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "form-section",
                                   "entity": "AgentRag",
-                                  "mode": "edit",
+                                  "type": "form-section",
                                   "submitEvent": "GENERATE",
                                   "fields": [
                                     "query"
-                                  ]
+                                  ],
+                                  "mode": "edit"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "ref": "Tabs.traits.TabContentTabs",
@@ -801,82 +808,82 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
                   "direction": "vertical",
+                  "type": "stack",
                   "gap": "lg",
                   "children": [
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
                       "gap": "sm",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
+                          "size": "lg",
                           "name": "brain",
-                          "size": "lg"
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
                           "content": "RAG Pipeline",
                           "variant": "h2"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "onTabChange": "SELECT_TAB",
                       "type": "tabs",
+                      "defaultActiveTab": "query",
                       "tabs": [
                         {
                           "label": "Query",
                           "value": "query"
                         },
                         {
-                          "label": "Sources",
-                          "value": "sources"
+                          "value": "sources",
+                          "label": "Sources"
                         },
                         {
                           "label": "Response",
                           "value": "response"
                         }
-                      ],
-                      "defaultActiveTab": "query",
-                      "onTabChange": "SELECT_TAB"
+                      ]
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "data-grid",
-                      "entity": "AgentRag",
-                      "emptyIcon": "inbox",
-                      "emptyTitle": "No agentrags yet",
                       "emptyDescription": "Add agentrags to see them here.",
                       "className": "transition-shadow hover:shadow-md cursor-pointer",
                       "renderItem": [
                         "fn",
                         "item",
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "h4",
-                              "content": "@item.name"
+                              "content": "@item.name",
+                              "type": "typography"
                             },
                             {
+                              "content": "@item.query",
                               "type": "typography",
-                              "variant": "caption",
                               "color": "muted",
-                              "content": "@item.query"
+                              "variant": "caption"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "data-grid",
+                      "entity": "AgentRag",
+                      "emptyIcon": "inbox",
+                      "emptyTitle": "No agentrags yet"
                     }
                   ]
                 }
@@ -891,19 +898,13 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "lg",
                   "children": [
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
                       "gap": "sm",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "brain",
+                          "type": "icon",
                           "size": "lg"
                         },
                         {
@@ -911,13 +912,19 @@
                           "content": "RAG Pipeline",
                           "variant": "h2"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "defaultActiveTab": "query",
                       "type": "tabs",
+                      "activeTab": "@payload.tab",
+                      "onTabChange": "SELECT_TAB",
                       "tabs": [
                         {
                           "label": "Query",
@@ -931,45 +938,45 @@
                           "label": "Response",
                           "value": "response"
                         }
-                      ],
-                      "defaultActiveTab": "query",
-                      "activeTab": "@payload.tab",
-                      "onTabChange": "SELECT_TAB"
+                      ]
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "data-grid",
                       "entity": "AgentRag",
-                      "emptyIcon": "inbox",
-                      "emptyTitle": "No agentrags yet",
-                      "emptyDescription": "Add agentrags to see them here.",
                       "className": "transition-shadow hover:shadow-md cursor-pointer",
                       "renderItem": [
                         "fn",
                         "item",
                         {
-                          "type": "stack",
                           "direction": "vertical",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "h4",
-                              "content": "@item.name"
+                              "content": "@item.name",
+                              "type": "typography"
                             },
                             {
+                              "color": "muted",
                               "type": "typography",
                               "variant": "caption",
-                              "color": "muted",
                               "content": "@item.query"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "type": "data-grid",
+                      "emptyDescription": "Add agentrags to see them here.",
+                      "emptyIcon": "inbox",
+                      "emptyTitle": "No agentrags yet"
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg"
                 }
               ]
             ]
@@ -979,7 +986,6 @@
           "ref": "AgentMemory.traits.AgentMemoryBrowse",
           "name": "RagMemoryLifecycle",
           "linkedEntity": "AgentRag",
-          "listens": [],
           "emitsScope": "internal",
           "effects": {
             "INIT": [
@@ -991,28 +997,24 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "lg",
                   "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
                       "type": "stack",
-                      "direction": "horizontal",
                       "gap": "md",
-                      "justify": "space-between",
+                      "direction": "horizontal",
                       "align": "center",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "brain",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "brain"
                             },
                             {
                               "type": "typography",
@@ -1023,97 +1025,101 @@
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Memorize",
                               "event": "MEMORIZE",
                               "variant": "primary",
-                              "icon": "plus"
+                              "type": "button",
+                              "icon": "plus",
+                              "label": "Memorize"
                             },
                             {
-                              "type": "button",
                               "label": "Recall",
+                              "type": "button",
                               "event": "RECALL",
                               "variant": "secondary",
                               "icon": "search"
                             },
                             {
-                              "type": "button",
-                              "label": "Decay All",
+                              "icon": "clock",
                               "event": "DECAY",
+                              "label": "Decay All",
                               "variant": "ghost",
-                              "icon": "clock"
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "justify": "space-between"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "data-grid",
-                      "entity": "AgentRag",
-                      "emptyIcon": "inbox",
-                      "emptyTitle": "No memories yet",
-                      "emptyDescription": "Create your first memory to get started.",
                       "itemActions": [
                         {
+                          "size": "sm",
                           "label": "Pin",
-                          "event": "PIN",
                           "variant": "ghost",
-                          "size": "sm"
+                          "event": "PIN"
                         },
                         {
                           "label": "Reinforce",
-                          "event": "REINFORCE",
                           "variant": "ghost",
+                          "event": "REINFORCE",
                           "size": "sm"
                         },
                         {
                           "label": "Forget",
+                          "size": "sm",
                           "event": "FORGET",
-                          "variant": "danger",
-                          "size": "sm"
+                          "variant": "danger"
                         }
                       ],
                       "columns": [
                         {
-                          "name": "content",
                           "label": "Content",
+                          "name": "content",
                           "variant": "h4",
                           "icon": "brain"
                         },
                         {
-                          "name": "category",
-                          "label": "Category",
                           "variant": "badge",
+                          "label": "Category",
                           "colorMap": {
+                            "draft": "warning",
                             "active": "success",
                             "completed": "success",
-                            "done": "success",
-                            "pending": "warning",
-                            "draft": "warning",
-                            "scheduled": "warning",
-                            "inactive": "neutral",
-                            "archived": "neutral",
                             "disabled": "neutral",
                             "error": "destructive",
+                            "inactive": "neutral",
                             "cancelled": "destructive",
-                            "failed": "destructive"
-                          }
+                            "scheduled": "warning",
+                            "failed": "destructive",
+                            "done": "success",
+                            "archived": "neutral",
+                            "pending": "warning"
+                          },
+                          "name": "category"
                         },
                         {
-                          "name": "strength",
                           "label": "Strength",
+                          "name": "strength",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "emptyIcon": "inbox",
+                      "entity": "AgentRag",
+                      "emptyTitle": "No memories yet",
+                      "type": "data-grid",
+                      "emptyDescription": "Create your first memory to get started."
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "gap": "lg",
+                  "direction": "vertical"
                 }
               ]
             ]
@@ -1123,7 +1129,6 @@
           "ref": "AgentSearch.traits.AgentSearchBrowse",
           "name": "RagSearchLifecycle",
           "linkedEntity": "AgentRag",
-          "listens": [],
           "emitsScope": "internal",
           "effects": {
             "INIT": [
@@ -1135,68 +1140,63 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
                   "direction": "vertical",
+                  "type": "stack",
                   "gap": "lg",
                   "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
                       "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "justify": "space-between",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "search",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "AgentRag",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Search",
+                              "icon": "search",
                               "event": "SEARCH",
+                              "type": "button",
                               "variant": "primary",
-                              "icon": "search"
+                              "label": "Search"
                             },
                             {
+                              "variant": "ghost",
+                              "icon": "x",
                               "type": "button",
                               "label": "Clear",
-                              "event": "CLEAR",
-                              "variant": "ghost",
-                              "icon": "x"
+                              "event": "CLEAR"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "justify": "space-between",
+                      "direction": "horizontal",
+                      "align": "center"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "data-grid",
-                      "entity": "AgentRag",
-                      "emptyIcon": "inbox",
-                      "emptyTitle": "No search results",
-                      "emptyDescription": "Enter a query to search the codebase.",
                       "itemActions": [
                         {
                           "label": "View",
@@ -1207,36 +1207,41 @@
                       ],
                       "columns": [
                         {
-                          "name": "query",
-                          "label": "Query",
+                          "icon": "search",
                           "variant": "h4",
-                          "icon": "search"
+                          "name": "query",
+                          "label": "Query"
                         },
                         {
-                          "name": "language",
-                          "label": "Language",
                           "variant": "badge",
+                          "label": "Language",
                           "colorMap": {
-                            "active": "success",
-                            "completed": "success",
-                            "done": "success",
-                            "pending": "warning",
-                            "draft": "warning",
-                            "scheduled": "warning",
-                            "inactive": "neutral",
                             "archived": "neutral",
+                            "failed": "destructive",
+                            "active": "success",
+                            "cancelled": "destructive",
+                            "draft": "warning",
+                            "pending": "warning",
+                            "done": "success",
+                            "completed": "success",
                             "disabled": "neutral",
                             "error": "destructive",
-                            "cancelled": "destructive",
-                            "failed": "destructive"
-                          }
+                            "scheduled": "warning",
+                            "inactive": "neutral"
+                          },
+                          "name": "language"
                         },
                         {
                           "name": "resultCount",
                           "label": "Result Count",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "entity": "AgentRag",
+                      "emptyTitle": "No search results",
+                      "emptyDescription": "Enter a query to search the codebase.",
+                      "emptyIcon": "inbox",
+                      "type": "data-grid"
                     }
                   ]
                 }
@@ -1248,7 +1253,6 @@
           "ref": "AgentCompletion.traits.AgentCompletionModal",
           "name": "RagCompletionFlow",
           "linkedEntity": "AgentRag",
-          "listens": [],
           "emitsScope": "internal",
           "effects": {
             "INIT": [
@@ -1260,41 +1264,41 @@
                 "render-ui",
                 "main",
                 {
+                  "gap": "lg",
                   "type": "stack",
                   "direction": "vertical",
-                  "gap": "lg",
                   "children": [
                     {
-                      "type": "stack",
                       "direction": "horizontal",
-                      "gap": "md",
-                      "justify": "space-between",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "sparkles",
-                              "size": "lg"
+                              "name": "sparkles"
                             },
                             {
                               "type": "typography",
                               "content": "AgentRag",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "button",
+                          "icon": "sparkles",
                           "label": "Open",
-                          "event": "GENERATE",
                           "variant": "primary",
-                          "icon": "sparkles"
+                          "event": "GENERATE"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "justify": "space-between"
                     },
                     {
                       "type": "divider"
@@ -1315,53 +1319,53 @@
                 "modal",
                 {
                   "type": "stack",
-                  "direction": "vertical",
                   "gap": "md",
+                  "direction": "vertical",
                   "children": [
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "sparkles",
-                          "size": "md"
+                          "size": "md",
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "AgentRag",
-                          "variant": "h3"
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "sm"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
                       "children": [
                         {
-                          "type": "badge",
-                          "label": "@entity.provider"
+                          "label": "@entity.provider",
+                          "type": "badge"
                         },
                         {
-                          "type": "badge",
-                          "label": "@entity.model"
+                          "label": "@entity.model",
+                          "type": "badge"
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack"
                     },
                     {
                       "type": "form-section",
-                      "entity": "AgentRag",
-                      "mode": "create",
-                      "submitEvent": "SAVE",
-                      "cancelEvent": "CLOSE",
                       "fields": [
                         "prompt"
-                      ]
+                      ],
+                      "submitEvent": "SAVE",
+                      "cancelEvent": "CLOSE",
+                      "mode": "create",
+                      "entity": "AgentRag"
                     }
                   ]
                 }
@@ -1387,19 +1391,12 @@
                 "main",
                 {
                   "type": "stack",
-                  "direction": "vertical",
-                  "gap": "lg",
                   "children": [
                     {
                       "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
                       "justify": "space-between",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
@@ -1407,31 +1404,38 @@
                               "size": "lg"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "AgentRag",
-                              "variant": "h2"
+                              "content": "AgentRag"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
-                          "type": "button",
                           "label": "Open",
                           "event": "GENERATE",
-                          "variant": "primary",
-                          "icon": "sparkles"
+                          "icon": "sparkles",
+                          "type": "button",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "description": "Click Open to view details in a modal overlay.",
                       "type": "empty-state",
                       "icon": "sparkles",
-                      "title": "Nothing open",
-                      "description": "Click Open to view details in a modal overlay."
+                      "title": "Nothing open"
                     }
-                  ]
+                  ],
+                  "direction": "vertical",
+                  "gap": "lg"
                 }
               ]
             ],
@@ -1460,51 +1464,51 @@
                 "main",
                 {
                   "type": "stack",
-                  "direction": "vertical",
-                  "gap": "lg",
                   "children": [
                     {
-                      "type": "stack",
+                      "justify": "space-between",
                       "direction": "horizontal",
                       "gap": "md",
-                      "justify": "space-between",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
+                              "size": "lg",
                               "name": "sparkles",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "AgentRag",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ]
                         },
                         {
-                          "type": "button",
                           "label": "Open",
                           "event": "GENERATE",
                           "variant": "primary",
+                          "type": "button",
                           "icon": "sparkles"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "description": "Click Open to view details in a modal overlay.",
                       "type": "empty-state",
                       "icon": "sparkles",
-                      "title": "Nothing open",
-                      "description": "Click Open to view details in a modal overlay."
+                      "title": "Nothing open"
                     }
-                  ]
+                  ],
+                  "gap": "lg",
+                  "direction": "vertical"
                 }
               ]
             ]

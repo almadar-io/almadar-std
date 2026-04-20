@@ -10,11 +10,14 @@ orbital ExperimentOrbital {
     completed : boolean = false
     level : number = 1
   }
-  trait ExperimentSimulatorGame -> Experiment [interaction] {
+
+  type ExperimentLoaded     = Event Experiment                  "Fired when Experiment finishes loading"
+  type ExperimentLoadFailed = Event { message : string } "Fired when Experiment fails to load"
+  trait ExperimentSimulatorGame -> Experiment [interaction, collection] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch Experiment)
+        (fetch Experiment { emit: { success: "ExperimentLoaded", failure: "ExperimentLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "game-menu", title: "Experiment Simulator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "simulator-board", entity: "Experiment", completeEvent: "COMPLETE" }] }] })
@@ -28,6 +31,10 @@ orbital ExperimentOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "game-menu", title: "Experiment Simulator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
+    emits: [ExperimentLoaded, ExperimentLoadFailed]
+    listens {
+      ExperimentLoadFailed { message : string }
+    }
   }
   page "/simulator" as SimulatorPage -> ExperimentSimulatorGame
 }
@@ -40,11 +47,14 @@ orbital ClassificationOrbital {
     accuracy : number
     level : number = 1
   }
-  trait ClassificationClassifierGame -> Classification [interaction] {
+
+  type ClassificationLoaded     = Event Classification                  "Fired when Classification finishes loading"
+  type ClassificationLoadFailed = Event { message : string } "Fired when Classification fails to load"
+  trait ClassificationClassifierGame -> Classification [interaction, collection] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch Classification)
+        (fetch Classification { emit: { success: "ClassificationLoaded", failure: "ClassificationLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "game-menu", title: "Classification Lab", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "classifier-board", entity: "Classification", completeEvent: "COMPLETE" }] }] })
@@ -58,6 +68,10 @@ orbital ClassificationOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "game-menu", title: "Classification Lab", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
+    emits: [ClassificationLoaded, ClassificationLoadFailed]
+    listens {
+      ClassificationLoadFailed { message : string }
+    }
   }
   page "/classifier" -> ClassificationClassifierGame
 }
@@ -69,28 +83,35 @@ orbital LabResultOrbital {
     totalScore : number
     grade : string
   }
-  trait LabResultDisplay -> LabResult [interaction] {
+
+  type LabResultLoaded     = Event LabResult                  "Fired when LabResult finishes loading"
+  type LabResultLoadFailed = Event { message : string } "Fired when LabResult fails to load"
+  trait LabResultDisplay -> LabResult [interaction, collection] {
     initial: loading
     state loading {
       INIT -> displaying
-        (fetch LabResult)
+        (fetch LabResult { emit: { success: "LabResultLoaded", failure: "LabResultLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Lab Results" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Lab Results", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "ExperimentCount", value: ["object/get", ["array/first", "@entity"], "experimentCount"] }, { type: "stat-display", label: "AvgAccuracy", value: ["object/get", ["array/first", "@entity"], "avgAccuracy"] }, { type: "stat-display", label: "TotalScore", value: ["object/get", ["array/first", "@entity"], "totalScore"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Grade" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "grade"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
-        (fetch LabResult)
+        (fetch LabResult { emit: { success: "LabResultLoaded", failure: "LabResultLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Lab Results" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Lab Results", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "ExperimentCount", value: ["object/get", ["array/first", "@entity"], "experimentCount"] }, { type: "stat-display", label: "AvgAccuracy", value: ["object/get", ["array/first", "@entity"], "avgAccuracy"] }, { type: "stat-display", label: "TotalScore", value: ["object/get", ["array/first", "@entity"], "totalScore"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Grade" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "grade"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state displaying {
       INIT -> displaying
-        (fetch LabResult)
+        (fetch LabResult { emit: { success: "LabResultLoaded", failure: "LabResultLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Lab Results" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Lab Results", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "ExperimentCount", value: ["object/get", ["array/first", "@entity"], "experimentCount"] }, { type: "stat-display", label: "AvgAccuracy", value: ["object/get", ["array/first", "@entity"], "avgAccuracy"] }, { type: "stat-display", label: "TotalScore", value: ["object/get", ["array/first", "@entity"], "totalScore"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Grade" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "grade"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       REFRESH -> refreshing
-        (fetch LabResult)
+        (fetch LabResult { emit: { success: "LabResultLoaded", failure: "LabResultLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Lab Results" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Lab Results", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "ExperimentCount", value: ["object/get", ["array/first", "@entity"], "experimentCount"] }, { type: "stat-display", label: "AvgAccuracy", value: ["object/get", ["array/first", "@entity"], "avgAccuracy"] }, { type: "stat-display", label: "TotalScore", value: ["object/get", ["array/first", "@entity"], "totalScore"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Grade" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "grade"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state refreshing {
       REFRESHED -> displaying
-        (fetch LabResult)
+        (fetch LabResult { emit: { success: "LabResultLoaded", failure: "LabResultLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "STEM Lab", showTopBar: true, children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Lab Results" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Lab Results", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "ExperimentCount", value: ["object/get", ["array/first", "@entity"], "experimentCount"] }, { type: "stat-display", label: "AvgAccuracy", value: ["object/get", ["array/first", "@entity"], "avgAccuracy"] }, { type: "stat-display", label: "TotalScore", value: ["object/get", ["array/first", "@entity"], "totalScore"] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Grade" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "grade"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    emits: [LabResultLoaded, LabResultLoadFailed]
+    listens {
+      LabResultLoadFailed { message : string }
     }
   }
   page "/results" -> LabResultDisplay

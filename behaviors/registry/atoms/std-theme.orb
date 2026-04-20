@@ -1,7 +1,7 @@
 {
   "name": "std-theme",
   "version": "1.0.0",
-  "description": "Theme selection atom with toggle and full selector. Absorbs: theme-toggle, theme-selector.",
+  "description": "std-theme as a Function",
   "orbitals": [
     {
       "name": "ThemePreferenceOrbital",
@@ -45,24 +45,61 @@
             "type": "string",
             "default": "default"
           }
-        ],
-        "instances": [
-          {
-            "id": "theme-1",
-            "name": "Default Theme",
-            "description": "System default",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "mode": "light",
-            "colorScheme": "almadar"
-          }
         ]
       },
       "traits": [
         {
           "name": "ThemePreferenceTheme",
-          "linkedEntity": "ThemePreference",
           "category": "interaction",
+          "linkedEntity": "ThemePreference",
+          "emits": [
+            {
+              "event": "ThemePreferenceLoaded",
+              "description": "Fired when ThemePreference finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "mode",
+                  "type": "string"
+                },
+                {
+                  "name": "colorScheme",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ThemePreferenceLoadFailed",
+              "description": "Fired when ThemePreference fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -77,16 +114,30 @@
               },
               {
                 "key": "TOGGLE",
-                "name": "Toggle Theme"
+                "name": "Toggle"
               },
               {
                 "key": "SELECT",
-                "name": "Select Theme",
+                "name": "Select",
                 "payload": [
                   {
                     "name": "theme",
                     "type": "string",
                     "required": true
+                  }
+                ]
+              },
+              {
+                "key": "ThemePreferenceLoaded",
+                "name": "ThemePreference loaded"
+              },
+              {
+                "key": "ThemePreferenceLoadFailed",
+                "name": "ThemePreference load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -99,7 +150,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "ThemePreference"
+                    "ThemePreference",
+                    {
+                      "emit": {
+                        "failure": "ThemePreferenceLoadFailed",
+                        "success": "ThemePreferenceLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -107,23 +164,22 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "palette",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "Theme Settings",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Theme Settings"
                             }
                           ]
                         },
@@ -135,8 +191,6 @@
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -144,15 +198,17 @@
                                   "content": "Quick Toggle"
                                 },
                                 {
+                                  "content": "Switch between light and dark mode",
                                   "type": "typography",
-                                  "variant": "caption",
                                   "color": "muted",
-                                  "content": "Switch between light and dark mode"
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "theme-toggle"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "md"
                             }
                           ]
                         },
@@ -160,9 +216,9 @@
                           "type": "card",
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -177,44 +233,42 @@
                                 },
                                 {
                                   "type": "simple-grid",
-                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "button",
                                       "label": "Almadar",
                                       "event": "SELECT",
+                                      "type": "button",
                                       "variant": "secondary"
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Ocean",
+                                      "type": "button",
                                       "event": "SELECT",
                                       "variant": "secondary"
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Forest",
+                                      "type": "button",
                                       "event": "SELECT",
                                       "variant": "secondary"
                                     }
-                                  ]
+                                  ],
+                                  "columns": 3.0
                                 }
                               ]
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "typography",
+                              "content": "Current mode:",
                               "variant": "caption",
-                              "content": "Current mode:"
+                              "type": "typography"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -222,12 +276,13 @@
                                   "@entity"
                                 ],
                                 "mode"
-                              ]
+                              ],
+                              "type": "badge"
                             },
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Scheme:"
+                              "content": "Scheme:",
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
@@ -240,9 +295,11 @@
                                 "colorScheme"
                               ]
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -257,112 +314,109 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "palette",
+                              "type": "icon",
                               "size": "lg"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Theme Settings",
-                              "variant": "h2"
+                              "content": "Theme Settings"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
+                                  "content": "Quick Toggle",
                                   "type": "typography",
-                                  "variant": "h4",
-                                  "content": "Quick Toggle"
+                                  "variant": "h4"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Switch between light and dark mode",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "Switch between light and dark mode"
+                                  "type": "typography",
+                                  "color": "muted"
                                 },
                                 {
                                   "type": "theme-toggle"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
                           "type": "card",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "content": "Theme Palette",
                                   "variant": "h4",
-                                  "content": "Theme Palette"
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "Choose from available color schemes",
                                   "variant": "caption",
                                   "color": "muted",
-                                  "content": "Choose from available color schemes"
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "simple-grid",
-                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "button",
                                       "label": "Almadar",
+                                      "variant": "secondary",
                                       "event": "SELECT",
-                                      "variant": "secondary"
+                                      "type": "button"
                                     },
                                     {
                                       "type": "button",
+                                      "variant": "secondary",
                                       "label": "Ocean",
-                                      "event": "SELECT",
-                                      "variant": "secondary"
+                                      "event": "SELECT"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Forest",
                                       "event": "SELECT",
-                                      "variant": "secondary"
+                                      "label": "Forest",
+                                      "variant": "secondary",
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "columns": 3.0,
+                                  "type": "simple-grid"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "content": "Current mode:"
+                              "content": "Current mode:",
+                              "type": "typography"
                             },
                             {
                               "type": "badge",
@@ -377,11 +431,10 @@
                             },
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Scheme:"
+                              "content": "Scheme:",
+                              "variant": "caption"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -389,11 +442,15 @@
                                   "@entity"
                                 ],
                                 "colorScheme"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -412,64 +469,59 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "palette",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "palette"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Theme Settings",
-                              "variant": "h2"
+                              "content": "Theme Settings"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "h4",
-                                  "content": "Quick Toggle"
+                                  "content": "Quick Toggle",
+                                  "type": "typography"
                                 },
                                 {
+                                  "color": "muted",
                                   "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted",
                                   "content": "Switch between light and dark mode"
                                 },
                                 {
                                   "type": "theme-toggle"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -477,43 +529,44 @@
                                   "content": "Theme Palette"
                                 },
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
                                   "color": "muted",
+                                  "variant": "caption",
+                                  "type": "typography",
                                   "content": "Choose from available color schemes"
                                 },
                                 {
                                   "type": "simple-grid",
-                                  "columns": 3,
                                   "children": [
                                     {
-                                      "type": "button",
+                                      "variant": "secondary",
                                       "label": "Almadar",
-                                      "event": "SELECT",
-                                      "variant": "secondary"
+                                      "type": "button",
+                                      "event": "SELECT"
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Ocean",
                                       "event": "SELECT",
+                                      "type": "button",
                                       "variant": "secondary"
                                     },
                                     {
+                                      "variant": "secondary",
                                       "type": "button",
                                       "label": "Forest",
-                                      "event": "SELECT",
-                                      "variant": "secondary"
+                                      "event": "SELECT"
                                     }
-                                  ]
+                                  ],
+                                  "columns": 3.0
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
@@ -521,7 +574,6 @@
                               "content": "Current mode:"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -529,15 +581,15 @@
                                   "@entity"
                                 ],
                                 "mode"
-                              ]
+                              ],
+                              "type": "badge"
                             },
                             {
                               "type": "typography",
-                              "variant": "caption",
-                              "content": "Scheme:"
+                              "content": "Scheme:",
+                              "variant": "caption"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -545,17 +597,23 @@
                                   "@entity"
                                 ],
                                 "colorScheme"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

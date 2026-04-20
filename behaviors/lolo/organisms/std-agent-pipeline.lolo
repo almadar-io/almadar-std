@@ -30,7 +30,18 @@ orbital PipelinePlanOrbital {
     duration : number = 0
     icon : string = "circle"
   }
-  trait PipelinePlanner -> PipelinePlan [interaction] {
+
+  type PipelinePlanLoaded     = Event PipelinePlan                  "Fired when PipelinePlan finishes loading"
+  type PipelinePlanLoadFailed = Event { message : string } "Fired when PipelinePlan fails to load"
+
+  type PipelineProgressLoaded = Event { message : string } "Emitted event PipelineProgressLoaded"
+
+  type PipelineProgressLoadFailed = Event { message : string } "Emitted event PipelineProgressLoadFailed"
+
+  type SessionTreeLoaded = Event { message : string } "Emitted event SessionTreeLoaded"
+
+  type SessionTreeLoadFailed = Event { message : string } "Emitted event SessionTreeLoadFailed"
+  trait PipelinePlanner -> PipelinePlan [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -97,11 +108,12 @@ orbital PipelinePlanOrbital {
       * PLAN_READY -> INIT
       CLASSIFIED { category : string! }
       MEMORIES_LOADED { memories : string!, count : number! }
-      PLAN_GENERATED { steps : string!, confidence : number! }
+      PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
       FAILED { error : string! }
     }
+    emits: [SessionTreeLoaded, SessionTreeLoadFailed]
   }
-  trait PlannerTaskInput -> PipelinePlan [interaction] {
+  trait PlannerTaskInput -> PipelinePlan [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -121,9 +133,11 @@ orbital PipelinePlanOrbital {
     }
     listens {
       PLAN { data : object! }
+          PipelinePlanLoadFailed { message : string }
     }
+    emits: [PipelinePlanLoaded, PipelinePlanLoadFailed]
   }
-  trait PlannerClassifierFlow -> PipelinePlan [interaction] {
+  trait PlannerClassifierFlow -> PipelinePlan [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -151,9 +165,11 @@ orbital PipelinePlanOrbital {
     }
     listens {
       SAVE { data : object! }
+          PipelinePlanLoadFailed { message : string }
     }
+    emits: [PipelinePlanLoaded, PipelinePlanLoadFailed]
   }
-  trait PlannerCompletionFlow -> PipelinePlan [interaction] {
+  trait PlannerCompletionFlow -> PipelinePlan [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -181,9 +197,11 @@ orbital PipelinePlanOrbital {
     }
     listens {
       SAVE { data : object! }
+          PipelinePlanLoadFailed { message : string }
     }
+    emits: [PipelinePlanLoaded, PipelinePlanLoadFailed]
   }
-  trait PlannerMemoryLifecycle -> PipelinePlan [interaction] {
+  trait PlannerMemoryLifecycle -> PipelinePlan [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref PipelinePlan)
@@ -193,7 +211,9 @@ orbital PipelinePlanOrbital {
       PIN { id : string!, row : object }
       REINFORCE { id : string!, row : object }
       FORGET { id : string!, row : object }
+          PipelinePlanLoadFailed { message : string }
     }
+    emits: [PipelinePlanLoaded, PipelinePlanLoadFailed]
   }
   page "/pipeline" as PipelinePage -> PipelinePlanner
 }
@@ -230,7 +250,10 @@ orbital PipelineExecOrbital {
     timestamp : string = ""
     duration : number = 0
   }
-  trait PipelineExecutor -> PipelineExec [interaction] {
+
+  type PipelineExecLoaded     = Event PipelineExec                  "Fired when PipelineExec finishes loading"
+  type PipelineExecLoadFailed = Event { message : string } "Fired when PipelineExec fails to load"
+  trait PipelineExecutor -> PipelineExec [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -311,13 +334,19 @@ orbital PipelineExecOrbital {
     }
     listens {
       * PIPELINE_PLANNED -> EXECUTE
+          TOOL_RESULT { output : string }
+          CHECK_PASSED { result : string }
+          CHECK_NEEDS_MORE { toolName : string, toolArgs : string }
+          MAX_ITERATIONS { error : string }
+          PLAN_GENERATED { plan : string, toolName : string, toolArgs : string }
+          FAILED { error : string }
     }
   }
-  trait ToolLoopStepProgress -> PipelineExec [interaction] {
+  trait ToolLoopStepProgress -> PipelineExec [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch PipelineExec)
+        (fetch PipelineExec { emit: { success: "PipelineExecLoaded", failure: "PipelineExecLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "PipelineExec", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
       START -> in_progress
         (set @entity.status in_progress)
@@ -361,8 +390,12 @@ orbital PipelineExecOrbital {
       COMPLETE internal { totalSteps: number }
       FAIL internal { step: number }
     }
+    emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    listens {
+      PipelineExecLoadFailed { message : string }
+    }
   }
-  trait ToolLoopCompletionFlow -> PipelineExec [interaction] {
+  trait ToolLoopCompletionFlow -> PipelineExec [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -388,8 +421,13 @@ orbital PipelineExecOrbital {
       SAVE internal
       GENERATED internal
     }
+    emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    listens {
+      PipelineExecLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ToolLoopToolCallFlow -> PipelineExec [interaction] {
+  trait ToolLoopToolCallFlow -> PipelineExec [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -415,12 +453,17 @@ orbital PipelineExecOrbital {
       SAVE internal
       INVOKED internal
     }
+    emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    listens {
+      PipelineExecLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ToolLoopContextMonitor -> PipelineExec [interaction] {
+  trait ToolLoopContextMonitor -> PipelineExec [interaction, collection] {
     initial: normal
     state normal {
       INIT -> normal
-        (fetch PipelineExec)
+        (fetch PipelineExec { emit: { success: "PipelineExecLoaded", failure: "PipelineExecLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
@@ -478,6 +521,11 @@ orbital PipelineExecOrbital {
         (set @entity.current 0)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
+    emits: [PipelineExecLoaded, PipelineExecLoadFailed]
+    listens {
+      PipelineExecLoadFailed { message : string }
+      UPDATE { current : string }
+    }
   }
   page "/execution" -> PipelineExecutor
 }
@@ -490,7 +538,10 @@ orbital PipelineSessionOrbital {
     status : string = "idle"
     createdAt : string
   }
-  trait PipelineSessionManager -> PipelineSession [interaction] {
+
+  type PipelineSessionLoaded     = Event PipelineSession                  "Fired when PipelineSession finishes loading"
+  type PipelineSessionLoadFailed = Event { message : string } "Fired when PipelineSession fails to load"
+  trait PipelineSessionManager -> PipelineSession [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref PipelineSession)
@@ -501,15 +552,17 @@ orbital PipelineSessionOrbital {
       * LABELED -> INIT
       * ENDED -> INIT
       * STEP_COMPLETE -> INIT
+          PipelineSessionLoadFailed { message : string }
     }
+    emits: [PipelineSessionLoaded, PipelineSessionLoadFailed]
   }
-  trait PipelineSessionLabel -> PipelineSession [interaction] {
+  trait PipelineSessionLabel -> PipelineSession [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref PipelineSession)
       LABEL -> open
-        (fetch PipelineSession)
+        (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag", size: "md" }, { type: "typography", content: "Label Session", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Session:" }, { type: "badge", label: "@entity.sessionId" }] }, { type: "form-section", entity: "PipelineSession", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["label"] }] })
     }
     state open {
@@ -525,12 +578,17 @@ orbital PipelineSessionOrbital {
       SAVE
       LABELED
     }
+    emits: [PipelineSessionLoaded, PipelineSessionLoadFailed]
+    listens {
+      PipelineSessionLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait PipelineSessionAgent -> PipelineSession [interaction] {
+  trait PipelineSessionAgent -> PipelineSession [interaction, collection] {
     initial: active
     state active {
       INIT -> active
-        (fetch PipelineSession)
+        (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
         (agent/session-id)
         (set @entity.createdAt @now)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" }] })
@@ -545,7 +603,7 @@ orbital PipelineSessionOrbital {
         (set @entity.label @payload.data.label)
       LABELED -> active
         (agent/label @entity.label)
-        (fetch PipelineSession)
+        (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
       END -> ended
         (set @entity.status ended)
         (emit ENDED)
@@ -562,14 +620,14 @@ orbital PipelineSessionOrbital {
         (set @entity.label @payload.data.label)
       LABELED -> forked
         (agent/label @entity.label)
-        (fetch PipelineSession)
+        (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
       END -> ended
         (set @entity.status ended)
         (emit ENDED)
     }
     state ended {
       INIT -> active
-        (fetch PipelineSession)
+        (fetch PipelineSession { emit: { success: "PipelineSessionLoaded", failure: "PipelineSessionLoadFailed" } })
         (agent/session-id)
         (set @entity.createdAt @now)
         (set @entity.status active)
@@ -582,7 +640,10 @@ orbital PipelineSessionOrbital {
     listens {
       * ENDED -> INIT
       * FORKED -> INIT
+          PipelineSessionLoadFailed { message : string }
+          DO_LABEL { data : string }
     }
+    emits: [PipelineSessionLoaded, PipelineSessionLoadFailed]
   }
   page "/session" -> PipelineSessionManager
 }
@@ -597,7 +658,10 @@ orbital ExecutionLogOrbital {
     lastAccessedAt : string
     createdAt : string
   }
-  trait ExecutionLogBrowse -> ExecutionLog [interaction] {
+
+  type ExecutionLogLoaded     = Event ExecutionLog                  "Fired when ExecutionLog finishes loading"
+  type ExecutionLogLoadFailed = Event { message : string } "Fired when ExecutionLog fails to load"
+  trait ExecutionLogBrowse -> ExecutionLog [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref ExecutionLog)
@@ -609,9 +673,11 @@ orbital ExecutionLogOrbital {
       * FORGOT -> INIT
       * REINFORCED -> INIT
       * DECAYED -> INIT
+          ExecutionLogLoadFailed { message : string }
     }
+    emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]
   }
-  trait ExecutionLogCreate -> ExecutionLog [interaction] {
+  trait ExecutionLogCreate -> ExecutionLog [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -632,12 +698,17 @@ orbital ExecutionLogOrbital {
       SAVE
       MEMORIZED
     }
+    emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]
+    listens {
+      ExecutionLogLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ExecutionLogAgent -> ExecutionLog [interaction] {
+  trait ExecutionLogAgent -> ExecutionLog [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ExecutionLog)
+        (fetch ExecutionLog { emit: { success: "ExecutionLogLoaded", failure: "ExecutionLogLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
@@ -646,7 +717,7 @@ orbital ExecutionLogOrbital {
         (agent/decay)
         (emit DECAYED)
       MEMORIZED -> active
-        (fetch ExecutionLog)
+        (fetch ExecutionLog { emit: { success: "ExecutionLogLoaded", failure: "ExecutionLogLoadFailed" } })
     }
     state active {
       RECALL -> active
@@ -673,11 +744,20 @@ orbital ExecutionLogOrbital {
     }
     listens {
       * PIPELINE_FINISHED -> MEMORIZE
+          ExecutionLogLoadFailed { message : string }
+          DO_MEMORIZE { data : string }
+          RECALL { query : string }
+          PIN { id : string }
+          FORGET { id : string }
+          REINFORCE { id : string }
     }
+    emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]
   }
   page "/logs" -> ExecutionLogBrowse, ExecutionLogCreate, ExecutionLogAgent
 }
 orbital PipelineProgressOrbital {
+  uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
+
   entity PipelineProgress [runtime] {
     id : string!
     steps : string = ""
@@ -685,6 +765,9 @@ orbital PipelineProgressOrbital {
     totalSteps : number
     status : string = "idle"
   }
+
+  type PipelineProgressLoaded     = Event PipelineProgress                  "Fired when PipelineProgress finishes loading"
+  type PipelineProgressLoadFailed = Event { message : string } "Fired when PipelineProgress fails to load"
   trait PipelineStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> PipelineProgress {
     on INIT {
         (fetch PipelineProgress)
@@ -717,12 +800,17 @@ orbital PipelineProgressOrbital {
   page "/pipeline/progress" -> PipelineStepProgress
 }
 orbital SessionTreeOrbital {
+  uses Drawer from "std/behaviors/std-drawer"
+
   entity SessionTree [runtime] {
     id : string!
     branchId : string
     label : string
     status : string = "idle"
   }
+
+  type SessionTreeLoaded     = Event SessionTree                  "Fired when SessionTree finishes loading"
+  type SessionTreeLoadFailed = Event { message : string } "Fired when SessionTree fails to load"
   trait SessionTreeDrawer = Drawer.traits.DrawerContentDrawer -> SessionTree {
     on INIT {
         (fetch SessionTree)

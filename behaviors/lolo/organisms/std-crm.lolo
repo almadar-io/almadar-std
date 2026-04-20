@@ -9,8 +9,12 @@ orbital ContactOrbital {
     email : string = ""
     phone : string = ""
     status : "lead" | "prospect" | "customer" | "inactive" = "lead"
+    pendingId : string = ""
   }
-  trait ContactBrowse -> Contact [interaction] {
+
+  type ContactLoaded     = Event Contact                  "Fired when Contact finishes loading"
+  type ContactLoadFailed = Event { message : string } "Fired when Contact fails to load"
+  trait ContactBrowse -> Contact [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Contact)
@@ -26,15 +30,17 @@ orbital ContactOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
+          ContactLoadFailed { message : string }
     }
+    emits: [ContactLoaded, ContactLoadFailed]
   }
-  trait ContactCreate -> Contact [interaction] {
+  trait ContactCreate -> Contact [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Contact)
       CREATE -> open
-        (fetch Contact)
+        (fetch Contact { emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "New Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Contact", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"] }] })
     }
     state open {
@@ -48,19 +54,21 @@ orbital ContactOrbital {
     }
     emits {
       SAVE
-      CONTACT_CREATED external
+      CONTACT_CREATED external { id: string }
     }
     listens {
       SAVE { data : object! }
+          ContactLoadFailed { message : string }
     }
+    emits: [ContactLoaded, ContactLoadFailed]
   }
-  trait ContactEdit -> Contact [interaction] {
+  trait ContactEdit -> Contact [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Contact)
       EDIT -> open
-        (fetch Contact { id: "@payload.id" })
+        (fetch Contact { id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Contact", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Contact", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "company", "email", "phone", "status"], entityId: "@entity.id" }] })
     }
     state open {
@@ -74,20 +82,22 @@ orbital ContactOrbital {
     }
     emits {
       SAVE
-      CONTACT_UPDATED external
+      CONTACT_UPDATED external { id: string }
     }
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
+          ContactLoadFailed { message : string }
     }
+    emits: [ContactLoaded, ContactLoadFailed]
   }
-  trait ContactView -> Contact [interaction] {
+  trait ContactView -> Contact [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Contact)
       VIEW -> open
-        (fetch Contact { id: "@payload.id" })
+        (fetch Contact { id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Company" }, { type: "typography", variant: "body", content: "@entity.company" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Email" }, { type: "typography", variant: "body", content: "@entity.email" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Phone" }, { type: "typography", variant: "body", content: "@entity.phone" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -103,16 +113,18 @@ orbital ContactOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
+          ContactLoadFailed { message : string }
     }
+    emits: [ContactLoaded, ContactLoadFailed]
   }
-  trait ContactDelete -> Contact [interaction] {
+  trait ContactDelete -> Contact [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (ref Contact)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Contact { id: "@payload.id" })
+        (fetch Contact { id: "@payload.id" , emit: { success: "ContactLoaded", failure: "ContactLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Contact", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
@@ -130,11 +142,13 @@ orbital ContactOrbital {
     }
     emits {
       CONFIRM_DELETE
-      CONTACT_DELETED external
+      CONTACT_DELETED external { id: string }
     }
     listens {
       DELETE { id : string! }
+          ContactLoadFailed { message : string }
     }
+    emits: [ContactLoaded, ContactLoadFailed]
   }
   page "/contacts" as ContactsPage -> ContactBrowse, ContactCreate, ContactEdit, ContactView, ContactDelete
 }
@@ -146,8 +160,12 @@ orbital DealOrbital {
     value : number
     stage : string
     closedAt : datetime
+    pendingId : string = ""
   }
-  trait DealBrowse -> Deal [interaction] {
+
+  type DealLoaded     = Event Deal                  "Fired when Deal finishes loading"
+  type DealLoadFailed = Event { message : string } "Fired when Deal fails to load"
+  trait DealBrowse -> Deal [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Deal)
@@ -161,15 +179,17 @@ orbital DealOrbital {
       * DEAL_UPDATED -> INIT
       * DEAL_DELETED -> INIT
       * CONVERT_LEAD -> INIT
+          DealLoadFailed { message : string }
     }
+    emits: [DealLoaded, DealLoadFailed]
   }
-  trait DealCreate -> Deal [interaction] {
+  trait DealCreate -> Deal [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Deal)
       CREATE -> open
-        (fetch Deal)
+        (fetch Deal { emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Deal", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"] }] })
     }
     state open {
@@ -185,14 +205,19 @@ orbital DealOrbital {
       SAVE
       DEAL_CREATED
     }
+    emits: [DealLoaded, DealLoadFailed]
+    listens {
+      DealLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait DealEdit -> Deal [interaction] {
+  trait DealEdit -> Deal [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Deal)
       EDIT -> open
-        (fetch Deal { id: "@payload.id" })
+        (fetch Deal { id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Deal", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Deal", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "contactId", "value", "stage", "closedAt"], entityId: "@entity.id" }] })
     }
     state open {
@@ -208,14 +233,20 @@ orbital DealOrbital {
       SAVE
       DEAL_UPDATED
     }
+    emits: [DealLoaded, DealLoadFailed]
+    listens {
+      DealLoadFailed { message : string }
+      EDIT { id : string }
+      SAVE { data : string }
+    }
   }
-  trait DealView -> Deal [interaction] {
+  trait DealView -> Deal [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Deal)
       VIEW -> open
-        (fetch Deal { id: "@payload.id" })
+        (fetch Deal { id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Contact ID" }, { type: "typography", variant: "body", content: "@entity.contactId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Value" }, { type: "typography", variant: "body", content: "@entity.value" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Stage" }, { type: "typography", variant: "body", content: "@entity.stage" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Closed At" }, { type: "typography", variant: "body", content: "@entity.closedAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -228,15 +259,20 @@ orbital DealOrbital {
     emits {
       SAVE
     }
+    emits: [DealLoaded, DealLoadFailed]
+    listens {
+      DealLoadFailed { message : string }
+      VIEW { id : string }
+    }
   }
-  trait DealDelete -> Deal [interaction] {
+  trait DealDelete -> Deal [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (ref Deal)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Deal { id: "@payload.id" })
+        (fetch Deal { id: "@payload.id" , emit: { success: "DealLoaded", failure: "DealLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Deal", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
@@ -256,6 +292,11 @@ orbital DealOrbital {
       CONFIRM_DELETE
       DEAL_DELETED
     }
+    emits: [DealLoaded, DealLoadFailed]
+    listens {
+      DealLoadFailed { message : string }
+      DELETE { id : string }
+    }
   }
   page "/deals" -> DealBrowse, DealCreate, DealEdit, DealView, DealDelete
 }
@@ -268,32 +309,37 @@ orbital PipelineOrbital {
     lostDeals : number
     conversionRate : number
   }
-  trait PipelineDisplay -> Pipeline [interaction] {
+
+  type PipelineLoaded     = Event Pipeline                  "Fired when Pipeline finishes loading"
+  type PipelineLoadFailed = Event { message : string } "Fired when Pipeline fails to load"
+  trait PipelineDisplay -> Pipeline [interaction, collection] {
     initial: loading
     state loading {
       INIT -> displaying
-        (fetch Pipeline)
+        (fetch Pipeline { emit: { success: "PipelineLoaded", failure: "PipelineLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
-        (fetch Pipeline)
+        (fetch Pipeline { emit: { success: "PipelineLoaded", failure: "PipelineLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state displaying {
       INIT -> displaying
-        (fetch Pipeline)
+        (fetch Pipeline { emit: { success: "PipelineLoaded", failure: "PipelineLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       REFRESH -> refreshing
-        (fetch Pipeline)
+        (fetch Pipeline { emit: { success: "PipelineLoaded", failure: "PipelineLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state refreshing {
       REFRESHED -> displaying
-        (fetch Pipeline)
+        (fetch Pipeline { emit: { success: "PipelineLoaded", failure: "PipelineLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Pipeline" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "bar-chart-2", size: "lg" }, { type: "typography", content: "Pipeline", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalDeals", value: ["object/get", ["array/first", "@entity"], "totalDeals"] }, { type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "WonDeals", value: ["object/get", ["array/first", "@entity"], "wonDeals"] }, { type: "stat-display", label: "LostDeals", value: ["object/get", ["array/first", "@entity"], "lostDeals"] }, { type: "stat-display", label: "ConversionRate", value: ["object/get", ["array/first", "@entity"], "conversionRate"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     listens {
       * CLOSE_DEAL -> INIT
+          PipelineLoadFailed { message : string }
     }
+    emits: [PipelineLoaded, PipelineLoadFailed]
   }
   page "/pipeline" -> PipelineDisplay
 }
@@ -305,7 +351,10 @@ orbital NoteOrbital {
     author : string
     createdAt : datetime
   }
-  trait NoteBrowse -> Note [interaction] {
+
+  type NoteLoaded     = Event Note                  "Fired when Note finishes loading"
+  type NoteLoadFailed = Event { message : string } "Fired when Note fails to load"
+  trait NoteBrowse -> Note [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Note)
@@ -313,9 +362,11 @@ orbital NoteOrbital {
     }
     listens {
       * SEND -> INIT
+          NoteLoadFailed { message : string }
     }
+    emits: [NoteLoaded, NoteLoadFailed]
   }
-  trait NoteCompose -> Note [interaction] {
+  trait NoteCompose -> Note [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -334,14 +385,19 @@ orbital NoteOrbital {
     emits {
       SEND
     }
+    emits: [NoteLoaded, NoteLoadFailed]
+    listens {
+      NoteLoadFailed { message : string }
+      SEND { data : string }
+    }
   }
-  trait NoteView -> Note [interaction] {
+  trait NoteView -> Note [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Note)
       VIEW -> open
-        (fetch Note { id: "@payload.id" })
+        (fetch Note { id: "@payload.id" , emit: { success: "NoteLoaded", failure: "NoteLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.subject" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Subject" }, { type: "typography", variant: "body", content: "@entity.subject" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -353,6 +409,11 @@ orbital NoteOrbital {
     }
     emits {
       SAVE
+    }
+    emits: [NoteLoaded, NoteLoadFailed]
+    listens {
+      NoteLoadFailed { message : string }
+      VIEW { id : string }
     }
   }
   page "/notes" -> NoteBrowse, NoteCompose, NoteView

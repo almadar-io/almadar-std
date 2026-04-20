@@ -40,8 +40,48 @@
       "traits": [
         {
           "name": "SelectableItemSelection",
-          "linkedEntity": "SelectableItem",
           "category": "interaction",
+          "linkedEntity": "SelectableItem",
+          "emits": [
+            {
+              "event": "SelectableItemLoaded",
+              "description": "Fired when SelectableItem finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SelectableItemLoadFailed",
+              "description": "Fired when SelectableItem fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -89,6 +129,20 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "SelectableItemLoaded",
+                "name": "SelectableItem loaded"
+              },
+              {
+                "key": "SelectableItemLoadFailed",
+                "name": "SelectableItem load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -99,7 +153,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "SelectableItem"
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "failure": "SelectableItemLoadFailed",
+                        "success": "SelectableItemLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -107,67 +167,67 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "check-square",
-                              "size": "lg"
+                              "name": "check-square"
                             },
                             {
                               "type": "typography",
-                              "content": "SelectableItems",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "SelectableItems"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Choose a selectableitem to continue."
+                          "content": "Choose a selectableitem to continue.",
+                          "type": "typography",
+                          "variant": "caption"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "SelectableItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No selectableitems yet",
-                          "emptyDescription": "Add selectableitems to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
                           "itemActions": [
                             {
-                              "label": "Select",
                               "event": "SELECT",
-                              "icon": "check"
+                              "icon": "check",
+                              "label": "Select"
                             }
                           ],
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "emptyTitle": "No selectableitems yet",
+                          "emptyIcon": "inbox",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "checkbox",
-                                  "label": "@item.name"
+                                  "label": "@item.name",
+                                  "type": "checkbox"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "emptyDescription": "Add selectableitems to see them here.",
+                          "entity": "SelectableItem"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -179,40 +239,42 @@
                 "effects": [
                   [
                     "fetch",
-                    "SelectableItem"
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "failure": "SelectableItemLoadFailed",
+                        "success": "SelectableItemLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
                               "align": "center",
+                              "gap": "md",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "check-square",
-                                  "size": "lg"
+                                  "name": "check-square"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "SelectableItems",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
                               "type": "stack",
@@ -225,48 +287,39 @@
                                   "label": "Selecting"
                                 },
                                 {
-                                  "type": "button",
                                   "label": "Clear",
+                                  "icon": "x",
                                   "event": "CLEAR",
                                   "variant": "ghost",
-                                  "icon": "x"
+                                  "type": "button"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "md",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": "info",
+                          "type": "alert",
                           "message": [
-                            "str/concat",
+                            "concat",
                             "Selected: ",
                             "@payload.id"
                           ]
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "SelectableItem",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No selectableitems yet",
-                          "emptyDescription": "Add selectableitems to see them here.",
-                          "itemActions": [
-                            {
-                              "label": "Select",
-                              "event": "SELECT",
-                              "icon": "check"
-                            }
-                          ],
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
@@ -278,7 +331,20 @@
                                     "@payload.id"
                                   ]
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm"
+                            }
+                          ],
+                          "entity": "SelectableItem",
+                          "type": "data-grid",
+                          "emptyDescription": "Add selectableitems to see them here.",
+                          "emptyIcon": "inbox",
+                          "itemActions": [
+                            {
+                              "event": "SELECT",
+                              "icon": "check",
+                              "label": "Select"
                             }
                           ]
                         },
@@ -286,32 +352,32 @@
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
+                              "variant": "secondary",
                               "label": "Select All",
-                              "action": "SELECT",
+                              "type": "button",
                               "icon": "check-square",
-                              "variant": "secondary"
+                              "action": "SELECT"
                             },
                             {
-                              "type": "button",
-                              "label": "Deselect All",
-                              "action": "DESELECT",
                               "icon": "square",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "label": "Deselect All",
+                              "type": "button",
+                              "action": "DESELECT"
                             },
                             {
                               "type": "button",
+                              "icon": "check",
                               "label": "Confirm",
                               "action": "CONFIRM_SELECTION",
-                              "icon": "check",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
                       ]
                     }
@@ -325,32 +391,34 @@
                 "effects": [
                   [
                     "fetch",
-                    "SelectableItem"
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "failure": "SelectableItemLoadFailed",
+                        "success": "SelectableItemLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "justify": "space-between",
                           "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "check-square",
+                                  "type": "icon",
                                   "size": "lg"
                                 },
                                 {
@@ -358,28 +426,32 @@
                                   "content": "SelectableItems",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "badge",
                                   "label": "Selecting"
                                 },
                                 {
+                                  "event": "CLEAR",
                                   "type": "button",
                                   "label": "Clear",
-                                  "event": "CLEAR",
                                   "variant": "ghost",
                                   "icon": "x"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -388,32 +460,20 @@
                           "type": "alert",
                           "variant": "info",
                           "message": [
-                            "str/concat",
+                            "concat",
                             "Selected: ",
                             "@payload.id"
                           ]
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "SelectableItem",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No selectableitems yet",
-                          "emptyDescription": "Add selectableitems to see them here.",
-                          "itemActions": [
-                            {
-                              "label": "Select",
-                              "event": "SELECT",
-                              "icon": "check"
-                            }
-                          ],
+                          "entity": "SelectableItem",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "checkbox",
@@ -424,7 +484,19 @@
                                     "@payload.id"
                                   ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "emptyDescription": "Add selectableitems to see them here.",
+                          "emptyIcon": "inbox",
+                          "itemActions": [
+                            {
+                              "icon": "check",
+                              "event": "SELECT",
+                              "label": "Select"
                             }
                           ]
                         },
@@ -432,30 +504,30 @@
                           "type": "divider"
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
                               "label": "Select All",
+                              "variant": "secondary",
                               "action": "SELECT",
-                              "icon": "check-square",
-                              "variant": "secondary"
+                              "icon": "check-square"
                             },
                             {
+                              "action": "DESELECT",
                               "type": "button",
                               "label": "Deselect All",
-                              "action": "DESELECT",
                               "icon": "square",
                               "variant": "secondary"
                             },
                             {
-                              "type": "button",
                               "label": "Confirm",
-                              "action": "CONFIRM_SELECTION",
+                              "type": "button",
                               "icon": "check",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "action": "CONFIRM_SELECTION"
                             }
                           ]
                         }
@@ -471,75 +543,81 @@
                 "effects": [
                   [
                     "fetch",
-                    "SelectableItem"
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "success": "SelectableItemLoaded",
+                        "failure": "SelectableItemLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "check-square",
-                              "size": "lg"
+                              "name": "check-square"
                             },
                             {
                               "type": "typography",
                               "content": "SelectableItems",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
                           "variant": "caption",
                           "color": "muted",
+                          "type": "typography",
                           "content": "Choose a selectableitem to continue."
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "SelectableItem",
+                          "emptyDescription": "Add selectableitems to see them here.",
                           "emptyIcon": "inbox",
                           "emptyTitle": "No selectableitems yet",
-                          "emptyDescription": "Add selectableitems to see them here.",
                           "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "itemActions": [
-                            {
-                              "label": "Select",
-                              "event": "SELECT",
-                              "icon": "check"
-                            }
-                          ],
+                          "entity": "SelectableItem",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "checkbox",
-                                  "label": "@item.name"
+                                  "label": "@item.name",
+                                  "type": "checkbox"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "itemActions": [
+                            {
+                              "event": "SELECT",
+                              "label": "Select",
+                              "icon": "check"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -551,21 +629,26 @@
                 "effects": [
                   [
                     "fetch",
-                    "SelectableItem"
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "success": "SelectableItemLoaded",
+                        "failure": "SelectableItemLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -573,11 +656,12 @@
                               "size": "lg"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "SelectableItems",
-                              "variant": "h2"
+                              "content": "SelectableItems"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -591,33 +675,33 @@
                         {
                           "type": "data-grid",
                           "entity": "SelectableItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No selectableitems yet",
-                          "emptyDescription": "Add selectableitems to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "itemActions": [
-                            {
-                              "label": "Select",
-                              "event": "SELECT",
-                              "icon": "check"
-                            }
-                          ],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
+                              "type": "stack",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "checkbox",
-                                  "label": "@item.name"
+                                  "label": "@item.name",
+                                  "type": "checkbox"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "emptyIcon": "inbox",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "emptyTitle": "No selectableitems yet",
+                          "itemActions": [
+                            {
+                              "icon": "check",
+                              "event": "SELECT",
+                              "label": "Select"
+                            }
+                          ],
+                          "emptyDescription": "Add selectableitems to see them here."
                         }
                       ]
                     }
@@ -633,22 +717,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -656,17 +735,22 @@
                                   "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Selection Confirmed",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
-                              "type": "badge",
-                              "label": "Confirmed"
+                              "label": "Confirmed",
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "justify": "space-between",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -677,29 +761,29 @@
                           "message": "Selection confirmed successfully."
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "typography",
+                              "content": "Selected ID:",
                               "variant": "caption",
-                              "content": "Selected ID:"
+                              "type": "typography"
                             },
                             {
-                              "type": "typography",
+                              "content": "@payload.id",
                               "variant": "body",
-                              "content": "@payload.id"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
-                          "type": "button",
                           "label": "Clear Selection",
-                          "event": "CLEAR",
                           "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button",
+                          "event": "CLEAR"
                         }
                       ]
                     }
@@ -713,31 +797,37 @@
                 "effects": [
                   [
                     "fetch",
-                    "SelectableItem"
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "success": "SelectableItemLoaded",
+                        "failure": "SelectableItemLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "check-square",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "check-square"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "SelectableItems",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -745,41 +835,41 @@
                           "type": "divider"
                         },
                         {
+                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
-                          "color": "muted",
                           "content": "Choose a selectableitem to continue."
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "SelectableItem",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No selectableitems yet",
                           "emptyDescription": "Add selectableitems to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
                           "itemActions": [
                             {
-                              "label": "Select",
                               "event": "SELECT",
-                              "icon": "check"
+                              "icon": "check",
+                              "label": "Select"
                             }
                           ],
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "checkbox",
-                                  "label": "@item.name"
+                                  "label": "@item.name",
+                                  "type": "checkbox"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "entity": "SelectableItem",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "type": "data-grid",
+                          "emptyIcon": "inbox"
                         }
                       ]
                     }
@@ -787,7 +877,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

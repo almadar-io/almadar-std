@@ -10,11 +10,14 @@ orbital DebugChallengeOrbital {
     solved : boolean = false
     level : number = 1
   }
-  trait DebugChallengeDebuggerGame -> DebugChallenge [interaction] {
+
+  type DebugChallengeLoaded     = Event DebugChallenge                  "Fired when DebugChallenge finishes loading"
+  type DebugChallengeLoadFailed = Event { message : string } "Fired when DebugChallenge fails to load"
+  trait DebugChallengeDebuggerGame -> DebugChallenge [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch DebugChallenge)
+        (fetch DebugChallenge { emit: { success: "DebugChallengeLoaded", failure: "DebugChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Debug Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "debugger-board", entity: "DebugChallenge", completeEvent: "COMPLETE" }] }] })
@@ -28,6 +31,10 @@ orbital DebugChallengeOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Debug Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
     }
+    emits: [DebugChallengeLoaded, DebugChallengeLoadFailed]
+    listens {
+      DebugChallengeLoadFailed { message : string }
+    }
   }
   page "/debugger" as DebuggerPage -> DebugChallengeDebuggerGame
 }
@@ -40,11 +47,14 @@ orbital NegotiateChallengeOrbital {
     outcome : string
     level : number = 1
   }
-  trait NegotiateChallengeNegotiatorGame -> NegotiateChallenge [interaction] {
+
+  type NegotiateChallengeLoaded     = Event NegotiateChallenge                  "Fired when NegotiateChallenge finishes loading"
+  type NegotiateChallengeLoadFailed = Event { message : string } "Fired when NegotiateChallenge fails to load"
+  trait NegotiateChallengeNegotiatorGame -> NegotiateChallenge [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch NegotiateChallenge)
+        (fetch NegotiateChallenge { emit: { success: "NegotiateChallengeLoaded", failure: "NegotiateChallengeLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Negotiate Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "negotiator-board", entity: "NegotiateChallenge", completeEvent: "COMPLETE" }] }] })
@@ -57,6 +67,10 @@ orbital NegotiateChallengeOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "game-menu", title: "Negotiate Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] }] })
+    }
+    emits: [NegotiateChallengeLoaded, NegotiateChallengeLoadFailed]
+    listens {
+      NegotiateChallengeLoadFailed { message : string }
     }
   }
   page "/negotiator" -> NegotiateChallengeNegotiatorGame
@@ -73,10 +87,13 @@ orbital TrainingScoreOrbital {
     multiplier : number
     level : number = 1
   }
-  trait TrainingScoreScoreBoard -> TrainingScore [interaction] {
+
+  type TrainingScoreLoaded     = Event TrainingScore                  "Fired when TrainingScore finishes loading"
+  type TrainingScoreLoadFailed = Event { message : string } "Fired when TrainingScore fails to load"
+  trait TrainingScoreScoreBoard -> TrainingScore [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch TrainingScore)
+        (fetch TrainingScore { emit: { success: "TrainingScoreLoaded", failure: "TrainingScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
@@ -90,6 +107,12 @@ orbital TrainingScoreOrbital {
         (set @entity.combo 0)
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Logic Training", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
+    }
+    emits: [TrainingScoreLoaded, TrainingScoreLoadFailed]
+    listens {
+      TrainingScoreLoadFailed { message : string }
+      ADD_SCORE { points : string }
+      COMBO { multiplier : string }
     }
   }
   page "/scores" -> TrainingScoreScoreBoard

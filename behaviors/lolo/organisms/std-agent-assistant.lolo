@@ -21,17 +21,20 @@ orbital AssistantOrbital {
     timestamp : string = ""
     toolName : string = ""
   }
-  trait AssistantConversation -> Assistant [interaction] {
+
+  type AssistantLoaded     = Event Assistant                  "Fired when Assistant finishes loading"
+  type AssistantLoadFailed = Event { message : string } "Fired when Assistant fails to load"
+  trait AssistantConversation -> Assistant [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
       COMPOSE -> composing
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus", disabled: true }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }, { type: "form-section", title: "Compose Message", children: [{ type: "textarea", label: "Message", bind: "@entity.content", placeholder: "Type your message..." }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Send", event: "SEND", variant: "primary", icon: "send" }] }] }] }] })
       CLEAR -> idle
         (persist delete Assistant)
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
     state composing {
@@ -42,11 +45,11 @@ orbital AssistantOrbital {
         (set @entity.status sent)
         (persist create Assistant { role: "user", content: "@payload.content", timestamp: "@now", status: "sent" })
         (emit SEND_MESSAGE)
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
       CLEAR -> idle
         (persist delete Assistant)
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant Thread", variant: "h2" }] }, { type: "button", label: "New Message", event: "COMPOSE", variant: "primary", icon: "plus" }] }, { type: "divider" }, { type: "data-list", entity: "Assistant", emptyIcon: "message-circle", emptyTitle: "No messages yet", emptyDescription: "Start a conversation by sending a message.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.role" }, { type: "badge", label: "@item.status", variant: "outline" }, { type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }] }, { type: "typography", variant: "body", content: "@item.content" }] }] }] }] })
     }
     emits {
@@ -57,13 +60,15 @@ orbital AssistantOrbital {
     listens {
       * PROVIDER_CHANGED -> INIT
       SEND { content : string! }
+          AssistantLoadFailed { message : string }
     }
+    emits: [AssistantLoaded, AssistantLoadFailed]
   }
-  trait AssistantAgent -> Assistant [interaction] {
+  trait AssistantAgent -> Assistant [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "empty-state", icon: "message-circle", title: "Conversation", description: "Conversation is ready" }] })
       SEND_MESSAGE -> active
         (set @entity.lastMessage @payload.content)
@@ -97,7 +102,9 @@ orbital AssistantOrbital {
     }
     listens {
       SEND_MESSAGE { content : string! }
+          AssistantLoadFailed { message : string }
     }
+    emits: [AssistantLoaded, AssistantLoadFailed]
   }
   page "/chat" as ChatPage -> AssistantConversation
 }
@@ -112,7 +119,10 @@ orbital MemoryOrbital {
     lastAccessedAt : string
     createdAt : string
   }
-  trait MemoryBrowse -> Memory [interaction] {
+
+  type MemoryLoaded     = Event Memory                  "Fired when Memory finishes loading"
+  type MemoryLoadFailed = Event { message : string } "Fired when Memory fails to load"
+  trait MemoryBrowse -> Memory [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Memory)
@@ -124,9 +134,11 @@ orbital MemoryOrbital {
       * FORGOT -> INIT
       * REINFORCED -> INIT
       * DECAYED -> INIT
+          MemoryLoadFailed { message : string }
     }
+    emits: [MemoryLoaded, MemoryLoadFailed]
   }
-  trait MemoryCreate -> Memory [interaction] {
+  trait MemoryCreate -> Memory [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -147,12 +159,17 @@ orbital MemoryOrbital {
       SAVE
       MEMORIZED
     }
+    emits: [MemoryLoaded, MemoryLoadFailed]
+    listens {
+      MemoryLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait MemoryAgent -> Memory [interaction] {
+  trait MemoryAgent -> Memory [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Memory)
+        (fetch Memory { emit: { success: "MemoryLoaded", failure: "MemoryLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "empty-state", icon: "brain", title: "Memory", description: "Memory is ready" }] })
       DO_MEMORIZE -> active
         (agent/memorize @payload.data.content @payload.data.category)
@@ -161,7 +178,7 @@ orbital MemoryOrbital {
         (agent/decay)
         (emit DECAYED)
       MEMORIZED -> active
-        (fetch Memory)
+        (fetch Memory { emit: { success: "MemoryLoaded", failure: "MemoryLoadFailed" } })
     }
     state active {
       RECALL -> active
@@ -188,7 +205,14 @@ orbital MemoryOrbital {
     }
     listens {
       * MEMORIZE_RESPONSE -> MEMORIZE
+          MemoryLoadFailed { message : string }
+          DO_MEMORIZE { data : string }
+          RECALL { query : string }
+          PIN { id : string }
+          FORGET { id : string }
+          REINFORCE { id : string }
     }
+    emits: [MemoryLoaded, MemoryLoadFailed]
   }
   page "/memory" -> MemoryBrowse, MemoryCreate, MemoryAgent
 }
@@ -205,11 +229,14 @@ orbital AssistantContextOrbital {
     message : string
     notificationType : string
   }
-  trait AssistantContextMonitor -> AssistantContext [interaction] {
+
+  type AssistantContextLoaded     = Event AssistantContext                  "Fired when AssistantContext finishes loading"
+  type AssistantContextLoadFailed = Event { message : string } "Fired when AssistantContext fails to load"
+  trait AssistantContextMonitor -> AssistantContext [interaction, collection] {
     initial: normal
     state normal {
       INIT -> normal
-        (fetch AssistantContext)
+        (fetch AssistantContext { emit: { success: "AssistantContextLoaded", failure: "AssistantContextLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
@@ -267,12 +294,17 @@ orbital AssistantContextOrbital {
         (set @entity.current 0)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
+    emits: [AssistantContextLoaded, AssistantContextLoadFailed]
+    listens {
+      AssistantContextLoadFailed { message : string }
+      UPDATE { current : string }
+    }
   }
-  trait AssistantContextNotification -> AssistantContext [interaction] {
+  trait AssistantContextNotification -> AssistantContext [interaction, collection] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch AssistantContext)
+        (fetch AssistantContext { emit: { success: "AssistantContextLoaded", failure: "AssistantContextLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -286,12 +318,17 @@ orbital AssistantContextOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
+    emits: [AssistantContextLoaded, AssistantContextLoadFailed]
+    listens {
+      AssistantContextLoadFailed { message : string }
+      SHOW { message : string, notificationType : string }
+    }
   }
-  trait AssistantContextAgent -> AssistantContext [interaction] {
+  trait AssistantContextAgent -> AssistantContext [interaction, collection] {
     initial: normal
     state normal {
       INIT -> normal
-        (fetch AssistantContext)
+        (fetch AssistantContext { emit: { success: "AssistantContextLoaded", failure: "AssistantContextLoadFailed" } })
         (agent/token-count)
         (agent/context-usage)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "empty-state", icon: "layers", title: "Context Window", description: "Context Window is ready" }] })
@@ -346,6 +383,10 @@ orbital AssistantContextOrbital {
       SHOW internal { tokenCount: number, usage: number }
       UPDATE internal { current: number, max: number }
     }
+    emits: [AssistantContextLoaded, AssistantContextLoadFailed]
+    listens {
+      AssistantContextLoadFailed { message : string }
+    }
   }
   page "/context" -> AssistantContextMonitor
 }
@@ -359,14 +400,17 @@ orbital ProviderConfigOrbital {
     message : string
     notificationType : string
   }
-  trait ProviderManager -> ProviderConfig [interaction] {
+
+  type ProviderConfigLoaded     = Event ProviderConfig                  "Fired when ProviderConfig finishes loading"
+  type ProviderConfigLoadFailed = Event { message : string } "Fired when ProviderConfig fails to load"
+  trait ProviderManager -> ProviderConfig [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref ProviderConfig)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
       SWITCH -> open
-        (fetch ProviderConfig)
+        (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "repeat", size: "md" }, { type: "typography", content: "Switch Provider", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current:" }, { type: "badge", label: "@entity.currentProvider" }, { type: "badge", label: "@entity.currentModel" }] }, { type: "form-section", entity: "ProviderConfig", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["currentProvider", "currentModel"] }] })
     }
     state open {
@@ -388,12 +432,17 @@ orbital ProviderConfigOrbital {
       PROVIDER_CHANGED internal { provider: string }
       PROVIDER_CHANGED external { provider: string }
     }
+    emits: [ProviderConfigLoaded, ProviderConfigLoadFailed]
+    listens {
+      ProviderConfigLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ProviderConfigNotification -> ProviderConfig [interaction] {
+  trait ProviderConfigNotification -> ProviderConfig [interaction, collection] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch ProviderConfig)
+        (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -407,12 +456,17 @@ orbital ProviderConfigOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
+    emits: [ProviderConfigLoaded, ProviderConfigLoadFailed]
+    listens {
+      ProviderConfigLoadFailed { message : string }
+      SHOW { message : string, notificationType : string }
+    }
   }
-  trait ProviderConfigAgent -> ProviderConfig [interaction] {
+  trait ProviderConfigAgent -> ProviderConfig [interaction, collection] {
     initial: idle
     state idle {
       INIT -> active
-        (fetch ProviderConfig)
+        (fetch ProviderConfig { emit: { success: "ProviderConfigLoaded", failure: "ProviderConfigLoadFailed" } })
         (agent/provider)
         (agent/model)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "empty-state", icon: "repeat", title: "Provider", description: "Provider is ready" }] })
@@ -444,7 +498,10 @@ orbital ProviderConfigOrbital {
     }
     listens {
       * SWITCHED -> SWITCHED
+          ProviderConfigLoadFailed { message : string }
+          DO_SWITCH { data : string }
     }
+    emits: [ProviderConfigLoaded, ProviderConfigLoadFailed]
   }
   page "/settings" -> ProviderManager
 }
@@ -461,15 +518,23 @@ orbital AssistantNavOrbital {
     status : string = "idle"
     error : string = ""
   }
-  trait AssistantTabs -> Assistant [interaction] {
+
+  type AssistantLoadFailed = Event { message : string } "Emitted event AssistantLoadFailed"
+
+  type AssistantLoaded = Event { message : string } "Emitted event AssistantLoaded"
+  trait AssistantTabs -> Assistant [interaction, collection] {
     state idle {
       INIT -> idle
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Chat", value: "chat" }, { label: "Memory", value: "memory" }, { label: "Settings", value: "settings" }], defaultActiveTab: "chat", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "Assistant", emptyIcon: "inbox", emptyTitle: "No assistants yet", emptyDescription: "Add assistants to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.messages" }, { type: "typography", variant: "caption", color: "muted", content: "@item.chat" }] }] }] }] })
       SELECT_TAB -> idle
-        (fetch Assistant)
+        (fetch Assistant { emit: { success: "AssistantLoaded", failure: "AssistantLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Assistant", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Chat", value: "chat" }, { label: "Memory", value: "memory" }, { label: "Settings", value: "settings" }], defaultActiveTab: "chat", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "Assistant", emptyIcon: "inbox", emptyTitle: "No assistants yet", emptyDescription: "Add assistants to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.messages" }, { type: "typography", variant: "caption", color: "muted", content: "@item.chat" }] }] }] }] })
     }
+    listens {
+      SELECT_TAB { tab : string }
+    }
+    emits: [AssistantLoadFailed, AssistantLoaded]
   }
   page "/assistant/nav" -> AssistantTabs
 }
@@ -480,19 +545,26 @@ orbital MemorySidebarOrbital {
     query : string
     strength : number
   }
-  trait MemoryDrawer -> MemorySidebar [interaction] {
+
+  type MemorySidebarLoaded     = Event MemorySidebar                  "Fired when MemorySidebar finishes loading"
+  type MemorySidebarLoadFailed = Event { message : string } "Fired when MemorySidebar fails to load"
+  trait MemoryDrawer -> MemorySidebar [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
-        (fetch MemorySidebar)
+        (fetch MemorySidebar { emit: { success: "MemorySidebarLoaded", failure: "MemorySidebarLoadFailed" } })
       OPEN -> open
-        (fetch MemorySidebar)
+        (fetch MemorySidebar { emit: { success: "MemorySidebarLoaded", failure: "MemorySidebarLoadFailed" } })
         (render-ui drawer { type: "stack", direction: "vertical", gap: "none", children: [{ type: "drawer", title: "Memory Recall", isOpen: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "content"] }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Query" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "query"] }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Strength" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "strength"] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] }] }, { type: "side-panel", title: "Memory Recall", isOpen: true, position: "right", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "content"] }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Query" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "query"] }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "typography", variant: "caption", content: "Strength" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "strength"] }] }] }] }] })
     }
     state open {
       CLOSE -> closed
         (render-ui drawer null)
-        (fetch MemorySidebar)
+        (fetch MemorySidebar { emit: { success: "MemorySidebarLoaded", failure: "MemorySidebarLoadFailed" } })
+    }
+    emits: [MemorySidebarLoaded, MemorySidebarLoadFailed]
+    listens {
+      MemorySidebarLoadFailed { message : string }
     }
   }
   page "/assistant/sidebar" -> MemoryDrawer

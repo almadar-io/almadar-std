@@ -14,18 +14,21 @@ orbital AgentActivityLogOrbital {
     duration : number = 0
     icon : string = "circle"
   }
-  trait AgentActivityLogLog -> AgentActivityLog [interaction] {
+
+  type AgentActivityLogLoaded     = Event AgentActivityLog                  "Fired when AgentActivityLog finishes loading"
+  type AgentActivityLogLoadFailed = Event { message : string } "Fired when AgentActivityLog fails to load"
+  trait AgentActivityLogLog -> AgentActivityLog [interaction, instance] {
     state logging {
       INIT -> logging
-        (fetch AgentActivityLog)
+        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", entity: "AgentActivityLog", emptyIcon: "activity", emptyTitle: "No activity yet", emptyDescription: "Agent actions will appear here as they occur.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.status" }, { type: "typography", variant: "h4", content: "@item.action" }] }, { type: "typography", variant: "body", color: "muted", content: "@item.detail" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }, { type: "badge", label: "@item.duration", variant: "outline" }] }] }] }] })
       LOG_ENTRY -> logging
         (persist create AgentActivityLog { action: "@payload.action", detail: "@payload.detail", status: "@payload.status", timestamp: "@now" })
-        (fetch AgentActivityLog)
+        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", entity: "AgentActivityLog", emptyIcon: "activity", emptyTitle: "No activity yet", emptyDescription: "Agent actions will appear here as they occur.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.status" }, { type: "typography", variant: "h4", content: "@item.action" }] }, { type: "typography", variant: "body", color: "muted", content: "@item.detail" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }, { type: "badge", label: "@item.duration", variant: "outline" }] }] }] }] })
       CLEAR -> logging
         (persist delete AgentActivityLog)
-        (fetch AgentActivityLog)
+        (fetch AgentActivityLog { emit: { success: "AgentActivityLogLoaded", failure: "AgentActivityLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "activity", size: "lg" }, { type: "typography", content: "Activity Log", variant: "h2" }] }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "trash" }] }, { type: "divider" }, { type: "timeline", entity: "AgentActivityLog", emptyIcon: "activity", emptyTitle: "No activity yet", emptyDescription: "Agent actions will appear here as they occur.", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "xs", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "badge", label: "@item.status" }, { type: "typography", variant: "h4", content: "@item.action" }] }, { type: "typography", variant: "body", color: "muted", content: "@item.detail" }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "typography", variant: "caption", color: "muted", content: "@item.timestamp" }, { type: "badge", label: "@item.duration", variant: "outline" }] }] }] }] })
     }
     emits {
@@ -33,7 +36,10 @@ orbital AgentActivityLogOrbital {
     }
     listens {
       * LOG_ENTRY -> LOG_ENTRY
+          AgentActivityLogLoadFailed { message : string }
+          LOG_ENTRY { action : string, detail : string, status : string }
     }
+    emits: [AgentActivityLogLoaded, AgentActivityLogLoadFailed]
   }
   page "/agentactivitylogs" as AgentActivityLogPage -> AgentActivityLogLog
 }

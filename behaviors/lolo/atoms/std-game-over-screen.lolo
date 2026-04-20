@@ -11,10 +11,13 @@ orbital GameOverStateOrbital {
     currentScore : number = 0
     highScore : number = 0
   }
-  trait GameOverStateGameOver -> GameOverState [interaction] {
+
+  type GameOverStateLoaded     = Event GameOverState                  "Fired when GameOverState finishes loading"
+  type GameOverStateLoadFailed = Event { message : string } "Fired when GameOverState fails to load"
+  trait GameOverStateGameOver -> GameOverState [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch GameOverState)
+        (fetch GameOverState { emit: { success: "GameOverStateLoaded", failure: "GameOverStateLoadFailed" } })
         (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
       NAVIGATE -> idle
       RESTART -> idle
@@ -22,6 +25,10 @@ orbital GameOverStateOrbital {
         (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
       QUIT -> idle
         (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
+    }
+    emits: [GameOverStateLoaded, GameOverStateLoadFailed]
+    listens {
+      GameOverStateLoadFailed { message : string }
     }
   }
   page "/gameoverstates" as GameOverStateGameOverPage -> GameOverStateGameOver

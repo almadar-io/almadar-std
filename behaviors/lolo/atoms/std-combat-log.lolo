@@ -16,10 +16,13 @@ orbital CombatLogEntryOrbital {
     value : number = 0
     turn : number = 1
   }
-  trait CombatLogEntryCombatLog -> CombatLogEntry [interaction] {
+
+  type CombatLogEntryLoaded     = Event CombatLogEntry                  "Fired when CombatLogEntry finishes loading"
+  type CombatLogEntryLoadFailed = Event { message : string } "Fired when CombatLogEntry fails to load"
+  trait CombatLogEntryCombatLog -> CombatLogEntry [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch CombatLogEntry)
+        (fetch CombatLogEntry { emit: { success: "CombatLogEntryLoaded", failure: "CombatLogEntryLoadFailed" } })
         (render-ui main { type: "combat-log", events: "@CombatLogEntry", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
       LOG_EVENT -> idle
         (render-ui main { type: "combat-log", events: "@CombatLogEntry", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
@@ -28,7 +31,9 @@ orbital CombatLogEntryOrbital {
     }
     listens {
       LOG_EVENT { data : object! }
+          CombatLogEntryLoadFailed { message : string }
     }
+    emits: [CombatLogEntryLoaded, CombatLogEntryLoadFailed]
   }
   page "/combatlogentrys" as CombatLogEntryLogPage -> CombatLogEntryCombatLog
 }

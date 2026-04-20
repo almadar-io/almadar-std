@@ -31,7 +31,10 @@ orbital AgentFixLoopOrbital {
     provider : string = "anthropic"
     model : string = "claude-sonnet-4-20250514"
   }
-  trait AgentFixLoopCycle -> AgentFixLoop [interaction] {
+
+  type AgentFixLoopLoaded     = Event AgentFixLoop                  "Fired when AgentFixLoop finishes loading"
+  type AgentFixLoopLoadFailed = Event { message : string } "Fired when AgentFixLoop fails to load"
+  trait AgentFixLoopCycle -> AgentFixLoop [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle

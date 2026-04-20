@@ -1,7 +1,7 @@
 {
   "name": "std-platformer-app",
   "version": "1.0.0",
-  "description": "Platformer game organism. Composes: stdPlatformerGame(PlatLevel) + stdScoreBoard(PlatScore) + stdInventory(Collectible)",
+  "description": "std-platformer-app as a Function",
   "orbitals": [
     {
       "name": "PlatLevelOrbital",
@@ -17,22 +17,22 @@
           {
             "name": "level",
             "type": "number",
-            "default": 1
+            "default": 1.0
           },
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "lives",
             "type": "number",
-            "default": 3
+            "default": 3.0
           },
           {
             "name": "time",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "player",
@@ -44,25 +44,62 @@
             "type": "string",
             "default": ""
           }
-        ],
-        "instances": [
-          {
-            "id": "player-1",
-            "name": "Player",
-            "description": "Main character",
-            "status": "active",
-            "score": 0,
-            "lives": 3,
-            "player": "",
-            "platforms": ""
-          }
         ]
       },
       "traits": [
         {
           "name": "PlatLevelPlatformerFlow",
-          "linkedEntity": "PlatLevel",
           "category": "interaction",
+          "linkedEntity": "PlatLevel",
+          "emits": [
+            {
+              "event": "PlatLevelLoaded",
+              "description": "Fired when PlatLevel finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "lives",
+                  "type": "number"
+                },
+                {
+                  "name": "time",
+                  "type": "number"
+                },
+                {
+                  "name": "player",
+                  "type": "string"
+                },
+                {
+                  "name": "platforms",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PlatLevelLoadFailed",
+              "description": "Fired when PlatLevel fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -86,15 +123,19 @@
               },
               {
                 "key": "START",
-                "name": "Start Game"
+                "name": "Start"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
               },
               {
                 "key": "LEFT",
-                "name": "Move Left"
+                "name": "Left"
               },
               {
                 "key": "RIGHT",
-                "name": "Move Right"
+                "name": "Right"
               },
               {
                 "key": "JUMP",
@@ -109,24 +150,34 @@
                 "name": "Pause"
               },
               {
-                "key": "RESUME",
-                "name": "Resume"
-              },
-              {
                 "key": "GAME_OVER",
                 "name": "Game Over"
               },
               {
-                "key": "RESTART",
-                "name": "Restart"
+                "key": "RESUME",
+                "name": "Resume"
               },
               {
                 "key": "CLOSE",
                 "name": "Close"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "PlatLevelLoaded",
+                "name": "PlatLevel loaded"
+              },
+              {
+                "key": "PlatLevelLoadFailed",
+                "name": "PlatLevel load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -137,25 +188,31 @@
                 "effects": [
                   [
                     "fetch",
-                    "PlatLevel"
+                    "PlatLevel",
+                    {
+                      "emit": {
+                        "success": "PlatLevelLoaded",
+                        "failure": "PlatLevelLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Platformer App",
                       "showTopBar": true,
+                      "appName": "Platformer App",
                       "children": [
                         {
                           "type": "game-menu",
-                          "title": "Platformer",
                           "subtitle": "Side-Scrolling Adventure",
+                          "title": "Platformer",
                           "menuItems": [
                             {
+                              "variant": "primary",
                               "label": "Start Game",
-                              "event": "START",
-                              "variant": "primary"
+                              "event": "START"
                             }
                           ]
                         }
@@ -175,61 +232,50 @@
                     {
                       "type": "game-shell",
                       "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
+                          "rightEvent": "RIGHT",
+                          "worldWidth": 2400.0,
+                          "jumpEvent": "JUMP",
+                          "stopEvent": "STOP",
+                          "canvasWidth": 800.0,
                           "type": "platformer-canvas",
-                          "canvasWidth": 800,
-                          "canvasHeight": 400,
-                          "worldWidth": 2400,
-                          "worldHeight": 400,
+                          "worldHeight": 400.0,
+                          "canvasHeight": 400.0,
                           "followCamera": true,
                           "bgColor": "#1a1a2e",
-                          "leftEvent": "LEFT",
-                          "rightEvent": "RIGHT",
-                          "jumpEvent": "JUMP",
-                          "stopEvent": "STOP"
+                          "leftEvent": "LEFT"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
               },
               {
-                "from": "playing",
-                "to": "playing",
-                "event": "LEFT",
-                "effects": []
-              },
-              {
-                "from": "playing",
-                "to": "playing",
-                "event": "RIGHT",
-                "effects": []
-              },
-              {
-                "from": "playing",
-                "to": "playing",
-                "event": "JUMP",
-                "effects": []
-              },
-              {
-                "from": "playing",
-                "to": "playing",
-                "event": "STOP",
-                "effects": []
-              },
-              {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
-                "from": "paused",
-                "to": "paused",
-                "event": "NAVIGATE",
-                "effects": []
+                "from": "playing",
+                "to": "playing",
+                "event": "LEFT"
+              },
+              {
+                "from": "playing",
+                "to": "playing",
+                "event": "RIGHT"
+              },
+              {
+                "from": "playing",
+                "to": "playing",
+                "event": "JUMP"
+              },
+              {
+                "from": "playing",
+                "to": "playing",
+                "event": "STOP"
               },
               {
                 "from": "playing",
@@ -240,8 +286,6 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "game-menu",
-                      "title": "Paused",
                       "menuItems": [
                         {
                           "label": "Resume",
@@ -250,13 +294,64 @@
                         },
                         {
                           "label": "Quit",
-                          "event": "RESTART",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "event": "RESTART"
                         }
-                      ]
+                      ],
+                      "type": "game-menu",
+                      "title": "Paused"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "Platformer App",
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "value": "@entity.lives",
+                              "label": "Lives"
+                            }
+                          ],
+                          "type": "game-over-screen",
+                          "menuItems": [
+                            {
+                              "label": "Play Again",
+                              "event": "RESTART",
+                              "variant": "primary"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Main Menu",
+                              "event": "RESTART"
+                            }
+                          ],
+                          "title": "Game Over"
+                        }
+                      ],
+                      "type": "game-shell"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "paused",
+                "event": "NAVIGATE"
               },
               {
                 "from": "paused",
@@ -273,23 +368,23 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
+                          "canvasHeight": 400.0,
                           "type": "platformer-canvas",
-                          "canvasWidth": 800,
-                          "canvasHeight": 400,
-                          "worldWidth": 2400,
-                          "worldHeight": 400,
-                          "followCamera": true,
+                          "worldHeight": 400.0,
                           "bgColor": "#1a1a2e",
-                          "leftEvent": "LEFT",
-                          "rightEvent": "RIGHT",
                           "jumpEvent": "JUMP",
-                          "stopEvent": "STOP"
+                          "stopEvent": "STOP",
+                          "worldWidth": 2400.0,
+                          "rightEvent": "RIGHT",
+                          "canvasWidth": 800.0,
+                          "followCamera": true,
+                          "leftEvent": "LEFT"
                         }
-                      ]
+                      ],
+                      "appName": "Platformer App",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -309,97 +404,23 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "platformer-canvas",
-                          "canvasWidth": 800,
-                          "canvasHeight": 400,
-                          "worldWidth": 2400,
-                          "worldHeight": 400,
-                          "followCamera": true,
-                          "bgColor": "#1a1a2e",
-                          "leftEvent": "LEFT",
                           "rightEvent": "RIGHT",
+                          "canvasHeight": 400.0,
+                          "worldHeight": 400.0,
+                          "bgColor": "#1a1a2e",
+                          "canvasWidth": 800.0,
+                          "stopEvent": "STOP",
+                          "leftEvent": "LEFT",
+                          "followCamera": true,
                           "jumpEvent": "JUMP",
-                          "stopEvent": "STOP"
+                          "worldWidth": 2400.0
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "Platformer App",
+                      ],
                       "showTopBar": true,
-                      "children": [
-                        {
-                          "type": "game-over-screen",
-                          "title": "Game Over",
-                          "stats": [
-                            {
-                              "label": "Score",
-                              "value": "@entity.score"
-                            },
-                            {
-                              "label": "Lives",
-                              "value": "@entity.lives"
-                            }
-                          ],
-                          "menuItems": [
-                            {
-                              "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Main Menu",
-                              "event": "RESTART",
-                              "variant": "secondary"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "gameover",
-                "to": "menu",
-                "event": "RESTART",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
-                      "children": [
-                        {
-                          "type": "game-menu",
-                          "title": "Platformer",
-                          "subtitle": "Side-Scrolling Adventure",
-                          "menuItems": [
-                            {
-                              "label": "Start Game",
-                              "event": "START",
-                              "variant": "primary"
-                            }
-                          ]
-                        }
-                      ]
+                      "appName": "Platformer App"
                     }
                   ]
                 ]
@@ -419,12 +440,8 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
-                          "title": "Platformer",
                           "subtitle": "Side-Scrolling Adventure",
                           "menuItems": [
                             {
@@ -432,20 +449,104 @@
                               "event": "START",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "type": "game-menu",
+                          "title": "Platformer"
                         }
-                      ]
+                      ],
+                      "appName": "Platformer App",
+                      "showTopBar": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "gameover",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "subtitle": "Side-Scrolling Adventure",
+                          "type": "game-menu",
+                          "menuItems": [
+                            {
+                              "label": "Start Game",
+                              "event": "START",
+                              "variant": "primary"
+                            }
+                          ],
+                          "title": "Platformer"
+                        }
+                      ],
+                      "type": "game-shell",
+                      "appName": "Platformer App"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "PlatLevelPlatformerCanvas",
-          "linkedEntity": "PlatLevel",
           "category": "interaction",
+          "linkedEntity": "PlatLevel",
+          "emits": [
+            {
+              "event": "PlatLevelLoaded",
+              "description": "Fired when PlatLevel finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "lives",
+                  "type": "number"
+                },
+                {
+                  "name": "time",
+                  "type": "number"
+                },
+                {
+                  "name": "player",
+                  "type": "string"
+                },
+                {
+                  "name": "platforms",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PlatLevelLoadFailed",
+              "description": "Fired when PlatLevel fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -462,12 +563,16 @@
                 "name": "Initialize"
               },
               {
+                "key": "START",
+                "name": "Start"
+              },
+              {
                 "key": "LEFT",
-                "name": "Move Left"
+                "name": "Left"
               },
               {
                 "key": "RIGHT",
-                "name": "Move Right"
+                "name": "Right"
               },
               {
                 "key": "JUMP",
@@ -478,8 +583,18 @@
                 "name": "Stop"
               },
               {
-                "key": "START",
-                "name": "Start"
+                "key": "PlatLevelLoaded",
+                "name": "PlatLevel loaded"
+              },
+              {
+                "key": "PlatLevelLoadFailed",
+                "name": "PlatLevel load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -490,7 +605,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "PlatLevel"
+                    "PlatLevel",
+                    {
+                      "emit": {
+                        "failure": "PlatLevelLoadFailed",
+                        "success": "PlatLevelLoaded"
+                      }
+                    }
                   ]
                 ]
               },
@@ -503,26 +624,26 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Platformer App",
                       "showTopBar": true,
                       "children": [
                         {
-                          "type": "platformer-canvas",
-                          "platforms": "@entity.platforms",
                           "player": "@entity.player",
-                          "canvasWidth": 800,
-                          "canvasHeight": 400,
-                          "worldWidth": 2400,
-                          "worldHeight": 400,
-                          "followCamera": true,
-                          "bgColor": "#1a1a2e",
+                          "canvasWidth": 800.0,
                           "leftEvent": "LEFT",
                           "rightEvent": "RIGHT",
+                          "canvasHeight": 400.0,
+                          "worldWidth": 2400.0,
                           "jumpEvent": "JUMP",
-                          "stopEvent": "STOP"
+                          "stopEvent": "STOP",
+                          "followCamera": true,
+                          "worldHeight": 400.0,
+                          "bgColor": "#1a1a2e",
+                          "type": "platformer-canvas",
+                          "platforms": "@entity.platforms"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "Platformer App"
                     }
                   ]
                 ]
@@ -530,20 +651,17 @@
               {
                 "from": "running",
                 "to": "running",
-                "event": "LEFT",
-                "effects": []
+                "event": "LEFT"
               },
               {
                 "from": "running",
                 "to": "running",
-                "event": "RIGHT",
-                "effects": []
+                "event": "RIGHT"
               },
               {
                 "from": "running",
                 "to": "running",
-                "event": "JUMP",
-                "effects": []
+                "event": "JUMP"
               },
               {
                 "from": "running",
@@ -554,39 +672,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Platformer App",
                       "showTopBar": true,
                       "children": [
                         {
-                          "type": "platformer-canvas",
                           "platforms": "@entity.platforms",
-                          "player": "@entity.player",
-                          "canvasWidth": 800,
-                          "canvasHeight": 400,
-                          "worldWidth": 2400,
-                          "worldHeight": 400,
-                          "followCamera": true,
                           "bgColor": "#1a1a2e",
-                          "leftEvent": "LEFT",
+                          "canvasHeight": 400.0,
+                          "stopEvent": "STOP",
+                          "player": "@entity.player",
+                          "canvasWidth": 800.0,
+                          "worldWidth": 2400.0,
                           "rightEvent": "RIGHT",
                           "jumpEvent": "JUMP",
-                          "stopEvent": "STOP"
+                          "worldHeight": 400.0,
+                          "followCamera": true,
+                          "type": "platformer-canvas",
+                          "leftEvent": "LEFT"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "Platformer App"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
           "name": "GamePage",
           "path": "/game",
-          "isInitial": true,
           "traits": [
             {
               "ref": "PlatLevelPlatformerFlow"
@@ -617,11 +735,13 @@
           {
             "name": "score",
             "type": "number",
-            "required": true
+            "required": true,
+            "default": 0.0
           },
           {
             "name": "level",
-            "type": "number"
+            "type": "number",
+            "default": 1.0
           },
           {
             "name": "completedAt",
@@ -629,26 +749,78 @@
           },
           {
             "name": "highScore",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "combo",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "multiplier",
-            "type": "number",
-            "default": 1
+            "type": "number"
           }
         ]
       },
       "traits": [
         {
           "name": "PlatScoreScoreBoard",
-          "linkedEntity": "PlatScore",
           "category": "interaction",
+          "linkedEntity": "PlatScore",
+          "emits": [
+            {
+              "event": "PlatScoreLoaded",
+              "description": "Fired when PlatScore finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "playerName",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "score",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                },
+                {
+                  "name": "completedAt",
+                  "type": "string"
+                },
+                {
+                  "name": "highScore",
+                  "type": "number"
+                },
+                {
+                  "name": "combo",
+                  "type": "number"
+                },
+                {
+                  "name": "multiplier",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "PlatScoreLoadFailed",
+              "description": "Fired when PlatScore fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -667,8 +839,7 @@
                 "payload": [
                   {
                     "name": "points",
-                    "type": "number",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
@@ -678,14 +849,27 @@
                 "payload": [
                   {
                     "name": "multiplier",
-                    "type": "number",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
               {
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "key": "PlatScoreLoaded",
+                "name": "PlatScore loaded"
+              },
+              {
+                "key": "PlatScoreLoadFailed",
+                "name": "PlatScore load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -696,25 +880,31 @@
                 "effects": [
                   [
                     "fetch",
-                    "PlatScore"
+                    "PlatScore",
+                    {
+                      "emit": {
+                        "success": "PlatScoreLoaded",
+                        "failure": "PlatScoreLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "score-board",
+                          "combo": "@entity.combo",
+                          "level": "@entity.level",
                           "score": "@entity.score",
                           "highScore": "@entity.highScore",
-                          "combo": "@entity.combo",
                           "multiplier": "@entity.multiplier",
-                          "level": "@entity.level"
+                          "type": "score-board"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "Platformer App",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -739,7 +929,7 @@
                     [
                       "+",
                       "@entity.combo",
-                      1
+                      1.0
                     ]
                   ],
                   [
@@ -747,18 +937,18 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "score-board",
                           "score": "@entity.score",
                           "highScore": "@entity.highScore",
+                          "type": "score-board",
                           "combo": "@entity.combo",
                           "multiplier": "@entity.multiplier",
                           "level": "@entity.level"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "appName": "Platformer App"
                     }
                   ]
                 ]
@@ -777,17 +967,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Platformer App",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
-                          "type": "score-board",
                           "score": "@entity.score",
-                          "highScore": "@entity.highScore",
-                          "combo": "@entity.combo",
+                          "type": "score-board",
                           "multiplier": "@entity.multiplier",
-                          "level": "@entity.level"
+                          "level": "@entity.level",
+                          "combo": "@entity.combo",
+                          "highScore": "@entity.highScore"
                         }
                       ]
                     }
@@ -802,46 +992,47 @@
                   [
                     "set",
                     "@entity.score",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.combo",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.multiplier",
-                    1
+                    1.0
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "score-board",
-                          "score": "@entity.score",
-                          "highScore": "@entity.highScore",
                           "combo": "@entity.combo",
+                          "highScore": "@entity.highScore",
                           "multiplier": "@entity.multiplier",
-                          "level": "@entity.level"
+                          "level": "@entity.level",
+                          "type": "score-board",
+                          "score": "@entity.score"
                         }
-                      ]
+                      ],
+                      "appName": "Platformer App",
+                      "showTopBar": true
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "ScoresPage",
+          "name": "Scores",
           "path": "/scores",
           "traits": [
             {
@@ -855,8 +1046,8 @@
       "name": "CollectibleOrbital",
       "entity": {
         "name": "Collectible",
-        "persistence": "persistent",
         "collection": "collectibles",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -875,64 +1066,82 @@
           },
           {
             "name": "quantity",
-            "type": "number",
-            "default": 1
+            "type": "number"
           },
           {
             "name": "rarity",
-            "type": "string",
-            "default": "common"
+            "type": "string"
           },
           {
             "name": "pendingId",
-            "type": "string",
-            "default": ""
-          }
-        ],
-        "instances": [
-          {
-            "id": "item-1",
-            "name": "Health Potion",
-            "description": "Restores 50 HP",
-            "status": "active",
-            "pendingId": ""
-          },
-          {
-            "id": "item-2",
-            "name": "Iron Sword",
-            "description": "A sturdy blade",
-            "status": "active",
-            "pendingId": ""
-          },
-          {
-            "id": "item-3",
-            "name": "Wooden Shield",
-            "description": "Basic protection",
-            "status": "active",
-            "pendingId": ""
+            "type": "string"
           }
         ]
       },
       "traits": [
         {
           "name": "CollectibleBrowse",
-          "linkedEntity": "Collectible",
           "category": "interaction",
+          "linkedEntity": "Collectible",
+          "emits": [
+            {
+              "event": "CollectibleLoaded",
+              "description": "Fired when Collectible finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "type",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number"
+                },
+                {
+                  "name": "rarity",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CollectibleLoadFailed",
+              "description": "Fired when Collectible fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "listens": [
             {
-              "event": "ITEM_ADDED",
-              "triggers": "INIT",
-              "scope": "external"
+              "event": "*.ITEM_ADDED",
+              "triggers": "INIT"
             },
             {
-              "event": "ITEM_USED",
-              "triggers": "INIT",
-              "scope": "internal"
+              "event": "*.ITEM_USED",
+              "triggers": "INIT"
             },
             {
-              "event": "CONFIRM_DROP",
-              "triggers": "INIT",
-              "scope": "internal"
+              "event": "*.CONFIRM_DROP",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -948,36 +1157,16 @@
                 "name": "Initialize"
               },
               {
-                "key": "ADD_ITEM",
-                "name": "ADD_ITEM"
+                "key": "CollectibleLoaded",
+                "name": "Collectible loaded"
               },
               {
-                "key": "USE_ITEM",
-                "name": "USE_ITEM",
+                "key": "CollectibleLoadFailed",
+                "name": "Collectible load failed",
                 "payload": [
                   {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "DROP",
-                "name": "DROP",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object"
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -996,114 +1185,114 @@
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "Platformer App",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "className": "max-w-5xl mx-auto w-full",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "justify": "space-between",
-                              "align": "center",
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "sm",
-                                  "align": "center",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
+                                      "size": "lg",
                                       "type": "icon",
-                                      "name": "package",
-                                      "size": "lg"
+                                      "name": "package"
                                     },
                                     {
+                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Collectibles",
-                                      "variant": "h2"
+                                      "content": "Collectibles"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center"
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "sm",
                                   "children": [
                                     {
+                                      "variant": "primary",
+                                      "icon": "plus",
                                       "type": "button",
                                       "label": "Add Collectible",
-                                      "event": "ADD_ITEM",
-                                      "variant": "primary",
-                                      "icon": "plus"
+                                      "event": "ADD_ITEM"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "emptyDescription": "Add your first item to get started.",
                               "type": "data-grid",
                               "entity": "Collectible",
-                              "emptyIcon": "inbox",
                               "emptyTitle": "No items yet",
-                              "emptyDescription": "Add your first item to get started.",
+                              "emptyIcon": "inbox",
                               "itemActions": [
                                 {
-                                  "label": "Use",
                                   "event": "USE_ITEM",
+                                  "size": "sm",
                                   "variant": "ghost",
-                                  "size": "sm"
+                                  "label": "Use"
                                 },
                                 {
-                                  "label": "Drop",
-                                  "event": "DROP",
+                                  "size": "sm",
                                   "variant": "danger",
-                                  "size": "sm"
+                                  "label": "Drop",
+                                  "event": "DROP"
                                 }
                               ],
                               "columns": [
                                 {
+                                  "icon": "package",
                                   "name": "name",
                                   "label": "Name",
-                                  "variant": "h4",
-                                  "icon": "package"
+                                  "variant": "h4"
                                 },
                                 {
+                                  "variant": "badge",
                                   "name": "type",
                                   "label": "Type",
-                                  "variant": "badge",
                                   "colorMap": {
-                                    "active": "success",
-                                    "completed": "success",
-                                    "done": "success",
-                                    "pending": "warning",
-                                    "draft": "warning",
-                                    "scheduled": "warning",
-                                    "inactive": "neutral",
-                                    "archived": "neutral",
-                                    "disabled": "neutral",
                                     "error": "destructive",
                                     "cancelled": "destructive",
-                                    "failed": "destructive"
+                                    "scheduled": "warning",
+                                    "done": "success",
+                                    "active": "success",
+                                    "disabled": "neutral",
+                                    "completed": "success",
+                                    "inactive": "neutral",
+                                    "pending": "warning",
+                                    "draft": "warning",
+                                    "failed": "destructive",
+                                    "archived": "neutral"
                                   }
                                 },
                                 {
                                   "name": "quantity",
-                                  "label": "Quantity",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "label": "Quantity"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-5xl mx-auto w-full",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -1111,20 +1300,64 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "CollectibleAdd",
-          "linkedEntity": "Collectible",
           "category": "interaction",
+          "linkedEntity": "Collectible",
           "emits": [
             {
-              "event": "SAVE",
-              "scope": "internal"
+              "event": "SAVE"
             },
             {
-              "event": "ITEM_ADDED",
-              "scope": "external"
+              "event": "ITEM_ADDED"
+            },
+            {
+              "event": "CollectibleLoaded",
+              "description": "Fired when Collectible finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "type",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number"
+                },
+                {
+                  "name": "rarity",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CollectibleLoadFailed",
+              "description": "Fired when Collectible fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -1144,7 +1377,7 @@
               },
               {
                 "key": "ADD_ITEM",
-                "name": "Open"
+                "name": "Add Item"
               },
               {
                 "key": "CLOSE",
@@ -1156,8 +1389,25 @@
                 "payload": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ITEM_ADDED",
+                "name": "Item Added"
+              },
+              {
+                "key": "CollectibleLoaded",
+                "name": "Collectible loaded"
+              },
+              {
+                "key": "CollectibleLoadFailed",
+                "name": "Collectible load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -1181,24 +1431,25 @@
                 "effects": [
                   [
                     "fetch",
-                    "Collectible"
+                    "Collectible",
+                    {
+                      "emit": {
+                        "failure": "CollectibleLoadFailed",
+                        "success": "CollectibleLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "plus-circle",
+                              "type": "icon",
                               "size": "md"
                             },
                             {
@@ -1206,15 +1457,15 @@
                               "content": "Add Collectible",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "entity": "Collectible",
-                          "mode": "create",
                           "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
                           "fields": [
@@ -1222,9 +1473,14 @@
                             "type",
                             "quantity",
                             "rarity"
-                          ]
+                          ],
+                          "mode": "create",
+                          "entity": "Collectible",
+                          "type": "form-section"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1269,20 +1525,64 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "CollectibleUse",
-          "linkedEntity": "Collectible",
           "category": "interaction",
+          "linkedEntity": "Collectible",
           "emits": [
             {
-              "event": "SAVE",
-              "scope": "internal"
+              "event": "SAVE"
             },
             {
-              "event": "ITEM_USED",
-              "scope": "internal"
+              "event": "ITEM_USED"
+            },
+            {
+              "event": "CollectibleLoaded",
+              "description": "Fired when Collectible finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "type",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number"
+                },
+                {
+                  "name": "rarity",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CollectibleLoadFailed",
+              "description": "Fired when Collectible fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -1302,12 +1602,11 @@
               },
               {
                 "key": "USE_ITEM",
-                "name": "Open",
+                "name": "Use Item",
                 "payload": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
@@ -1321,8 +1620,25 @@
                 "payload": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ITEM_USED",
+                "name": "Item Used"
+              },
+              {
+                "key": "CollectibleLoaded",
+                "name": "Collectible loaded"
+              },
+              {
+                "key": "CollectibleLoadFailed",
+                "name": "Collectible load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -1348,6 +1664,10 @@
                     "fetch",
                     "Collectible",
                     {
+                      "emit": {
+                        "failure": "CollectibleLoadFailed",
+                        "success": "CollectibleLoaded"
+                      },
                       "id": "@payload.id"
                     }
                   ],
@@ -1355,16 +1675,10 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
@@ -1376,27 +1690,31 @@
                               "content": "Use Collectible",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "typography",
-                          "content": "@entity.name",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "@entity.name"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Cancel",
+                              "variant": "ghost",
                               "event": "CLOSE",
-                              "variant": "ghost"
+                              "type": "button",
+                              "label": "Cancel"
                             },
                             {
                               "type": "button",
@@ -1407,7 +1725,9 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1452,16 +1772,61 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "CollectibleDrop",
-          "linkedEntity": "Collectible",
           "category": "interaction",
+          "linkedEntity": "Collectible",
           "emits": [
             {
-              "event": "CONFIRM_DROP",
-              "scope": "internal"
+              "event": "CONFIRM_DROP"
+            },
+            {
+              "event": "CollectibleLoaded",
+              "description": "Fired when Collectible finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "type",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "quantity",
+                  "type": "number"
+                },
+                {
+                  "name": "rarity",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CollectibleLoadFailed",
+              "description": "Fired when Collectible fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -1481,18 +1846,17 @@
               },
               {
                 "key": "DROP",
-                "name": "Request Confirmation",
+                "name": "Drop",
                 "payload": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
               {
                 "key": "CONFIRM_DROP",
-                "name": "Confirm"
+                "name": "Confirm Drop"
               },
               {
                 "key": "CANCEL",
@@ -1501,6 +1865,20 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "CollectibleLoaded",
+                "name": "Collectible loaded"
+              },
+              {
+                "key": "CollectibleLoadFailed",
+                "name": "Collectible load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1529,6 +1907,10 @@
                     "fetch",
                     "Collectible",
                     {
+                      "emit": {
+                        "failure": "CollectibleLoadFailed",
+                        "success": "CollectibleLoaded"
+                      },
                       "id": "@payload.id"
                     }
                   ],
@@ -1537,57 +1919,57 @@
                     "modal",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
+                              "size": "md",
                               "type": "icon",
-                              "name": "alert-triangle",
-                              "size": "md"
+                              "name": "alert-triangle"
                             },
                             {
-                              "type": "typography",
                               "content": "Drop Collectible",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "message": "Are you sure you want to drop this collectible?",
                           "type": "alert",
-                          "variant": "danger",
-                          "message": "Are you sure you want to drop this collectible?"
+                          "variant": "danger"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "end",
+                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Cancel",
                               "event": "CANCEL",
-                              "variant": "ghost"
+                              "label": "Cancel",
+                              "variant": "ghost",
+                              "type": "button"
                             },
                             {
                               "type": "button",
-                              "label": "Drop",
-                              "event": "CONFIRM_DROP",
                               "variant": "danger",
-                              "icon": "check"
+                              "icon": "check",
+                              "event": "CONFIRM_DROP",
+                              "label": "Drop"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -1647,12 +2029,13 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "CollectiblesPage",
+          "name": "Collectibles",
           "path": "/collectibles",
           "traits": [
             {

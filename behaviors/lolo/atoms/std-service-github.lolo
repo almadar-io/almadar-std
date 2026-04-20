@@ -17,11 +17,14 @@ orbital ServiceGithubOrbital {
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
-  trait ServiceGithubGithub -> ServiceGithub [interaction] {
+
+  type ServiceGithubLoaded     = Event ServiceGithub                  "Fired when ServiceGithub finishes loading"
+  type ServiceGithubLoadFailed = Event { message : string } "Fired when ServiceGithub fails to load"
+  trait ServiceGithubGithub -> ServiceGithub [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ServiceGithub)
+        (fetch ServiceGithub { emit: { success: "ServiceGithubLoaded", failure: "ServiceGithubLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "Create Pull Request", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Title", field: "title", placeholder: "PR title" }, { type: "textarea", label: "Body", field: "body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", field: "head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", field: "base", placeholder: "main" }] }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
       CREATE_PR -> creatingPR
         (render-ui main { type: "loading-state", title: "Creating pull request...", message: "Submitting your PR to GitHub." })
@@ -50,7 +53,9 @@ orbital ServiceGithubOrbital {
     listens {
       PR_CREATED { url : string!, number : number! }
       FAILED { error : string! }
+          ServiceGithubLoadFailed { message : string }
     }
+    emits: [ServiceGithubLoaded, ServiceGithubLoadFailed]
   }
   page "/servicegithubs" as ServiceGithubPage -> ServiceGithubGithub
 }

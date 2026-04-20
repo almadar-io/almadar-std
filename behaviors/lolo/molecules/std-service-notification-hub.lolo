@@ -15,11 +15,14 @@ orbital ServiceNotificationHubOrbital {
     sendStatus : string = "idle"
     error : string
   }
-  trait ServiceNotificationHubNotificationHub -> ServiceNotificationHub [interaction] {
+
+  type ServiceNotificationHubLoaded     = Event ServiceNotificationHub                  "Fired when ServiceNotificationHub finishes loading"
+  type ServiceNotificationHubLoadFailed = Event { message : string } "Fired when ServiceNotificationHub fails to load"
+  trait ServiceNotificationHubNotificationHub -> ServiceNotificationHub [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ServiceNotificationHub)
+        (fetch ServiceNotificationHub { emit: { success: "ServiceNotificationHubLoaded", failure: "ServiceNotificationHubLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Recipient", bind: "@entity.recipient", placeholder: "Email or phone number" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Notification subject" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", event: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", event: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
       SEND_EMAIL -> sending
         (set @entity.channel email)
@@ -57,7 +60,9 @@ orbital ServiceNotificationHubOrbital {
     }
     listens {
       FAILED { error : string! }
+          ServiceNotificationHubLoadFailed { message : string }
     }
+    emits: [ServiceNotificationHubLoaded, ServiceNotificationHubLoadFailed]
   }
   page "/servicenotificationhubs" as ServiceNotificationHubPage -> ServiceNotificationHubNotificationHub
 }

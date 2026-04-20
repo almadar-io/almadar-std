@@ -8,8 +8,12 @@ orbital BuildOrbital {
     status : "pending" | "running" | "success" | "failed"
     commit : string
     triggeredBy : string
+    pendingId : string = ""
   }
-  trait BuildBrowse -> Build [interaction] {
+
+  type BuildLoaded     = Event Build                  "Fired when Build finishes loading"
+  type BuildLoadFailed = Event { message : string } "Fired when Build fails to load"
+  trait BuildBrowse -> Build [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Build)
@@ -22,15 +26,17 @@ orbital BuildOrbital {
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
+          BuildLoadFailed { message : string }
     }
+    emits: [BuildLoaded, BuildLoadFailed]
   }
-  trait BuildCreate -> Build [interaction] {
+  trait BuildCreate -> Build [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Build)
       CREATE -> open
-        (fetch Build)
+        (fetch Build { emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Build", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"] }] })
     }
     state open {
@@ -44,19 +50,21 @@ orbital BuildOrbital {
     }
     emits {
       SAVE
-      BUILD_CREATED external
+      BUILD_CREATED external { id: string }
     }
     listens {
       SAVE { data : object! }
+          BuildLoadFailed { message : string }
     }
+    emits: [BuildLoaded, BuildLoadFailed]
   }
-  trait BuildEdit -> Build [interaction] {
+  trait BuildEdit -> Build [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Build)
       EDIT -> open
-        (fetch Build { id: "@payload.id" })
+        (fetch Build { id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Build", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Build", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["branch", "status", "commit", "triggeredBy"], entityId: "@entity.id" }] })
     }
     state open {
@@ -70,20 +78,22 @@ orbital BuildOrbital {
     }
     emits {
       SAVE
-      BUILD_UPDATED external
+      BUILD_UPDATED external { id: string }
     }
     listens {
       EDIT { id : string! }
       SAVE { data : object! }
+          BuildLoadFailed { message : string }
     }
+    emits: [BuildLoaded, BuildLoadFailed]
   }
-  trait BuildView -> Build [interaction] {
+  trait BuildView -> Build [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Build)
       VIEW -> open
-        (fetch Build { id: "@payload.id" })
+        (fetch Build { id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.branch" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Branch" }, { type: "typography", variant: "body", content: "@entity.branch" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: "@entity.status" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Commit" }, { type: "typography", variant: "body", content: "@entity.commit" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Triggered By" }, { type: "typography", variant: "body", content: "@entity.triggeredBy" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -99,16 +109,18 @@ orbital BuildOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
+          BuildLoadFailed { message : string }
     }
+    emits: [BuildLoaded, BuildLoadFailed]
   }
-  trait BuildDelete -> Build [interaction] {
+  trait BuildDelete -> Build [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (ref Build)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Build { id: "@payload.id" })
+        (fetch Build { id: "@payload.id" , emit: { success: "BuildLoaded", failure: "BuildLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Build", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
@@ -126,11 +138,13 @@ orbital BuildOrbital {
     }
     emits {
       CONFIRM_DELETE
-      BUILD_DELETED external
+      BUILD_DELETED external { id: string }
     }
     listens {
       DELETE { id : string! }
+          BuildLoadFailed { message : string }
     }
+    emits: [BuildLoaded, BuildLoadFailed]
   }
   page "/builds" as BuildsPage -> BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
 }
@@ -142,28 +156,35 @@ orbital StageOrbital {
     duration : string
     output : string
   }
-  trait StageDisplay -> Stage [interaction] {
+
+  type StageLoaded     = Event Stage                  "Fired when Stage finishes loading"
+  type StageLoadFailed = Event { message : string } "Fired when Stage fails to load"
+  trait StageDisplay -> Stage [interaction, collection] {
     initial: loading
     state loading {
       INIT -> displaying
-        (fetch Stage)
+        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "duration"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "output"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
-        (fetch Stage)
+        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "duration"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "output"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state displaying {
       INIT -> displaying
-        (fetch Stage)
+        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "duration"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "output"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       REFRESH -> refreshing
-        (fetch Stage)
+        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "duration"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "output"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state refreshing {
       REFRESHED -> displaying
-        (fetch Stage)
+        (fetch Stage { emit: { success: "StageLoaded", failure: "StageLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Stages" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layers", size: "lg" }, { type: "typography", content: "Stages", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Duration" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "duration"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Output" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "output"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    emits: [StageLoaded, StageLoadFailed]
+    listens {
+      StageLoadFailed { message : string }
     }
   }
   page "/stages" -> StageDisplay
@@ -176,11 +197,14 @@ orbital DeploymentOrbital {
     status : "pending" | "running" | "success" | "failed"
     deployedAt : datetime
   }
-  trait DeploymentAsync -> Deployment [interaction] {
+
+  type DeploymentLoaded     = Event Deployment                  "Fired when Deployment finishes loading"
+  type DeploymentLoadFailed = Event { message : string } "Fired when Deployment fails to load"
+  trait DeploymentAsync -> Deployment [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Deployment)
+        (fetch Deployment { emit: { success: "DeploymentLoaded", failure: "DeploymentLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "upload-cloud", size: "lg" }, { type: "typography", content: "Deployment", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
       START -> loading
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Deploying...", message: "Processing deployment..." }, { type: "skeleton", variant: "text" }] }] })
@@ -201,6 +225,11 @@ orbital DeploymentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "upload-cloud", size: "lg" }, { type: "typography", content: "Deployment", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start deployment operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
       RETRY -> loading
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Deploying...", message: "Processing deployment..." }, { type: "skeleton", variant: "text" }] }] })
+    }
+    emits: [DeploymentLoaded, DeploymentLoadFailed]
+    listens {
+      DeploymentLoadFailed { message : string }
+      LOADED { data : string }
     }
   }
   page "/deploy" -> DeploymentAsync

@@ -11,7 +11,7 @@ orbital ValidateOnSave {
     timestamp : number = 0
     status : string = "idle"
   }
-  trait OrbFileWatcher -> ValidateOnSave [interaction] {
+  trait OrbFileWatcher -> ValidateOnSave [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
@@ -35,7 +35,7 @@ orbital ValidateOnSave {
         (set @entity.warnings @payload.warnings)
         (set @entity.status valid)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Validation passed", actions: [{ event: "REFRESH", label: "Validate Now", variant: "primary" }] })
-        (render-ui center { type: "entity-detail", entity: "ValidateOnSave", fields: ["path", "valid", "status", "timestamp"] })
+        (render-ui center { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "caption", content: "path" }, { type: "typography", variant: "body", content: "@entity.path" }, { type: "typography", variant: "caption", content: "valid" }, { type: "typography", variant: "body", content: "@entity.valid" }, { type: "typography", variant: "caption", content: "status" }, { type: "typography", variant: "body", content: "@entity.status" }, { type: "typography", variant: "caption", content: "timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] })
         (notify success "Schema is valid")
         (emit AGENT_INTERRUPT { type: "validation", status: "passed", path: "@entity.path", blocking: false })
       VALIDATION_FAILED -> invalid
@@ -44,7 +44,7 @@ orbital ValidateOnSave {
         (set @entity.warnings @payload.warnings)
         (set @entity.status invalid)
         (render-ui main { type: "page-header", title: "Orb File Validator", subtitle: "Validation failed", actions: [{ event: "REFRESH", label: "Validate Now", variant: "primary" }] })
-        (render-ui center { type: "entity-detail", entity: "ValidateOnSave", fields: ["path", "valid", "errors", "warnings", "status"] })
+        (render-ui center { type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", variant: "caption", content: "path" }, { type: "typography", variant: "body", content: "@entity.path" }, { type: "typography", variant: "caption", content: "status" }, { type: "typography", variant: "body", content: "@entity.status" }, { type: "typography", variant: "caption", content: "errors" }, { type: "typography", variant: "body", content: "@entity.errors" }, { type: "typography", variant: "caption", content: "warnings" }, { type: "typography", variant: "body", content: "@entity.warnings" }] })
         (notify error "Schema has errors")
         (emit AGENT_INTERRUPT { type: "validation", status: "failed", path: "@entity.path", errors: "@payload.errors", blocking: true })
     }
@@ -83,6 +83,7 @@ orbital ValidateOnSave {
       * OS_FILE_MODIFIED -> undefined
       VALIDATION_PASSED { warnings : array }
       VALIDATION_FAILED { errors : array, warnings : array }
+          OS_FILE_MODIFIED { path : string }
     }
   }
   page "/validator" as ValidatorPage -> OrbFileWatcher

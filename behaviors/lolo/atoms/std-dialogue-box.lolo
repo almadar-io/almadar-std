@@ -11,16 +11,19 @@ orbital DialogueNodeOrbital {
     speaker : string = "Narrator"
     text : string = "Welcome, adventurer. Your journey begins here."
   }
-  trait DialogueNodeDialogue -> DialogueNode [interaction] {
+
+  type DialogueNodeLoaded     = Event DialogueNode                  "Fired when DialogueNode finishes loading"
+  type DialogueNodeLoadFailed = Event { message : string } "Fired when DialogueNode fails to load"
+  trait DialogueNodeDialogue -> DialogueNode [interaction, instance] {
     initial: talking
     state talking {
       INIT -> talking
-        (fetch DialogueNode)
+        (fetch DialogueNode { emit: { success: "DialogueNodeLoaded", failure: "DialogueNodeLoadFailed" } })
         (set @entity.speaker Narrator)
         (set @entity.text "Welcome, adventurer. Your journey begins here.")
         (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
       ADVANCE -> talking
-        (fetch DialogueNode)
+        (fetch DialogueNode { emit: { success: "DialogueNodeLoaded", failure: "DialogueNodeLoadFailed" } })
         (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
       CHOICE -> talking
         (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
@@ -29,12 +32,14 @@ orbital DialogueNodeOrbital {
     }
     state idle {
       START_DIALOGUE -> talking
-        (fetch DialogueNode)
+        (fetch DialogueNode { emit: { success: "DialogueNodeLoaded", failure: "DialogueNodeLoadFailed" } })
         (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
     }
     listens {
       CHOICE { choiceId : string! }
+          DialogueNodeLoadFailed { message : string }
     }
+    emits: [DialogueNodeLoaded, DialogueNodeLoadFailed]
   }
   page "/dialoguenodes" as DialogueNodeDialoguePage -> DialogueNodeDialogue
 }

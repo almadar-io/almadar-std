@@ -11,11 +11,14 @@ orbital NotificationOrbital {
     message : string = ""
     notificationType : string = "info"
   }
-  trait NotificationNotification -> Notification [interaction] {
+
+  type NotificationLoaded     = Event Notification                  "Fired when Notification finishes loading"
+  type NotificationLoadFailed = Event { message : string } "Fired when Notification fails to load"
+  trait NotificationNotification -> Notification [interaction, instance] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch Notification)
+        (fetch Notification { emit: { success: "NotificationLoaded", failure: "NotificationLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "Notifications", variant: "h2" }] }, { type: "divider" }, { type: "empty-state", icon: "bell-off", title: "No notifications", description: "New notifications will appear here." }, { type: "button", label: "Test Notification", event: "SHOW", variant: "secondary", icon: "bell", actionPayload: { message: "This is a test notification", notificationType: "info" } }] })
       SHOW -> visible
         (set @entity.message @payload.message)
@@ -33,7 +36,9 @@ orbital NotificationOrbital {
     }
     listens {
       SHOW { message : string!, notificationType : string }
+          NotificationLoadFailed { message : string }
     }
+    emits: [NotificationLoaded, NotificationLoadFailed]
   }
   page "/notifications/notifications" as NotificationNotificationPage -> NotificationNotification
 }

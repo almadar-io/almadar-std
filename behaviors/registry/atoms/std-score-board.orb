@@ -1,7 +1,7 @@
 {
   "name": "std-score-board",
   "version": "1.0.0",
-  "description": "Score display atom using the `score-board` pattern. Shows score, high score, combo, multiplier, level.",
+  "description": "std-score-board as a Function",
   "orbitals": [
     {
       "name": "ScoreBoardEntryOrbital",
@@ -38,35 +38,95 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "highScore",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "combo",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "multiplier",
             "type": "number",
-            "default": 1
+            "default": 1.0
           },
           {
             "name": "level",
             "type": "number",
-            "default": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "ScoreBoardEntryScoreBoard",
-          "linkedEntity": "ScoreBoardEntry",
           "category": "interaction",
+          "linkedEntity": "ScoreBoardEntry",
+          "emits": [
+            {
+              "event": "ScoreBoardEntryLoaded",
+              "description": "Fired when ScoreBoardEntry finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "highScore",
+                  "type": "number"
+                },
+                {
+                  "name": "combo",
+                  "type": "number"
+                },
+                {
+                  "name": "multiplier",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ScoreBoardEntryLoadFailed",
+              "description": "Fired when ScoreBoardEntry fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -104,6 +164,20 @@
               {
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "key": "ScoreBoardEntryLoaded",
+                "name": "ScoreBoardEntry loaded"
+              },
+              {
+                "key": "ScoreBoardEntryLoadFailed",
+                "name": "ScoreBoardEntry load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -114,18 +188,24 @@
                 "effects": [
                   [
                     "fetch",
-                    "ScoreBoardEntry"
+                    "ScoreBoardEntry",
+                    {
+                      "emit": {
+                        "failure": "ScoreBoardEntryLoadFailed",
+                        "success": "ScoreBoardEntryLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "score-board",
-                      "score": "@entity.score",
+                      "level": "@entity.level",
                       "highScore": "@entity.highScore",
+                      "score": "@entity.score",
+                      "type": "score-board",
                       "combo": "@entity.combo",
-                      "multiplier": "@entity.multiplier",
-                      "level": "@entity.level"
+                      "multiplier": "@entity.multiplier"
                     }
                   ]
                 ]
@@ -150,19 +230,19 @@
                     [
                       "+",
                       "@entity.combo",
-                      1
+                      1.0
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "score-board",
-                      "score": "@entity.score",
                       "highScore": "@entity.highScore",
+                      "level": "@entity.level",
                       "combo": "@entity.combo",
+                      "score": "@entity.score",
                       "multiplier": "@entity.multiplier",
-                      "level": "@entity.level"
+                      "type": "score-board"
                     }
                   ]
                 ]
@@ -181,12 +261,12 @@
                     "render-ui",
                     "main",
                     {
+                      "combo": "@entity.combo",
+                      "level": "@entity.level",
                       "type": "score-board",
                       "score": "@entity.score",
                       "highScore": "@entity.highScore",
-                      "combo": "@entity.combo",
-                      "multiplier": "@entity.multiplier",
-                      "level": "@entity.level"
+                      "multiplier": "@entity.multiplier"
                     }
                   ]
                 ]
@@ -199,34 +279,35 @@
                   [
                     "set",
                     "@entity.score",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.combo",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.multiplier",
-                    1
+                    1.0
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "score-board",
-                      "score": "@entity.score",
-                      "highScore": "@entity.highScore",
-                      "combo": "@entity.combo",
                       "multiplier": "@entity.multiplier",
+                      "type": "score-board",
+                      "highScore": "@entity.highScore",
+                      "score": "@entity.score",
+                      "combo": "@entity.combo",
                       "level": "@entity.level"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

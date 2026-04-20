@@ -1,7 +1,7 @@
 {
   "name": "std-undo",
   "version": "1.0.0",
-  "description": "Undo/Redo atom using array operators as a stack. - PUSH: appends to undoStack, clears redoStack - UNDO: pops from undoStack, pushes to redoStack - REDO: pops from redoStack, pushes to undoStack - CLEAR: empties both stacks",
+  "description": "std-undo as a Function",
   "orbitals": [
     {
       "name": "UndoActionOrbital",
@@ -38,12 +38,18 @@
           {
             "name": "undoStack",
             "type": "array",
-            "default": []
+            "default": [],
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "redoStack",
             "type": "array",
-            "default": []
+            "default": [],
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "current",
@@ -55,8 +61,60 @@
       "traits": [
         {
           "name": "UndoActionUndo",
-          "linkedEntity": "UndoAction",
           "category": "interaction",
+          "linkedEntity": "UndoAction",
+          "emits": [
+            {
+              "event": "UndoActionLoaded",
+              "description": "Fired when UndoAction finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "undoStack",
+                  "type": "[string]"
+                },
+                {
+                  "name": "redoStack",
+                  "type": "[string]"
+                },
+                {
+                  "name": "current",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "UndoActionLoadFailed",
+              "description": "Fired when UndoAction fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -91,6 +149,20 @@
               {
                 "key": "CLEAR",
                 "name": "Clear"
+              },
+              {
+                "key": "UndoActionLoaded",
+                "name": "UndoAction loaded"
+              },
+              {
+                "key": "UndoActionLoadFailed",
+                "name": "UndoAction load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -101,7 +173,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "UndoAction"
+                    "UndoAction",
+                    {
+                      "emit": {
+                        "failure": "UndoActionLoadFailed",
+                        "success": "UndoActionLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -112,21 +190,14 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "history",
+                                  "type": "icon",
                                   "size": "lg"
                                 },
                                 {
@@ -134,39 +205,40 @@
                                   "content": "History",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "align": "center"
                             },
                             {
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "tooltip",
-                                  "content": "Undo the last action",
                                   "children": [
                                     {
+                                      "variant": "ghost",
+                                      "icon": "undo",
                                       "type": "button",
                                       "label": "Undo",
-                                      "event": "UNDO",
-                                      "variant": "ghost",
-                                      "icon": "undo"
+                                      "event": "UNDO"
                                     }
-                                  ]
+                                  ],
+                                  "type": "tooltip",
+                                  "content": "Undo the last action"
                                 },
                                 {
-                                  "type": "tooltip",
-                                  "content": "Redo the last undone action",
                                   "children": [
                                     {
-                                      "type": "button",
                                       "label": "Redo",
-                                      "event": "REDO",
+                                      "type": "button",
                                       "variant": "ghost",
+                                      "event": "REDO",
                                       "icon": "redo"
                                     }
-                                  ]
+                                  ],
+                                  "type": "tooltip",
+                                  "content": "Redo the last undone action"
                                 },
                                 {
                                   "type": "divider",
@@ -174,38 +246,43 @@
                                 },
                                 {
                                   "type": "tooltip",
-                                  "content": "Clear all history",
                                   "children": [
                                     {
+                                      "icon": "trash-2",
+                                      "event": "CLEAR",
                                       "type": "button",
                                       "label": "Clear",
-                                      "event": "CLEAR",
-                                      "variant": "ghost",
-                                      "icon": "trash-2"
+                                      "variant": "ghost"
                                     }
-                                  ]
+                                  ],
+                                  "content": "Clear all history"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "justify": "space-between",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
+                          "type": "stack",
                           "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "color": "muted",
                               "content": "Last action:"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -213,7 +290,8 @@
                                   "@entity"
                                 ],
                                 "current"
-                              ]
+                              ],
+                              "type": "badge"
                             }
                           ]
                         }
@@ -251,104 +329,100 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "justify": "space-between",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "history",
-                                  "size": "lg"
+                                  "name": "history"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "History",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "type": "stack",
+                              "gap": "sm"
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
+                              "type": "stack",
                               "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "tooltip",
-                                  "content": "Undo the last action",
                                   "children": [
                                     {
                                       "type": "button",
                                       "label": "Undo",
                                       "event": "UNDO",
-                                      "variant": "ghost",
-                                      "icon": "undo"
+                                      "icon": "undo",
+                                      "variant": "ghost"
                                     }
-                                  ]
+                                  ],
+                                  "content": "Undo the last action",
+                                  "type": "tooltip"
                                 },
                                 {
-                                  "type": "tooltip",
-                                  "content": "Redo the last undone action",
                                   "children": [
                                     {
+                                      "event": "REDO",
+                                      "icon": "redo",
                                       "type": "button",
                                       "label": "Redo",
-                                      "event": "REDO",
-                                      "variant": "ghost",
-                                      "icon": "redo"
+                                      "variant": "ghost"
                                     }
-                                  ]
-                                },
-                                {
-                                  "type": "divider",
-                                  "orientation": "vertical"
-                                },
-                                {
+                                  ],
                                   "type": "tooltip",
-                                  "content": "Clear all history",
+                                  "content": "Redo the last undone action"
+                                },
+                                {
+                                  "orientation": "vertical",
+                                  "type": "divider"
+                                },
+                                {
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Clear",
                                       "event": "CLEAR",
+                                      "label": "Clear",
                                       "variant": "ghost",
-                                      "icon": "trash-2"
+                                      "icon": "trash-2",
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "type": "tooltip",
+                                  "content": "Clear all history"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
-                              "color": "muted",
-                              "content": "Last action:"
+                              "type": "typography",
+                              "content": "Last action:",
+                              "color": "muted"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -356,9 +430,13 @@
                                   "@entity"
                                 ],
                                 "current"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -393,113 +471,106 @@
                     [
                       "array/slice",
                       "@entity.undoStack",
-                      0,
-                      -1
+                      0.0,
+                      -1.0
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
                           "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
+                                  "size": "lg",
                                   "name": "history",
-                                  "size": "lg"
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "History",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "History"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
+                              "type": "stack",
                               "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "tooltip",
-                                  "content": "Undo the last action",
                                   "children": [
                                     {
                                       "type": "button",
                                       "label": "Undo",
-                                      "event": "UNDO",
                                       "variant": "ghost",
+                                      "event": "UNDO",
                                       "icon": "undo"
                                     }
-                                  ]
+                                  ],
+                                  "type": "tooltip",
+                                  "content": "Undo the last action"
                                 },
                                 {
                                   "type": "tooltip",
-                                  "content": "Redo the last undone action",
                                   "children": [
                                     {
-                                      "type": "button",
+                                      "variant": "ghost",
+                                      "icon": "redo",
                                       "label": "Redo",
                                       "event": "REDO",
-                                      "variant": "ghost",
-                                      "icon": "redo"
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "content": "Redo the last undone action"
                                 },
                                 {
                                   "type": "divider",
                                   "orientation": "vertical"
                                 },
                                 {
-                                  "type": "tooltip",
                                   "content": "Clear all history",
                                   "children": [
                                     {
+                                      "event": "CLEAR",
                                       "type": "button",
                                       "label": "Clear",
-                                      "event": "CLEAR",
                                       "variant": "ghost",
                                       "icon": "trash-2"
                                     }
-                                  ]
+                                  ],
+                                  "type": "tooltip"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "typography",
-                              "variant": "caption",
                               "color": "muted",
-                              "content": "Last action:"
+                              "content": "Last action:",
+                              "type": "typography",
+                              "variant": "caption"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -507,11 +578,18 @@
                                   "@entity"
                                 ],
                                 "current"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "align": "center",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -544,29 +622,23 @@
                     [
                       "array/slice",
                       "@entity.redoStack",
-                      0,
-                      -1
+                      0.0,
+                      -1.0
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
@@ -575,28 +647,30 @@
                                   "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "History",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "type": "stack",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "tooltip",
                                   "content": "Undo the last action",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Undo",
-                                      "event": "UNDO",
                                       "variant": "ghost",
-                                      "icon": "undo"
+                                      "icon": "undo",
+                                      "event": "UNDO",
+                                      "type": "button",
+                                      "label": "Undo"
                                     }
                                   ]
                                 },
@@ -605,11 +679,11 @@
                                   "content": "Redo the last undone action",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Redo",
                                       "event": "REDO",
+                                      "icon": "redo",
                                       "variant": "ghost",
-                                      "icon": "redo"
+                                      "type": "button",
+                                      "label": "Redo"
                                     }
                                   ]
                                 },
@@ -618,36 +692,35 @@
                                   "orientation": "vertical"
                                 },
                                 {
-                                  "type": "tooltip",
-                                  "content": "Clear all history",
                                   "children": [
                                     {
-                                      "type": "button",
                                       "label": "Clear",
+                                      "icon": "trash-2",
                                       "event": "CLEAR",
-                                      "variant": "ghost",
-                                      "icon": "trash-2"
+                                      "type": "button",
+                                      "variant": "ghost"
                                     }
-                                  ]
+                                  ],
+                                  "content": "Clear all history",
+                                  "type": "tooltip"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
                               "type": "typography",
+                              "content": "Last action:",
                               "variant": "caption",
-                              "color": "muted",
-                              "content": "Last action:"
+                              "color": "muted"
                             },
                             {
                               "type": "badge",
@@ -660,9 +733,14 @@
                                 "current"
                               ]
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -691,16 +769,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
@@ -709,48 +781,48 @@
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "history",
+                                  "type": "icon",
                                   "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "History",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
                                   "type": "tooltip",
-                                  "content": "Undo the last action",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Undo",
+                                      "icon": "undo",
                                       "event": "UNDO",
+                                      "type": "button",
                                       "variant": "ghost",
-                                      "icon": "undo"
+                                      "label": "Undo"
                                     }
-                                  ]
+                                  ],
+                                  "content": "Undo the last action"
                                 },
                                 {
-                                  "type": "tooltip",
-                                  "content": "Redo the last undone action",
                                   "children": [
                                     {
-                                      "type": "button",
-                                      "label": "Redo",
                                       "event": "REDO",
                                       "variant": "ghost",
-                                      "icon": "redo"
+                                      "type": "button",
+                                      "icon": "redo",
+                                      "label": "Redo"
                                     }
-                                  ]
+                                  ],
+                                  "type": "tooltip",
+                                  "content": "Redo the last undone action"
                                 },
                                 {
                                   "type": "divider",
@@ -758,38 +830,38 @@
                                 },
                                 {
                                   "type": "tooltip",
-                                  "content": "Clear all history",
                                   "children": [
                                     {
                                       "type": "button",
-                                      "label": "Clear",
-                                      "event": "CLEAR",
                                       "variant": "ghost",
-                                      "icon": "trash-2"
+                                      "event": "CLEAR",
+                                      "icon": "trash-2",
+                                      "label": "Clear"
                                     }
-                                  ]
+                                  ],
+                                  "content": "Clear all history"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "justify": "space-between",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
+                              "content": "Last action:",
                               "type": "typography",
-                              "variant": "caption",
                               "color": "muted",
-                              "content": "Last action:"
+                              "variant": "caption"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -797,17 +869,24 @@
                                   "@entity"
                                 ],
                                 "current"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md",
+                          "align": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

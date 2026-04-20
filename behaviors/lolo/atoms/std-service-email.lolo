@@ -16,11 +16,14 @@ orbital ServiceEmailOrbital {
     messageId : string
     error : string
   }
-  trait ServiceEmailEmail -> ServiceEmail [interaction] {
+
+  type ServiceEmailLoaded     = Event ServiceEmail                  "Fired when ServiceEmail finishes loading"
+  type ServiceEmailLoadFailed = Event { message : string } "Fired when ServiceEmail fails to load"
+  trait ServiceEmailEmail -> ServiceEmail [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ServiceEmail)
+        (fetch ServiceEmail { emit: { success: "ServiceEmailLoaded", failure: "ServiceEmailLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "mail", size: "lg" }, { type: "typography", content: "ServiceEmail Email", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "To", bind: "@entity.to", placeholder: "recipient@example.com" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Email subject" }, { type: "textarea", label: "Body", bind: "@entity.body", placeholder: "Write your message..." }, { type: "button", label: "Send", event: "SEND", variant: "primary", icon: "send" }] })
       SEND -> sending
         (render-ui main { type: "loading-state", title: "Sending email...", message: "Delivering serviceemail email..." })
@@ -49,7 +52,9 @@ orbital ServiceEmailOrbital {
     listens {
       SENT { messageId : string }
       FAILED { error : string! }
+          ServiceEmailLoadFailed { message : string }
     }
+    emits: [ServiceEmailLoaded, ServiceEmailLoadFailed]
   }
   page "/serviceemails" as ServiceEmailPage -> ServiceEmailEmail
 }

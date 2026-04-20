@@ -1,7 +1,7 @@
 {
   "name": "std-stem-lab",
   "version": "1.0.0",
-  "description": "STEM lab organism. Composes: stdSimulatorGame(Experiment) + stdClassifierGame(Classification) + stdDisplay(LabResult)",
+  "description": "std-stem-lab as a Function",
   "orbitals": [
     {
       "name": "ExperimentOrbital",
@@ -26,7 +26,7 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "completed",
@@ -36,25 +36,61 @@
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Simulator Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "ExperimentSimulatorGame",
-          "linkedEntity": "Experiment",
           "category": "interaction",
+          "linkedEntity": "Experiment",
+          "emits": [
+            {
+              "event": "ExperimentLoaded",
+              "description": "Fired when Experiment finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "hypothesis",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "completed",
+                  "type": "boolean"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ExperimentLoadFailed",
+              "description": "Fired when Experiment fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -78,6 +114,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -86,8 +126,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "ExperimentLoaded",
+                "name": "Experiment loaded"
+              },
+              {
+                "key": "ExperimentLoadFailed",
+                "name": "Experiment load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -98,7 +148,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "Experiment"
+                    "Experiment",
+                    {
+                      "emit": {
+                        "success": "ExperimentLoaded",
+                        "failure": "ExperimentLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -106,20 +162,20 @@
                     {
                       "type": "game-shell",
                       "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
                           "title": "Experiment Simulator",
+                          "type": "game-menu",
                           "menuItems": [
                             {
                               "label": "Start",
-                              "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "START"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -133,9 +189,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "STEM Lab",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "stack",
@@ -143,22 +199,22 @@
                           "gap": "md",
                           "children": [
                             {
-                              "type": "game-hud",
                               "stats": [
                                 {
-                                  "label": "Score",
-                                  "value": "@entity.score"
+                                  "value": "@entity.score",
+                                  "label": "Score"
                                 },
                                 {
-                                  "label": "Level",
-                                  "value": "@entity.level"
+                                  "value": "@entity.level",
+                                  "label": "Level"
                                 }
-                              ]
+                              ],
+                              "type": "game-hud"
                             },
                             {
                               "type": "simulator-board",
-                              "entity": "Experiment",
-                              "completeEvent": "COMPLETE"
+                              "completeEvent": "COMPLETE",
+                              "entity": "Experiment"
                             }
                           ]
                         }
@@ -170,8 +226,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -183,8 +238,6 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "game-over-screen",
@@ -192,12 +245,14 @@
                           "menuItems": [
                             {
                               "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "RESTART"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "appName": "STEM Lab",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -211,35 +266,35 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
-                          "title": "Experiment Simulator",
                           "menuItems": [
                             {
                               "label": "Start",
                               "event": "START",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "title": "Experiment Simulator",
+                          "type": "game-menu"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "showTopBar": true
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
           "name": "SimulatorPage",
           "path": "/simulator",
-          "isInitial": true,
           "traits": [
             {
               "ref": "ExperimentSimulatorGame"
@@ -271,35 +326,70 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "accuracy",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Classifier Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "ClassificationClassifierGame",
-          "linkedEntity": "Classification",
           "category": "interaction",
+          "linkedEntity": "Classification",
+          "emits": [
+            {
+              "event": "ClassificationLoaded",
+              "description": "Fired when Classification finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "accuracy",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ClassificationLoadFailed",
+              "description": "Fired when Classification fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -323,6 +413,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -331,8 +425,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "ClassificationLoaded",
+                "name": "Classification loaded"
+              },
+              {
+                "key": "ClassificationLoadFailed",
+                "name": "Classification load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -343,28 +447,34 @@
                 "effects": [
                   [
                     "fetch",
-                    "Classification"
+                    "Classification",
+                    {
+                      "emit": {
+                        "failure": "ClassificationLoadFailed",
+                        "success": "ClassificationLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "STEM Lab",
-                      "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "game-menu",
-                          "title": "Classification Lab",
                           "menuItems": [
                             {
                               "label": "Start",
                               "event": "START",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "title": "Classification Lab"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -379,8 +489,8 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "STEM Lab",
                       "showTopBar": true,
+                      "appName": "STEM Lab",
                       "children": [
                         {
                           "type": "stack",
@@ -391,18 +501,18 @@
                               "type": "game-hud",
                               "stats": [
                                 {
-                                  "label": "Score",
-                                  "value": "@entity.score"
+                                  "value": "@entity.score",
+                                  "label": "Score"
                                 },
                                 {
-                                  "label": "Level",
-                                  "value": "@entity.level"
+                                  "value": "@entity.level",
+                                  "label": "Level"
                                 }
                               ]
                             },
                             {
-                              "type": "classifier-board",
                               "entity": "Classification",
+                              "type": "classifier-board",
                               "completeEvent": "COMPLETE"
                             }
                           ]
@@ -415,8 +525,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -427,22 +536,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-over-screen",
-                          "title": "Well Done!",
                           "menuItems": [
                             {
-                              "label": "Play Again",
                               "event": "RESTART",
+                              "label": "Play Again",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "type": "game-over-screen",
+                          "title": "Well Done!"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "STEM Lab",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -456,20 +565,20 @@
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
-                          "title": "Classification Lab",
                           "menuItems": [
                             {
-                              "label": "Start",
                               "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Start"
                             }
-                          ]
+                          ],
+                          "title": "Classification Lab",
+                          "type": "game-menu"
                         }
                       ]
                     }
@@ -477,12 +586,13 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "ClassifierPage",
+          "name": "Classifier",
           "path": "/classifier",
           "traits": [
             {
@@ -505,31 +615,68 @@
           },
           {
             "name": "experimentCount",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "avgAccuracy",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "totalScore",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "grade",
-            "type": "string",
-            "default": "N/A"
+            "type": "string"
           }
         ]
       },
       "traits": [
         {
           "name": "LabResultDisplay",
-          "linkedEntity": "LabResult",
           "category": "interaction",
+          "linkedEntity": "LabResult",
+          "emits": [
+            {
+              "event": "LabResultLoaded",
+              "description": "Fired when LabResult finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "experimentCount",
+                  "type": "number"
+                },
+                {
+                  "name": "avgAccuracy",
+                  "type": "number"
+                },
+                {
+                  "name": "totalScore",
+                  "type": "number"
+                },
+                {
+                  "name": "grade",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "LabResultLoadFailed",
+              "description": "Fired when LabResult fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -559,6 +706,20 @@
               {
                 "key": "REFRESHED",
                 "name": "Refreshed"
+              },
+              {
+                "key": "LabResultLoaded",
+                "name": "LabResult loaded"
+              },
+              {
+                "key": "LabResultLoadFailed",
+                "name": "LabResult load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -569,26 +730,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "LabResult"
+                    "LabResult",
+                    {
+                      "emit": {
+                        "failure": "LabResultLoadFailed",
+                        "success": "LabResultLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "STEM Lab",
                       "showTopBar": true,
+                      "appName": "STEM Lab",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
                               "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -597,18 +762,14 @@
                                     {
                                       "label": "Lab Results"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
                                       "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -616,35 +777,38 @@
                                           "size": "lg"
                                         },
                                         {
-                                          "type": "typography",
+                                          "variant": "h2",
                                           "content": "Lab Results",
-                                          "variant": "h2"
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md",
+                                      "direction": "horizontal"
                                     },
                                     {
                                       "type": "button",
-                                      "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "event": "REFRESH",
+                                      "label": "Refresh"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "label": "ExperimentCount",
                                           "value": [
                                             "object/get",
                                             [
@@ -652,11 +816,11 @@
                                               "@entity"
                                             ],
                                             "experimentCount"
-                                          ]
+                                          ],
+                                          "label": "ExperimentCount",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "AvgAccuracy",
                                           "value": [
                                             "object/get",
                                             [
@@ -664,10 +828,11 @@
                                               "@entity"
                                             ],
                                             "avgAccuracy"
-                                          ]
+                                          ],
+                                          "label": "AvgAccuracy",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "TotalScore",
                                           "value": [
                                             "object/get",
@@ -676,24 +841,20 @@
                                               "@entity"
                                             ],
                                             "totalScore"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
+                                                  "type": "typography",
                                                   "content": "Grade"
                                                 },
                                                 {
-                                                  "type": "typography",
-                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -701,9 +862,14 @@
                                                       "@entity"
                                                     ],
                                                     "grade"
-                                                  ]
+                                                  ],
+                                                  "variant": "h3",
+                                                  "type": "typography"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical",
+                                              "gap": "sm",
+                                              "type": "stack"
                                             }
                                           ]
                                         }
@@ -716,62 +882,62 @@
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Chart View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Graph View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "columns": 2.0
                                 },
                                 {
+                                  "xKey": "date",
+                                  "title": "Trend",
+                                  "yKey": "value",
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
-                                  ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  ]
                                 },
                                 {
                                   "type": "chart-legend",
@@ -781,33 +947,35 @@
                                       "color": "primary"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "id": "a",
+                                      "x": 50.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "id": "a",
+                                      "y": 100.0
                                     },
                                     {
                                       "id": "b",
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "y": 50.0,
+                                      "x": 200.0
                                     },
                                     {
                                       "id": "c",
+                                      "y": 100.0,
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "x": 350.0
                                     }
                                   ],
+                                  "type": "graph-view",
+                                  "height": 200.0,
+                                  "width": 400.0,
                                   "edges": [
                                     {
                                       "from": "a",
@@ -817,13 +985,12 @@
                                       "from": "b",
                                       "to": "c"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ]
                     }
@@ -837,7 +1004,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "LabResult"
+                    "LabResult",
+                    {
+                      "emit": {
+                        "failure": "LabResultLoadFailed",
+                        "success": "LabResultLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -845,15 +1018,10 @@
                     {
                       "type": "game-shell",
                       "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -868,15 +1036,11 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
                                       "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -884,31 +1048,33 @@
                                           "size": "lg"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "Lab Results",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md"
                                     },
                                     {
                                       "type": "button",
                                       "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
+                                      "event": "REFRESH",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
                                           "type": "stat-display",
@@ -923,7 +1089,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "AvgAccuracy",
                                           "value": [
                                             "object/get",
@@ -932,7 +1097,8 @@
                                               "@entity"
                                             ],
                                             "avgAccuracy"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "stat-display",
@@ -947,12 +1113,9 @@
                                           ]
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
                                               "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm",
                                               "children": [
                                                 {
                                                   "type": "typography",
@@ -960,8 +1123,6 @@
                                                   "content": "Grade"
                                                 },
                                                 {
-                                                  "type": "typography",
-                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -969,13 +1130,20 @@
                                                       "@entity"
                                                     ],
                                                     "grade"
-                                                  ]
+                                                  ],
+                                                  "type": "typography",
+                                                  "variant": "h3"
                                                 }
-                                              ]
+                                              ],
+                                              "direction": "vertical",
+                                              "gap": "sm"
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid",
+                                      "columns": 3.0
                                     }
                                   ]
                                 },
@@ -983,117 +1151,122 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
+                                  "columns": 2.0,
                                   "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
+                                          "content": "Chart View",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Graph View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid"
                                 },
                                 {
+                                  "xKey": "date",
                                   "type": "line-chart",
+                                  "title": "Trend",
+                                  "yKey": "value",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
-                                    }
-                                  ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
-                                },
-                                {
-                                  "type": "chart-legend",
-                                  "items": [
-                                    {
-                                      "label": "Current",
-                                      "color": "primary"
-                                    },
-                                    {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "value": 30.0
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "nodes": [
+                                  "items": [
                                     {
-                                      "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ],
+                                  "type": "chart-legend"
+                                },
+                                {
+                                  "height": 200.0,
+                                  "type": "graph-view",
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "nodes": [
+                                    {
+                                      "x": 50.0,
+                                      "label": "Start",
+                                      "y": 100.0,
+                                      "id": "a"
+                                    },
+                                    {
+                                      "x": 200.0,
+                                      "id": "b",
+                                      "y": 50.0,
+                                      "label": "Process"
+                                    },
+                                    {
+                                      "id": "c",
+                                      "x": 350.0,
+                                      "y": 100.0,
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "width": 400.0
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "lg",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1105,13 +1278,18 @@
                 "effects": [
                   [
                     "fetch",
-                    "LabResult"
+                    "LabResult",
+                    {
+                      "emit": {
+                        "failure": "LabResultLoadFailed",
+                        "success": "LabResultLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "STEM Lab",
                       "showTopBar": true,
                       "children": [
@@ -1119,36 +1297,32 @@
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
                               "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Lab Results"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
                                       "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "clipboard",
+                                          "type": "icon",
                                           "size": "lg"
                                         },
                                         {
@@ -1162,25 +1336,27 @@
                                       "type": "button",
                                       "label": "Refresh",
                                       "event": "REFRESH",
-                                      "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "variant": "secondary"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "gap": "md",
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "ExperimentCount",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -1204,7 +1380,6 @@
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "TotalScore",
                                           "value": [
                                             "object/get",
                                             [
@@ -1212,15 +1387,13 @@
                                               "@entity"
                                             ],
                                             "totalScore"
-                                          ]
+                                          ],
+                                          "label": "TotalScore"
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
-                                              "direction": "vertical",
-                                              "gap": "sm",
                                               "children": [
                                                 {
                                                   "type": "typography",
@@ -1228,8 +1401,8 @@
                                                   "content": "Grade"
                                                 },
                                                 {
-                                                  "type": "typography",
                                                   "variant": "h3",
+                                                  "type": "typography",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1239,82 +1412,87 @@
                                                     "grade"
                                                   ]
                                                 }
-                                              ]
+                                              ],
+                                              "gap": "sm",
+                                              "direction": "vertical",
+                                              "type": "stack"
                                             }
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
+                                  "columns": 2.0,
                                   "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "content": "Chart View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Graph View"
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid"
                                 },
                                 {
+                                  "xKey": "date",
                                   "type": "line-chart",
+                                  "yKey": "value",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
-                                  "yKey": "value",
                                   "title": "Trend"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
                                       "label": "Previous",
@@ -1323,45 +1501,46 @@
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
-                                    }
-                                  ],
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "width": 400.0,
+                                  "height": 200.0,
+                                  "nodes": [
+                                    {
+                                      "id": "a",
+                                      "label": "Start",
+                                      "x": 50.0,
+                                      "y": 100.0
+                                    },
+                                    {
+                                      "x": 200.0,
+                                      "y": 50.0,
+                                      "id": "b",
+                                      "label": "Process"
+                                    },
+                                    {
+                                      "id": "c",
+                                      "x": 350.0,
+                                      "y": 100.0,
+                                      "label": "End"
+                                    }
+                                  ],
+                                  "type": "graph-view"
                                 }
                               ]
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -1373,30 +1552,34 @@
                 "effects": [
                   [
                     "fetch",
-                    "LabResult"
+                    "LabResult",
+                    {
+                      "emit": {
+                        "success": "LabResultLoaded",
+                        "failure": "LabResultLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "STEM Lab",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "gap": "lg",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Lab Results"
@@ -1405,14 +1588,11 @@
                                 },
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
+                                  "gap": "md",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -1420,16 +1600,19 @@
                                           "size": "lg"
                                         },
                                         {
-                                          "type": "typography",
+                                          "variant": "h2",
                                           "content": "Lab Results",
-                                          "variant": "h2"
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Refresh",
                                       "event": "REFRESH",
+                                      "type": "button",
                                       "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
@@ -1439,15 +1622,12 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "ExperimentCount",
                                           "value": [
                                             "object/get",
@@ -1456,11 +1636,10 @@
                                               "@entity"
                                             ],
                                             "experimentCount"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "AvgAccuracy",
                                           "value": [
                                             "object/get",
                                             [
@@ -1468,10 +1647,11 @@
                                               "@entity"
                                             ],
                                             "avgAccuracy"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "AvgAccuracy"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "TotalScore",
                                           "value": [
                                             "object/get",
@@ -1480,24 +1660,23 @@
                                               "@entity"
                                             ],
                                             "totalScore"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
                                               "direction": "vertical",
+                                              "type": "stack",
                                               "gap": "sm",
                                               "children": [
                                                 {
+                                                  "content": "Grade",
                                                   "type": "typography",
-                                                  "variant": "caption",
-                                                  "content": "Grade"
+                                                  "variant": "caption"
                                                 },
                                                 {
                                                   "type": "typography",
-                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1505,31 +1684,33 @@
                                                       "@entity"
                                                     ],
                                                     "grade"
-                                                  ]
+                                                  ],
+                                                  "variant": "h3"
                                                 }
                                               ]
                                             }
-                                          ]
+                                          ],
+                                          "type": "card"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
                                       ]
                                     },
@@ -1537,48 +1718,49 @@
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "type": "typography"
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid",
+                                  "columns": 2.0
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
+                                  "title": "Trend",
+                                  "type": "line-chart",
                                   "yKey": "value",
-                                  "title": "Trend"
+                                  "xKey": "date"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -1588,48 +1770,51 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "width": 400.0,
                                   "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "id": "a",
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "y": 100.0,
+                                      "x": 50.0,
+                                      "id": "a"
                                     },
                                     {
-                                      "id": "b",
+                                      "x": 200.0,
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "id": "b",
+                                      "y": 50.0
                                     },
                                     {
+                                      "x": 350.0,
                                       "id": "c",
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "y": 100.0
                                     }
                                   ],
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "height": 200.0
                                 }
                               ]
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "appName": "STEM Lab"
                     }
                   ]
                 ]
@@ -1641,22 +1826,24 @@
                 "effects": [
                   [
                     "fetch",
-                    "LabResult"
+                    "LabResult",
+                    {
+                      "emit": {
+                        "success": "LabResultLoaded",
+                        "failure": "LabResultLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "STEM Lab",
                       "showTopBar": true,
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
                               "children": [
                                 {
@@ -1672,51 +1859,48 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
                                       "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "clipboard",
-                                          "size": "lg"
+                                          "size": "lg",
+                                          "type": "icon"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Lab Results",
-                                          "variant": "h2"
+                                          "content": "Lab Results"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal"
                                     },
                                     {
                                       "type": "button",
-                                      "label": "Refresh",
                                       "event": "REFRESH",
+                                      "label": "Refresh",
                                       "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
                                           "type": "stat-display",
-                                          "label": "ExperimentCount",
                                           "value": [
                                             "object/get",
                                             [
@@ -1724,11 +1908,10 @@
                                               "@entity"
                                             ],
                                             "experimentCount"
-                                          ]
+                                          ],
+                                          "label": "ExperimentCount"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "AvgAccuracy",
                                           "value": [
                                             "object/get",
                                             [
@@ -1736,11 +1919,11 @@
                                               "@entity"
                                             ],
                                             "avgAccuracy"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "AvgAccuracy"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "TotalScore",
                                           "value": [
                                             "object/get",
                                             [
@@ -1748,24 +1931,22 @@
                                               "@entity"
                                             ],
                                             "totalScore"
-                                          ]
+                                          ],
+                                          "label": "TotalScore",
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "card",
                                           "children": [
                                             {
-                                              "type": "stack",
-                                              "direction": "vertical",
                                               "gap": "sm",
                                               "children": [
                                                 {
-                                                  "type": "typography",
                                                   "variant": "caption",
-                                                  "content": "Grade"
+                                                  "content": "Grade",
+                                                  "type": "typography"
                                                 },
                                                 {
-                                                  "type": "typography",
-                                                  "variant": "h3",
                                                   "content": [
                                                     "object/get",
                                                     [
@@ -1773,80 +1954,85 @@
                                                       "@entity"
                                                     ],
                                                     "grade"
-                                                  ]
+                                                  ],
+                                                  "type": "typography",
+                                                  "variant": "h3"
                                                 }
-                                              ]
+                                              ],
+                                              "type": "stack",
+                                              "direction": "vertical"
                                             }
                                           ]
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md",
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
+                                  "columns": 2.0,
                                   "gap": "md",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "type": "grid"
                                 },
                                 {
                                   "type": "line-chart",
+                                  "xKey": "date",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
                                   "yKey": "value",
                                   "title": "Trend"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -1856,59 +2042,65 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "edges": [
+                                    {
+                                      "to": "b",
+                                      "from": "a"
+                                    },
+                                    {
+                                      "to": "c",
+                                      "from": "b"
+                                    }
+                                  ],
                                   "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "id": "a",
+                                      "y": 100.0,
+                                      "x": 50.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "id": "a"
                                     },
                                     {
-                                      "id": "b",
+                                      "y": 50.0,
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "id": "b",
+                                      "x": 200.0
                                     },
                                     {
-                                      "id": "c",
+                                      "y": 100.0,
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "id": "c",
+                                      "x": 350.0
                                     }
                                   ],
-                                  "edges": [
-                                    {
-                                      "from": "a",
-                                      "to": "b"
-                                    },
-                                    {
-                                      "from": "b",
-                                      "to": "c"
-                                    }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  "width": 400.0,
+                                  "height": 200.0
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "appName": "STEM Lab"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "ResultsPage",
+          "name": "Results",
           "path": "/results",
           "traits": [
             {

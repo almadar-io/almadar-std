@@ -1,7 +1,7 @@
 {
   "name": "std-classifier-game",
   "version": "1.0.0",
-  "description": "Educational game molecule: menu -> playing -> complete. Uses the `classifier-board` pattern for the playing state.",
+  "description": "std-classifier-game as a Function",
   "orbitals": [
     {
       "name": "ClassifierGameOrbital",
@@ -38,30 +38,68 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Classifier Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "ClassifierGameClassifierGame",
-          "linkedEntity": "ClassifierGame",
           "category": "interaction",
+          "linkedEntity": "ClassifierGame",
+          "emits": [
+            {
+              "event": "ClassifierGameLoaded",
+              "description": "Fired when ClassifierGame finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ClassifierGameLoadFailed",
+              "description": "Fired when ClassifierGame fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -85,6 +123,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -93,8 +135,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "ClassifierGameLoaded",
+                "name": "ClassifierGame loaded"
+              },
+              {
+                "key": "ClassifierGameLoadFailed",
+                "name": "ClassifierGame load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,14 +157,20 @@
                 "effects": [
                   [
                     "fetch",
-                    "ClassifierGame"
+                    "ClassifierGame",
+                    {
+                      "emit": {
+                        "success": "ClassifierGameLoaded",
+                        "failure": "ClassifierGameLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
                       "title": "Sort & Classify",
+                      "type": "game-menu",
                       "menuItems": [
                         {
                           "label": "Start",
@@ -133,29 +191,29 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "game-hud",
                           "stats": [
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             },
                             {
-                              "label": "Level",
-                              "value": "@entity.level"
+                              "value": "@entity.level",
+                              "label": "Level"
                             }
                           ]
                         },
                         {
-                          "type": "classifier-board",
+                          "completeEvent": "COMPLETE",
                           "entity": "ClassifierGame",
-                          "completeEvent": "COMPLETE"
+                          "type": "classifier-board"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -163,8 +221,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -179,9 +236,9 @@
                       "title": "Well Done!",
                       "menuItems": [
                         {
+                          "variant": "primary",
                           "label": "Play Again",
-                          "event": "RESTART",
-                          "variant": "primary"
+                          "event": "RESTART"
                         }
                       ]
                     }
@@ -197,21 +254,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
-                      "title": "Sort & Classify",
                       "menuItems": [
                         {
                           "label": "Start",
                           "event": "START",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "game-menu",
+                      "title": "Sort & Classify"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

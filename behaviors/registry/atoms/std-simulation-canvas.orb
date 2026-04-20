@@ -1,7 +1,7 @@
 {
   "name": "std-simulation-canvas",
   "version": "1.0.0",
-  "description": "2D physics simulation renderer atom using the `simulation-canvas` pattern. Runs built-in Euler integration for educational presets (pendulum, spring, etc.). Supports start, stop, and reset controls.",
+  "description": "std-simulation-canvas as a Function",
   "orbitals": [
     {
       "name": "SimulationWorldOrbital",
@@ -40,8 +40,48 @@
       "traits": [
         {
           "name": "SimulationWorldSimulationCanvas",
-          "linkedEntity": "SimulationWorld",
           "category": "interaction",
+          "linkedEntity": "SimulationWorld",
+          "emits": [
+            {
+              "event": "SimulationWorldLoaded",
+              "description": "Fired when SimulationWorld finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "SimulationWorldLoadFailed",
+              "description": "Fired when SimulationWorld fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -62,12 +102,26 @@
                 "name": "Start"
               },
               {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
                 "key": "STOP",
                 "name": "Stop"
               },
               {
-                "key": "RESET",
-                "name": "Reset"
+                "key": "SimulationWorldLoaded",
+                "name": "SimulationWorld loaded"
+              },
+              {
+                "key": "SimulationWorldLoadFailed",
+                "name": "SimulationWorld load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -78,18 +132,24 @@
                 "effects": [
                   [
                     "fetch",
-                    "SimulationWorld"
+                    "SimulationWorld",
+                    {
+                      "emit": {
+                        "failure": "SimulationWorldLoadFailed",
+                        "success": "SimulationWorldLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "simulation-canvas",
-                      "preset": "pendulum",
-                      "width": 800,
-                      "height": 400,
+                      "speed": 1.0,
                       "running": false,
-                      "speed": 1
+                      "width": 800.0,
+                      "preset": "pendulum",
+                      "type": "simulation-canvas",
+                      "height": 400.0
                     }
                   ]
                 ]
@@ -104,49 +164,11 @@
                     "main",
                     {
                       "type": "simulation-canvas",
-                      "preset": "pendulum",
-                      "width": 800,
-                      "height": 400,
                       "running": true,
-                      "speed": 1
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "running",
-                "to": "idle",
-                "event": "STOP",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "simulation-canvas",
+                      "width": 800.0,
+                      "speed": 1.0,
                       "preset": "pendulum",
-                      "width": 800,
-                      "height": 400,
-                      "running": false,
-                      "speed": 1
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "running",
-                "to": "running",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "simulation-canvas",
-                      "preset": "pendulum",
-                      "width": 800,
-                      "height": 400,
-                      "running": true,
-                      "speed": 1
+                      "height": 400.0
                     }
                   ]
                 ]
@@ -160,18 +182,57 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "simulation-canvas",
-                      "preset": "pendulum",
-                      "width": 800,
-                      "height": 400,
                       "running": false,
-                      "speed": 1
+                      "speed": 1.0,
+                      "height": 400.0,
+                      "type": "simulation-canvas",
+                      "width": 800.0,
+                      "preset": "pendulum"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "idle",
+                "event": "STOP",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "width": 800.0,
+                      "height": 400.0,
+                      "preset": "pendulum",
+                      "type": "simulation-canvas",
+                      "running": false,
+                      "speed": 1.0
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "running",
+                "to": "running",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "speed": 1.0,
+                      "preset": "pendulum",
+                      "height": 400.0,
+                      "type": "simulation-canvas",
+                      "width": 800.0,
+                      "running": true
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

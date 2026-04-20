@@ -11,11 +11,14 @@ orbital EventHandlerGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait EventHandlerGameEventHandlerGame -> EventHandlerGame [interaction] {
+
+  type EventHandlerGameLoaded     = Event EventHandlerGame                  "Fired when EventHandlerGame finishes loading"
+  type EventHandlerGameLoadFailed = Event { message : string } "Fired when EventHandlerGame fails to load"
+  trait EventHandlerGameEventHandlerGame -> EventHandlerGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch EventHandlerGame)
+        (fetch EventHandlerGame { emit: { success: "EventHandlerGameLoaded", failure: "EventHandlerGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Event Handler", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "event-handler-board", entity: "EventHandlerGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital EventHandlerGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Event Handler", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [EventHandlerGameLoaded, EventHandlerGameLoadFailed]
+    listens {
+      EventHandlerGameLoadFailed { message : string }
     }
   }
   page "/eventhandlergames" as EventHandlerGamePage -> EventHandlerGameEventHandlerGame

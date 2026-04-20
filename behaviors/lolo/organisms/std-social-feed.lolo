@@ -10,7 +10,10 @@ orbital PostOrbital {
     createdAt : datetime = ""
     likes : number = 0
   }
-  trait PostBrowse -> Post [interaction] {
+
+  type PostLoaded     = Event Post                  "Fired when Post finishes loading"
+  type PostLoadFailed = Event { message : string } "Fired when Post fails to load"
+  trait PostBrowse -> Post [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Post)
@@ -22,15 +25,17 @@ orbital PostOrbital {
     listens {
       * SAVE -> INIT
       VIEW { id : string!, row : object }
+          PostLoadFailed { message : string }
     }
+    emits: [PostLoaded, PostLoadFailed]
   }
-  trait PostCreate -> Post [interaction] {
+  trait PostCreate -> Post [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Post)
       CREATE -> open
-        (fetch Post)
+        (fetch Post { emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Post", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Post", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["title", "content", "author", "likes"] }] })
     }
     state open {
@@ -46,15 +51,17 @@ orbital PostOrbital {
     }
     listens {
       SAVE { data : object! }
+          PostLoadFailed { message : string }
     }
+    emits: [PostLoaded, PostLoadFailed]
   }
-  trait PostView -> Post [interaction] {
+  trait PostView -> Post [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Post)
       VIEW -> open
-        (fetch Post { id: "@payload.id" })
+        (fetch Post { id: "@payload.id" , emit: { success: "PostLoaded", failure: "PostLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.title" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Title" }, { type: "typography", variant: "body", content: "@entity.title" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Likes" }, { type: "typography", variant: "body", content: "@entity.likes" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -70,7 +77,9 @@ orbital PostOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
+          PostLoadFailed { message : string }
     }
+    emits: [PostLoaded, PostLoadFailed]
   }
   page "/feed" as FeedPage -> PostBrowse, PostCreate, PostView
 }
@@ -82,7 +91,10 @@ orbital CommentOrbital {
     postId : string
     createdAt : datetime = ""
   }
-  trait CommentBrowse -> Comment [interaction] {
+
+  type CommentLoaded     = Event Comment                  "Fired when Comment finishes loading"
+  type CommentLoadFailed = Event { message : string } "Fired when Comment fails to load"
+  trait CommentBrowse -> Comment [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Comment)
@@ -91,9 +103,11 @@ orbital CommentOrbital {
     listens {
       * SEND -> INIT
       * COMMENT -> INIT
+          CommentLoadFailed { message : string }
     }
+    emits: [CommentLoaded, CommentLoadFailed]
   }
-  trait CommentCompose -> Comment [interaction] {
+  trait CommentCompose -> Comment [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -112,14 +126,19 @@ orbital CommentOrbital {
     emits {
       SEND
     }
+    emits: [CommentLoaded, CommentLoadFailed]
+    listens {
+      CommentLoadFailed { message : string }
+      SEND { data : string }
+    }
   }
-  trait CommentView -> Comment [interaction] {
+  trait CommentView -> Comment [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Comment)
       VIEW -> open
-        (fetch Comment { id: "@payload.id" })
+        (fetch Comment { id: "@payload.id" , emit: { success: "CommentLoaded", failure: "CommentLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.body" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Body" }, { type: "typography", variant: "body", content: "@entity.body" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Author" }, { type: "typography", variant: "body", content: "@entity.author" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Post ID" }, { type: "typography", variant: "body", content: "@entity.postId" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Created At" }, { type: "typography", variant: "body", content: "@entity.createdAt" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -131,6 +150,11 @@ orbital CommentOrbital {
     }
     emits {
       SAVE
+    }
+    emits: [CommentLoaded, CommentLoadFailed]
+    listens {
+      CommentLoadFailed { message : string }
+      VIEW { id : string }
     }
   }
   page "/messages" -> CommentBrowse, CommentCompose, CommentView

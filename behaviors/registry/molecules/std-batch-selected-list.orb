@@ -1,7 +1,7 @@
 {
   "name": "std-batch-selected-list",
   "version": "1.0.0",
-  "description": "Batch-select list: Browse + Selection + Confirmation with a batch-action toolbar, composed via @trait.X.",
+  "description": "std-batch-selected-list as a Function",
   "orbitals": [
     {
       "name": "BatchListItemOrbital",
@@ -72,7 +72,8 @@
             ],
             "events": [
               {
-                "key": "INIT"
+                "key": "INIT",
+                "name": "Initialize"
               }
             ],
             "transitions": [
@@ -82,37 +83,42 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "BatchListItem"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "md",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "end",
                           "children": [
                             {
-                              "icon": "trash-2",
                               "type": "button",
-                              "event": "REQUEST",
+                              "label": "Delete selected",
                               "variant": "danger",
-                              "label": "Delete selected"
+                              "event": "REQUEST",
+                              "icon": "trash-2"
                             }
                           ],
-                          "gap": "sm"
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         "@trait.BatchItemSelection",
                         "@trait.BatchItemBrowse"
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

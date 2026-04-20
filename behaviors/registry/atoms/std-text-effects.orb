@@ -1,7 +1,7 @@
 {
   "name": "std-text-effects",
   "version": "1.0.0",
-  "description": "Text animation and highlighting atom. Absorbs: typewriter-text, text-highlight, law-reference-tooltip.",
+  "description": "std-text-effects as a Function",
   "orbitals": [
     {
       "name": "TextContentOrbital",
@@ -50,25 +50,65 @@
             "type": "string",
             "default": ""
           }
-        ],
-        "instances": [
-          {
-            "id": "txt-1",
-            "name": "The quick brown fox jumps over the lazy dog",
-            "description": "A pangram sentence",
-            "status": "active",
-            "createdAt": "2026-01-01",
-            "content": "The **quick** brown fox _jumps_ over the lazy dog. This demonstrates text animation and highlighting capabilities.",
-            "highlightType": "emphasis",
-            "reference": "Article 42, Section 3.1 — Typography Standards"
-          }
         ]
       },
       "traits": [
         {
           "name": "TextContentTextEffects",
-          "linkedEntity": "TextContent",
           "category": "interaction",
+          "linkedEntity": "TextContent",
+          "emits": [
+            {
+              "event": "TextContentLoaded",
+              "description": "Fired when TextContent finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
+                },
+                {
+                  "name": "highlightType",
+                  "type": "string"
+                },
+                {
+                  "name": "reference",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TextContentLoadFailed",
+              "description": "Fired when TextContent fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -98,6 +138,20 @@
               {
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "key": "TextContentLoaded",
+                "name": "TextContent loaded"
+              },
+              {
+                "key": "TextContentLoadFailed",
+                "name": "TextContent load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -108,33 +162,36 @@
                 "effects": [
                   [
                     "fetch",
-                    "TextContent"
+                    "TextContent",
+                    {
+                      "emit": {
+                        "success": "TextContentLoaded",
+                        "failure": "TextContentLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "type",
-                              "size": "lg"
+                              "name": "type"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "Text Effects",
-                              "variant": "h2"
+                              "content": "Text Effects"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -152,6 +209,7 @@
                         },
                         {
                           "type": "code-block",
+                          "language": "text",
                           "code": [
                             "object/get",
                             [
@@ -159,12 +217,9 @@
                               "@entity"
                             ],
                             "reference"
-                          ],
-                          "language": "text"
+                          ]
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
                           "content": [
                             "object/get",
                             [
@@ -172,31 +227,36 @@
                               "@entity"
                             ],
                             "name"
-                          ]
+                          ],
+                          "variant": "body",
+                          "type": "typography"
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Animate",
-                              "event": "ANIMATE",
                               "variant": "primary",
-                              "icon": "play"
+                              "icon": "play",
+                              "type": "button",
+                              "event": "ANIMATE",
+                              "label": "Animate"
                             },
                             {
-                              "type": "button",
                               "label": "Highlight",
-                              "event": "HIGHLIGHT",
+                              "type": "button",
                               "variant": "secondary",
-                              "icon": "highlighter"
+                              "icon": "highlighter",
+                              "event": "HIGHLIGHT"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -211,23 +271,21 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "type",
-                              "size": "lg"
+                              "name": "type"
                             },
                             {
-                              "type": "typography",
                               "content": "Text Effects",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ]
@@ -237,6 +295,7 @@
                         },
                         {
                           "type": "typewriter-text",
+                          "speed": 50.0,
                           "text": [
                             "object/get",
                             [
@@ -245,89 +304,17 @@
                             ],
                             "name"
                           ],
-                          "speed": 50,
                           "cursor": true
                         },
                         {
-                          "type": "law-reference-tooltip",
-                          "reference": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "reference"
-                          ],
                           "children": [
                             {
-                              "type": "typography",
                               "variant": "caption",
+                              "type": "typography",
                               "color": "muted",
                               "content": "Hover for reference details"
                             }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Highlight",
-                          "event": "HIGHLIGHT",
-                          "variant": "secondary",
-                          "icon": "highlighter"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "animating",
-                "to": "highlighted",
-                "event": "HIGHLIGHT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "type",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Text Effects",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "text-highlight",
-                          "text": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "name"
                           ],
-                          "highlightColor": "yellow",
-                          "pattern": "important"
-                        },
-                        {
-                          "type": "law-reference-tooltip",
                           "reference": [
                             "object/get",
                             [
@@ -336,221 +323,18 @@
                             ],
                             "reference"
                           ],
-                          "children": [
-                            {
-                              "type": "typography",
-                              "variant": "body",
-                              "content": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "name"
-                              ]
-                            }
-                          ]
+                          "type": "law-reference-tooltip"
                         },
                         {
                           "type": "button",
-                          "label": "Reset",
-                          "event": "RESET",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "variant": "secondary",
+                          "label": "Highlight",
+                          "icon": "highlighter",
+                          "event": "HIGHLIGHT"
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "highlighted",
-                "to": "idle",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
+                      ],
                       "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "type",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Text Effects",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "markdown-content",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "name"
-                          ]
-                        },
-                        {
-                          "type": "code-block",
-                          "code": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "reference"
-                          ],
-                          "language": "text"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "name"
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Animate",
-                              "event": "ANIMATE",
-                              "variant": "primary",
-                              "icon": "play"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Highlight",
-                              "event": "HIGHLIGHT",
-                              "variant": "secondary",
-                              "icon": "highlighter"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "animating",
-                "to": "idle",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "type",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Text Effects",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "markdown-content",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "name"
-                          ]
-                        },
-                        {
-                          "type": "code-block",
-                          "code": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "reference"
-                          ],
-                          "language": "text"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "name"
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Animate",
-                              "event": "ANIMATE",
-                              "variant": "primary",
-                              "icon": "play"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Highlight",
-                              "event": "HIGHLIGHT",
-                              "variant": "secondary",
-                              "icon": "highlighter"
-                            }
-                          ]
-                        }
-                      ]
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -564,9 +348,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "stack",
@@ -575,14 +358,14 @@
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "type",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
-                              "content": "Text Effects",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Text Effects"
                             }
                           ]
                         },
@@ -614,7 +397,91 @@
                           ],
                           "children": [
                             {
+                              "content": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "name"
+                              ],
+                              "variant": "body",
+                              "type": "typography"
+                            }
+                          ]
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "label": "Reset",
+                          "event": "RESET",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "animating",
+                "to": "highlighted",
+                "event": "HIGHLIGHT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "type",
+                              "size": "lg",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h2",
                               "type": "typography",
+                              "content": "Text Effects"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "text": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "name"
+                          ],
+                          "pattern": "important",
+                          "type": "text-highlight",
+                          "highlightColor": "yellow"
+                        },
+                        {
+                          "type": "law-reference-tooltip",
+                          "reference": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "reference"
+                          ],
+                          "children": [
+                            {
                               "variant": "body",
                               "content": [
                                 "object/get",
@@ -623,16 +490,209 @@
                                   "@entity"
                                 ],
                                 "name"
-                              ]
+                              ],
+                              "type": "typography"
                             }
                           ]
                         },
                         {
-                          "type": "button",
                           "label": "Reset",
-                          "event": "RESET",
+                          "type": "button",
                           "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "event": "RESET"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "animating",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "size": "lg",
+                              "name": "type"
+                            },
+                            {
+                              "content": "Text Effects",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "markdown-content",
+                          "content": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "name"
+                          ]
+                        },
+                        {
+                          "type": "code-block",
+                          "code": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "reference"
+                          ],
+                          "language": "text"
+                        },
+                        {
+                          "type": "typography",
+                          "content": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "name"
+                          ],
+                          "variant": "body"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "justify": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "event": "ANIMATE",
+                              "type": "button",
+                              "label": "Animate",
+                              "icon": "play",
+                              "variant": "primary"
+                            },
+                            {
+                              "type": "button",
+                              "variant": "secondary",
+                              "label": "Highlight",
+                              "event": "HIGHLIGHT",
+                              "icon": "highlighter"
+                            }
+                          ],
+                          "gap": "sm"
+                        }
+                      ],
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "highlighted",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "type",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Text Effects"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "markdown-content",
+                          "content": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "name"
+                          ]
+                        },
+                        {
+                          "language": "text",
+                          "type": "code-block",
+                          "code": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "reference"
+                          ]
+                        },
+                        {
+                          "content": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "name"
+                          ],
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "justify": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "label": "Animate",
+                              "event": "ANIMATE",
+                              "variant": "primary",
+                              "icon": "play",
+                              "type": "button"
+                            },
+                            {
+                              "event": "HIGHLIGHT",
+                              "variant": "secondary",
+                              "icon": "highlighter",
+                              "label": "Highlight",
+                              "type": "button"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -640,7 +700,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

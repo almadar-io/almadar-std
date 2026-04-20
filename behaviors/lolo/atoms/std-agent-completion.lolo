@@ -16,7 +16,10 @@ orbital AgentCompletionOrbital {
     message : string = ""
     notificationType : string = "info"
   }
-  trait AgentCompletionModal -> AgentCompletion [interaction] {
+
+  type AgentCompletionLoaded     = Event AgentCompletion                  "Fired when AgentCompletion finishes loading"
+  type AgentCompletionLoadFailed = Event { message : string } "Fired when AgentCompletion fails to load"
+  trait AgentCompletionModal -> AgentCompletion [interaction, instance] {
     initial: closed
     state closed {
       INIT -> closed
@@ -39,18 +42,20 @@ orbital AgentCompletionOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentCompletion", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
-      SAVE external
-      GENERATED external
+      SAVE external { data: string }
+      GENERATED external { id: string }
     }
     listens {
       SAVE { data : object! }
+          AgentCompletionLoadFailed { message : string }
     }
+    emits: [AgentCompletionLoaded, AgentCompletionLoadFailed]
   }
-  trait AgentCompletionNotification -> AgentCompletion [interaction] {
+  trait AgentCompletionNotification -> AgentCompletion [interaction, instance] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch AgentCompletion)
+        (fetch AgentCompletion { emit: { success: "AgentCompletionLoaded", failure: "AgentCompletionLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -66,13 +71,15 @@ orbital AgentCompletionOrbital {
     }
     listens {
       SHOW { message : string!, notificationType : string }
+          AgentCompletionLoadFailed { message : string }
     }
+    emits: [AgentCompletionLoaded, AgentCompletionLoadFailed]
   }
-  trait AgentCompletionAgent -> AgentCompletion [interaction] {
+  trait AgentCompletionAgent -> AgentCompletion [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch AgentCompletion)
+        (fetch AgentCompletion { emit: { success: "AgentCompletionLoaded", failure: "AgentCompletionLoadFailed" } })
         (render-ui main { type: "empty-state", icon: "sparkles", title: "Completion", description: "Completion is ready" })
       DO_GENERATE -> generating
         (set @entity.status generating)
@@ -111,7 +118,9 @@ orbital AgentCompletionOrbital {
     listens {
       * GENERATED -> GENERATED
       DO_GENERATE { data : object! }
+          AgentCompletionLoadFailed { message : string }
     }
+    emits: [AgentCompletionLoaded, AgentCompletionLoadFailed]
   }
   page "/agentcompletions" as AgentCompletionPage -> AgentCompletionModal, AgentCompletionNotification, AgentCompletionAgent
 }

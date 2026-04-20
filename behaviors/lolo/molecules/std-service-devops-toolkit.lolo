@@ -22,11 +22,14 @@ orbital ServiceDevopsToolkitOrbital {
     activeTab : string = "github"
     error : string = ""
   }
-  trait ServiceDevopsToolkitGithub -> ServiceDevopsToolkit [interaction] {
+
+  type ServiceDevopsToolkitLoaded     = Event ServiceDevopsToolkit                  "Fired when ServiceDevopsToolkit finishes loading"
+  type ServiceDevopsToolkitLoadFailed = Event { message : string } "Fired when ServiceDevopsToolkit fails to load"
+  trait ServiceDevopsToolkitGithub -> ServiceDevopsToolkit [interaction, instance] {
     initial: ghIdle
     state ghIdle {
       INIT -> ghIdle
-        (fetch ServiceDevopsToolkit)
+        (fetch ServiceDevopsToolkit { emit: { success: "ServiceDevopsToolkitLoaded", failure: "ServiceDevopsToolkitLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "GitHub: Create PR", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Title", bind: "@entity.title", placeholder: "PR title" }, { type: "textarea", label: "Body", bind: "@entity.body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", bind: "@entity.head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", bind: "@entity.base", placeholder: "main" }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
       CREATE_PR -> creatingPR
         (render-ui main { type: "loading-state", title: "Creating pull request...", message: "Submitting your PR to GitHub." })
@@ -55,13 +58,15 @@ orbital ServiceDevopsToolkitOrbital {
     listens {
       PR_CREATED { url : string! }
       GH_FAILED { error : string! }
+          ServiceDevopsToolkitLoadFailed { message : string }
     }
+    emits: [ServiceDevopsToolkitLoaded, ServiceDevopsToolkitLoadFailed]
   }
-  trait ServiceDevopsToolkitRedis -> ServiceDevopsToolkit [interaction] {
+  trait ServiceDevopsToolkitRedis -> ServiceDevopsToolkit [interaction, instance] {
     initial: redisIdle
     state redisIdle {
       INIT -> redisIdle
-        (fetch ServiceDevopsToolkit)
+        (fetch ServiceDevopsToolkit { emit: { success: "ServiceDevopsToolkitLoaded", failure: "ServiceDevopsToolkitLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Key", bind: "@entity.cacheKey", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.cacheValue", placeholder: "cache-value" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
       GET_KEY -> redisExecuting
         (render-ui main { type: "loading-state", title: "Executing...", message: "Running Redis operation..." })
@@ -96,13 +101,15 @@ orbital ServiceDevopsToolkitOrbital {
     listens {
       REDIS_DONE { data : string! }
       REDIS_FAILED { error : string! }
+          ServiceDevopsToolkitLoadFailed { message : string }
     }
+    emits: [ServiceDevopsToolkitLoaded, ServiceDevopsToolkitLoadFailed]
   }
-  trait ServiceDevopsToolkitStorage -> ServiceDevopsToolkit [interaction] {
+  trait ServiceDevopsToolkitStorage -> ServiceDevopsToolkit [interaction, instance] {
     initial: storageIdle
     state storageIdle {
       INIT -> storageIdle
-        (fetch ServiceDevopsToolkit)
+        (fetch ServiceDevopsToolkit { emit: { success: "ServiceDevopsToolkitLoaded", failure: "ServiceDevopsToolkitLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Storage Files", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] })
       UPLOAD -> storageExecuting
         (render-ui main { type: "loading-state", title: "Processing...", message: "Executing storage operation..." })
@@ -140,7 +147,9 @@ orbital ServiceDevopsToolkitOrbital {
     listens {
       STORAGE_DONE { data : string! }
       STORAGE_FAILED { error : string! }
+          ServiceDevopsToolkitLoadFailed { message : string }
     }
+    emits: [ServiceDevopsToolkitLoaded, ServiceDevopsToolkitLoadFailed]
   }
   page "/servicedevopstoolkits" as ServiceDevopsToolkitPage -> ServiceDevopsToolkitGithub, ServiceDevopsToolkitRedis, ServiceDevopsToolkitStorage
 }

@@ -40,7 +40,10 @@ orbital AgentLearnerOrbital {
     duration : number = 0
     icon : string = "circle"
   }
-  trait AgentLearnerLearner -> AgentLearner [interaction] {
+
+  type AgentLearnerLoaded     = Event AgentLearner                  "Fired when AgentLearner finishes loading"
+  type AgentLearnerLoadFailed = Event { message : string } "Fired when AgentLearner fails to load"
+  trait AgentLearnerLearner -> AgentLearner [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -102,6 +105,8 @@ orbital AgentLearnerOrbital {
       RECORDED { memoryId : string! }
       ANALYSIS_DONE { impact : string! }
       FAILED { error : string! }
+          TASK_SUCCEEDED { outcome : string, category : string }
+          TASK_FAILED { outcome : string, category : string }
     }
   }
   trait LearnerRecordsBrowse = Browse.traits.BrowseItemBrowse -> AgentLearner {

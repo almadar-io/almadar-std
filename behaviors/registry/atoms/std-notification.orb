@@ -45,24 +45,61 @@
             "type": "string",
             "default": "info"
           }
-        ],
-        "instances": [
-          {
-            "id": "notif-1",
-            "name": "System Update",
-            "description": "New version available",
-            "status": "active",
-            "createdAt": "2026-03-19",
-            "message": "System update completed successfully.",
-            "notificationType": "success"
-          }
         ]
       },
       "traits": [
         {
           "name": "NotificationNotification",
-          "linkedEntity": "Notification",
           "category": "interaction",
+          "linkedEntity": "Notification",
+          "emits": [
+            {
+              "event": "NotificationLoaded",
+              "description": "Fired when Notification finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "message",
+                  "type": "string"
+                },
+                {
+                  "name": "notificationType",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "NotificationLoadFailed",
+              "description": "Fired when Notification fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -80,7 +117,7 @@
               },
               {
                 "key": "SHOW",
-                "name": "Show Notification",
+                "name": "Show",
                 "payload": [
                   {
                     "name": "message",
@@ -95,7 +132,21 @@
               },
               {
                 "key": "HIDE",
-                "name": "Hide Notification"
+                "name": "Hide"
+              },
+              {
+                "key": "NotificationLoaded",
+                "name": "Notification loaded"
+              },
+              {
+                "key": "NotificationLoadFailed",
+                "name": "Notification load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -106,26 +157,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "Notification"
+                    "Notification",
+                    {
+                      "emit": {
+                        "success": "NotificationLoaded",
+                        "failure": "NotificationLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
                           "align": "center",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "bell",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "bell"
                             },
                             {
                               "type": "typography",
@@ -138,23 +193,25 @@
                           "type": "divider"
                         },
                         {
+                          "title": "No notifications",
                           "type": "empty-state",
                           "icon": "bell-off",
-                          "title": "No notifications",
                           "description": "New notifications will appear here."
                         },
                         {
                           "type": "button",
                           "label": "Test Notification",
-                          "event": "SHOW",
                           "variant": "secondary",
                           "icon": "bell",
+                          "event": "SHOW",
                           "actionPayload": {
-                            "message": "This is a test notification",
-                            "notificationType": "info"
+                            "notificationType": "info",
+                            "message": "This is a test notification"
                           }
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -179,26 +236,23 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
-                          "justify": "space-between",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
                               "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
                               "gap": "md",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "bell",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "bell"
                                 },
                                 {
                                   "type": "typography",
@@ -208,19 +262,20 @@
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "Dismiss",
                               "event": "HIDE",
                               "variant": "ghost",
-                              "icon": "x"
+                              "type": "button",
+                              "icon": "x",
+                              "label": "Dismiss"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": [
                             "object/get",
                             [
@@ -236,15 +291,14 @@
                               "@entity"
                             ],
                             "message"
-                          ]
+                          ],
+                          "type": "alert"
                         },
                         {
                           "type": "toast-slot",
                           "position": "top-right"
                         },
                         {
-                          "type": "violation-alert",
-                          "severity": "warning",
                           "message": [
                             "object/get",
                             [
@@ -253,9 +307,12 @@
                             ],
                             "message"
                           ],
+                          "severity": "warning",
+                          "type": "violation-alert",
                           "category": "compliance"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -279,22 +336,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
                           "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -302,26 +352,30 @@
                                   "size": "lg"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Notifications",
-                                  "variant": "h2"
+                                  "content": "Notifications"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "align": "center"
                             },
                             {
-                              "type": "button",
-                              "label": "Dismiss",
-                              "event": "HIDE",
                               "variant": "ghost",
+                              "type": "button",
+                              "event": "HIDE",
+                              "label": "Dismiss",
                               "icon": "x"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": [
                             "object/get",
                             [
@@ -337,7 +391,8 @@
                               "@entity"
                             ],
                             "message"
-                          ]
+                          ],
+                          "type": "alert"
                         },
                         {
                           "type": "toast-slot",
@@ -345,7 +400,6 @@
                         },
                         {
                           "type": "violation-alert",
-                          "severity": "warning",
                           "message": [
                             "object/get",
                             [
@@ -354,9 +408,12 @@
                             ],
                             "message"
                           ],
-                          "category": "compliance"
+                          "category": "compliance",
+                          "severity": "warning"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -375,24 +432,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "direction": "horizontal",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "bell",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Notifications",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ]
@@ -401,29 +456,32 @@
                           "type": "divider"
                         },
                         {
-                          "type": "empty-state",
-                          "icon": "bell-off",
+                          "description": "New notifications will appear here.",
                           "title": "No notifications",
-                          "description": "New notifications will appear here."
+                          "icon": "bell-off",
+                          "type": "empty-state"
                         },
                         {
-                          "type": "button",
-                          "label": "Test Notification",
                           "event": "SHOW",
+                          "type": "button",
                           "variant": "secondary",
-                          "icon": "bell",
+                          "label": "Test Notification",
                           "actionPayload": {
-                            "message": "This is a test notification",
-                            "notificationType": "info"
-                          }
+                            "notificationType": "info",
+                            "message": "This is a test notification"
+                          },
+                          "icon": "bell"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

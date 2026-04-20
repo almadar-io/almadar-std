@@ -9,11 +9,14 @@ orbital AsyncTaskOrbital {
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
-  trait AsyncTaskAsync -> AsyncTask [interaction] {
+
+  type AsyncTaskLoaded     = Event AsyncTask                  "Fired when AsyncTask finishes loading"
+  type AsyncTaskLoadFailed = Event { message : string } "Fired when AsyncTask fails to load"
+  trait AsyncTaskAsync -> AsyncTask [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch AsyncTask)
+        (fetch AsyncTask { emit: { success: "AsyncTaskLoaded", failure: "AsyncTaskLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "AsyncTask", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to start asynctask operation." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
       START -> loading
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "loading-state", title: "Loading...", message: "Processing asynctask..." }, { type: "skeleton", variant: "text" }] })
@@ -38,7 +41,9 @@ orbital AsyncTaskOrbital {
     listens {
       LOADED { data : object! }
       FAILED { error : string! }
+          AsyncTaskLoadFailed { message : string }
     }
+    emits: [AsyncTaskLoaded, AsyncTaskLoadFailed]
   }
   page "/asynctasks" as AsyncTaskPage -> AsyncTaskAsync
 }

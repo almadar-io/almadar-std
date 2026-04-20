@@ -9,11 +9,14 @@ orbital ArcadeStateOrbital {
     lives : number = 3
     highScore : number = 0
   }
-  trait ArcadeStateGameflow -> ArcadeState [interaction] {
+
+  type ArcadeStateLoaded     = Event ArcadeState                  "Fired when ArcadeState finishes loading"
+  type ArcadeStateLoadFailed = Event { message : string } "Fired when ArcadeState fails to load"
+  trait ArcadeStateGameflow -> ArcadeState [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch ArcadeState)
+        (fetch ArcadeState { emit: { success: "ArcadeStateLoaded", failure: "ArcadeStateLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
       START -> playing
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", stats: [{ label: "Score", value: ["object/get", ["array/first", "@entity"], "score"] }, { label: "Level", value: ["object/get", ["array/first", "@entity"], "level"] }] }] })
@@ -41,6 +44,10 @@ orbital ArcadeStateOrbital {
       RESTART -> menu
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
     }
+    emits: [ArcadeStateLoaded, ArcadeStateLoadFailed]
+    listens {
+      ArcadeStateLoadFailed { message : string }
+    }
   }
   page "/game" as GamePage -> ArcadeStateGameflow
 }
@@ -52,11 +59,14 @@ orbital ArcadeCanvasOrbital {
     fps : number
     running : boolean
   }
-  trait ArcadeCanvasGameCanvas2d -> ArcadeCanvas [interaction] {
+
+  type ArcadeCanvasLoaded     = Event ArcadeCanvas                  "Fired when ArcadeCanvas finishes loading"
+  type ArcadeCanvasLoadFailed = Event { message : string } "Fired when ArcadeCanvas fails to load"
+  trait ArcadeCanvasGameCanvas2d -> ArcadeCanvas [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ArcadeCanvas)
+        (fetch ArcadeCanvas { emit: { success: "ArcadeCanvasLoaded", failure: "ArcadeCanvasLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor", size: "md" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "typography", content: "800x600 @ 60fps", variant: "caption", color: "muted" }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
       START -> rendering
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor", size: "md" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
@@ -65,6 +75,10 @@ orbital ArcadeCanvasOrbital {
       TICK -> rendering
       STOP -> idle
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "monitor", size: "md" }, { type: "typography", content: "ArcadeCanvas Canvas", variant: "h3" }] }, { type: "typography", content: "800x600 @ 60fps", variant: "caption", color: "muted" }, { type: "game-canvas-2d", width: 800, height: 600, fps: 60 }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
+    }
+    emits: [ArcadeCanvasLoaded, ArcadeCanvasLoadFailed]
+    listens {
+      ArcadeCanvasLoadFailed { message : string }
     }
   }
   page "/canvas" -> ArcadeCanvasGameCanvas2d
@@ -80,10 +94,13 @@ orbital ArcadeScoreOrbital {
     combo : number
     multiplier : number
   }
-  trait ArcadeScoreScoreBoard -> ArcadeScore [interaction] {
+
+  type ArcadeScoreLoaded     = Event ArcadeScore                  "Fired when ArcadeScore finishes loading"
+  type ArcadeScoreLoadFailed = Event { message : string } "Fired when ArcadeScore fails to load"
+  trait ArcadeScoreScoreBoard -> ArcadeScore [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch ArcadeScore)
+        (fetch ArcadeScore { emit: { success: "ArcadeScoreLoaded", failure: "ArcadeScoreLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
@@ -98,6 +115,12 @@ orbital ArcadeScoreOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" }] })
     }
+    emits: [ArcadeScoreLoaded, ArcadeScoreLoadFailed]
+    listens {
+      ArcadeScoreLoadFailed { message : string }
+      ADD_SCORE { points : string }
+      COMBO { multiplier : string }
+    }
   }
   page "/scores" -> ArcadeScoreScoreBoard
 }
@@ -109,14 +132,21 @@ orbital ArcadeHudOrbital {
     level : number = 1
     timer : number
   }
-  trait ArcadeHudHud -> ArcadeHud [interaction] {
+
+  type ArcadeHudLoaded     = Event ArcadeHud                  "Fired when ArcadeHud finishes loading"
+  type ArcadeHudLoadFailed = Event { message : string } "Fired when ArcadeHud fails to load"
+  trait ArcadeHudHud -> ArcadeHud [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch ArcadeHud)
+        (fetch ArcadeHud { emit: { success: "ArcadeHudLoaded", failure: "ArcadeHudLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", position: "top-left", size: "md", transparent: false, stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }, { label: "Level", value: "@entity.level" }, { label: "Timer", value: "@entity.timer" }] }] })
       REFRESH -> idle
-        (fetch ArcadeHud)
+        (fetch ArcadeHud { emit: { success: "ArcadeHudLoaded", failure: "ArcadeHudLoadFailed" } })
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-hud", position: "top-left", size: "md", transparent: false, stats: [{ label: "Score", value: "@entity.score" }, { label: "Lives", value: "@entity.lives" }, { label: "Level", value: "@entity.level" }, { label: "Timer", value: "@entity.timer" }] }] })
+    }
+    emits: [ArcadeHudLoaded, ArcadeHudLoadFailed]
+    listens {
+      ArcadeHudLoadFailed { message : string }
     }
   }
   page "/hud" -> ArcadeHudHud

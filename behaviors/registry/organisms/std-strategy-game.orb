@@ -1,7 +1,7 @@
 {
   "name": "std-strategy-game",
   "version": "1.0.0",
-  "description": "Strategy game organism. Composes: stdTurnBasedBattle(ArmyBattle) + stdOverworld(Territory) + stdDisplay(Resource)",
+  "description": "std-strategy-game as a Function",
   "orbitals": [
     {
       "name": "ArmyBattleOrbital",
@@ -17,56 +17,71 @@
           {
             "name": "turn",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "armySize",
             "type": "number",
-            "default": 10
+            "default": 10.0
           },
           {
             "name": "morale",
             "type": "number",
-            "default": 100
-          }
-        ],
-        "instances": [
-          {
-            "id": "unit-1",
-            "name": "Knight",
-            "description": "Armored warrior",
-            "status": "active",
-            "turn": 0,
-            "score": 0
-          },
-          {
-            "id": "unit-2",
-            "name": "Archer",
-            "description": "Ranged attacker",
-            "status": "active",
-            "turn": 0,
-            "score": 0
-          },
-          {
-            "id": "unit-3",
-            "name": "Mage",
-            "description": "Magic caster",
-            "status": "active",
-            "turn": 0,
-            "score": 0
+            "default": 100.0
           }
         ]
       },
       "traits": [
         {
           "name": "ArmyBattleBattleFlow",
-          "linkedEntity": "ArmyBattle",
           "category": "interaction",
+          "linkedEntity": "ArmyBattle",
+          "emits": [
+            {
+              "event": "ArmyBattleLoaded",
+              "description": "Fired when ArmyBattle finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "turn",
+                  "type": "number"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "armySize",
+                  "type": "number"
+                },
+                {
+                  "name": "morale",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ArmyBattleLoadFailed",
+              "description": "Fired when ArmyBattle fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -90,7 +105,11 @@
               },
               {
                 "key": "START",
-                "name": "Start Battle"
+                "name": "Start"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
               },
               {
                 "key": "END_TURN",
@@ -101,24 +120,34 @@
                 "name": "Pause"
               },
               {
-                "key": "RESUME",
-                "name": "Resume"
-              },
-              {
                 "key": "GAME_OVER",
                 "name": "Game Over"
               },
               {
-                "key": "RESTART",
-                "name": "Restart"
+                "key": "RESUME",
+                "name": "Resume"
               },
               {
                 "key": "CLOSE",
                 "name": "Close"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "ArmyBattleLoaded",
+                "name": "ArmyBattle loaded"
+              },
+              {
+                "key": "ArmyBattleLoadFailed",
+                "name": "ArmyBattle load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -129,25 +158,31 @@
                 "effects": [
                   [
                     "fetch",
-                    "ArmyBattle"
+                    "ArmyBattle",
+                    {
+                      "emit": {
+                        "failure": "ArmyBattleLoadFailed",
+                        "success": "ArmyBattleLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Strategy Game",
                       "showTopBar": true,
+                      "appName": "Strategy Game",
                       "children": [
                         {
                           "type": "game-menu",
-                          "title": "Army Battle",
                           "subtitle": "Turn-Based Strategy",
+                          "title": "Army Battle",
                           "menuItems": [
                             {
-                              "label": "Start Battle",
                               "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Start Battle"
                             }
                           ]
                         }
@@ -165,27 +200,32 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Strategy Game",
                       "showTopBar": true,
+                      "appName": "Strategy Game",
+                      "type": "game-shell",
                       "children": [
                         {
-                          "type": "game-hud",
                           "stats": [
                             {
-                              "label": "Turn",
-                              "value": "@entity.turn"
+                              "value": "@entity.turn",
+                              "label": "Turn"
                             },
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             }
-                          ]
+                          ],
+                          "type": "game-hud"
                         }
                       ]
                     }
                   ]
                 ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -198,16 +238,15 @@
                     [
                       "+",
                       "@entity.turn",
-                      1
+                      1.0
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Strategy Game",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "game-hud",
@@ -222,22 +261,11 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "appName": "Strategy Game"
                     }
                   ]
                 ]
-              },
-              {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
-              },
-              {
-                "from": "paused",
-                "to": "paused",
-                "event": "NAVIGATE",
-                "effects": []
               },
               {
                 "from": "playing",
@@ -249,7 +277,6 @@
                     "modal",
                     {
                       "type": "game-menu",
-                      "title": "Paused",
                       "menuItems": [
                         {
                           "label": "Resume",
@@ -261,10 +288,60 @@
                           "event": "RESTART",
                           "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "title": "Paused"
                     }
                   ]
                 ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "menuItems": [
+                            {
+                              "label": "Play Again",
+                              "variant": "primary",
+                              "event": "RESTART"
+                            },
+                            {
+                              "variant": "secondary",
+                              "label": "Main Menu",
+                              "event": "RESTART"
+                            }
+                          ],
+                          "stats": [
+                            {
+                              "label": "Turns",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            }
+                          ],
+                          "type": "game-over-screen",
+                          "title": "Battle Over"
+                        }
+                      ],
+                      "type": "game-shell",
+                      "appName": "Strategy Game"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "paused",
+                "event": "NAVIGATE"
               },
               {
                 "from": "paused",
@@ -280,20 +357,20 @@
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "game-hud",
                           "stats": [
                             {
-                              "label": "Turn",
-                              "value": "@entity.turn"
+                              "value": "@entity.turn",
+                              "label": "Turn"
                             },
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             }
                           ]
                         }
@@ -318,96 +395,22 @@
                     {
                       "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-hud",
                           "stats": [
                             {
-                              "label": "Turn",
-                              "value": "@entity.turn"
-                            },
-                            {
-                              "label": "Score",
-                              "value": "@entity.score"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "Strategy Game",
-                      "showTopBar": true,
-                      "children": [
-                        {
-                          "type": "game-over-screen",
-                          "title": "Battle Over",
-                          "stats": [
-                            {
-                              "label": "Turns",
-                              "value": "@entity.turn"
+                              "value": "@entity.turn",
+                              "label": "Turn"
                             },
                             {
                               "label": "Score",
                               "value": "@entity.score"
                             }
                           ],
-                          "menuItems": [
-                            {
-                              "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
-                            },
-                            {
-                              "label": "Main Menu",
-                              "event": "RESTART",
-                              "variant": "secondary"
-                            }
-                          ]
+                          "type": "game-hud"
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "gameover",
-                "to": "menu",
-                "event": "RESTART",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-shell",
-                      "appName": "Strategy Game",
-                      "showTopBar": true,
-                      "children": [
-                        {
-                          "type": "game-menu",
-                          "title": "Army Battle",
-                          "subtitle": "Turn-Based Strategy",
-                          "menuItems": [
-                            {
-                              "label": "Start Battle",
-                              "event": "START",
-                              "variant": "primary"
-                            }
-                          ]
-                        }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -426,34 +429,106 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Strategy Game",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "game-menu",
-                          "title": "Army Battle",
                           "subtitle": "Turn-Based Strategy",
                           "menuItems": [
                             {
-                              "label": "Start Battle",
                               "event": "START",
+                              "label": "Start Battle",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "title": "Army Battle"
                         }
                       ]
                     }
                   ]
                 ]
+              },
+              {
+                "from": "gameover",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "Strategy Game",
+                      "showTopBar": true,
+                      "children": [
+                        {
+                          "subtitle": "Turn-Based Strategy",
+                          "type": "game-menu",
+                          "menuItems": [
+                            {
+                              "variant": "primary",
+                              "event": "START",
+                              "label": "Start Battle"
+                            }
+                          ],
+                          "title": "Army Battle"
+                        }
+                      ],
+                      "type": "game-shell"
+                    }
+                  ]
+                ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "ArmyBattleCombatLog",
-          "linkedEntity": "ArmyBattle",
           "category": "interaction",
+          "linkedEntity": "ArmyBattle",
+          "emits": [
+            {
+              "event": "ArmyBattleLoaded",
+              "description": "Fired when ArmyBattle finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "turn",
+                  "type": "number"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "armySize",
+                  "type": "number"
+                },
+                {
+                  "name": "morale",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ArmyBattleLoadFailed",
+              "description": "Fired when ArmyBattle fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -480,6 +555,20 @@
               {
                 "key": "CLEAR",
                 "name": "Clear"
+              },
+              {
+                "key": "ArmyBattleLoaded",
+                "name": "ArmyBattle loaded"
+              },
+              {
+                "key": "ArmyBattleLoadFailed",
+                "name": "ArmyBattle load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -490,7 +579,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "ArmyBattle"
+                    "ArmyBattle",
+                    {
+                      "emit": {
+                        "success": "ArmyBattleLoaded",
+                        "failure": "ArmyBattleLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -503,19 +598,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
-                          "type": "combat-log",
                           "events": "@ArmyBattle",
-                          "maxVisible": 10,
-                          "autoScroll": true,
                           "showTimestamps": true,
+                          "type": "combat-log",
+                          "maxVisible": 10.0,
+                          "autoScroll": true,
                           "title": "Combat Log"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -529,25 +624,26 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "combat-log",
+                          "maxVisible": 10.0,
                           "events": "@ArmyBattle",
-                          "maxVisible": 10,
-                          "autoScroll": true,
                           "showTimestamps": true,
+                          "type": "combat-log",
+                          "autoScroll": true,
                           "title": "Combat Log"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "Strategy Game",
+                      "showTopBar": true
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
@@ -587,21 +683,61 @@
           },
           {
             "name": "defense",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "explored",
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           }
         ]
       },
       "traits": [
         {
           "name": "TerritoryNavigation",
-          "linkedEntity": "Territory",
           "category": "interaction",
+          "linkedEntity": "Territory",
+          "emits": [
+            {
+              "event": "TerritoryLoaded",
+              "description": "Fired when Territory finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "owner",
+                  "type": "string"
+                },
+                {
+                  "name": "defense",
+                  "type": "number"
+                },
+                {
+                  "name": "explored",
+                  "type": "boolean"
+                }
+              ]
+            },
+            {
+              "event": "TerritoryLoadFailed",
+              "description": "Fired when Territory fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -622,14 +758,7 @@
               },
               {
                 "key": "TRAVEL",
-                "name": "Travel",
-                "payload": [
-                  {
-                    "name": "zoneId",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
+                "name": "Travel"
               },
               {
                 "key": "ARRIVE",
@@ -638,6 +767,20 @@
               {
                 "key": "BACK",
                 "name": "Back"
+              },
+              {
+                "key": "TerritoryLoaded",
+                "name": "Territory loaded"
+              },
+              {
+                "key": "TerritoryLoadFailed",
+                "name": "Territory load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -648,7 +791,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "Territory"
+                    "Territory",
+                    {
+                      "emit": {
+                        "failure": "TerritoryLoadFailed",
+                        "success": "TerritoryLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -656,58 +805,55 @@
                     {
                       "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "justify": "space-between",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "children": [
                                     {
+                                      "size": "lg",
                                       "type": "icon",
-                                      "name": "map",
-                                      "size": "lg"
+                                      "name": "map"
                                     },
                                     {
                                       "type": "typography",
                                       "content": "Territory Map",
                                       "variant": "h2"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "direction": "horizontal"
                                 },
                                 {
+                                  "label": "Exploring",
                                   "type": "status-dot",
                                   "status": "active",
-                                  "pulse": false,
-                                  "label": "Exploring"
+                                  "pulse": false
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "justify": "space-between",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "map-view",
-                              "markers": [],
                               "height": "200px",
-                              "zoom": 10
+                              "zoom": 10.0,
+                              "type": "map-view",
+                              "markers": []
                             },
                             {
                               "type": "data-grid",
-                              "entity": "Territory",
-                              "emptyIcon": "compass",
                               "emptyTitle": "No territorys discovered",
+                              "entity": "Territory",
                               "emptyDescription": "Explore to discover new territorys.",
                               "itemActions": [
                                 {
@@ -724,47 +870,50 @@
                                   "gap": "sm",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "justify": "space-between",
                                       "align": "center",
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "type": "stack",
+                                          "align": "center",
                                           "direction": "horizontal",
                                           "gap": "sm",
-                                          "align": "center",
+                                          "type": "stack",
                                           "children": [
                                             {
+                                              "size": "sm",
                                               "type": "icon",
-                                              "name": "map-pin",
-                                              "size": "sm"
+                                              "name": "map-pin"
                                             },
                                             {
-                                              "type": "typography",
                                               "variant": "h4",
+                                              "type": "typography",
                                               "content": "@item.name"
                                             }
                                           ]
                                         },
                                         {
-                                          "type": "badge",
-                                          "label": "@item.owner"
+                                          "label": "@item.owner",
+                                          "type": "badge"
                                         }
-                                      ]
+                                      ],
+                                      "justify": "space-between"
                                     },
                                     {
+                                      "content": "@item.defense",
                                       "type": "typography",
-                                      "variant": "caption",
-                                      "content": "@item.defense"
+                                      "variant": "caption"
                                     }
                                   ]
                                 }
-                              ]
+                              ],
+                              "emptyIcon": "compass"
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -778,20 +927,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "lg",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -799,23 +941,30 @@
                                   "size": "lg"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Traveling...",
-                                  "variant": "h2"
+                                  "content": "Traveling..."
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "type": "typography",
-                              "content": "Traveling to the destination territorys map.",
-                              "variant": "body"
+                              "variant": "body",
+                              "content": "Traveling to the destination territorys map."
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -827,48 +976,53 @@
                 "effects": [
                   [
                     "fetch",
-                    "Territory"
+                    "Territory",
+                    {
+                      "emit": {
+                        "success": "TerritoryLoaded",
+                        "failure": "TerritoryLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "lg",
                           "children": [
                             {
-                              "type": "stack",
+                              "justify": "space-between",
                               "direction": "horizontal",
                               "gap": "md",
-                              "justify": "space-between",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "children": [
                                     {
-                                      "type": "icon",
                                       "name": "map",
+                                      "type": "icon",
                                       "size": "lg"
                                     },
                                     {
-                                      "type": "typography",
+                                      "variant": "h2",
                                       "content": "Territorys Map",
-                                      "variant": "h2"
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md",
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "status-dot",
                                   "status": "success",
-                                  "label": "Entered"
+                                  "label": "Entered",
+                                  "type": "status-dot"
                                 }
                               ]
                             },
@@ -876,35 +1030,31 @@
                               "type": "divider"
                             },
                             {
-                              "type": "data-grid",
                               "entity": "Territory",
+                              "type": "data-grid",
                               "emptyIcon": "inbox",
                               "emptyTitle": "Nothing here",
-                              "emptyDescription": "This zone is empty.",
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
                                   "type": "stack",
                                   "direction": "vertical",
-                                  "gap": "sm",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "justify": "space-between",
                                       "align": "center",
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "stack",
-                                          "direction": "horizontal",
                                           "gap": "sm",
+                                          "direction": "horizontal",
                                           "align": "center",
                                           "children": [
                                             {
+                                              "size": "sm",
                                               "type": "icon",
-                                              "name": "map-pin",
-                                              "size": "sm"
+                                              "name": "map-pin"
                                             },
                                             {
                                               "type": "typography",
@@ -917,36 +1067,41 @@
                                           "type": "badge",
                                           "label": "@item.owner"
                                         }
-                                      ]
+                                      ],
+                                      "justify": "space-between",
+                                      "direction": "horizontal"
                                     },
                                     {
                                       "type": "typography",
                                       "variant": "caption",
                                       "content": "@item.defense"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm"
                                 }
-                              ]
+                              ],
+                              "emptyDescription": "This zone is empty."
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "justify": "end",
+                              "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "justify": "end",
                               "children": [
                                 {
-                                  "type": "button",
-                                  "label": "Back to Map",
+                                  "icon": "arrow-left",
                                   "event": "BACK",
                                   "variant": "ghost",
-                                  "icon": "arrow-left"
+                                  "label": "Back to Map",
+                                  "type": "button"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "lg"
                         }
                       ]
                     }
@@ -960,49 +1115,53 @@
                 "effects": [
                   [
                     "fetch",
-                    "Territory"
+                    "Territory",
+                    {
+                      "emit": {
+                        "success": "TerritoryLoaded",
+                        "failure": "TerritoryLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Strategy Game",
                       "showTopBar": true,
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "lg",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
                               "justify": "space-between",
+                              "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "md",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "icon",
                                       "name": "map",
-                                      "size": "lg"
+                                      "size": "lg",
+                                      "type": "icon"
                                     },
                                     {
+                                      "variant": "h2",
                                       "type": "typography",
-                                      "content": "Territory Map",
-                                      "variant": "h2"
+                                      "content": "Territory Map"
                                     }
                                   ]
                                 },
                                 {
+                                  "label": "Exploring",
                                   "type": "status-dot",
                                   "status": "active",
-                                  "pulse": false,
-                                  "label": "Exploring"
+                                  "pulse": false
                                 }
                               ]
                             },
@@ -1010,42 +1169,32 @@
                               "type": "divider"
                             },
                             {
-                              "type": "map-view",
-                              "markers": [],
+                              "zoom": 10.0,
                               "height": "200px",
-                              "zoom": 10
+                              "markers": [],
+                              "type": "map-view"
                             },
                             {
                               "type": "data-grid",
-                              "entity": "Territory",
-                              "emptyIcon": "compass",
                               "emptyTitle": "No territorys discovered",
-                              "emptyDescription": "Explore to discover new territorys.",
-                              "itemActions": [
-                                {
-                                  "label": "Travel",
-                                  "event": "TRAVEL"
-                                }
-                              ],
                               "renderItem": [
                                 "fn",
                                 "item",
                                 {
-                                  "type": "stack",
                                   "direction": "vertical",
-                                  "gap": "sm",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "justify": "space-between",
                                       "align": "center",
+                                      "type": "stack",
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "type": "stack",
                                           "direction": "horizontal",
-                                          "gap": "sm",
                                           "align": "center",
+                                          "gap": "sm",
                                           "children": [
                                             {
                                               "type": "icon",
@@ -1053,9 +1202,9 @@
                                               "size": "sm"
                                             },
                                             {
+                                              "content": "@item.name",
                                               "type": "typography",
-                                              "variant": "h4",
-                                              "content": "@item.name"
+                                              "variant": "h4"
                                             }
                                           ]
                                         },
@@ -1066,30 +1215,42 @@
                                       ]
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
+                                      "type": "typography",
                                       "content": "@item.defense"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm"
+                                }
+                              ],
+                              "emptyIcon": "compass",
+                              "entity": "Territory",
+                              "emptyDescription": "Explore to discover new territorys.",
+                              "itemActions": [
+                                {
+                                  "event": "TRAVEL",
+                                  "label": "Travel"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "appName": "Strategy Game"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "MapPage",
+          "name": "Map",
           "path": "/map",
-          "isInitial": true,
           "traits": [
             {
               "ref": "TerritoryNavigation"
@@ -1111,31 +1272,68 @@
           },
           {
             "name": "gold",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "food",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "wood",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "iron",
-            "type": "number",
-            "default": 0
+            "type": "number"
           }
         ]
       },
       "traits": [
         {
           "name": "ResourceDisplay",
-          "linkedEntity": "Resource",
           "category": "interaction",
+          "linkedEntity": "Resource",
+          "emits": [
+            {
+              "event": "ResourceLoaded",
+              "description": "Fired when Resource finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "gold",
+                  "type": "number"
+                },
+                {
+                  "name": "food",
+                  "type": "number"
+                },
+                {
+                  "name": "wood",
+                  "type": "number"
+                },
+                {
+                  "name": "iron",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ResourceLoadFailed",
+              "description": "Fired when Resource fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -1165,6 +1363,20 @@
               {
                 "key": "REFRESHED",
                 "name": "Refreshed"
+              },
+              {
+                "key": "ResourceLoaded",
+                "name": "Resource loaded"
+              },
+              {
+                "key": "ResourceLoadFailed",
+                "name": "Resource load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -1175,23 +1387,27 @@
                 "effects": [
                   [
                     "fetch",
-                    "Resource"
+                    "Resource",
+                    {
+                      "emit": {
+                        "failure": "ResourceLoadFailed",
+                        "success": "ResourceLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Strategy Game",
                       "showTopBar": true,
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "gap": "lg",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -1206,51 +1422,49 @@
                                   ]
                                 },
                                 {
+                                  "gap": "md",
                                   "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
+                                          "size": "lg",
                                           "type": "icon",
-                                          "name": "database",
-                                          "size": "lg"
+                                          "name": "database"
                                         },
                                         {
                                           "type": "typography",
                                           "content": "Resources",
                                           "variant": "h2"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
                                       "event": "REFRESH",
+                                      "type": "button",
                                       "variant": "secondary",
+                                      "label": "Refresh",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "justify": "space-between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
                                           "type": "stat-display",
-                                          "label": "Gold",
                                           "value": [
                                             "object/get",
                                             [
@@ -1258,11 +1472,12 @@
                                               "@entity"
                                             ],
                                             "gold"
-                                          ]
+                                          ],
+                                          "label": "Gold"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Food",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -1273,7 +1488,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Wood",
                                           "value": [
                                             "object/get",
@@ -1282,7 +1496,8 @@
                                               "@entity"
                                             ],
                                             "wood"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "stat-display",
@@ -1298,23 +1513,22 @@
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
+                                          "content": "Chart View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "variant": "caption"
                                         }
                                       ]
                                     },
@@ -1328,42 +1542,43 @@
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "columns": 2.0,
+                                  "type": "grid"
                                 },
                                 {
-                                  "type": "line-chart",
+                                  "xKey": "date",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
-                                      "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0,
+                                      "date": "Feb"
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
                                   "yKey": "value",
+                                  "type": "line-chart",
                                   "title": "Trend"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -1373,48 +1588,51 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
                                   "type": "graph-view",
+                                  "width": 400.0,
                                   "nodes": [
                                     {
-                                      "id": "a",
+                                      "x": 50.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "id": "a",
+                                      "y": 100.0
                                     },
                                     {
                                       "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "x": 200.0,
+                                      "y": 50.0,
+                                      "label": "Process"
                                     },
                                     {
-                                      "id": "c",
+                                      "x": 350.0,
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "id": "c",
+                                      "y": 100.0
                                     }
                                   ],
+                                  "height": 200.0,
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "appName": "Strategy Game"
                     }
                   ]
                 ]
@@ -1426,23 +1644,27 @@
                 "effects": [
                   [
                     "fetch",
-                    "Resource"
+                    "Resource",
+                    {
+                      "emit": {
+                        "success": "ResourceLoaded",
+                        "failure": "ResourceLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Strategy Game",
+                      "type": "game-shell",
                       "showTopBar": true,
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -1458,49 +1680,46 @@
                                 },
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
+                                          "size": "lg",
                                           "name": "database",
-                                          "size": "lg"
+                                          "type": "icon"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Resources",
-                                          "variant": "h2"
+                                          "content": "Resources"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md",
+                                      "type": "stack",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "icon": "refresh-cw",
+                                      "label": "Refresh",
+                                      "type": "button",
+                                      "event": "REFRESH"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
+                                      "columns": 3.0,
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "Gold",
                                           "value": [
                                             "object/get",
@@ -1509,7 +1728,8 @@
                                               "@entity"
                                             ],
                                             "gold"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
                                           "type": "stat-display",
@@ -1524,8 +1744,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Wood",
                                           "value": [
                                             "object/get",
                                             [
@@ -1533,7 +1751,9 @@
                                               "@entity"
                                             ],
                                             "wood"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "Wood"
                                         },
                                         {
                                           "type": "stat-display",
@@ -1549,64 +1769,66 @@
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "box",
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
-                                  "gap": "md",
+                                  "columns": 2.0,
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "content": "Chart View",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
                                           "variant": "caption",
                                           "content": "Graph View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ],
                                   "xKey": "date",
@@ -1627,41 +1849,43 @@
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "id": "a",
+                                      "y": 100.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "id": "a",
+                                      "x": 50.0
                                     },
                                     {
-                                      "id": "b",
+                                      "y": 50.0,
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "x": 200.0,
+                                      "id": "b"
                                     },
                                     {
+                                      "y": 100.0,
                                       "id": "c",
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "x": 350.0
                                     }
                                   ],
+                                  "type": "graph-view",
+                                  "height": 200.0,
+                                  "width": 400.0,
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
-                              ]
+                              ],
+                              "gap": "lg",
+                              "type": "stack"
                             }
                           ]
                         }
@@ -1677,82 +1901,84 @@
                 "effects": [
                   [
                     "fetch",
-                    "Resource"
+                    "Resource",
+                    {
+                      "emit": {
+                        "success": "ResourceLoaded",
+                        "failure": "ResourceLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "lg",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Resources"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
+                                  "justify": "space-between",
                                   "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "name": "database",
-                                          "size": "lg"
+                                          "size": "lg",
+                                          "name": "database"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Resources",
-                                          "variant": "h2"
+                                          "content": "Resources"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "md"
                                     },
                                     {
-                                      "type": "button",
+                                      "icon": "refresh-cw",
                                       "label": "Refresh",
                                       "event": "REFRESH",
-                                      "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "type": "button",
+                                      "variant": "secondary"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
                                           "type": "stat-display",
-                                          "label": "Gold",
                                           "value": [
                                             "object/get",
                                             [
@@ -1760,10 +1986,10 @@
                                               "@entity"
                                             ],
                                             "gold"
-                                          ]
+                                          ],
+                                          "label": "Gold"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Food",
                                           "value": [
                                             "object/get",
@@ -1772,11 +1998,12 @@
                                               "@entity"
                                             ],
                                             "food"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Wood",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -1787,8 +2014,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Iron",
                                           "value": [
                                             "object/get",
                                             [
@@ -1796,9 +2021,12 @@
                                               "@entity"
                                             ],
                                             "iron"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "Iron"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
                                   ]
                                 },
@@ -1807,15 +2035,15 @@
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
+                                  "columns": 2.0,
                                   "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Chart View"
                                         }
                                       ]
@@ -1824,56 +2052,56 @@
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "type": "typography"
                                         }
                                       ]
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "line-chart",
+                                  "yKey": "value",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  "title": "Trend",
+                                  "type": "line-chart",
+                                  "xKey": "date"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ]
                                 },
@@ -1881,22 +2109,22 @@
                                   "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "id": "a",
+                                      "y": 100.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "id": "a",
+                                      "x": 50.0
                                     },
                                     {
-                                      "id": "b",
+                                      "y": 50.0,
+                                      "x": 200.0,
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "id": "b"
                                     },
                                     {
                                       "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "y": 100.0,
+                                      "x": 350.0,
+                                      "label": "End"
                                     }
                                   ],
                                   "edges": [
@@ -1909,14 +2137,16 @@
                                       "to": "c"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "height": 200.0,
+                                  "width": 400.0
                                 }
-                              ]
+                              ],
+                              "gap": "lg"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1928,26 +2158,31 @@
                 "effects": [
                   [
                     "fetch",
-                    "Resource"
+                    "Resource",
+                    {
+                      "emit": {
+                        "success": "ResourceLoaded",
+                        "failure": "ResourceLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "Strategy Game",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
+                              "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -1956,18 +2191,17 @@
                                     {
                                       "label": "Resources"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
+                                  "justify": "space-between",
                                   "type": "stack",
                                   "direction": "horizontal",
                                   "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
                                       "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -1976,17 +2210,19 @@
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "Resources",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "content": "Resources"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "md",
+                                      "direction": "horizontal"
                                     },
                                     {
-                                      "type": "button",
-                                      "label": "Refresh",
-                                      "event": "REFRESH",
+                                      "icon": "refresh-cw",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "label": "Refresh",
+                                      "type": "button",
+                                      "event": "REFRESH"
                                     }
                                   ]
                                 },
@@ -1994,16 +2230,14 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "Gold",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -2014,8 +2248,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Food",
                                           "value": [
                                             "object/get",
                                             [
@@ -2023,11 +2255,13 @@
                                               "@entity"
                                             ],
                                             "food"
-                                          ]
+                                          ],
+                                          "label": "Food",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Wood",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -2038,8 +2272,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Iron",
                                           "value": [
                                             "object/get",
                                             [
@@ -2047,27 +2279,28 @@
                                               "@entity"
                                             ],
                                             "iron"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "Iron"
                                         }
-                                      ]
+                                      ],
+                                      "columns": 3.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
-                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
+                                          "content": "Chart View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "variant": "caption"
                                         }
                                       ]
                                     },
@@ -2076,51 +2309,54 @@
                                       "children": [
                                         {
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "variant": "caption"
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "columns": 2.0,
+                                  "type": "grid",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "line-chart",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
-                                  "xKey": "date",
                                   "yKey": "value",
+                                  "xKey": "date",
                                   "title": "Trend"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
                                       "label": "Previous",
@@ -2129,39 +2365,39 @@
                                   ]
                                 },
                                 {
+                                  "height": 200.0,
                                   "type": "graph-view",
+                                  "width": 400.0,
                                   "nodes": [
                                     {
                                       "id": "a",
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "x": 50.0,
+                                      "y": 100.0
                                     },
                                     {
-                                      "id": "b",
+                                      "y": 50.0,
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "x": 200.0,
+                                      "id": "b"
                                     },
                                     {
                                       "id": "c",
+                                      "x": 350.0,
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "y": 100.0
                                     }
                                   ],
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
                               ]
                             }
@@ -2179,18 +2415,22 @@
                 "effects": [
                   [
                     "fetch",
-                    "Resource"
+                    "Resource",
+                    {
+                      "emit": {
+                        "success": "ResourceLoaded",
+                        "failure": "ResourceLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Strategy Game",
                       "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
                               "type": "stack",
@@ -2198,7 +2438,6 @@
                               "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -2207,54 +2446,52 @@
                                     {
                                       "label": "Resources"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
+                                      "direction": "horizontal",
+                                      "type": "stack",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "database",
-                                          "size": "lg"
+                                          "size": "lg",
+                                          "type": "icon"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Resources",
-                                          "variant": "h2"
+                                          "content": "Resources"
                                         }
                                       ]
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
+                                      "type": "button",
+                                      "event": "REFRESH",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "justify": "space-between",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
+                                      "columns": 3.0,
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "label": "Gold",
                                           "value": [
                                             "object/get",
                                             [
@@ -2262,10 +2499,11 @@
                                               "@entity"
                                             ],
                                             "gold"
-                                          ]
+                                          ],
+                                          "label": "Gold",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Food",
                                           "value": [
                                             "object/get",
@@ -2274,11 +2512,12 @@
                                               "@entity"
                                             ],
                                             "food"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Wood",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -2289,7 +2528,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Iron",
                                           "value": [
                                             "object/get",
@@ -2298,26 +2536,28 @@
                                               "@entity"
                                             ],
                                             "iron"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "columns": 2.0,
                                   "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
+                                          "type": "typography",
                                           "content": "Chart View"
                                         }
                                       ]
@@ -2326,45 +2566,45 @@
                                       "type": "card",
                                       "children": [
                                         {
+                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "variant": "caption"
                                         }
                                       ]
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ],
                                   "xKey": "date",
                                   "yKey": "value",
-                                  "title": "Trend"
+                                  "title": "Trend",
+                                  "type": "line-chart"
                                 },
                                 {
                                   "type": "chart-legend",
@@ -2383,53 +2623,56 @@
                                   "type": "graph-view",
                                   "nodes": [
                                     {
+                                      "x": 50.0,
+                                      "y": 100.0,
                                       "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "label": "Start"
                                     },
                                     {
-                                      "id": "b",
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "y": 50.0,
+                                      "x": 200.0,
+                                      "id": "b"
                                     },
                                     {
-                                      "id": "c",
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "x": 350.0,
+                                      "id": "c",
+                                      "y": 100.0
                                     }
                                   ],
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "height": 200.0,
+                                  "width": 400.0
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "appName": "Strategy Game"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "ResourcesPage",
+          "name": "Resources",
           "path": "/resources",
           "traits": [
             {

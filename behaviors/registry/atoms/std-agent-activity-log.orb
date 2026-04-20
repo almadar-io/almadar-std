@@ -1,14 +1,14 @@
 {
   "name": "std-agent-activity-log",
   "version": "1.0.0",
-  "description": "Chronological action log atom for tracking agent operations. Provides a timeline view of agent actions with status indicators, duration tracking, and clear functionality. Listens for LOG_ENTRY events from sibling traits.",
+  "description": "std-agent-activity-log as a Function",
   "orbitals": [
     {
       "name": "AgentActivityLogOrbital",
       "entity": {
         "name": "AgentActivityLog",
-        "persistence": "persistent",
         "collection": "agentactivitylogs",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -54,7 +54,7 @@
           {
             "name": "duration",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "icon",
@@ -66,8 +66,8 @@
       "traits": [
         {
           "name": "AgentActivityLogLog",
-          "linkedEntity": "AgentActivityLog",
           "category": "interaction",
+          "linkedEntity": "AgentActivityLog",
           "emits": [
             {
               "event": "LOG_ENTRY",
@@ -86,13 +86,70 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "AgentActivityLogLoaded",
+              "description": "Fired when AgentActivityLog finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "action",
+                  "type": "string"
+                },
+                {
+                  "name": "detail",
+                  "type": "string"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "string"
+                },
+                {
+                  "name": "duration",
+                  "type": "number"
+                },
+                {
+                  "name": "icon",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentActivityLogLoadFailed",
+              "description": "Fired when AgentActivityLog fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "listens": [
             {
-              "event": "LOG_ENTRY",
-              "triggers": "LOG_ENTRY",
-              "scope": "external"
+              "event": "*.LOG_ENTRY",
+              "triggers": "LOG_ENTRY"
             }
           ],
           "stateMachine": {
@@ -113,24 +170,35 @@
                 "payload": [
                   {
                     "name": "action",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   },
                   {
                     "name": "detail",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   },
                   {
                     "name": "status",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                   }
                 ]
               },
               {
                 "key": "CLEAR",
-                "name": "Clear Log"
+                "name": "Clear"
+              },
+              {
+                "key": "AgentActivityLogLoaded",
+                "name": "AgentActivityLog loaded"
+              },
+              {
+                "key": "AgentActivityLogLoadFailed",
+                "name": "AgentActivityLog load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -141,138 +209,118 @@
                 "effects": [
                   [
                     "fetch",
-                    "AgentActivityLog"
+                    "AgentActivityLog",
+                    {
+                      "emit": {
+                        "failure": "AgentActivityLogLoadFailed",
+                        "success": "AgentActivityLogLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "space-between",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "activity",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Activity Log",
-                                  "variant": "h2"
+                                  "content": "Activity Log"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
-                              "type": "button",
                               "label": "Clear",
                               "event": "CLEAR",
                               "variant": "ghost",
-                              "icon": "trash"
+                              "icon": "trash",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
-                          "entity": "AgentActivityLog",
+                          "type": "timeline",
                           "emptyIcon": "activity",
-                          "emptyTitle": "No activity yet",
-                          "emptyDescription": "Agent actions will appear here as they occur.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "vertical",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "align": "center",
-                                  "className": "w-6 relative",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "sm",
-                                      "className": "z-10 bg-card"
+                                      "type": "badge",
+                                      "label": "@item.status"
                                     },
                                     {
-                                      "type": "box",
-                                      "className": "w-0.5 flex-1 bg-border opacity-40 min-h-[24px]"
+                                      "variant": "h4",
+                                      "type": "typography",
+                                      "content": "@item.action"
                                     }
                                   ]
                                 },
                                 {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "content": "@item.detail"
+                                },
+                                {
                                   "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "className": "flex-1 pb-6",
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
                                       "type": "typography",
-                                      "variant": "body",
+                                      "variant": "caption",
                                       "color": "muted",
-                                      "content": "@item.detail"
+                                      "content": "@item.timestamp"
                                     },
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
+                                      "label": "@item.duration",
+                                      "type": "badge",
+                                      "variant": "outline"
                                     }
                                   ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "xs"
                             }
-                          ]
+                          ],
+                          "entity": "AgentActivityLog",
+                          "emptyTitle": "No activity yet",
+                          "emptyDescription": "Agent actions will appear here as they occur."
                         }
                       ]
                     }
@@ -290,39 +338,40 @@
                     "AgentActivityLog",
                     {
                       "action": "@payload.action",
-                      "detail": "@payload.detail",
                       "status": "@payload.status",
+                      "detail": "@payload.detail",
                       "timestamp": "@now"
                     }
                   ],
                   [
                     "fetch",
-                    "AgentActivityLog"
+                    "AgentActivityLog",
+                    {
+                      "emit": {
+                        "success": "AgentActivityLogLoaded",
+                        "failure": "AgentActivityLogLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "justify": "space-between",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "activity",
+                                  "type": "icon",
                                   "size": "lg"
                                 },
                                 {
@@ -330,14 +379,17 @@
                                   "content": "Activity Log",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center"
                             },
                             {
-                              "type": "button",
-                              "label": "Clear",
                               "event": "CLEAR",
                               "variant": "ghost",
-                              "icon": "trash"
+                              "icon": "trash",
+                              "label": "Clear",
+                              "type": "button"
                             }
                           ]
                         },
@@ -345,92 +397,68 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
-                          "entity": "AgentActivityLog",
-                          "emptyIcon": "activity",
                           "emptyTitle": "No activity yet",
+                          "entity": "AgentActivityLog",
                           "emptyDescription": "Agent actions will appear here as they occur.",
+                          "emptyIcon": "activity",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
-                                  "align": "center",
-                                  "className": "w-6 relative",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "sm",
-                                      "className": "z-10 bg-card"
+                                      "type": "badge",
+                                      "label": "@item.status"
                                     },
                                     {
-                                      "type": "box",
-                                      "className": "w-0.5 flex-1 bg-border opacity-40 min-h-[24px]"
+                                      "variant": "h4",
+                                      "content": "@item.action",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
+                                  "align": "center"
                                 },
                                 {
+                                  "variant": "body",
+                                  "color": "muted",
+                                  "content": "@item.detail",
+                                  "type": "typography"
+                                },
+                                {
+                                  "align": "center",
+                                  "gap": "sm",
+                                  "direction": "horizontal",
                                   "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "className": "flex-1 pb-6",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
+                                      "content": "@item.timestamp",
+                                      "variant": "caption",
                                       "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
+                                      "color": "muted"
                                     },
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
+                                      "label": "@item.duration",
+                                      "type": "badge",
+                                      "variant": "outline"
                                     }
                                   ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "timeline"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -447,138 +475,118 @@
                   ],
                   [
                     "fetch",
-                    "AgentActivityLog"
+                    "AgentActivityLog",
+                    {
+                      "emit": {
+                        "success": "AgentActivityLogLoaded",
+                        "failure": "AgentActivityLogLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "space-between",
                           "align": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "activity",
-                                  "size": "lg"
+                                  "name": "activity"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Activity Log",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
+                              "event": "CLEAR",
                               "type": "button",
                               "label": "Clear",
-                              "event": "CLEAR",
                               "variant": "ghost",
                               "icon": "trash"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
-                          "entity": "AgentActivityLog",
                           "emptyIcon": "activity",
-                          "emptyTitle": "No activity yet",
                           "emptyDescription": "Agent actions will appear here as they occur.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
+                              "direction": "vertical",
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "vertical",
                                   "align": "center",
-                                  "className": "w-6 relative",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "name": "activity",
-                                      "size": "sm",
-                                      "className": "z-10 bg-card"
+                                      "label": "@item.status",
+                                      "type": "badge"
                                     },
                                     {
-                                      "type": "box",
-                                      "className": "w-0.5 flex-1 bg-border opacity-40 min-h-[24px]"
+                                      "variant": "h4",
+                                      "type": "typography",
+                                      "content": "@item.action"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm",
+                                  "direction": "horizontal"
                                 },
                                 {
+                                  "type": "typography",
+                                  "color": "muted",
+                                  "variant": "body",
+                                  "content": "@item.detail"
+                                },
+                                {
+                                  "gap": "sm",
                                   "type": "stack",
-                                  "direction": "vertical",
-                                  "gap": "xs",
-                                  "className": "flex-1 pb-6",
+                                  "direction": "horizontal",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.status"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.action"
-                                        }
-                                      ]
-                                    },
-                                    {
+                                      "variant": "caption",
                                       "type": "typography",
-                                      "variant": "body",
-                                      "color": "muted",
-                                      "content": "@item.detail"
+                                      "content": "@item.timestamp",
+                                      "color": "muted"
                                     },
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "caption",
-                                          "color": "muted",
-                                          "content": "@item.timestamp"
-                                        },
-                                        {
-                                          "type": "badge",
-                                          "label": "@item.duration",
-                                          "variant": "outline"
-                                        }
-                                      ]
+                                      "label": "@item.duration",
+                                      "type": "badge",
+                                      "variant": "outline"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "timeline",
+                          "emptyTitle": "No activity yet",
+                          "entity": "AgentActivityLog"
                         }
                       ]
                     }
@@ -586,7 +594,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

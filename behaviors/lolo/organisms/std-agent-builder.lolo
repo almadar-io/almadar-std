@@ -30,7 +30,18 @@ orbital BuildPlanOrbital {
     duration : number = 0
     icon : string = "circle"
   }
-  trait BuildPlanner -> BuildPlan [interaction] {
+
+  type BuildPlanLoaded     = Event BuildPlan                  "Fired when BuildPlan finishes loading"
+  type BuildPlanLoadFailed = Event { message : string } "Fired when BuildPlan fails to load"
+
+  type BuildTaskLoadFailed = Event { message : string } "Emitted event BuildTaskLoadFailed"
+
+  type BuildTaskLoaded = Event { message : string } "Emitted event BuildTaskLoaded"
+
+  type BuildProgressLoaded = Event { message : string } "Emitted event BuildProgressLoaded"
+
+  type BuildProgressLoadFailed = Event { message : string } "Emitted event BuildProgressLoadFailed"
+  trait BuildPlanner -> BuildPlan [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -96,11 +107,12 @@ orbital BuildPlanOrbital {
       * PLAN_READY -> INIT
       CLASSIFIED { category : string! }
       MEMORIES_LOADED { memories : string!, count : number! }
-      PLAN_GENERATED { steps : string!, confidence : number! }
+      PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
       FAILED { error : string! }
     }
+    emits: [BuildTaskLoaded, BuildTaskLoadFailed]
   }
-  trait PlannerTaskInput -> BuildPlan [interaction] {
+  trait PlannerTaskInput -> BuildPlan [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -120,9 +132,11 @@ orbital BuildPlanOrbital {
     }
     listens {
       PLAN { data : object! }
+          BuildPlanLoadFailed { message : string }
     }
+    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
-  trait PlannerClassifierFlow -> BuildPlan [interaction] {
+  trait PlannerClassifierFlow -> BuildPlan [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -150,9 +164,11 @@ orbital BuildPlanOrbital {
     }
     listens {
       SAVE { data : object! }
+          BuildPlanLoadFailed { message : string }
     }
+    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
-  trait PlannerCompletionFlow -> BuildPlan [interaction] {
+  trait PlannerCompletionFlow -> BuildPlan [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -180,9 +196,11 @@ orbital BuildPlanOrbital {
     }
     listens {
       SAVE { data : object! }
+          BuildPlanLoadFailed { message : string }
     }
+    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
-  trait PlannerMemoryLifecycle -> BuildPlan [interaction] {
+  trait PlannerMemoryLifecycle -> BuildPlan [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref BuildPlan)
@@ -192,7 +210,9 @@ orbital BuildPlanOrbital {
       PIN { id : string!, row : object }
       REINFORCE { id : string!, row : object }
       FORGET { id : string!, row : object }
+          BuildPlanLoadFailed { message : string }
     }
+    emits: [BuildPlanLoaded, BuildPlanLoadFailed]
   }
   page "/plan" as PlanPage -> BuildPlanner
 }
@@ -229,7 +249,10 @@ orbital BuildLoopOrbital {
     timestamp : string = ""
     duration : number = 0
   }
-  trait SchemaBuilder -> BuildLoop [interaction] {
+
+  type BuildLoopLoaded     = Event BuildLoop                  "Fired when BuildLoop finishes loading"
+  type BuildLoopLoadFailed = Event { message : string } "Fired when BuildLoop fails to load"
+  trait SchemaBuilder -> BuildLoop [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -307,13 +330,19 @@ orbital BuildLoopOrbital {
     }
     listens {
       * PLAN_READY -> EXECUTE
+          TOOL_RESULT { output : string }
+          CHECK_PASSED { result : string }
+          CHECK_NEEDS_MORE { toolName : string, toolArgs : string }
+          MAX_ITERATIONS { error : string }
+          PLAN_GENERATED { plan : string, toolName : string, toolArgs : string }
+          FAILED { error : string }
     }
   }
-  trait ToolLoopStepProgress -> BuildLoop [interaction] {
+  trait ToolLoopStepProgress -> BuildLoop [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "BuildLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
       START -> in_progress
         (set @entity.status in_progress)
@@ -357,8 +386,12 @@ orbital BuildLoopOrbital {
       COMPLETE internal { totalSteps: number }
       FAIL internal { step: number }
     }
+    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
+    listens {
+      BuildLoopLoadFailed { message : string }
+    }
   }
-  trait ToolLoopCompletionFlow -> BuildLoop [interaction] {
+  trait ToolLoopCompletionFlow -> BuildLoop [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -384,8 +417,13 @@ orbital BuildLoopOrbital {
       SAVE internal
       GENERATED internal
     }
+    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
+    listens {
+      BuildLoopLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ToolLoopToolCallFlow -> BuildLoop [interaction] {
+  trait ToolLoopToolCallFlow -> BuildLoop [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -411,12 +449,17 @@ orbital BuildLoopOrbital {
       SAVE internal
       INVOKED internal
     }
+    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
+    listens {
+      BuildLoopLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ToolLoopContextMonitor -> BuildLoop [interaction] {
+  trait ToolLoopContextMonitor -> BuildLoop [interaction, collection] {
     initial: normal
     state normal {
       INIT -> normal
-        (fetch BuildLoop)
+        (fetch BuildLoop { emit: { success: "BuildLoopLoaded", failure: "BuildLoopLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
@@ -474,6 +517,11 @@ orbital BuildLoopOrbital {
         (set @entity.current 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
+    emits: [BuildLoopLoaded, BuildLoopLoadFailed]
+    listens {
+      BuildLoopLoadFailed { message : string }
+      UPDATE { current : string }
+    }
   }
   page "/build" -> SchemaBuilder
 }
@@ -499,7 +547,10 @@ orbital BuildFixOrbital {
     provider : string = "anthropic"
     model : string = "claude-sonnet-4-20250514"
   }
-  trait FixLoop -> BuildFix [interaction] {
+
+  type BuildFixLoaded     = Event BuildFix                  "Fired when BuildFix finishes loading"
+  type BuildFixLoadFailed = Event { message : string } "Fired when BuildFix fails to load"
+  trait FixLoop -> BuildFix [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -583,13 +634,17 @@ orbital BuildFixOrbital {
       * FIX_SUCCEEDED -> INIT
       * FIX_FAILED -> INIT
       * TOOL_LOOP_DONE -> FIX
+          VALIDATION_ERRORS { errors : string, count : string }
+          EXCEEDED_ATTEMPTS { error : string }
+          FIX_GENERATED { fix : string }
+          FAILED { error : string }
     }
   }
-  trait FixLoopStepProgress -> BuildFix [interaction] {
+  trait FixLoopStepProgress -> BuildFix [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch BuildFix)
+        (fetch BuildFix { emit: { success: "BuildFixLoaded", failure: "BuildFixLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "BuildFix", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
       START -> in_progress
         (set @entity.status in_progress)
@@ -633,15 +688,23 @@ orbital BuildFixOrbital {
       COMPLETE internal { totalSteps: number }
       FAIL internal { step: number }
     }
+    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    listens {
+      BuildFixLoadFailed { message : string }
+    }
   }
-  trait FixLoopErrorsBrowse -> BuildFix [interaction] {
+  trait FixLoopErrorsBrowse -> BuildFix [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref BuildFix)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Validation Errors", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BuildFix", emptyIcon: "inbox", emptyTitle: "No errors", emptyDescription: "All validations passed.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "target", label: "Target", variant: "h4", icon: "alert-triangle" }, { name: "errorCount", label: "Error Count", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }, { type: "floating-action-button", icon: "plus", event: "INIT", label: "Create", tooltip: "Create" }] }] })
     }
+    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    listens {
+      BuildFixLoadFailed { message : string }
+    }
   }
-  trait FixLoopValidateCall -> BuildFix [interaction] {
+  trait FixLoopValidateCall -> BuildFix [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -667,8 +730,13 @@ orbital BuildFixOrbital {
       SAVE internal
       INVOKED internal
     }
+    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    listens {
+      BuildFixLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait FixLoopFixCall -> BuildFix [interaction] {
+  trait FixLoopFixCall -> BuildFix [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -694,8 +762,13 @@ orbital BuildFixOrbital {
       SAVE internal
       INVOKED internal
     }
+    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    listens {
+      BuildFixLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait FixLoopCompletionFlow -> BuildFix [interaction] {
+  trait FixLoopCompletionFlow -> BuildFix [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -721,6 +794,11 @@ orbital BuildFixOrbital {
       SAVE internal
       GENERATED internal
     }
+    emits: [BuildFixLoaded, BuildFixLoadFailed]
+    listens {
+      BuildFixLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
   page "/fix" -> FixLoop
 }
@@ -733,7 +811,10 @@ orbital BuildSessionOrbital {
     status : string = "idle"
     createdAt : string
   }
-  trait BuildSessionManager -> BuildSession [interaction] {
+
+  type BuildSessionLoaded     = Event BuildSession                  "Fired when BuildSession finishes loading"
+  type BuildSessionLoadFailed = Event { message : string } "Fired when BuildSession fails to load"
+  trait BuildSessionManager -> BuildSession [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref BuildSession)
@@ -743,15 +824,17 @@ orbital BuildSessionOrbital {
       * FORKED -> INIT
       * LABELED -> INIT
       * ENDED -> INIT
+          BuildSessionLoadFailed { message : string }
     }
+    emits: [BuildSessionLoaded, BuildSessionLoadFailed]
   }
-  trait BuildSessionLabel -> BuildSession [interaction] {
+  trait BuildSessionLabel -> BuildSession [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref BuildSession)
       LABEL -> open
-        (fetch BuildSession)
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "tag", size: "md" }, { type: "typography", content: "Label Session", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Session:" }, { type: "badge", label: "@entity.sessionId" }] }, { type: "form-section", entity: "BuildSession", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["label"] }] })
     }
     state open {
@@ -767,12 +850,17 @@ orbital BuildSessionOrbital {
       SAVE
       LABELED
     }
+    emits: [BuildSessionLoaded, BuildSessionLoadFailed]
+    listens {
+      BuildSessionLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait BuildSessionAgent -> BuildSession [interaction] {
+  trait BuildSessionAgent -> BuildSession [interaction, collection] {
     initial: active
     state active {
       INIT -> active
-        (fetch BuildSession)
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
         (agent/session-id)
         (set @entity.createdAt @now)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "empty-state", icon: "git-branch", title: "Session", description: "Session is ready" }] })
@@ -787,7 +875,7 @@ orbital BuildSessionOrbital {
         (set @entity.label @payload.data.label)
       LABELED -> active
         (agent/label @entity.label)
-        (fetch BuildSession)
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
       END -> ended
         (set @entity.status ended)
         (emit ENDED)
@@ -804,14 +892,14 @@ orbital BuildSessionOrbital {
         (set @entity.label @payload.data.label)
       LABELED -> forked
         (agent/label @entity.label)
-        (fetch BuildSession)
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
       END -> ended
         (set @entity.status ended)
         (emit ENDED)
     }
     state ended {
       INIT -> active
-        (fetch BuildSession)
+        (fetch BuildSession { emit: { success: "BuildSessionLoaded", failure: "BuildSessionLoadFailed" } })
         (agent/session-id)
         (set @entity.createdAt @now)
         (set @entity.status active)
@@ -824,11 +912,16 @@ orbital BuildSessionOrbital {
     listens {
       * ENDED -> INIT
       * FORKED -> INIT
+          BuildSessionLoadFailed { message : string }
+          DO_LABEL { data : string }
     }
+    emits: [BuildSessionLoaded, BuildSessionLoadFailed]
   }
   page "/session" -> BuildSessionManager
 }
 orbital BuildTaskOrbital {
+  uses Tabs from "std/behaviors/std-tabs"
+
   entity BuildTask [runtime] {
     id : string!
     prompt : string = ""
@@ -840,6 +933,9 @@ orbital BuildTaskOrbital {
     sessionId : string
     error : string = ""
   }
+
+  type BuildTaskLoaded     = Event BuildTask                  "Fired when BuildTask finishes loading"
+  type BuildTaskLoadFailed = Event { message : string } "Fired when BuildTask fails to load"
   trait BuilderTabs = Tabs.traits.TabContentTabs -> BuildTask {
     on INIT {
         (fetch BuildTask)
@@ -853,6 +949,8 @@ orbital BuildTaskOrbital {
   page "/builder/nav" -> BuilderTabs
 }
 orbital BuildProgressOrbital {
+  uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
+
   entity BuildProgress [runtime] {
     id : string!
     steps : string = ""
@@ -860,6 +958,9 @@ orbital BuildProgressOrbital {
     totalSteps : number
     status : string = "idle"
   }
+
+  type BuildProgressLoaded     = Event BuildProgress                  "Fired when BuildProgress finishes loading"
+  type BuildProgressLoadFailed = Event { message : string } "Fired when BuildProgress fails to load"
   trait BuildStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> BuildProgress {
     on INIT {
         (fetch BuildProgress)

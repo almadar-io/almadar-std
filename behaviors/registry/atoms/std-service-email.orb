@@ -1,7 +1,7 @@
 {
   "name": "std-service-email",
   "version": "1.0.0",
-  "description": "Email service integration behavior: compose, send, track delivery status. Wraps the `email` service with call-service for send operations. Pure function: params in, OrbitalDefinition out.",
+  "description": "std-service-email as a Function",
   "orbitals": [
     {
       "name": "ServiceEmailOrbital",
@@ -69,8 +69,76 @@
       "traits": [
         {
           "name": "ServiceEmailEmail",
-          "linkedEntity": "ServiceEmail",
           "category": "interaction",
+          "linkedEntity": "ServiceEmail",
+          "emits": [
+            {
+              "event": "ServiceEmailLoaded",
+              "description": "Fired when ServiceEmail finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "to",
+                  "type": "string"
+                },
+                {
+                  "name": "subject",
+                  "type": "string"
+                },
+                {
+                  "name": "body",
+                  "type": "string"
+                },
+                {
+                  "name": "from",
+                  "type": "string"
+                },
+                {
+                  "name": "sendStatus",
+                  "type": "string"
+                },
+                {
+                  "name": "messageId",
+                  "type": "string"
+                },
+                {
+                  "name": "error",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ServiceEmailLoadFailed",
+              "description": "Fired when ServiceEmail fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -94,22 +162,21 @@
               },
               {
                 "key": "SEND",
-                "name": "Send Email"
+                "name": "Send"
               },
               {
                 "key": "SENT",
-                "name": "Email Sent",
+                "name": "Sent",
                 "payload": [
                   {
                     "name": "messageId",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                   }
                 ]
               },
               {
                 "key": "FAILED",
-                "name": "Send Failed",
+                "name": "Failed",
                 "payload": [
                   {
                     "name": "error",
@@ -119,12 +186,26 @@
                 ]
               },
               {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
                 "key": "RETRY",
                 "name": "Retry"
               },
               {
-                "key": "RESET",
-                "name": "Reset"
+                "key": "ServiceEmailLoaded",
+                "name": "ServiceEmail loaded"
+              },
+              {
+                "key": "ServiceEmailLoadFailed",
+                "name": "ServiceEmail load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -135,20 +216,26 @@
                 "effects": [
                   [
                     "fetch",
-                    "ServiceEmail"
+                    "ServiceEmail",
+                    {
+                      "emit": {
+                        "failure": "ServiceEmailLoadFailed",
+                        "success": "ServiceEmailLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "align": "stretch",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "align": "center",
                           "children": [
@@ -159,8 +246,8 @@
                             },
                             {
                               "type": "typography",
-                              "content": "ServiceEmail Email",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "ServiceEmail Email"
                             }
                           ]
                         },
@@ -168,26 +255,26 @@
                           "type": "divider"
                         },
                         {
-                          "type": "input",
                           "label": "To",
-                          "bind": "@entity.to",
-                          "placeholder": "recipient@example.com"
+                          "type": "input",
+                          "placeholder": "recipient@example.com",
+                          "bind": "@entity.to"
                         },
                         {
+                          "bind": "@entity.subject",
                           "type": "input",
                           "label": "Subject",
-                          "bind": "@entity.subject",
                           "placeholder": "Email subject"
                         },
                         {
                           "type": "textarea",
-                          "label": "Body",
+                          "placeholder": "Write your message...",
                           "bind": "@entity.body",
-                          "placeholder": "Write your message..."
+                          "label": "Body"
                         },
                         {
-                          "type": "button",
                           "label": "Send",
+                          "type": "button",
                           "event": "SEND",
                           "variant": "primary",
                           "icon": "send"
@@ -206,9 +293,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "title": "Sending email...",
-                      "message": "Delivering serviceemail email..."
+                      "message": "Delivering serviceemail email...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -216,9 +303,9 @@
                     "email",
                     "send",
                     {
+                      "body": "@entity.body",
                       "to": "@entity.to",
-                      "subject": "@entity.subject",
-                      "body": "@entity.body"
+                      "subject": "@entity.subject"
                     }
                   ]
                 ]
@@ -237,15 +324,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
                       "direction": "vertical",
                       "gap": "lg",
-                      "align": "center",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
-                          "name": "check-circle",
-                          "size": "lg"
+                          "size": "lg",
+                          "name": "check-circle"
                         },
                         {
                           "type": "alert",
@@ -253,11 +340,11 @@
                           "message": "Email sent successfully"
                         },
                         {
-                          "type": "button",
-                          "label": "Send Another",
                           "event": "RESET",
+                          "label": "Send Another",
                           "variant": "ghost",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "type": "button"
                         }
                       ]
                     }
@@ -278,105 +365,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
                           "type": "error-state",
-                          "title": "Send Failed",
                           "message": "Could not deliver the email.",
-                          "onRetry": "RETRY"
+                          "onRetry": "RETRY",
+                          "title": "Send Failed"
                         },
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
+                              "event": "RETRY",
                               "type": "button",
                               "label": "Retry",
-                              "event": "RETRY",
-                              "variant": "primary",
-                              "icon": "refresh-cw"
+                              "icon": "refresh-cw",
+                              "variant": "primary"
                             },
                             {
                               "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "icon": "rotate-ccw",
+                              "label": "Reset",
+                              "event": "RESET"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "justify": "center"
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "idle",
-                "event": "RETRY",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
+                      ],
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "stretch",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "mail",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "ServiceEmail Email",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "input",
-                          "label": "To",
-                          "bind": "@entity.to",
-                          "placeholder": "recipient@example.com"
-                        },
-                        {
-                          "type": "input",
-                          "label": "Subject",
-                          "bind": "@entity.subject",
-                          "placeholder": "Email subject"
-                        },
-                        {
-                          "type": "textarea",
-                          "label": "Body",
-                          "bind": "@entity.body",
-                          "placeholder": "Write your message..."
-                        },
-                        {
-                          "type": "button",
-                          "label": "Send",
-                          "event": "SEND",
-                          "variant": "primary",
-                          "icon": "send"
-                        }
-                      ]
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -396,19 +418,18 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "stretch",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "mail",
+                              "type": "icon",
                               "size": "lg"
                             },
                             {
@@ -422,29 +443,95 @@
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "label": "To",
                           "bind": "@entity.to",
-                          "placeholder": "recipient@example.com"
-                        },
-                        {
                           "type": "input",
-                          "label": "Subject",
-                          "bind": "@entity.subject",
-                          "placeholder": "Email subject"
+                          "placeholder": "recipient@example.com",
+                          "label": "To"
                         },
                         {
+                          "bind": "@entity.subject",
+                          "type": "input",
+                          "placeholder": "Email subject",
+                          "label": "Subject"
+                        },
+                        {
+                          "placeholder": "Write your message...",
                           "type": "textarea",
                           "label": "Body",
-                          "bind": "@entity.body",
-                          "placeholder": "Write your message..."
+                          "bind": "@entity.body"
+                        },
+                        {
+                          "variant": "primary",
+                          "icon": "send",
+                          "event": "SEND",
+                          "type": "button",
+                          "label": "Send"
+                        }
+                      ],
+                      "align": "stretch"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RETRY",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "stretch",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "mail",
+                              "size": "lg"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "ServiceEmail Email"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "label": "To",
+                          "placeholder": "recipient@example.com",
+                          "type": "input",
+                          "bind": "@entity.to"
+                        },
+                        {
+                          "bind": "@entity.subject",
+                          "placeholder": "Email subject",
+                          "type": "input",
+                          "label": "Subject"
+                        },
+                        {
+                          "label": "Body",
+                          "placeholder": "Write your message...",
+                          "type": "textarea",
+                          "bind": "@entity.body"
                         },
                         {
                           "type": "button",
-                          "label": "Send",
-                          "event": "SEND",
                           "variant": "primary",
-                          "icon": "send"
+                          "icon": "send",
+                          "label": "Send",
+                          "event": "SEND"
                         }
                       ]
                     }
@@ -471,22 +558,22 @@
                       "align": "stretch",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "align": "center",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "mail",
-                              "size": "lg"
+                              "name": "mail"
                             },
                             {
-                              "type": "typography",
                               "content": "ServiceEmail Email",
+                              "type": "typography",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
@@ -499,22 +586,22 @@
                         },
                         {
                           "type": "input",
-                          "label": "Subject",
+                          "placeholder": "Email subject",
                           "bind": "@entity.subject",
-                          "placeholder": "Email subject"
+                          "label": "Subject"
                         },
                         {
-                          "type": "textarea",
-                          "label": "Body",
                           "bind": "@entity.body",
-                          "placeholder": "Write your message..."
+                          "label": "Body",
+                          "placeholder": "Write your message...",
+                          "type": "textarea"
                         },
                         {
-                          "type": "button",
                           "label": "Send",
-                          "event": "SEND",
                           "variant": "primary",
-                          "icon": "send"
+                          "icon": "send",
+                          "type": "button",
+                          "event": "SEND"
                         }
                       ]
                     }
@@ -522,7 +609,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

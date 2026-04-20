@@ -1,7 +1,7 @@
 {
   "name": "std-game-hud",
   "version": "1.0.0",
-  "description": "Heads-up display atom. Renders the `game-hud` pattern showing health, score, lives, and other stats.",
+  "description": "std-game-hud as a Function",
   "orbitals": [
     {
       "name": "HudStateOrbital",
@@ -40,8 +40,48 @@
       "traits": [
         {
           "name": "HudStateHud",
-          "linkedEntity": "HudState",
           "category": "interaction",
+          "linkedEntity": "HudState",
+          "emits": [
+            {
+              "event": "HudStateLoaded",
+              "description": "Fired when HudState finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "HudStateLoadFailed",
+              "description": "Fired when HudState fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -57,6 +97,20 @@
               {
                 "key": "REFRESH",
                 "name": "Refresh"
+              },
+              {
+                "key": "HudStateLoaded",
+                "name": "HudState loaded"
+              },
+              {
+                "key": "HudStateLoadFailed",
+                "name": "HudState load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -67,24 +121,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "HudState"
+                    "HudState",
+                    {
+                      "emit": {
+                        "failure": "HudStateLoadFailed",
+                        "success": "HudStateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-hud",
+                      "transparent": false,
                       "position": "top-left",
                       "size": "md",
-                      "transparent": false,
                       "stats": [
                         {
                           "label": "Name",
                           "value": "@entity.name"
                         },
                         {
-                          "label": "Description",
-                          "value": "@entity.description"
+                          "value": "@entity.description",
+                          "label": "Description"
                         },
                         {
                           "label": "Status",
@@ -106,24 +166,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "HudState"
+                    "HudState",
+                    {
+                      "emit": {
+                        "success": "HudStateLoaded",
+                        "failure": "HudStateLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-hud",
                       "position": "top-left",
                       "size": "md",
                       "transparent": false,
+                      "type": "game-hud",
                       "stats": [
                         {
                           "label": "Name",
                           "value": "@entity.name"
                         },
                         {
-                          "label": "Description",
-                          "value": "@entity.description"
+                          "value": "@entity.description",
+                          "label": "Description"
                         },
                         {
                           "label": "Status",
@@ -139,7 +205,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

@@ -1,14 +1,14 @@
 {
   "name": "std-agent-session",
   "version": "1.0.0",
-  "description": "Session lifecycle atom for agent session management. Composes UI atoms (stdBrowse for session list, stdModal for fork label form) with an agent trait that handles agent/fork, agent/label, and agent/session-id.",
+  "description": "std-agent-session as a Function",
   "orbitals": [
     {
       "name": "AgentSessionOrbital",
       "entity": {
         "name": "AgentSession",
-        "persistence": "persistent",
         "collection": "agentsessions",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -56,22 +56,71 @@
       "traits": [
         {
           "name": "AgentSessionBrowse",
-          "linkedEntity": "AgentSession",
           "category": "interaction",
+          "linkedEntity": "AgentSession",
+          "emits": [
+            {
+              "event": "AgentSessionLoaded",
+              "description": "Fired when AgentSession finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "sessionId",
+                  "type": "string"
+                },
+                {
+                  "name": "parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "label",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentSessionLoadFailed",
+              "description": "Fired when AgentSession fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "listens": [
             {
-              "event": "FORKED",
-              "scope": "external",
+              "event": "*.FORKED",
               "triggers": "INIT"
             },
             {
-              "event": "LABELED",
-              "scope": "external",
+              "event": "*.LABELED",
               "triggers": "INIT"
             },
             {
-              "event": "ENDED",
-              "scope": "external",
+              "event": "*.ENDED",
               "triggers": "INIT"
             }
           ],
@@ -88,20 +137,22 @@
                 "name": "Initialize"
               },
               {
-                "key": "FORK",
-                "name": "FORK"
+                "key": "AgentSessionLoaded",
+                "name": "AgentSession loaded"
               },
               {
-                "key": "LABEL",
-                "name": "LABEL"
-              },
-              {
-                "key": "END",
-                "name": "END"
+                "key": "AgentSessionLoadFailed",
+                "name": "AgentSession load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "VIEW",
-                "name": "VIEW",
+                "name": "View",
                 "payload": [
                   {
                     "name": "id",
@@ -129,63 +180,61 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
                           "justify": "space-between",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "terminal",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "terminal"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "AgentSession Manager",
-                                  "variant": "h2"
+                                  "content": "AgentSession Manager"
                                 }
-                              ]
-                            },
-                            {
+                              ],
                               "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
+                              "align": "center"
+                            },
+                            {
                               "children": [
                                 {
-                                  "type": "button",
+                                  "icon": "git-branch",
+                                  "variant": "secondary",
                                   "label": "Fork",
-                                  "event": "FORK",
-                                  "variant": "secondary",
-                                  "icon": "git-branch"
+                                  "type": "button",
+                                  "event": "FORK"
                                 },
                                 {
+                                  "variant": "secondary",
                                   "type": "button",
-                                  "label": "Label",
                                   "event": "LABEL",
-                                  "variant": "secondary",
-                                  "icon": "tag"
+                                  "icon": "tag",
+                                  "label": "Label"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "End",
-                                  "event": "END",
                                   "variant": "ghost",
-                                  "icon": "square"
+                                  "event": "END",
+                                  "icon": "square",
+                                  "type": "button",
+                                  "label": "End"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "horizontal"
                             }
                           ]
                         },
@@ -194,32 +243,30 @@
                         },
                         {
                           "type": "data-grid",
-                          "entity": "AgentSession",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No sessions yet",
-                          "emptyDescription": "Start a new session to begin.",
+                          "entity": "AgentSession",
                           "itemActions": [
                             {
-                              "label": "View",
                               "event": "VIEW",
                               "variant": "ghost",
+                              "label": "View",
                               "size": "sm"
                             }
                           ],
+                          "emptyIcon": "inbox",
+                          "emptyDescription": "Start a new session to begin.",
                           "columns": [
                             {
-                              "name": "sessionId",
-                              "label": "Session ID",
+                              "icon": "terminal",
                               "variant": "h4",
-                              "icon": "terminal"
+                              "label": "Session ID",
+                              "name": "sessionId"
                             },
                             {
-                              "name": "status",
                               "label": "Status",
                               "variant": "badge",
+                              "name": "status",
                               "colorMap": {
-                                "active": "success",
-                                "completed": "success",
                                 "done": "success",
                                 "pending": "warning",
                                 "draft": "warning",
@@ -229,36 +276,103 @@
                                 "disabled": "neutral",
                                 "error": "destructive",
                                 "cancelled": "destructive",
-                                "failed": "destructive"
+                                "failed": "destructive",
+                                "active": "success",
+                                "completed": "success"
                               }
                             },
                             {
-                              "name": "label",
+                              "variant": "caption",
                               "label": "Label",
-                              "variant": "caption"
+                              "name": "label"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "AgentSessionLabel",
-          "linkedEntity": "AgentSession",
           "category": "interaction",
+          "linkedEntity": "AgentSession",
           "emits": [
             {
               "event": "SAVE",
-              "scope": "external"
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "data",
+                  "type": "string"
+                }
+              ]
             },
             {
               "event": "LABELED",
-              "scope": "external"
+              "scope": "external",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentSessionLoaded",
+              "description": "Fired when AgentSession finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "sessionId",
+                  "type": "string"
+                },
+                {
+                  "name": "parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "label",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentSessionLoadFailed",
+              "description": "Fired when AgentSession fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -278,7 +392,7 @@
               },
               {
                 "key": "LABEL",
-                "name": "Open"
+                "name": "Label"
               },
               {
                 "key": "CLOSE",
@@ -292,6 +406,24 @@
                     "name": "data",
                     "type": "object",
                     "required": true
+                  }
+                ]
+              },
+              {
+                "key": "LABELED",
+                "name": "Labeled"
+              },
+              {
+                "key": "AgentSessionLoaded",
+                "name": "AgentSession loaded"
+              },
+              {
+                "key": "AgentSessionLoadFailed",
+                "name": "AgentSession load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -315,40 +447,43 @@
                 "effects": [
                   [
                     "fetch",
-                    "AgentSession"
+                    "AgentSession",
+                    {
+                      "emit": {
+                        "success": "AgentSessionLoaded",
+                        "failure": "AgentSessionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "tag",
-                              "size": "md"
+                              "size": "md",
+                              "name": "tag"
                             },
                             {
-                              "type": "typography",
                               "content": "Label Session",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "typography",
@@ -359,19 +494,22 @@
                               "type": "badge",
                               "label": "@entity.sessionId"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
-                          "type": "form-section",
-                          "entity": "AgentSession",
                           "mode": "edit",
-                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "label"
-                          ]
+                          ],
+                          "type": "form-section",
+                          "entity": "AgentSession",
+                          "submitEvent": "SAVE"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -416,12 +554,13 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         },
         {
           "name": "AgentSessionAgent",
-          "linkedEntity": "AgentSession",
           "category": "interaction",
+          "linkedEntity": "AgentSession",
           "emits": [
             {
               "event": "ENDED",
@@ -442,18 +581,66 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "AgentSessionLoaded",
+              "description": "Fired when AgentSession finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "sessionId",
+                  "type": "string"
+                },
+                {
+                  "name": "parentId",
+                  "type": "string"
+                },
+                {
+                  "name": "label",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentSessionLoadFailed",
+              "description": "Fired when AgentSession fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "listens": [
             {
-              "event": "ENDED",
-              "triggers": "INIT",
-              "scope": "external"
+              "event": "*.ENDED",
+              "triggers": "INIT"
             },
             {
-              "event": "FORKED",
-              "triggers": "INIT",
-              "scope": "external"
+              "event": "*.FORKED",
+              "triggers": "INIT"
             }
           ],
           "stateMachine": {
@@ -476,7 +663,7 @@
               },
               {
                 "key": "FORK",
-                "name": "Fork Session"
+                "name": "Fork"
               },
               {
                 "key": "DO_LABEL",
@@ -490,10 +677,6 @@
                 ]
               },
               {
-                "key": "END",
-                "name": "End Session"
-              },
-              {
                 "key": "LABELED",
                 "name": "Labeled",
                 "payload": [
@@ -505,13 +688,28 @@
                 ]
               },
               {
+                "key": "END",
+                "name": "End"
+              },
+              {
+                "key": "ENDED",
+                "name": "Ended"
+              },
+              {
                 "key": "FORKED",
-                "name": "Forked",
+                "name": "Forked"
+              },
+              {
+                "key": "AgentSessionLoaded",
+                "name": "AgentSession loaded"
+              },
+              {
+                "key": "AgentSessionLoadFailed",
+                "name": "AgentSession load failed",
                 "payload": [
                   {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -524,7 +722,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "AgentSession"
+                    "AgentSession",
+                    {
+                      "emit": {
+                        "success": "AgentSessionLoaded",
+                        "failure": "AgentSessionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "agent/session-id"
@@ -538,10 +742,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "empty-state",
-                      "icon": "git-branch",
                       "title": "Session",
-                      "description": "Session is ready"
+                      "description": "Session is ready",
+                      "type": "empty-state",
+                      "icon": "git-branch"
                     }
                   ]
                 ]
@@ -568,8 +772,8 @@
                     "AgentSession",
                     {
                       "sessionId": "@entity.sessionId",
-                      "parentId": "@entity.parentId",
                       "status": "forked",
+                      "parentId": "@entity.parentId",
                       "createdAt": "@now"
                     }
                   ],
@@ -580,97 +784,39 @@
                 ]
               },
               {
-                "from": "forked",
-                "to": "forked",
-                "event": "FORK",
+                "from": "active",
+                "to": "active",
+                "event": "DO_LABEL",
                 "effects": [
                   [
+                    "agent/label",
+                    "@payload.data.label"
+                  ],
+                  [
                     "set",
-                    "@entity.parentId",
-                    "@entity.sessionId"
+                    "@entity.label",
+                    "@payload.data.label"
+                  ]
+                ]
+              },
+              {
+                "from": "active",
+                "to": "active",
+                "event": "LABELED",
+                "effects": [
+                  [
+                    "agent/label",
+                    "@entity.label"
                   ],
                   [
-                    "agent/fork"
-                  ],
-                  [
-                    "agent/session-id"
-                  ],
-                  [
-                    "persist",
-                    "create",
+                    "fetch",
                     "AgentSession",
                     {
-                      "sessionId": "@entity.sessionId",
-                      "parentId": "@entity.parentId",
-                      "status": "forked",
-                      "createdAt": "@now"
+                      "emit": {
+                        "success": "AgentSessionLoaded",
+                        "failure": "AgentSessionLoadFailed"
+                      }
                     }
-                  ],
-                  [
-                    "emit",
-                    "FORKED"
-                  ]
-                ]
-              },
-              {
-                "from": "active",
-                "to": "active",
-                "event": "DO_LABEL",
-                "effects": [
-                  [
-                    "agent/label",
-                    "@payload.data.label"
-                  ],
-                  [
-                    "set",
-                    "@entity.label",
-                    "@payload.data.label"
-                  ]
-                ]
-              },
-              {
-                "from": "forked",
-                "to": "forked",
-                "event": "DO_LABEL",
-                "effects": [
-                  [
-                    "agent/label",
-                    "@payload.data.label"
-                  ],
-                  [
-                    "set",
-                    "@entity.label",
-                    "@payload.data.label"
-                  ]
-                ]
-              },
-              {
-                "from": "active",
-                "to": "active",
-                "event": "LABELED",
-                "effects": [
-                  [
-                    "agent/label",
-                    "@entity.label"
-                  ],
-                  [
-                    "fetch",
-                    "AgentSession"
-                  ]
-                ]
-              },
-              {
-                "from": "forked",
-                "to": "forked",
-                "event": "LABELED",
-                "effects": [
-                  [
-                    "agent/label",
-                    "@entity.label"
-                  ],
-                  [
-                    "fetch",
-                    "AgentSession"
                   ]
                 ]
               },
@@ -687,6 +833,76 @@
                   [
                     "emit",
                     "ENDED"
+                  ]
+                ]
+              },
+              {
+                "from": "forked",
+                "to": "forked",
+                "event": "FORK",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.parentId",
+                    "@entity.sessionId"
+                  ],
+                  [
+                    "agent/fork"
+                  ],
+                  [
+                    "agent/session-id"
+                  ],
+                  [
+                    "persist",
+                    "create",
+                    "AgentSession",
+                    {
+                      "sessionId": "@entity.sessionId",
+                      "status": "forked",
+                      "parentId": "@entity.parentId",
+                      "createdAt": "@now"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "FORKED"
+                  ]
+                ]
+              },
+              {
+                "from": "forked",
+                "to": "forked",
+                "event": "DO_LABEL",
+                "effects": [
+                  [
+                    "agent/label",
+                    "@payload.data.label"
+                  ],
+                  [
+                    "set",
+                    "@entity.label",
+                    "@payload.data.label"
+                  ]
+                ]
+              },
+              {
+                "from": "forked",
+                "to": "forked",
+                "event": "LABELED",
+                "effects": [
+                  [
+                    "agent/label",
+                    "@entity.label"
+                  ],
+                  [
+                    "fetch",
+                    "AgentSession",
+                    {
+                      "emit": {
+                        "success": "AgentSessionLoaded",
+                        "failure": "AgentSessionLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -713,7 +929,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "AgentSession"
+                    "AgentSession",
+                    {
+                      "emit": {
+                        "failure": "AgentSessionLoadFailed",
+                        "success": "AgentSessionLoaded"
+                      }
+                    }
                   ],
                   [
                     "agent/session-id"
@@ -734,14 +956,15 @@
                     {
                       "type": "empty-state",
                       "icon": "git-branch",
-                      "title": "Session",
-                      "description": "Session is ready"
+                      "description": "Session is ready",
+                      "title": "Session"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

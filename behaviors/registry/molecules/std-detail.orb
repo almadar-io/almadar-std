@@ -63,13 +63,7 @@
             "INIT": [
               [
                 "fetch",
-                "DetailRecord",
-                {
-                  "emit": {
-                    "failure": "BrowseItemLoadFailed",
-                    "success": "BrowseItemLoaded"
-                  }
-                }
+                "DetailRecord"
               ]
             ],
             "BrowseItemLoaded": [
@@ -77,82 +71,82 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
-                  "gap": "lg",
-                  "className": "max-w-5xl mx-auto w-full",
-                  "direction": "vertical",
                   "children": [
                     {
-                      "justify": "space-between",
-                      "gap": "md",
                       "type": "stack",
                       "direction": "horizontal",
-                      "align": "center",
+                      "gap": "md",
+                      "justify": "space-between",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
+                              "name": "file-text",
                               "size": "lg",
-                              "type": "icon",
-                              "name": "file-text"
+                              "type": "icon"
                             },
                             {
-                              "content": "DetailRecords",
+                              "type": "typography",
                               "variant": "h2",
-                              "type": "typography"
+                              "content": "DetailRecords"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center"
                         },
                         {
                           "icon": "plus",
-                          "type": "button",
-                          "event": "CREATE",
+                          "label": "Create DetailRecord",
                           "variant": "primary",
-                          "label": "Create DetailRecord"
+                          "type": "button",
+                          "event": "CREATE"
                         }
-                      ]
+                      ],
+                      "align": "center"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "emptyTitle": "No detailrecords yet",
-                      "emptyIcon": "inbox",
+                      "itemActions": [
+                        {
+                          "size": "sm",
+                          "label": "View",
+                          "variant": "ghost",
+                          "event": "VIEW"
+                        }
+                      ],
                       "columns": [
                         {
                           "name": "name",
-                          "variant": "h4",
                           "label": "Name",
+                          "variant": "h4",
                           "icon": "file-text"
                         },
                         {
-                          "label": "Description",
+                          "variant": "badge",
                           "name": "description",
-                          "variant": "badge"
+                          "label": "Description"
                         },
                         {
-                          "label": "Status",
                           "variant": "caption",
+                          "label": "Status",
                           "name": "status"
                         }
                       ],
+                      "emptyIcon": "inbox",
                       "type": "data-grid",
-                      "itemActions": [
-                        {
-                          "variant": "ghost",
-                          "size": "sm",
-                          "event": "VIEW",
-                          "label": "View"
-                        }
-                      ],
-                      "emptyDescription": "Create your first detailrecord to get started.",
-                      "entity": "DetailRecord"
+                      "entity": "DetailRecord",
+                      "emptyTitle": "No detailrecords yet",
+                      "emptyDescription": "Create your first detailrecord to get started."
                     }
-                  ]
+                  ],
+                  "direction": "vertical",
+                  "className": "max-w-5xl mx-auto w-full",
+                  "gap": "lg",
+                  "type": "stack"
                 }
               ]
             ]
@@ -166,6 +160,51 @@
             "OPEN": "CREATE"
           },
           "effects": {
+            "CREATE": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "size": "md",
+                          "type": "icon",
+                          "name": "plus-circle"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "New DetailRecord"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "entity": "DetailRecord",
+                      "submitEvent": "SAVE",
+                      "cancelEvent": "CLOSE",
+                      "type": "form-section",
+                      "fields": [
+                        "name",
+                        "description",
+                        "status"
+                      ],
+                      "mode": "create"
+                    }
+                  ]
+                }
+              ]
+            ],
             "CLOSE": [
               [
                 "render-ui",
@@ -176,51 +215,6 @@
                 "notify",
                 "Cancelled",
                 "info"
-              ]
-            ],
-            "CREATE": [
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "gap": "md",
-                  "children": [
-                    {
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "plus-circle",
-                          "size": "md"
-                        },
-                        {
-                          "content": "New DetailRecord",
-                          "variant": "h3",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "sm",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "mode": "create",
-                      "fields": [
-                        "name",
-                        "description",
-                        "status"
-                      ],
-                      "type": "form-section",
-                      "submitEvent": "SAVE",
-                      "cancelEvent": "CLOSE",
-                      "entity": "DetailRecord"
-                    }
-                  ],
-                  "type": "stack"
-                }
               ]
             ],
             "SAVE": [
@@ -239,13 +233,7 @@
             "INIT": [
               [
                 "fetch",
-                "DetailRecord",
-                {
-                  "emit": {
-                    "success": "ModalRecordLoaded",
-                    "failure": "ModalRecordLoadFailed"
-                  }
-                }
+                "DetailRecord"
               ]
             ]
           }
@@ -258,131 +246,6 @@
             "OPEN": "VIEW"
           },
           "effects": {
-            "VIEW": [
-              [
-                "fetch",
-                "DetailRecord",
-                {
-                  "emit": {
-                    "success": "ModalRecordLoaded",
-                    "failure": "ModalRecordLoadFailed"
-                  },
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "children": [
-                    {
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "name": "eye",
-                          "type": "icon",
-                          "size": "md"
-                        },
-                        {
-                          "variant": "h3",
-                          "type": "typography",
-                          "content": "@entity.name"
-                        }
-                      ],
-                      "gap": "sm",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Name"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.name"
-                        }
-                      ]
-                    },
-                    {
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Description"
-                        },
-                        {
-                          "content": "@entity.description",
-                          "variant": "body",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Status"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.status",
-                          "variant": "body"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "stack",
-                      "justify": "end",
-                      "children": [
-                        {
-                          "variant": "ghost",
-                          "label": "Close",
-                          "event": "CLOSE",
-                          "type": "button"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    }
-                  ],
-                  "gap": "md",
-                  "type": "stack",
-                  "direction": "vertical"
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord",
-                {
-                  "emit": {
-                    "success": "ModalRecordLoaded",
-                    "failure": "ModalRecordLoadFailed"
-                  }
-                }
-              ]
-            ],
             "SAVE": [
               [
                 "render-ui",
@@ -395,6 +258,121 @@
                 "render-ui",
                 "modal",
                 null
+              ]
+            ],
+            "INIT": [
+              [
+                "fetch",
+                "DetailRecord"
+              ]
+            ],
+            "VIEW": [
+              [
+                "fetch",
+                "DetailRecord",
+                {
+                  "id": "@payload.id"
+                }
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "gap": "md",
+                  "direction": "vertical",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "size": "md",
+                          "name": "eye"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "@entity.name"
+                        }
+                      ],
+                      "gap": "sm",
+                      "align": "center"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "children": [
+                        {
+                          "content": "Name",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@entity.name"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md"
+                    },
+                    {
+                      "gap": "md",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Description",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.description",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack"
+                    },
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "content": "Status",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.status"
+                        }
+                      ],
+                      "direction": "horizontal"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "variant": "ghost",
+                          "event": "CLOSE",
+                          "type": "button",
+                          "label": "Close"
+                        }
+                      ],
+                      "justify": "end"
+                    }
+                  ]
+                }
               ]
             ]
           }

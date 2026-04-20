@@ -1,7 +1,7 @@
 {
   "name": "std-puzzle-game",
   "version": "1.0.0",
-  "description": "Puzzle game molecule. Composes game atoms into a two-trait orbital:",
+  "description": "std-puzzle-game as a Function",
   "orbitals": [
     {
       "name": "PuzzleBoardOrbital",
@@ -38,66 +38,104 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0,
-            "min": 0,
-            "max": 9999
+            "default": 0.0
           },
           {
             "name": "highScore",
             "type": "number",
-            "default": 0,
-            "min": 0,
-            "max": 9999
+            "default": 0.0
           },
           {
             "name": "combo",
             "type": "number",
-            "default": 0,
-            "min": 0,
-            "max": 99
+            "default": 0.0
           },
           {
             "name": "multiplier",
             "type": "number",
-            "default": 1,
-            "min": 1,
-            "max": 10
+            "default": 1.0
           },
           {
             "name": "level",
             "type": "number",
-            "default": 1,
-            "min": 1,
-            "max": 99
+            "default": 1.0
           },
           {
             "name": "moves",
             "type": "number",
-            "default": 0,
-            "min": 0,
-            "max": 9999
-          }
-        ],
-        "instances": [
-          {
-            "id": "puzzle-1",
-            "name": "Puzzle Board",
-            "description": "Active puzzle",
-            "status": "active",
-            "score": 0,
-            "highScore": 0,
-            "combo": 0,
-            "multiplier": 1,
-            "level": 1,
-            "moves": 0
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
           "name": "PuzzleBoardPuzzleFlow",
-          "linkedEntity": "PuzzleBoard",
           "category": "interaction",
+          "linkedEntity": "PuzzleBoard",
+          "emits": [
+            {
+              "event": "PuzzleBoardLoaded",
+              "description": "Fired when PuzzleBoard finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "highScore",
+                  "type": "number"
+                },
+                {
+                  "name": "combo",
+                  "type": "number"
+                },
+                {
+                  "name": "multiplier",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                },
+                {
+                  "name": "moves",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "PuzzleBoardLoadFailed",
+              "description": "Fired when PuzzleBoard fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -121,39 +159,53 @@
               },
               {
                 "key": "START",
-                "name": "Start Puzzle"
+                "name": "Start"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
               },
               {
                 "key": "MOVE",
-                "name": "Make Move"
+                "name": "Move"
               },
               {
                 "key": "HINT",
-                "name": "Show Hint"
+                "name": "Hint"
               },
               {
                 "key": "PAUSE",
                 "name": "Pause"
               },
               {
+                "key": "GAME_OVER",
+                "name": "Game Over"
+              },
+              {
                 "key": "RESUME",
                 "name": "Resume"
-              },
-              {
-                "key": "GAME_OVER",
-                "name": "Puzzle Complete"
-              },
-              {
-                "key": "RESTART",
-                "name": "Restart"
               },
               {
                 "key": "CLOSE",
                 "name": "Close"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "PuzzleBoardLoaded",
+                "name": "PuzzleBoard loaded"
+              },
+              {
+                "key": "PuzzleBoardLoadFailed",
+                "name": "PuzzleBoard load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -164,22 +216,28 @@
                 "effects": [
                   [
                     "fetch",
-                    "PuzzleBoard"
+                    "PuzzleBoard",
+                    {
+                      "emit": {
+                        "success": "PuzzleBoardLoaded",
+                        "failure": "PuzzleBoardLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
-                      "title": "Puzzle",
-                      "subtitle": "Puzzle Challenge",
                       "menuItems": [
                         {
                           "label": "Start Puzzle",
                           "event": "START",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "title": "Puzzle",
+                      "type": "game-menu",
+                      "subtitle": "Puzzle Challenge"
                     }
                   ]
                 ]
@@ -193,13 +251,18 @@
                     "render-ui",
                     "main",
                     {
+                      "width": 800.0,
                       "type": "game-canvas-2d",
-                      "width": 800,
-                      "height": 600,
-                      "fps": 60
+                      "fps": 60.0,
+                      "height": 600.0
                     }
                   ]
                 ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -212,17 +275,17 @@
                     [
                       "+",
                       "@entity.moves",
-                      1
+                      1.0
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "height": 600.0,
                       "type": "game-canvas-2d",
-                      "width": 800,
-                      "height": 600,
-                      "fps": 60
+                      "width": 800.0,
+                      "fps": 60.0
                     }
                   ]
                 ]
@@ -230,20 +293,7 @@
               {
                 "from": "playing",
                 "to": "playing",
-                "event": "HINT",
-                "effects": []
-              },
-              {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
-              },
-              {
-                "from": "paused",
-                "to": "paused",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "HINT"
               },
               {
                 "from": "playing",
@@ -254,8 +304,8 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "game-menu",
                       "title": "Paused",
+                      "type": "game-menu",
                       "menuItems": [
                         {
                           "label": "Resume",
@@ -263,14 +313,56 @@
                           "variant": "primary"
                         },
                         {
+                          "variant": "ghost",
                           "label": "Quit",
-                          "event": "RESTART",
-                          "variant": "ghost"
+                          "event": "RESTART"
                         }
                       ]
                     }
                   ]
                 ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Puzzle Complete",
+                      "type": "game-over-screen",
+                      "stats": [
+                        {
+                          "value": "@entity.score",
+                          "label": "Score"
+                        },
+                        {
+                          "label": "Moves",
+                          "value": "@entity.moves"
+                        }
+                      ],
+                      "menuItems": [
+                        {
+                          "variant": "primary",
+                          "event": "RESTART",
+                          "label": "Play Again"
+                        },
+                        {
+                          "event": "RESTART",
+                          "label": "Main Menu",
+                          "variant": "secondary"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "paused",
+                "event": "NAVIGATE"
               },
               {
                 "from": "paused",
@@ -287,9 +379,9 @@
                     "main",
                     {
                       "type": "game-canvas-2d",
-                      "width": 800,
-                      "height": 600,
-                      "fps": 60
+                      "fps": 60.0,
+                      "width": 800.0,
+                      "height": 600.0
                     }
                   ]
                 ]
@@ -308,70 +400,10 @@
                     "render-ui",
                     "main",
                     {
+                      "width": 800.0,
                       "type": "game-canvas-2d",
-                      "width": 800,
-                      "height": 600,
-                      "fps": 60
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-over-screen",
-                      "title": "Puzzle Complete",
-                      "stats": [
-                        {
-                          "label": "Score",
-                          "value": "@entity.score"
-                        },
-                        {
-                          "label": "Moves",
-                          "value": "@entity.moves"
-                        }
-                      ],
-                      "menuItems": [
-                        {
-                          "label": "Play Again",
-                          "event": "RESTART",
-                          "variant": "primary"
-                        },
-                        {
-                          "label": "Main Menu",
-                          "event": "RESTART",
-                          "variant": "secondary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "gameover",
-                "to": "menu",
-                "event": "RESTART",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-menu",
-                      "title": "Puzzle",
-                      "subtitle": "Puzzle Challenge",
-                      "menuItems": [
-                        {
-                          "label": "Start Puzzle",
-                          "event": "START",
-                          "variant": "primary"
-                        }
-                      ]
+                      "fps": 60.0,
+                      "height": 600.0
                     }
                   ]
                 ]
@@ -390,27 +422,115 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
                       "title": "Puzzle",
                       "subtitle": "Puzzle Challenge",
+                      "type": "game-menu",
                       "menuItems": [
                         {
-                          "label": "Start Puzzle",
+                          "variant": "primary",
                           "event": "START",
-                          "variant": "primary"
+                          "label": "Start Puzzle"
                         }
                       ]
                     }
                   ]
                 ]
+              },
+              {
+                "from": "gameover",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-menu",
+                      "menuItems": [
+                        {
+                          "event": "START",
+                          "variant": "primary",
+                          "label": "Start Puzzle"
+                        }
+                      ],
+                      "title": "Puzzle",
+                      "subtitle": "Puzzle Challenge"
+                    }
+                  ]
+                ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         },
         {
           "name": "PuzzleBoardPuzzleScore",
-          "linkedEntity": "PuzzleBoard",
           "category": "interaction",
+          "linkedEntity": "PuzzleBoard",
+          "emits": [
+            {
+              "event": "PuzzleBoardLoaded",
+              "description": "Fired when PuzzleBoard finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "highScore",
+                  "type": "number"
+                },
+                {
+                  "name": "combo",
+                  "type": "number"
+                },
+                {
+                  "name": "multiplier",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                },
+                {
+                  "name": "moves",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "PuzzleBoardLoadFailed",
+              "description": "Fired when PuzzleBoard fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -448,6 +568,20 @@
               {
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "key": "PuzzleBoardLoaded",
+                "name": "PuzzleBoard loaded"
+              },
+              {
+                "key": "PuzzleBoardLoadFailed",
+                "name": "PuzzleBoard load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -458,7 +592,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "PuzzleBoard"
+                    "PuzzleBoard",
+                    {
+                      "emit": {
+                        "success": "PuzzleBoardLoaded",
+                        "failure": "PuzzleBoardLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -482,17 +622,17 @@
                     [
                       "+",
                       "@entity.combo",
-                      1
+                      1.0
                     ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "score-board",
-                      "score": "@entity.score",
-                      "highScore": "@entity.highScore",
                       "combo": "@entity.combo",
+                      "highScore": "@entity.highScore",
+                      "score": "@entity.score",
+                      "type": "score-board",
                       "multiplier": "@entity.multiplier",
                       "level": "@entity.level"
                     }
@@ -513,12 +653,12 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "score-board",
-                      "score": "@entity.score",
                       "highScore": "@entity.highScore",
                       "combo": "@entity.combo",
+                      "score": "@entity.score",
                       "multiplier": "@entity.multiplier",
-                      "level": "@entity.level"
+                      "level": "@entity.level",
+                      "type": "score-board"
                     }
                   ]
                 ]
@@ -531,34 +671,35 @@
                   [
                     "set",
                     "@entity.score",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.combo",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.multiplier",
-                    1
+                    1.0
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "score-board",
-                      "score": "@entity.score",
-                      "highScore": "@entity.highScore",
                       "combo": "@entity.combo",
+                      "highScore": "@entity.highScore",
                       "multiplier": "@entity.multiplier",
-                      "level": "@entity.level"
+                      "score": "@entity.score",
+                      "level": "@entity.level",
+                      "type": "score-board"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

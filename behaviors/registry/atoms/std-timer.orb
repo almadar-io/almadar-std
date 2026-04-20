@@ -38,45 +38,20 @@
           {
             "name": "remaining",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "duration",
             "type": "number",
-            "default": 0
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
           "name": "TimerSessionTimer",
-          "linkedEntity": "TimerSession",
           "category": "interaction",
-          "ticks": [
-            {
-              "name": "countdown",
-              "interval": 1000,
-              "appliesTo": [
-                "running"
-              ],
-              "guard": [
-                ">",
-                "@entity.remaining",
-                0
-              ],
-              "effects": [
-                [
-                  "set",
-                  "@entity.remaining",
-                  [
-                    "-",
-                    "@entity.remaining",
-                    1
-                  ]
-                ]
-              ]
-            }
-          ],
+          "linkedEntity": "TimerSession",
           "stateMachine": {
             "states": [
               {
@@ -103,24 +78,24 @@
                 "name": "Start"
               },
               {
+                "key": "TICK",
+                "name": "Tick"
+              },
+              {
                 "key": "PAUSE",
                 "name": "Pause"
               },
               {
-                "key": "RESUME",
-                "name": "Resume"
+                "key": "EXPIRE",
+                "name": "Expire"
               },
               {
                 "key": "RESET",
                 "name": "Reset"
               },
               {
-                "key": "TICK",
-                "name": "Tick"
-              },
-              {
-                "key": "EXPIRE",
-                "name": "Expire"
+                "key": "RESUME",
+                "name": "Resume"
               }
             ],
             "transitions": [
@@ -135,38 +110,36 @@
                     {
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
                           "direction": "vertical",
                           "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
+                                  "size": "lg",
                                   "name": "clock",
-                                  "size": "lg"
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "Timer",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "animated-counter",
                               "value": [
                                 "object/get",
                                 [
@@ -175,11 +148,11 @@
                                 ],
                                 "remaining"
                               ],
-                              "suffix": "s",
-                              "duration": 500
+                              "type": "animated-counter",
+                              "duration": 500.0,
+                              "suffix": "s"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Time Remaining",
                               "value": [
                                 "object/get",
@@ -189,10 +162,10 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "type": "stat-display",
+                              "max": 60.0
                             },
                             {
-                              "type": "meter",
                               "value": [
                                 "object/get",
                                 [
@@ -201,8 +174,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "min": 0,
-                              "max": 60
+                              "max": 60.0,
+                              "min": 0.0,
+                              "type": "meter"
                             },
                             {
                               "type": "progress-bar",
@@ -214,9 +188,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
-                              "color": "primary",
-                              "showPercentage": true
+                              "showPercentage": true,
+                              "max": 60.0,
+                              "color": "primary"
                             },
                             {
                               "type": "badge",
@@ -229,38 +203,39 @@
                                 "status"
                               ]
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Start",
-                              "event": "START",
                               "variant": "primary",
-                              "icon": "play"
+                              "label": "Start",
+                              "type": "button",
+                              "icon": "play",
+                              "event": "START"
                             },
                             {
-                              "type": "button",
-                              "label": "Pause",
-                              "event": "PAUSE",
-                              "variant": "ghost",
                               "icon": "pause",
-                              "disabled": true
+                              "type": "button",
+                              "disabled": true,
+                              "variant": "ghost",
+                              "label": "Pause",
+                              "event": "PAUSE"
                             },
                             {
                               "type": "button",
                               "label": "Reset",
+                              "disabled": true,
                               "event": "RESET",
                               "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "disabled": true
+                              "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -275,7 +250,7 @@
                   [
                     "set",
                     "@entity.remaining",
-                    60
+                    60.0
                   ],
                   [
                     "set",
@@ -286,22 +261,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "md",
+                          "direction": "vertical",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -310,10 +277,14 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Timer",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Timer"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
@@ -329,11 +300,9 @@
                                 "remaining"
                               ],
                               "suffix": "s",
-                              "duration": 500
+                              "duration": 500.0
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Time Remaining",
                               "value": [
                                 "object/get",
                                 [
@@ -342,9 +311,12 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "label": "Time Remaining",
+                              "max": 60.0,
+                              "type": "stat-display"
                             },
                             {
+                              "max": 60.0,
                               "type": "meter",
                               "value": [
                                 "object/get",
@@ -354,10 +326,11 @@
                                 ],
                                 "remaining"
                               ],
-                              "min": 0,
-                              "max": 60
+                              "min": 0.0
                             },
                             {
+                              "showPercentage": true,
+                              "color": "primary",
                               "type": "progress-bar",
                               "value": [
                                 "object/get",
@@ -367,12 +340,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
-                              "color": "primary",
-                              "showPercentage": true
+                              "max": 60.0
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -380,33 +350,38 @@
                                   "@entity"
                                 ],
                                 "status"
-                              ]
+                              ],
+                              "type": "badge"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Pause",
                               "event": "PAUSE",
+                              "icon": "pause",
                               "variant": "secondary",
-                              "icon": "pause"
+                              "type": "button"
                             },
                             {
                               "type": "button",
                               "label": "Reset",
-                              "event": "RESET",
                               "variant": "ghost",
+                              "event": "RESET",
                               "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "justify": "center",
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -420,9 +395,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
@@ -433,9 +405,6 @@
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
@@ -443,31 +412,34 @@
                                   "size": "lg"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Timer",
-                                  "variant": "h2"
+                                  "content": "Timer"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm"
                             },
                             {
                               "type": "divider"
                             },
                             {
                               "type": "animated-counter",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
                               "suffix": "s",
-                              "duration": 500
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "duration": 500.0
                             },
                             {
-                              "type": "stat-display",
                               "label": "Time Remaining",
+                              "max": 60.0,
                               "value": [
                                 "object/get",
                                 [
@@ -476,10 +448,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "type": "stat-display"
                             },
                             {
-                              "type": "meter",
                               "value": [
                                 "object/get",
                                 [
@@ -488,25 +459,25 @@
                                 ],
                                 "remaining"
                               ],
-                              "min": 0,
-                              "max": 60
+                              "max": 60.0,
+                              "min": 0.0,
+                              "type": "meter"
                             },
                             {
-                              "type": "progress-bar",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
-                              "max": 60,
+                              "showPercentage": true,
+                              "max": 60.0,
                               "color": "primary",
-                              "showPercentage": true
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "type": "progress-bar"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -514,33 +485,37 @@
                                   "@entity"
                                 ],
                                 "status"
-                              ]
+                              ],
+                              "type": "badge"
                             }
                           ]
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "center",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Pause",
-                              "event": "PAUSE",
                               "variant": "secondary",
+                              "type": "button",
+                              "event": "PAUSE",
+                              "label": "Pause",
                               "icon": "pause"
                             },
                             {
                               "type": "button",
-                              "label": "Reset",
                               "event": "RESET",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "icon": "rotate-ccw",
+                              "label": "Reset",
+                              "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -560,53 +535,50 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "clock",
-                                  "size": "lg"
+                                  "name": "clock"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Timer",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "animated-counter",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
                               "suffix": "s",
-                              "duration": 500
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "duration": 500.0,
+                              "type": "animated-counter"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Time Remaining",
+                              "type": "stat-display",
                               "value": [
                                 "object/get",
                                 [
@@ -615,10 +587,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "max": 60.0
                             },
                             {
-                              "type": "meter",
                               "value": [
                                 "object/get",
                                 [
@@ -627,11 +598,14 @@
                                 ],
                                 "remaining"
                               ],
-                              "min": 0,
-                              "max": 60
+                              "min": 0.0,
+                              "type": "meter",
+                              "max": 60.0
                             },
                             {
                               "type": "progress-bar",
+                              "max": 60.0,
+                              "color": "primary",
                               "value": [
                                 "object/get",
                                 [
@@ -640,12 +614,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
-                              "color": "primary",
                               "showPercentage": true
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -653,172 +624,37 @@
                                   "@entity"
                                 ],
                                 "status"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "direction": "vertical"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Resume",
                               "event": "RESUME",
-                              "variant": "primary",
-                              "icon": "play"
+                              "icon": "play",
+                              "label": "Resume",
+                              "variant": "primary"
                             },
                             {
+                              "icon": "rotate-ccw",
                               "type": "button",
                               "label": "Reset",
                               "event": "RESET",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "variant": "ghost"
                             }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "paused",
-                "to": "running",
-                "event": "RESUME",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.status",
-                    "running"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "clock",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Timer",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "animated-counter",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
-                              "suffix": "s",
-                              "duration": 500
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Time Remaining",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
-                              "max": 60
-                            },
-                            {
-                              "type": "meter",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
-                              "min": 0,
-                              "max": 60
-                            },
-                            {
-                              "type": "progress-bar",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
-                              "max": 60,
-                              "color": "primary",
-                              "showPercentage": true
-                            },
-                            {
-                              "type": "badge",
-                              "label": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "status"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          ],
                           "justify": "center",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Pause",
-                              "event": "PAUSE",
-                              "variant": "secondary",
-                              "icon": "pause"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw"
-                            }
-                          ]
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -837,22 +673,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -860,17 +689,17 @@
                                   "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Timer",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "type": "animated-counter",
                               "value": [
                                 "object/get",
                                 [
@@ -879,12 +708,13 @@
                                 ],
                                 "remaining"
                               ],
+                              "type": "animated-counter",
                               "suffix": "s",
-                              "duration": 500
+                              "duration": 500.0
                             },
                             {
                               "type": "stat-display",
-                              "label": "Time Remaining",
+                              "max": 60.0,
                               "value": [
                                 "object/get",
                                 [
@@ -893,10 +723,12 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "label": "Time Remaining"
                             },
                             {
                               "type": "meter",
+                              "min": 0.0,
+                              "max": 60.0,
                               "value": [
                                 "object/get",
                                 [
@@ -904,11 +736,11 @@
                                   "@entity"
                                 ],
                                 "remaining"
-                              ],
-                              "min": 0,
-                              "max": 60
+                              ]
                             },
                             {
+                              "showPercentage": true,
+                              "max": 60.0,
                               "type": "progress-bar",
                               "value": [
                                 "object/get",
@@ -918,12 +750,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
-                              "color": "primary",
-                              "showPercentage": true
+                              "color": "primary"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "object/get",
                                 [
@@ -931,9 +760,14 @@
                                   "@entity"
                                 ],
                                 "status"
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "align": "center"
                         },
                         {
                           "type": "typography",
@@ -941,21 +775,23 @@
                           "variant": "h3"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "justify": "center",
                           "children": [
                             {
+                              "icon": "rotate-ccw",
                               "type": "button",
                               "label": "Reset",
                               "event": "RESET",
-                              "variant": "primary",
-                              "icon": "rotate-ccw"
+                              "variant": "primary"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -975,21 +811,15 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
@@ -998,10 +828,11 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Timer",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Timer"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             },
                             {
                               "type": "divider"
@@ -1016,12 +847,10 @@
                                 ],
                                 "remaining"
                               ],
-                              "suffix": "s",
-                              "duration": 500
+                              "duration": 500.0,
+                              "suffix": "s"
                             },
                             {
-                              "type": "stat-display",
-                              "label": "Time Remaining",
                               "value": [
                                 "object/get",
                                 [
@@ -1030,10 +859,162 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "type": "stat-display",
+                              "label": "Time Remaining",
+                              "max": 60.0
+                            },
+                            {
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "type": "meter",
+                              "min": 0.0,
+                              "max": 60.0
+                            },
+                            {
+                              "showPercentage": true,
+                              "type": "progress-bar",
+                              "color": "primary",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "max": 60.0
+                            },
+                            {
+                              "type": "badge",
+                              "label": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "status"
+                              ]
+                            }
+                          ],
+                          "direction": "vertical",
+                          "type": "stack",
+                          "align": "center",
+                          "gap": "md"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "center",
+                          "children": [
+                            {
+                              "icon": "play",
+                              "type": "button",
+                              "variant": "primary",
+                              "label": "Start",
+                              "event": "START"
+                            },
+                            {
+                              "variant": "ghost",
+                              "label": "Pause",
+                              "type": "button",
+                              "disabled": true,
+                              "icon": "pause",
+                              "event": "PAUSE"
+                            },
+                            {
+                              "disabled": true,
+                              "label": "Reset",
+                              "event": "RESET",
+                              "type": "button",
+                              "variant": "ghost",
+                              "icon": "rotate-ccw"
+                            }
+                          ],
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "running",
+                "event": "RESUME",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "md",
+                          "align": "center",
+                          "direction": "vertical",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "align": "center",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "type": "icon",
+                                  "name": "clock"
+                                },
+                                {
+                                  "variant": "h2",
+                                  "content": "Timer",
+                                  "type": "typography"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "duration": 500.0,
+                              "suffix": "s",
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "type": "animated-counter"
+                            },
+                            {
+                              "label": "Time Remaining",
+                              "type": "stat-display",
+                              "max": 60.0,
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ]
                             },
                             {
                               "type": "meter",
+                              "max": 60.0,
                               "value": [
                                 "object/get",
                                 [
@@ -1042,11 +1023,10 @@
                                 ],
                                 "remaining"
                               ],
-                              "min": 0,
-                              "max": 60
+                              "min": 0.0
                             },
                             {
-                              "type": "progress-bar",
+                              "color": "primary",
                               "value": [
                                 "object/get",
                                 [
@@ -1055,9 +1035,9 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
-                              "color": "primary",
-                              "showPercentage": true
+                              "showPercentage": true,
+                              "max": 60.0,
+                              "type": "progress-bar"
                             },
                             {
                               "type": "badge",
@@ -1074,36 +1054,31 @@
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Start",
-                              "event": "START",
-                              "variant": "primary",
-                              "icon": "play"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Pause",
-                              "event": "PAUSE",
-                              "variant": "ghost",
                               "icon": "pause",
-                              "disabled": true
+                              "variant": "secondary",
+                              "event": "PAUSE",
+                              "type": "button",
+                              "label": "Pause"
                             },
                             {
-                              "type": "button",
                               "label": "Reset",
                               "event": "RESET",
+                              "type": "button",
                               "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "disabled": true
+                              "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -1123,39 +1098,38 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
+                                  "size": "lg",
                                   "name": "clock",
-                                  "size": "lg"
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Timer",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "duration": 500.0,
                               "type": "animated-counter",
+                              "suffix": "s",
                               "value": [
                                 "object/get",
                                 [
@@ -1163,13 +1137,10 @@
                                   "@entity"
                                 ],
                                 "remaining"
-                              ],
-                              "suffix": "s",
-                              "duration": 500
+                              ]
                             },
                             {
                               "type": "stat-display",
-                              "label": "Time Remaining",
                               "value": [
                                 "object/get",
                                 [
@@ -1178,7 +1149,8 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "max": 60.0,
+                              "label": "Time Remaining"
                             },
                             {
                               "type": "meter",
@@ -1190,8 +1162,8 @@
                                 ],
                                 "remaining"
                               ],
-                              "min": 0,
-                              "max": 60
+                              "min": 0.0,
+                              "max": 60.0
                             },
                             {
                               "type": "progress-bar",
@@ -1203,7 +1175,7 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
+                              "max": 60.0,
                               "color": "primary",
                               "showPercentage": true
                             },
@@ -1218,40 +1190,43 @@
                                 "status"
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "align": "center"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "justify": "center",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
+                              "icon": "play",
                               "type": "button",
                               "label": "Start",
-                              "event": "START",
                               "variant": "primary",
-                              "icon": "play"
+                              "event": "START"
                             },
                             {
-                              "type": "button",
-                              "label": "Pause",
+                              "disabled": true,
                               "event": "PAUSE",
-                              "variant": "ghost",
                               "icon": "pause",
-                              "disabled": true
+                              "label": "Pause",
+                              "variant": "ghost",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
                               "variant": "ghost",
+                              "event": "RESET",
                               "icon": "rotate-ccw",
-                              "disabled": true
+                              "label": "Reset",
+                              "disabled": true,
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1270,54 +1245,63 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
                           "direction": "vertical",
-                          "gap": "md",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
+                              "align": "center",
                               "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "clock",
-                                  "size": "lg"
+                                  "name": "clock"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Timer",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Timer"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
+                              "duration": 500.0,
                               "type": "animated-counter",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
                               "suffix": "s",
-                              "duration": 500
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ]
                             },
                             {
+                              "value": [
+                                "object/get",
+                                [
+                                  "array/first",
+                                  "@entity"
+                                ],
+                                "remaining"
+                              ],
+                              "max": 60.0,
                               "type": "stat-display",
-                              "label": "Time Remaining",
+                              "label": "Time Remaining"
+                            },
+                            {
                               "value": [
                                 "object/get",
                                 [
@@ -1326,23 +1310,14 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60
+                              "min": 0.0,
+                              "max": 60.0,
+                              "type": "meter"
                             },
                             {
-                              "type": "meter",
-                              "value": [
-                                "object/get",
-                                [
-                                  "array/first",
-                                  "@entity"
-                                ],
-                                "remaining"
-                              ],
-                              "min": 0,
-                              "max": 60
-                            },
-                            {
+                              "showPercentage": true,
                               "type": "progress-bar",
+                              "max": 60.0,
                               "value": [
                                 "object/get",
                                 [
@@ -1351,9 +1326,7 @@
                                 ],
                                 "remaining"
                               ],
-                              "max": 60,
-                              "color": "primary",
-                              "showPercentage": true
+                              "color": "primary"
                             },
                             {
                               "type": "badge",
@@ -1366,38 +1339,40 @@
                                 "status"
                               ]
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "align": "center"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Start",
                               "event": "START",
+                              "type": "button",
                               "variant": "primary",
                               "icon": "play"
                             },
                             {
-                              "type": "button",
-                              "label": "Pause",
                               "event": "PAUSE",
+                              "label": "Pause",
                               "variant": "ghost",
                               "icon": "pause",
+                              "type": "button",
                               "disabled": true
                             },
                             {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
-                              "variant": "ghost",
                               "icon": "rotate-ccw",
+                              "type": "button",
+                              "variant": "ghost",
+                              "event": "RESET",
+                              "label": "Reset",
                               "disabled": true
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -1405,7 +1380,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

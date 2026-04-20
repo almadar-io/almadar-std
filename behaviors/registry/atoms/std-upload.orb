@@ -1,7 +1,7 @@
 {
   "name": "std-upload",
   "version": "1.0.0",
-  "description": "File upload atom with drag-and-drop zone and progress tracking. Absorbs: upload-drop-zone.",
+  "description": "std-upload as a Function",
   "orbitals": [
     {
       "name": "UploadFileOrbital",
@@ -43,7 +43,7 @@
           {
             "name": "fileSize",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "uploadStatus",
@@ -55,8 +55,8 @@
       "traits": [
         {
           "name": "UploadFileUpload",
-          "linkedEntity": "UploadFile",
           "category": "interaction",
+          "linkedEntity": "UploadFile",
           "stateMachine": {
             "states": [
               {
@@ -98,12 +98,12 @@
                 "name": "Failed"
               },
               {
-                "key": "RETRY",
-                "name": "Retry"
-              },
-              {
                 "key": "RESET",
                 "name": "Reset"
+              },
+              {
+                "key": "RETRY",
+                "name": "Retry"
               }
             ],
             "transitions": [
@@ -116,21 +116,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
+                          "align": "center",
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
+                              "size": "lg",
                               "name": "upload",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -143,13 +139,17 @@
                           "type": "divider"
                         },
                         {
-                          "type": "upload-drop-zone",
+                          "maxSize": 10485760.0,
+                          "multiple": false,
                           "accept": "*/*",
                           "event": "UPLOAD",
-                          "multiple": false,
-                          "maxSize": 10485760
+                          "type": "upload-drop-zone"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -173,25 +173,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "upload",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Uploading...",
+                              "type": "typography",
                               "variant": "h2"
                             }
                           ]
@@ -200,8 +200,6 @@
                           "type": "divider"
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
                           "content": [
                             "object/get",
                             [
@@ -209,16 +207,18 @@
                               "@entity"
                             ],
                             "fileName"
-                          ]
+                          ],
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
                           "type": "progress-bar",
-                          "value": 50,
+                          "value": 50.0,
                           "showPercentage": true
                         },
                         {
-                          "type": "spinner",
-                          "size": "md"
+                          "size": "md",
+                          "type": "spinner"
                         }
                       ]
                     }
@@ -239,26 +239,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "check-circle",
+                              "type": "icon",
                               "size": "lg"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "Upload Complete",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ]
                         },
@@ -266,14 +263,11 @@
                           "type": "divider"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
-                          "message": "File uploaded successfully."
+                          "message": "File uploaded successfully.",
+                          "type": "alert"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
-                          "color": "muted",
                           "content": [
                             "object/get",
                             [
@@ -281,16 +275,22 @@
                               "@entity"
                             ],
                             "fileName"
-                          ]
+                          ],
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted"
                         },
                         {
                           "type": "button",
                           "label": "Upload Another",
-                          "event": "RESET",
                           "variant": "primary",
+                          "event": "RESET",
                           "icon": "upload"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -309,157 +309,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "error-state",
-                          "title": "Upload Failed",
                           "message": "Something went wrong. Please try again.",
-                          "onRetry": "UPLOAD"
+                          "type": "error-state",
+                          "onRetry": "UPLOAD",
+                          "title": "Upload Failed"
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Retry",
                               "event": "RETRY",
                               "variant": "primary",
-                              "icon": "rotate-ccw"
+                              "icon": "rotate-ccw",
+                              "label": "Retry"
                             },
                             {
+                              "event": "RESET",
                               "type": "button",
                               "label": "Cancel",
-                              "event": "RESET",
                               "variant": "ghost"
                             }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "uploading",
-                "event": "RETRY",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.uploadStatus",
-                    "uploading"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "stack",
+                          ],
+                          "justify": "center",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "upload",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Uploading...",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "fileName"
-                          ]
-                        },
-                        {
-                          "type": "progress-bar",
-                          "value": 50,
-                          "showPercentage": true
-                        },
-                        {
-                          "type": "spinner",
-                          "size": "md"
+                          "gap": "sm"
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "idle",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.uploadStatus",
-                    "idle"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "upload",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Upload",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "upload-drop-zone",
-                          "accept": "*/*",
-                          "event": "UPLOAD",
-                          "multiple": false,
-                          "maxSize": 10485760
-                        }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -478,46 +360,165 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "upload",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
+                            },
+                            {
+                              "variant": "h2",
+                              "content": "Upload",
+                              "type": "typography"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "accept": "*/*",
+                          "event": "UPLOAD",
+                          "maxSize": 10485760.0,
+                          "multiple": false,
+                          "type": "upload-drop-zone"
+                        }
+                      ],
+                      "direction": "vertical"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "uploading",
+                "event": "RETRY",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.uploadStatus",
+                    "uploading"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "type": "icon",
+                              "name": "upload"
+                            },
+                            {
+                              "variant": "h2",
+                              "type": "typography",
+                              "content": "Uploading..."
+                            }
+                          ],
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "variant": "body",
+                          "content": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "fileName"
+                          ],
+                          "type": "typography"
+                        },
+                        {
+                          "showPercentage": true,
+                          "type": "progress-bar",
+                          "value": 50.0
+                        },
+                        {
+                          "type": "spinner",
+                          "size": "md"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.uploadStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "type": "icon",
+                              "name": "upload"
                             },
                             {
                               "type": "typography",
                               "content": "Upload",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "upload-drop-zone",
-                          "accept": "*/*",
                           "event": "UPLOAD",
+                          "maxSize": 10485760.0,
+                          "type": "upload-drop-zone",
                           "multiple": false,
-                          "maxSize": 10485760
+                          "accept": "*/*"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

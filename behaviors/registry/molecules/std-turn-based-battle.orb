@@ -1,7 +1,7 @@
 {
   "name": "std-turn-based-battle",
   "version": "1.0.0",
-  "description": "Turn-based strategy game molecule (Fire Emblem, XCOM style). Composes game atoms into a two-trait orbital:",
+  "description": "std-turn-based-battle as a Function",
   "orbitals": [
     {
       "name": "BattleUnitOrbital",
@@ -38,46 +38,68 @@
           {
             "name": "turn",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "score",
             "type": "number",
-            "default": 0
-          }
-        ],
-        "instances": [
-          {
-            "id": "unit-1",
-            "name": "Knight",
-            "description": "Armored warrior",
-            "status": "active",
-            "turn": 0,
-            "score": 0
-          },
-          {
-            "id": "unit-2",
-            "name": "Archer",
-            "description": "Ranged attacker",
-            "status": "active",
-            "turn": 0,
-            "score": 0
-          },
-          {
-            "id": "unit-3",
-            "name": "Mage",
-            "description": "Magic caster",
-            "status": "active",
-            "turn": 0,
-            "score": 0
+            "default": 0.0
           }
         ]
       },
       "traits": [
         {
           "name": "BattleUnitBattleFlow",
-          "linkedEntity": "BattleUnit",
           "category": "interaction",
+          "linkedEntity": "BattleUnit",
+          "emits": [
+            {
+              "event": "BattleUnitLoaded",
+              "description": "Fired when BattleUnit finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "turn",
+                  "type": "number"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "BattleUnitLoadFailed",
+              "description": "Fired when BattleUnit fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -101,7 +123,11 @@
               },
               {
                 "key": "START",
-                "name": "Start Battle"
+                "name": "Start"
+              },
+              {
+                "key": "NAVIGATE",
+                "name": "Navigate"
               },
               {
                 "key": "END_TURN",
@@ -112,24 +138,34 @@
                 "name": "Pause"
               },
               {
-                "key": "RESUME",
-                "name": "Resume"
-              },
-              {
                 "key": "GAME_OVER",
                 "name": "Game Over"
               },
               {
-                "key": "RESTART",
-                "name": "Restart"
+                "key": "RESUME",
+                "name": "Resume"
               },
               {
                 "key": "CLOSE",
                 "name": "Close"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "RESTART",
+                "name": "Restart"
+              },
+              {
+                "key": "BattleUnitLoaded",
+                "name": "BattleUnit loaded"
+              },
+              {
+                "key": "BattleUnitLoadFailed",
+                "name": "BattleUnit load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -140,22 +176,28 @@
                 "effects": [
                   [
                     "fetch",
-                    "BattleUnit"
+                    "BattleUnit",
+                    {
+                      "emit": {
+                        "failure": "BattleUnitLoadFailed",
+                        "success": "BattleUnitLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
                       "title": "Battle Arena",
-                      "subtitle": "Turn-Based Strategy",
                       "menuItems": [
                         {
+                          "variant": "primary",
                           "label": "Start Battle",
-                          "event": "START",
-                          "variant": "primary"
+                          "event": "START"
                         }
-                      ]
+                      ],
+                      "subtitle": "Turn-Based Strategy",
+                      "type": "game-menu"
                     }
                   ]
                 ]
@@ -185,6 +227,11 @@
                 ]
               },
               {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
+              },
+              {
                 "from": "playing",
                 "to": "playing",
                 "event": "END_TURN",
@@ -195,7 +242,7 @@
                     [
                       "+",
                       "@entity.turn",
-                      1
+                      1.0
                     ]
                   ],
                   [
@@ -218,18 +265,6 @@
                 ]
               },
               {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
-              },
-              {
-                "from": "paused",
-                "to": "paused",
-                "event": "NAVIGATE",
-                "effects": []
-              },
-              {
                 "from": "playing",
                 "to": "paused",
                 "event": "PAUSE",
@@ -242,19 +277,61 @@
                       "title": "Paused",
                       "menuItems": [
                         {
+                          "variant": "primary",
                           "label": "Resume",
-                          "event": "RESUME",
-                          "variant": "primary"
+                          "event": "RESUME"
                         },
                         {
+                          "variant": "ghost",
                           "label": "Quit",
-                          "event": "RESTART",
-                          "variant": "ghost"
+                          "event": "RESTART"
                         }
                       ]
                     }
                   ]
                 ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "menuItems": [
+                        {
+                          "variant": "primary",
+                          "event": "RESTART",
+                          "label": "Play Again"
+                        },
+                        {
+                          "event": "RESTART",
+                          "label": "Main Menu",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "type": "game-over-screen",
+                      "title": "Battle Over",
+                      "stats": [
+                        {
+                          "value": "@entity.turn",
+                          "label": "Turns"
+                        },
+                        {
+                          "value": "@entity.score",
+                          "label": "Score"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "paused",
+                "event": "NAVIGATE"
               },
               {
                 "from": "paused",
@@ -302,72 +379,12 @@
                       "type": "game-hud",
                       "stats": [
                         {
-                          "label": "Turn",
-                          "value": "@entity.turn"
+                          "value": "@entity.turn",
+                          "label": "Turn"
                         },
                         {
-                          "label": "Score",
-                          "value": "@entity.score"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-over-screen",
-                      "title": "Battle Over",
-                      "stats": [
-                        {
-                          "label": "Turns",
-                          "value": "@entity.turn"
-                        },
-                        {
-                          "label": "Score",
-                          "value": "@entity.score"
-                        }
-                      ],
-                      "menuItems": [
-                        {
-                          "label": "Play Again",
-                          "event": "RESTART",
-                          "variant": "primary"
-                        },
-                        {
-                          "label": "Main Menu",
-                          "event": "RESTART",
-                          "variant": "secondary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "gameover",
-                "to": "menu",
-                "event": "RESTART",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-menu",
-                      "title": "Battle Arena",
-                      "subtitle": "Turn-Based Strategy",
-                      "menuItems": [
-                        {
-                          "label": "Start Battle",
-                          "event": "START",
-                          "variant": "primary"
+                          "value": "@entity.score",
+                          "label": "Score"
                         }
                       ]
                     }
@@ -388,9 +405,32 @@
                     "render-ui",
                     "main",
                     {
+                      "menuItems": [
+                        {
+                          "variant": "primary",
+                          "label": "Start Battle",
+                          "event": "START"
+                        }
+                      ],
                       "type": "game-menu",
                       "title": "Battle Arena",
+                      "subtitle": "Turn-Based Strategy"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "gameover",
+                "to": "menu",
+                "event": "RESTART",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "subtitle": "Turn-Based Strategy",
+                      "title": "Battle Arena",
+                      "type": "game-menu",
                       "menuItems": [
                         {
                           "label": "Start Battle",
@@ -403,12 +443,61 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         },
         {
           "name": "BattleUnitCombatLog",
-          "linkedEntity": "BattleUnit",
           "category": "interaction",
+          "linkedEntity": "BattleUnit",
+          "emits": [
+            {
+              "event": "BattleUnitLoaded",
+              "description": "Fired when BattleUnit finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "turn",
+                  "type": "number"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "BattleUnitLoadFailed",
+              "description": "Fired when BattleUnit fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -435,6 +524,20 @@
               {
                 "key": "CLEAR",
                 "name": "Clear"
+              },
+              {
+                "key": "BattleUnitLoaded",
+                "name": "BattleUnit loaded"
+              },
+              {
+                "key": "BattleUnitLoadFailed",
+                "name": "BattleUnit load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -445,7 +548,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "BattleUnit"
+                    "BattleUnit",
+                    {
+                      "emit": {
+                        "failure": "BattleUnitLoadFailed",
+                        "success": "BattleUnitLoaded"
+                      }
+                    }
                   ]
                 ]
               },
@@ -458,12 +567,12 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "Combat Log",
+                      "maxVisible": 10.0,
                       "type": "combat-log",
-                      "events": "@BattleUnit",
-                      "maxVisible": 10,
-                      "autoScroll": true,
                       "showTimestamps": true,
-                      "title": "Combat Log"
+                      "autoScroll": true,
+                      "events": "@BattleUnit"
                     }
                   ]
                 ]
@@ -477,10 +586,10 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "combat-log",
-                      "events": "@BattleUnit",
-                      "maxVisible": 10,
                       "autoScroll": true,
+                      "maxVisible": 10.0,
+                      "events": "@BattleUnit",
+                      "type": "combat-log",
                       "showTimestamps": true,
                       "title": "Combat Log"
                     }
@@ -488,7 +597,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

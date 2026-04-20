@@ -11,11 +11,14 @@ orbital DebuggerGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait DebuggerGameDebuggerGame -> DebuggerGame [interaction] {
+
+  type DebuggerGameLoaded     = Event DebuggerGame                  "Fired when DebuggerGame finishes loading"
+  type DebuggerGameLoadFailed = Event { message : string } "Fired when DebuggerGame fails to load"
+  trait DebuggerGameDebuggerGame -> DebuggerGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch DebuggerGame)
+        (fetch DebuggerGame { emit: { success: "DebuggerGameLoaded", failure: "DebuggerGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Bug Hunter", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "debugger-board", entity: "DebuggerGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital DebuggerGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Bug Hunter", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [DebuggerGameLoaded, DebuggerGameLoadFailed]
+    listens {
+      DebuggerGameLoadFailed { message : string }
     }
   }
   page "/debuggergames" as DebuggerGamePage -> DebuggerGameDebuggerGame

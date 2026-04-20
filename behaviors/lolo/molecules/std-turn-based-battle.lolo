@@ -11,11 +11,14 @@ orbital BattleUnitOrbital {
     turn : number = 0
     score : number = 0
   }
-  trait BattleUnitBattleFlow -> BattleUnit [interaction] {
+
+  type BattleUnitLoaded     = Event BattleUnit                  "Fired when BattleUnit finishes loading"
+  type BattleUnitLoadFailed = Event { message : string } "Fired when BattleUnit fails to load"
+  trait BattleUnitBattleFlow -> BattleUnit [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch BattleUnit)
+        (fetch BattleUnit { emit: { success: "BattleUnitLoaded", failure: "BattleUnitLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "game-hud", stats: [{ label: "Turn", value: "@entity.turn" }, { label: "Score", value: "@entity.score" }] })
@@ -46,11 +49,15 @@ orbital BattleUnitOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Battle Arena", subtitle: "Turn-Based Strategy", menuItems: [{ label: "Start Battle", event: "START", variant: "primary" }] })
     }
+    emits: [BattleUnitLoaded, BattleUnitLoadFailed]
+    listens {
+      BattleUnitLoadFailed { message : string }
+    }
   }
-  trait BattleUnitCombatLog -> BattleUnit [interaction] {
+  trait BattleUnitCombatLog -> BattleUnit [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch BattleUnit)
+        (fetch BattleUnit { emit: { success: "BattleUnitLoaded", failure: "BattleUnitLoadFailed" } })
       LOG_EVENT -> idle
         (render-ui main { type: "combat-log", events: "@BattleUnit", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
       CLEAR -> idle
@@ -58,7 +65,9 @@ orbital BattleUnitOrbital {
     }
     listens {
       LOG_EVENT { data : object! }
+          BattleUnitLoadFailed { message : string }
     }
+    emits: [BattleUnitLoaded, BattleUnitLoadFailed]
   }
   page "/battleunits" as BattleUnitPage -> BattleUnitBattleFlow, BattleUnitCombatLog
 }

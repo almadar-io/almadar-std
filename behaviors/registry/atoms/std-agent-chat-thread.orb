@@ -1,14 +1,14 @@
 {
   "name": "std-agent-chat-thread",
   "version": "1.0.0",
-  "description": "Chat message thread atom for agent conversations. Displays a chronological list of messages (user, assistant, tool) with compose/send flow. Emits configurable send event for orchestrating traits to handle the actual agent call.",
+  "description": "std-agent-chat-thread as a Function",
   "orbitals": [
     {
       "name": "AgentChatThreadOrbital",
       "entity": {
         "name": "AgentChatThread",
-        "persistence": "persistent",
         "collection": "agentchatthreads",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -61,8 +61,8 @@
       "traits": [
         {
           "name": "AgentChatThreadThread",
-          "linkedEntity": "AgentChatThread",
           "category": "interaction",
+          "linkedEntity": "AgentChatThread",
           "emits": [
             {
               "event": "SEND_MESSAGE",
@@ -70,6 +70,60 @@
               "payload": [
                 {
                   "name": "content",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentChatThreadLoaded",
+              "description": "Fired when AgentChatThread finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "role",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "string"
+                },
+                {
+                  "name": "toolName",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentChatThreadLoadFailed",
+              "description": "Fired when AgentChatThread fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
                   "type": "string"
                 }
               ]
@@ -92,11 +146,15 @@
               },
               {
                 "key": "COMPOSE",
-                "name": "Compose Message"
+                "name": "Compose"
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
               },
               {
                 "key": "SEND",
-                "name": "Send Message",
+                "name": "Send",
                 "payload": [
                   {
                     "name": "content",
@@ -106,8 +164,22 @@
                 ]
               },
               {
-                "key": "CLEAR",
-                "name": "Clear Thread"
+                "key": "SEND_MESSAGE",
+                "name": "Send Message"
+              },
+              {
+                "key": "AgentChatThreadLoaded",
+                "name": "AgentChatThread loaded"
+              },
+              {
+                "key": "AgentChatThreadLoadFailed",
+                "name": "AgentChatThread load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -118,27 +190,27 @@
                 "effects": [
                   [
                     "fetch",
-                    "AgentChatThread"
+                    "AgentChatThread",
+                    {
+                      "emit": {
+                        "success": "AgentChatThreadLoaded",
+                        "failure": "AgentChatThreadLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "align": "center",
                               "children": [
                                 {
@@ -154,35 +226,34 @@
                               ]
                             },
                             {
-                              "type": "button",
                               "label": "New Message",
+                              "type": "button",
                               "event": "COMPOSE",
                               "variant": "primary",
                               "icon": "plus"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
-                          "entity": "AgentChatThread",
-                          "emptyIcon": "message-circle",
-                          "emptyTitle": "No messages yet",
-                          "emptyDescription": "Start a conversation by sending a message.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "gap": "xs",
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "sm",
+                                  "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
@@ -190,28 +261,35 @@
                                       "label": "@item.role"
                                     },
                                     {
-                                      "type": "badge",
                                       "label": "@item.status",
+                                      "type": "badge",
                                       "variant": "outline"
                                     },
                                     {
                                       "type": "typography",
-                                      "variant": "caption",
                                       "color": "muted",
-                                      "content": "@item.timestamp"
+                                      "content": "@item.timestamp",
+                                      "variant": "caption"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@item.content",
                                   "variant": "body",
-                                  "content": "@item.content"
+                                  "type": "typography"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "emptyIcon": "message-circle",
+                          "emptyDescription": "Start a conversation by sending a message.",
+                          "entity": "AgentChatThread",
+                          "emptyTitle": "No messages yet",
+                          "type": "data-list"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -225,102 +303,100 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "space-between",
                           "align": "center",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "message-circle",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "type": "icon"
                                 },
                                 {
                                   "type": "typography",
                                   "content": "AgentChatThread Thread",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "button",
-                              "label": "New Message",
-                              "event": "COMPOSE",
                               "variant": "primary",
+                              "event": "COMPOSE",
                               "icon": "plus",
-                              "disabled": true
+                              "disabled": true,
+                              "type": "button",
+                              "label": "New Message"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
-                          "entity": "AgentChatThread",
-                          "emptyIcon": "message-circle",
-                          "emptyTitle": "No messages yet",
-                          "emptyDescription": "Start a conversation by sending a message.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "xs",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "type": "stack",
                                   "gap": "sm",
-                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "badge",
                                       "label": "@item.role"
                                     },
                                     {
-                                      "type": "badge",
                                       "label": "@item.status",
-                                      "variant": "outline"
+                                      "variant": "outline",
+                                      "type": "badge"
                                     },
                                     {
-                                      "type": "typography",
-                                      "variant": "caption",
+                                      "content": "@item.timestamp",
                                       "color": "muted",
-                                      "content": "@item.timestamp"
+                                      "variant": "caption",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center"
                                 },
                                 {
+                                  "content": "@item.content",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@item.content"
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "gap": "xs"
                             }
-                          ]
+                          ],
+                          "type": "data-list",
+                          "entity": "AgentChatThread",
+                          "emptyIcon": "message-circle",
+                          "emptyTitle": "No messages yet",
+                          "emptyDescription": "Start a conversation by sending a message."
                         },
                         {
-                          "type": "form-section",
-                          "title": "Compose Message",
                           "children": [
                             {
+                              "bind": "@entity.content",
                               "type": "textarea",
                               "label": "Message",
-                              "bind": "@entity.content",
                               "placeholder": "Type your message..."
                             },
                             {
@@ -329,15 +405,133 @@
                               "gap": "sm",
                               "children": [
                                 {
+                                  "variant": "primary",
                                   "type": "button",
                                   "label": "Send",
                                   "event": "SEND",
-                                  "variant": "primary",
                                   "icon": "send"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "form-section",
+                          "title": "Compose Message"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "CLEAR",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "AgentChatThread"
+                  ],
+                  [
+                    "fetch",
+                    "AgentChatThread",
+                    {
+                      "emit": {
+                        "success": "AgentChatThreadLoaded",
+                        "failure": "AgentChatThreadLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "gap": "sm",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "children": [
+                                {
+                                  "name": "message-circle",
+                                  "size": "lg",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "AgentChatThread Thread",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "type": "stack"
+                            },
+                            {
+                              "event": "COMPOSE",
+                              "variant": "primary",
+                              "type": "button",
+                              "label": "New Message",
+                              "icon": "plus"
+                            }
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "AgentChatThread",
+                          "type": "data-list",
+                          "emptyDescription": "Start a conversation by sending a message.",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "gap": "xs",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.role"
+                                    },
+                                    {
+                                      "label": "@item.status",
+                                      "variant": "outline",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "variant": "caption",
+                                      "type": "typography",
+                                      "content": "@item.timestamp",
+                                      "color": "muted"
+                                    }
+                                  ],
+                                  "gap": "sm"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@item.content",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "vertical"
+                            }
+                          ],
+                          "emptyIcon": "message-circle",
+                          "emptyTitle": "No messages yet"
                         }
                       ]
                     }
@@ -374,10 +568,10 @@
                     "create",
                     "AgentChatThread",
                     {
-                      "role": "user",
                       "content": "@payload.content",
-                      "timestamp": "@now",
-                      "status": "sent"
+                      "status": "sent",
+                      "role": "user",
+                      "timestamp": "@now"
                     }
                   ],
                   [
@@ -386,159 +580,54 @@
                   ],
                   [
                     "fetch",
-                    "AgentChatThread"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
+                    "AgentChatThread",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "space-between",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "message-circle",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "AgentChatThread Thread",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "button",
-                              "label": "New Message",
-                              "event": "COMPOSE",
-                              "variant": "primary",
-                              "icon": "plus"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-list",
-                          "entity": "AgentChatThread",
-                          "emptyIcon": "message-circle",
-                          "emptyTitle": "No messages yet",
-                          "emptyDescription": "Start a conversation by sending a message.",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "children": [
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.role"
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@item.status",
-                                      "variant": "outline"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "variant": "caption",
-                                      "color": "muted",
-                                      "content": "@item.timestamp"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@item.content"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
+                      "emit": {
+                        "failure": "AgentChatThreadLoadFailed",
+                        "success": "AgentChatThreadLoaded"
+                      }
                     }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "CLEAR",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "AgentChatThread"
-                  ],
-                  [
-                    "fetch",
-                    "AgentChatThread"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "message-circle",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "AgentChatThread Thread",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal",
+                              "align": "center"
                             },
                             {
                               "type": "button",
-                              "label": "New Message",
-                              "event": "COMPOSE",
+                              "icon": "plus",
                               "variant": "primary",
-                              "icon": "plus"
+                              "event": "COMPOSE",
+                              "label": "New Message"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
@@ -546,50 +635,51 @@
                         {
                           "type": "data-list",
                           "entity": "AgentChatThread",
-                          "emptyIcon": "message-circle",
                           "emptyTitle": "No messages yet",
+                          "emptyIcon": "message-circle",
                           "emptyDescription": "Start a conversation by sending a message.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "align": "center",
                                   "children": [
                                     {
                                       "type": "badge",
                                       "label": "@item.role"
                                     },
                                     {
-                                      "type": "badge",
                                       "label": "@item.status",
+                                      "type": "badge",
                                       "variant": "outline"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
-                                      "color": "muted",
-                                      "content": "@item.timestamp"
+                                      "type": "typography",
+                                      "content": "@item.timestamp",
+                                      "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "gap": "sm",
+                                  "align": "center",
+                                  "type": "stack",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@item.content",
                                   "variant": "body",
-                                  "content": "@item.content"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "gap": "xs",
+                              "direction": "vertical"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -606,56 +696,59 @@
                   ],
                   [
                     "fetch",
-                    "AgentChatThread"
+                    "AgentChatThread",
+                    {
+                      "emit": {
+                        "success": "AgentChatThreadLoaded",
+                        "failure": "AgentChatThreadLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "space-between",
-                          "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
                               "align": "center",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "message-circle",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "message-circle"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "AgentChatThread Thread",
-                                  "variant": "h2"
+                                  "content": "AgentChatThread Thread"
                                 }
                               ]
                             },
                             {
                               "type": "button",
-                              "label": "New Message",
                               "event": "COMPOSE",
-                              "variant": "primary",
-                              "icon": "plus"
+                              "label": "New Message",
+                              "icon": "plus",
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
-                          "entity": "AgentChatThread",
                           "emptyIcon": "message-circle",
                           "emptyTitle": "No messages yet",
                           "emptyDescription": "Start a conversation by sending a message.",
@@ -664,13 +757,9 @@
                             "item",
                             {
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "xs",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
                                   "align": "center",
                                   "children": [
                                     {
@@ -678,34 +767,42 @@
                                       "label": "@item.role"
                                     },
                                     {
-                                      "type": "badge",
                                       "label": "@item.status",
+                                      "type": "badge",
                                       "variant": "outline"
                                     },
                                     {
-                                      "type": "typography",
                                       "variant": "caption",
                                       "color": "muted",
-                                      "content": "@item.timestamp"
+                                      "content": "@item.timestamp",
+                                      "type": "typography"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@item.content"
+                                  "content": "@item.content",
+                                  "variant": "body"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs"
                             }
-                          ]
+                          ],
+                          "type": "data-list",
+                          "entity": "AgentChatThread"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

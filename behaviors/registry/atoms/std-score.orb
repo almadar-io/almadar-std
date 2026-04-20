@@ -38,43 +38,86 @@
           {
             "name": "total",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "combo",
             "type": "number",
-            "default": 1
+            "default": 1.0
           },
           {
             "name": "points",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "multiplier",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "score-1",
-            "name": "Player 1",
-            "description": "Current session",
-            "status": "active",
-            "createdAt": "2026-03-19",
-            "total": 1250,
-            "combo": 3,
-            "points": 150,
-            "multiplier": 2
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "ScoreEntryScore",
-          "linkedEntity": "ScoreEntry",
           "category": "interaction",
+          "linkedEntity": "ScoreEntry",
+          "emits": [
+            {
+              "event": "ScoreEntryLoaded",
+              "description": "Fired when ScoreEntry finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "total",
+                  "type": "number"
+                },
+                {
+                  "name": "combo",
+                  "type": "number"
+                },
+                {
+                  "name": "points",
+                  "type": "number"
+                },
+                {
+                  "name": "multiplier",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "ScoreEntryLoadFailed",
+              "description": "Fired when ScoreEntry fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -89,7 +132,7 @@
               },
               {
                 "key": "ADD",
-                "name": "Add Points",
+                "name": "Add",
                 "payload": [
                   {
                     "name": "points",
@@ -100,10 +143,21 @@
               },
               {
                 "key": "SUBTRACT",
-                "name": "Subtract Points",
+                "name": "Subtract",
                 "payload": [
                   {
                     "name": "points",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "COMBO",
+                "name": "Combo",
+                "payload": [
+                  {
+                    "name": "multiplier",
                     "type": "number",
                     "required": true
                   }
@@ -114,13 +168,16 @@
                 "name": "Reset"
               },
               {
-                "key": "COMBO",
-                "name": "Combo",
+                "key": "ScoreEntryLoaded",
+                "name": "ScoreEntry loaded"
+              },
+              {
+                "key": "ScoreEntryLoadFailed",
+                "name": "ScoreEntry load failed",
                 "payload": [
                   {
-                    "name": "multiplier",
-                    "type": "number",
-                    "required": true
+                    "name": "message",
+                    "type": "string"
                   }
                 ]
               }
@@ -133,28 +190,24 @@
                 "effects": [
                   [
                     "fetch",
-                    "ScoreEntry"
+                    "ScoreEntry",
+                    {
+                      "emit": {
+                        "failure": "ScoreEntryLoadFailed",
+                        "success": "ScoreEntryLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
                           "type": "score-board",
-                          "score": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "total"
-                          ],
-                          "highScore": 0,
+                          "level": 1.0,
                           "combo": [
                             "object/get",
                             [
@@ -163,11 +216,18 @@
                             ],
                             "combo"
                           ],
-                          "multiplier": 1,
-                          "level": 1
+                          "multiplier": 1.0,
+                          "highScore": 0.0,
+                          "score": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "total"
+                          ]
                         },
                         {
-                          "type": "animated-counter",
                           "value": [
                             "object/get",
                             [
@@ -177,10 +237,10 @@
                             "total"
                           ],
                           "prefix": "Score: ",
-                          "duration": 300
+                          "type": "animated-counter",
+                          "duration": 300.0
                         },
                         {
-                          "type": "trend-indicator",
                           "value": [
                             "object/get",
                             [
@@ -189,6 +249,7 @@
                             ],
                             "points"
                           ],
+                          "type": "trend-indicator",
                           "showValue": true
                         },
                         {
@@ -196,42 +257,44 @@
                           "size": "md"
                         },
                         {
+                          "gap": "sm",
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Add",
                               "event": "ADD",
+                              "icon": "plus",
                               "variant": "primary",
-                              "icon": "plus"
+                              "type": "button",
+                              "label": "Add"
                             },
                             {
-                              "type": "button",
-                              "label": "Subtract",
                               "event": "SUBTRACT",
+                              "label": "Subtract",
                               "variant": "secondary",
-                              "icon": "minus"
+                              "icon": "minus",
+                              "type": "button"
                             },
                             {
-                              "type": "button",
-                              "label": "Combo",
+                              "variant": "secondary",
+                              "icon": "zap",
                               "event": "COMBO",
-                              "variant": "secondary",
-                              "icon": "zap"
+                              "type": "button",
+                              "label": "Combo"
                             },
                             {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "event": "RESET",
+                              "type": "button",
+                              "icon": "rotate-ccw",
+                              "label": "Reset"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -250,13 +313,14 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "score-board",
+                          "level": 1.0,
+                          "highScore": 0.0,
                           "score": [
                             "object/get",
                             [
@@ -265,7 +329,6 @@
                             ],
                             "total"
                           ],
-                          "highScore": 0,
                           "combo": [
                             "object/get",
                             [
@@ -274,11 +337,12 @@
                             ],
                             "combo"
                           ],
-                          "multiplier": 1,
-                          "level": 1
+                          "type": "score-board",
+                          "multiplier": 1.0
                         },
                         {
                           "type": "animated-counter",
+                          "prefix": "Score: ",
                           "value": [
                             "object/get",
                             [
@@ -287,11 +351,10 @@
                             ],
                             "total"
                           ],
-                          "prefix": "Score: ",
-                          "duration": 300
+                          "duration": 300.0
                         },
                         {
-                          "type": "trend-indicator",
+                          "showValue": true,
                           "value": [
                             "object/get",
                             [
@@ -300,47 +363,47 @@
                             ],
                             "points"
                           ],
-                          "showValue": true
+                          "type": "trend-indicator"
                         },
                         {
-                          "type": "spacer",
-                          "size": "md"
+                          "size": "md",
+                          "type": "spacer"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Add",
-                              "event": "ADD",
                               "variant": "primary",
-                              "icon": "plus"
+                              "event": "ADD",
+                              "label": "Add",
+                              "icon": "plus",
+                              "type": "button"
                             },
                             {
                               "type": "button",
-                              "label": "Subtract",
                               "event": "SUBTRACT",
                               "variant": "secondary",
+                              "label": "Subtract",
                               "icon": "minus"
                             },
                             {
+                              "icon": "zap",
                               "type": "button",
-                              "label": "Combo",
-                              "event": "COMBO",
                               "variant": "secondary",
-                              "icon": "zap"
+                              "event": "COMBO",
+                              "label": "Combo"
                             },
                             {
-                              "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
+                              "icon": "rotate-ccw",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "label": "Reset",
+                              "type": "button",
+                              "event": "RESET"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ]
                     }
@@ -361,22 +424,13 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
                           "type": "score-board",
-                          "score": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "total"
-                          ],
-                          "highScore": 0,
+                          "highScore": 0.0,
+                          "multiplier": 1.0,
+                          "level": 1.0,
                           "combo": [
                             "object/get",
                             [
@@ -385,11 +439,18 @@
                             ],
                             "combo"
                           ],
-                          "multiplier": 1,
-                          "level": 1
+                          "score": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "total"
+                          ]
                         },
                         {
                           "type": "animated-counter",
+                          "prefix": "Score: ",
                           "value": [
                             "object/get",
                             [
@@ -398,8 +459,7 @@
                             ],
                             "total"
                           ],
-                          "prefix": "Score: ",
-                          "duration": 300
+                          "duration": 300.0
                         },
                         {
                           "type": "trend-indicator",
@@ -414,46 +474,49 @@
                           "showValue": true
                         },
                         {
-                          "type": "spacer",
-                          "size": "md"
+                          "size": "md",
+                          "type": "spacer"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
                               "label": "Add",
-                              "event": "ADD",
+                              "icon": "plus",
                               "variant": "primary",
-                              "icon": "plus"
+                              "event": "ADD"
                             },
                             {
                               "type": "button",
-                              "label": "Subtract",
+                              "icon": "minus",
                               "event": "SUBTRACT",
-                              "variant": "secondary",
-                              "icon": "minus"
+                              "label": "Subtract",
+                              "variant": "secondary"
                             },
                             {
-                              "type": "button",
                               "label": "Combo",
+                              "icon": "zap",
+                              "type": "button",
                               "event": "COMBO",
-                              "variant": "secondary",
-                              "icon": "zap"
+                              "variant": "secondary"
                             },
                             {
                               "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
+                              "icon": "rotate-ccw",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "label": "Reset",
+                              "event": "RESET"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -472,26 +535,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "confetti-effect",
-                          "trigger": true
+                          "trigger": true,
+                          "type": "confetti-effect"
                         },
                         {
-                          "type": "score-board",
-                          "score": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "total"
-                          ],
-                          "highScore": 0,
                           "combo": [
                             "object/get",
                             [
@@ -500,11 +553,21 @@
                             ],
                             "combo"
                           ],
-                          "multiplier": 1,
-                          "level": 1
+                          "score": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "total"
+                          ],
+                          "level": 1.0,
+                          "type": "score-board",
+                          "highScore": 0.0,
+                          "multiplier": 1.0
                         },
                         {
-                          "type": "animated-counter",
+                          "duration": 300.0,
                           "value": [
                             "object/get",
                             [
@@ -513,10 +576,11 @@
                             ],
                             "total"
                           ],
-                          "prefix": "Score: ",
-                          "duration": 300
+                          "type": "animated-counter",
+                          "prefix": "Score: "
                         },
                         {
+                          "showValue": true,
                           "type": "trend-indicator",
                           "value": [
                             "object/get",
@@ -525,46 +589,45 @@
                               "@entity"
                             ],
                             "points"
-                          ],
-                          "showValue": true
+                          ]
                         },
                         {
-                          "type": "spacer",
-                          "size": "md"
+                          "size": "md",
+                          "type": "spacer"
                         },
                         {
-                          "type": "stack",
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "sm",
                           "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Add",
                               "event": "ADD",
-                              "variant": "primary",
-                              "icon": "plus"
+                              "type": "button",
+                              "icon": "plus",
+                              "label": "Add",
+                              "variant": "primary"
                             },
                             {
                               "type": "button",
-                              "label": "Subtract",
                               "event": "SUBTRACT",
+                              "icon": "minus",
                               "variant": "secondary",
-                              "icon": "minus"
+                              "label": "Subtract"
                             },
                             {
-                              "type": "button",
-                              "label": "Combo",
+                              "variant": "secondary",
                               "event": "COMBO",
-                              "variant": "secondary",
-                              "icon": "zap"
+                              "icon": "zap",
+                              "type": "button",
+                              "label": "Combo"
                             },
                             {
                               "type": "button",
-                              "label": "Reset",
-                              "event": "RESET",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "event": "RESET",
+                              "icon": "rotate-ccw",
+                              "label": "Reset"
                             }
                           ]
                         }
@@ -581,23 +644,22 @@
                   [
                     "set",
                     "@entity.total",
-                    0
+                    0.0
                   ],
                   [
                     "set",
                     "@entity.combo",
-                    1
+                    1.0
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
+                          "highScore": 0.0,
+                          "level": 1.0,
+                          "multiplier": 1.0,
                           "type": "score-board",
                           "score": [
                             "object/get",
@@ -607,7 +669,6 @@
                             ],
                             "total"
                           ],
-                          "highScore": 0,
                           "combo": [
                             "object/get",
                             [
@@ -615,12 +676,10 @@
                               "@entity"
                             ],
                             "combo"
-                          ],
-                          "multiplier": 1,
-                          "level": 1
+                          ]
                         },
                         {
-                          "type": "animated-counter",
+                          "prefix": "Score: ",
                           "value": [
                             "object/get",
                             [
@@ -629,11 +688,10 @@
                             ],
                             "total"
                           ],
-                          "prefix": "Score: ",
-                          "duration": 300
+                          "duration": 300.0,
+                          "type": "animated-counter"
                         },
                         {
-                          "type": "trend-indicator",
                           "value": [
                             "object/get",
                             [
@@ -642,7 +700,8 @@
                             ],
                             "points"
                           ],
-                          "showValue": true
+                          "showValue": true,
+                          "type": "trend-indicator"
                         },
                         {
                           "type": "spacer",
@@ -650,47 +709,52 @@
                         },
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
                           "children": [
                             {
-                              "type": "button",
                               "label": "Add",
-                              "event": "ADD",
+                              "icon": "plus",
+                              "type": "button",
                               "variant": "primary",
-                              "icon": "plus"
+                              "event": "ADD"
                             },
                             {
-                              "type": "button",
                               "label": "Subtract",
                               "event": "SUBTRACT",
-                              "variant": "secondary",
-                              "icon": "minus"
+                              "type": "button",
+                              "icon": "minus",
+                              "variant": "secondary"
                             },
                             {
                               "type": "button",
-                              "label": "Combo",
+                              "variant": "secondary",
                               "event": "COMBO",
-                              "variant": "secondary",
-                              "icon": "zap"
+                              "icon": "zap",
+                              "label": "Combo"
                             },
                             {
                               "type": "button",
-                              "label": "Reset",
                               "event": "RESET",
+                              "icon": "rotate-ccw",
                               "variant": "ghost",
-                              "icon": "rotate-ccw"
+                              "label": "Reset"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "justify": "center",
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "lg"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

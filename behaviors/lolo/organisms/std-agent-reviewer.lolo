@@ -15,11 +15,14 @@ orbital ReviewOrbital {
     reviewStatus : string = "idle"
     error : string = ""
   }
-  trait ReviewGenerator -> Review [interaction] {
+
+  type ReviewLoaded     = Event Review                  "Fired when Review finishes loading"
+  type ReviewLoadFailed = Event { message : string } "Fired when Review fails to load"
+  trait ReviewGenerator -> Review [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Review)
+        (fetch Review { emit: { success: "ReviewLoaded", failure: "ReviewLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-search", size: "lg" }, { type: "typography", content: "Code Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.", variant: "body" }, { type: "form-section", entity: "Review", mode: "edit", submitEvent: "SUBMIT_REVIEW", fields: ["target"] }] }] }] }] })
       SUBMIT_REVIEW -> analyzing
         (set @entity.target @payload.target)
@@ -56,7 +59,10 @@ orbital ReviewOrbital {
     }
     listens {
       * CLASSIFIED -> SUBMIT_REVIEW
+          ReviewLoadFailed { message : string }
+          SUBMIT_REVIEW { target : string }
     }
+    emits: [ReviewLoaded, ReviewLoadFailed]
   }
   page "/review" as ReviewPage -> ReviewGenerator
 }
@@ -82,7 +88,10 @@ orbital ReviewRagOrbital {
     provider : string
     model : string
   }
-  trait ReviewRagRag -> ReviewRag [interaction] {
+
+  type ReviewRagLoaded     = Event ReviewRag                  "Fired when ReviewRag finishes loading"
+  type ReviewRagLoadFailed = Event { message : string } "Fired when ReviewRag fails to load"
+  trait ReviewRagRag -> ReviewRag [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -127,32 +136,50 @@ orbital ReviewRagOrbital {
         (set @entity.error "")
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: "ReviewRag", mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] }] })
     }
-  }
-  trait RagTabs -> ReviewRag [interaction] {
-    state idle {
-      INIT -> idle
-        (fetch ReviewRag)
-        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No reviewrags yet", emptyDescription: "Add reviewrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.query" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] }] })
-      SELECT_TAB -> idle
-        (fetch ReviewRag)
-        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No reviewrags yet", emptyDescription: "Add reviewrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.query" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] }] })
+    listens {
+      RETRIEVAL_DONE { context : string, memoryHits : string, searchHits : string }
+          FAILED { error : string }
+          GENERATION_DONE { response : string }
     }
   }
-  trait RagMemoryLifecycle -> ReviewRag [interaction] {
+  trait RagTabs -> ReviewRag [interaction, collection] {
+    state idle {
+      INIT -> idle
+        (fetch ReviewRag { emit: { success: "ReviewRagLoaded", failure: "ReviewRagLoadFailed" } })
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No reviewrags yet", emptyDescription: "Add reviewrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.query" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] }] })
+      SELECT_TAB -> idle
+        (fetch ReviewRag { emit: { success: "ReviewRagLoaded", failure: "ReviewRagLoadFailed" } })
+        (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "tabs", tabs: [{ label: "Query", value: "query" }, { label: "Sources", value: "sources" }, { label: "Response", value: "response" }], defaultActiveTab: "query", activeTab: "@payload.tab", onTabChange: "SELECT_TAB" }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No reviewrags yet", emptyDescription: "Add reviewrags to see them here.", className: "transition-shadow hover:shadow-md cursor-pointer", renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.query" }, { type: "typography", variant: "caption", color: "muted", content: "@item.query" }] }] }] }] })
+    }
+    emits: [ReviewRagLoaded, ReviewRagLoadFailed]
+    listens {
+      ReviewRagLoadFailed { message : string }
+      SELECT_TAB { tab : string }
+    }
+  }
+  trait RagMemoryLifecycle -> ReviewRag [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref ReviewRag)
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "ReviewRag Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
+    emits: [ReviewRagLoaded, ReviewRagLoadFailed]
+    listens {
+      ReviewRagLoadFailed { message : string }
+    }
   }
-  trait RagSearchLifecycle -> ReviewRag [interaction] {
+  trait RagSearchLifecycle -> ReviewRag [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref ReviewRag)
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "ReviewRag", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Search", event: "SEARCH", variant: "primary", icon: "search" }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ReviewRag", emptyIcon: "inbox", emptyTitle: "No search results", emptyDescription: "Enter a query to search the codebase.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "query", label: "Query", variant: "h4", icon: "search" }, { name: "language", label: "Language", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "resultCount", label: "Result Count", variant: "caption" }] }] }] })
     }
+    emits: [ReviewRagLoaded, ReviewRagLoadFailed]
+    listens {
+      ReviewRagLoadFailed { message : string }
+    }
   }
-  trait RagCompletionFlow -> ReviewRag [interaction] {
+  trait RagCompletionFlow -> ReviewRag [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -178,6 +205,11 @@ orbital ReviewRagOrbital {
       SAVE internal
       GENERATED internal
     }
+    emits: [ReviewRagLoaded, ReviewRagLoadFailed]
+    listens {
+      ReviewRagLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
   page "/rag" -> ReviewRagRag
 }
@@ -191,7 +223,10 @@ orbital AnalysisOrbital {
     message : string
     notificationType : string
   }
-  trait InputClassifier -> Analysis [interaction] {
+
+  type AnalysisLoaded     = Event Analysis                  "Fired when Analysis finishes loading"
+  type AnalysisLoadFailed = Event { message : string } "Fired when Analysis fails to load"
+  trait InputClassifier -> Analysis [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -217,12 +252,17 @@ orbital AnalysisOrbital {
       CLASSIFIED internal { category: string }
       CLASSIFIED external { category: string }
     }
+    emits: [AnalysisLoaded, AnalysisLoadFailed]
+    listens {
+      AnalysisLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait AnalysisNotification -> Analysis [interaction] {
+  trait AnalysisNotification -> Analysis [interaction, collection] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch Analysis)
+        (fetch Analysis { emit: { success: "AnalysisLoaded", failure: "AnalysisLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -236,12 +276,17 @@ orbital AnalysisOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
+    emits: [AnalysisLoaded, AnalysisLoadFailed]
+    listens {
+      AnalysisLoadFailed { message : string }
+      SHOW { message : string, notificationType : string }
+    }
   }
-  trait AnalysisAgent -> Analysis [interaction] {
+  trait AnalysisAgent -> Analysis [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Analysis)
+        (fetch Analysis { emit: { success: "AnalysisLoaded", failure: "AnalysisLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "empty-state", icon: "tag", title: "Classifier", description: "Classifier is ready" }] })
       DO_CLASSIFY -> classifying
         (agent/generate (str/concat "Classify the following text into one of these categories: " "schema, component, trait, page, behavior, style" ". Text: " @entity.input ". Respond with JSON: {\"category\": \"...\", \"confidence\": 0.0-1.0}"))
@@ -264,7 +309,10 @@ orbital AnalysisOrbital {
     }
     listens {
       * CLASSIFIED -> CLASSIFIED
+          AnalysisLoadFailed { message : string }
+          DO_CLASSIFY { data : string }
     }
+    emits: [AnalysisLoaded, AnalysisLoadFailed]
   }
   page "/analysis" -> InputClassifier
 }
@@ -280,7 +328,10 @@ orbital ReviewCompletionOrbital {
     message : string
     notificationType : string
   }
-  trait ReviewCompletionFlow -> ReviewCompletion [interaction] {
+
+  type ReviewCompletionLoaded     = Event ReviewCompletion                  "Fired when ReviewCompletion finishes loading"
+  type ReviewCompletionLoadFailed = Event { message : string } "Fired when ReviewCompletion fails to load"
+  trait ReviewCompletionFlow -> ReviewCompletion [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -306,12 +357,17 @@ orbital ReviewCompletionOrbital {
       SAVE
       GENERATED
     }
+    emits: [ReviewCompletionLoaded, ReviewCompletionLoadFailed]
+    listens {
+      ReviewCompletionLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ReviewCompletionNotification -> ReviewCompletion [interaction] {
+  trait ReviewCompletionNotification -> ReviewCompletion [interaction, collection] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch ReviewCompletion)
+        (fetch ReviewCompletion { emit: { success: "ReviewCompletionLoaded", failure: "ReviewCompletionLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -325,12 +381,17 @@ orbital ReviewCompletionOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
+    emits: [ReviewCompletionLoaded, ReviewCompletionLoadFailed]
+    listens {
+      ReviewCompletionLoadFailed { message : string }
+      SHOW { message : string, notificationType : string }
+    }
   }
-  trait ReviewCompletionAgent -> ReviewCompletion [interaction] {
+  trait ReviewCompletionAgent -> ReviewCompletion [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ReviewCompletion)
+        (fetch ReviewCompletion { emit: { success: "ReviewCompletionLoaded", failure: "ReviewCompletionLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "empty-state", icon: "sparkles", title: "Completion", description: "Completion is ready" }] })
       DO_GENERATE -> generating
         (set @entity.status generating)
@@ -368,11 +429,16 @@ orbital ReviewCompletionOrbital {
     }
     listens {
       * GENERATED -> GENERATED
+          ReviewCompletionLoadFailed { message : string }
+          DO_GENERATE { data : string }
     }
+    emits: [ReviewCompletionLoaded, ReviewCompletionLoadFailed]
   }
   page "/completion" -> ReviewCompletionFlow
 }
 orbital ReviewNavOrbital {
+  uses Tabs from "std/behaviors/std-tabs"
+
   entity ReviewNav [runtime] {
     id : string!
     target : string = ""
@@ -396,6 +462,8 @@ orbital ReviewNavOrbital {
   page "/reviewer/nav" -> ReviewerTabs
 }
 orbital ReviewIssueOrbital {
+  uses Browse from "std/behaviors/std-browse"
+
   entity ReviewIssue [runtime] {
     id : string!
     description : string

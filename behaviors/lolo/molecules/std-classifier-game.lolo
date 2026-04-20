@@ -11,11 +11,14 @@ orbital ClassifierGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait ClassifierGameClassifierGame -> ClassifierGame [interaction] {
+
+  type ClassifierGameLoaded     = Event ClassifierGame                  "Fired when ClassifierGame finishes loading"
+  type ClassifierGameLoadFailed = Event { message : string } "Fired when ClassifierGame fails to load"
+  trait ClassifierGameClassifierGame -> ClassifierGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch ClassifierGame)
+        (fetch ClassifierGame { emit: { success: "ClassifierGameLoaded", failure: "ClassifierGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Sort & Classify", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "classifier-board", entity: "ClassifierGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital ClassifierGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Sort & Classify", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [ClassifierGameLoaded, ClassifierGameLoadFailed]
+    listens {
+      ClassifierGameLoadFailed { message : string }
     }
   }
   page "/classifiergames" as ClassifierGamePage -> ClassifierGameClassifierGame

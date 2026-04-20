@@ -13,11 +13,14 @@ orbital AgentTokenGaugeOrbital {
     threshold : number = 0.85
     lastCompactedAt : string = ""
   }
-  trait AgentTokenGaugeGauge -> AgentTokenGauge [interaction] {
+
+  type AgentTokenGaugeLoaded     = Event AgentTokenGauge                  "Fired when AgentTokenGauge finishes loading"
+  type AgentTokenGaugeLoadFailed = Event { message : string } "Fired when AgentTokenGauge fails to load"
+  trait AgentTokenGaugeGauge -> AgentTokenGauge [interaction, instance] {
     initial: normal
     state normal {
       INIT -> normal
-        (fetch AgentTokenGauge)
+        (fetch AgentTokenGauge { emit: { success: "AgentTokenGaugeLoaded", failure: "AgentTokenGaugeLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] })
       UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
@@ -77,7 +80,9 @@ orbital AgentTokenGaugeOrbital {
     }
     listens {
       UPDATE { current : number! }
+          AgentTokenGaugeLoadFailed { message : string }
     }
+    emits: [AgentTokenGaugeLoaded, AgentTokenGaugeLoadFailed]
   }
   page "/agenttokengauges" as AgentTokenGaugePage -> AgentTokenGaugeGauge
 }

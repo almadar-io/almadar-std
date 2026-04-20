@@ -1,7 +1,7 @@
 {
   "name": "std-tabs",
   "version": "1.0.0",
-  "description": "Tab navigation atom. Uses the `tabs` pattern component with clickable tab headers. Each tab shows different entity data.",
+  "description": "std-tabs as a Function",
   "orbitals": [
     {
       "name": "TabContentOrbital",
@@ -40,8 +40,48 @@
       "traits": [
         {
           "name": "TabContentTabs",
-          "linkedEntity": "TabContent",
           "category": "interaction",
+          "linkedEntity": "TabContent",
+          "emits": [
+            {
+              "event": "TabContentLoaded",
+              "description": "Fired when TabContent finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "TabContentLoadFailed",
+              "description": "Fired when TabContent fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -64,6 +104,20 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "TabContentLoaded",
+                "name": "TabContent loaded"
+              },
+              {
+                "key": "TabContentLoadFailed",
+                "name": "TabContent load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -74,7 +128,13 @@
                 "effects": [
                   [
                     "fetch",
-                    "TabContent"
+                    "TabContent",
+                    {
+                      "emit": {
+                        "failure": "TabContentLoadFailed",
+                        "success": "TabContentLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -87,18 +147,18 @@
                         {
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "layout-grid",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "TabContents",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -106,19 +166,18 @@
                           "type": "divider"
                         },
                         {
-                          "type": "tabs",
                           "tabs": [
                             {
                               "label": "Name",
                               "value": "name"
                             },
                             {
-                              "label": "Description",
-                              "value": "description"
+                              "value": "description",
+                              "label": "Description"
                             },
                             {
-                              "label": "Status",
-                              "value": "status"
+                              "value": "status",
+                              "label": "Status"
                             },
                             {
                               "label": "CreatedAt",
@@ -126,40 +185,41 @@
                             }
                           ],
                           "defaultActiveTab": "name",
+                          "type": "tabs",
                           "onTabChange": "SELECT_TAB"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "TabContent",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No tabcontents yet",
-                          "emptyDescription": "Add tabcontents to see them here.",
                           "className": "transition-shadow hover:shadow-md cursor-pointer",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
+                                  "content": "@item.name",
                                   "variant": "h4",
-                                  "content": "@item.name"
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
+                                  "content": "@item.name",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.name"
+                                  "color": "muted"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "emptyIcon": "inbox",
+                          "entity": "TabContent",
+                          "emptyDescription": "Add tabcontents to see them here."
                         }
                       ]
                     }
@@ -173,21 +233,23 @@
                 "effects": [
                   [
                     "fetch",
-                    "TabContent"
+                    "TabContent",
+                    {
+                      "emit": {
+                        "success": "TabContentLoaded",
+                        "failure": "TabContentLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -195,79 +257,84 @@
                               "size": "lg"
                             },
                             {
-                              "type": "typography",
                               "content": "TabContents",
+                              "type": "typography",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "tabs",
+                          "defaultActiveTab": "name",
                           "tabs": [
                             {
                               "label": "Name",
                               "value": "name"
                             },
                             {
-                              "label": "Description",
-                              "value": "description"
+                              "value": "description",
+                              "label": "Description"
                             },
                             {
                               "label": "Status",
                               "value": "status"
                             },
                             {
-                              "label": "CreatedAt",
-                              "value": "createdAt"
+                              "value": "createdAt",
+                              "label": "CreatedAt"
                             }
                           ],
-                          "defaultActiveTab": "name",
                           "activeTab": "@payload.tab",
-                          "onTabChange": "SELECT_TAB"
+                          "onTabChange": "SELECT_TAB",
+                          "type": "tabs"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "TabContent",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No tabcontents yet",
                           "emptyDescription": "Add tabcontents to see them here.",
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "sm",
                               "children": [
                                 {
+                                  "content": "@item.name",
                                   "type": "typography",
-                                  "variant": "h4",
-                                  "content": "@item.name"
+                                  "variant": "h4"
                                 },
                                 {
+                                  "content": "@item.name",
                                   "type": "typography",
                                   "variant": "caption",
-                                  "color": "muted",
-                                  "content": "@item.name"
+                                  "color": "muted"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "emptyIcon": "inbox",
+                          "type": "data-grid",
+                          "entity": "TabContent",
+                          "emptyTitle": "No tabcontents yet",
+                          "className": "transition-shadow hover:shadow-md cursor-pointer"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

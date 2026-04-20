@@ -1,7 +1,7 @@
 {
   "name": "std-overworld",
   "version": "1.0.0",
-  "description": "Map/zone navigation behavior: exploring, transitioning, entered. Pure function: params in, OrbitalDefinition out.",
+  "description": "std-overworld as a Function",
   "orbitals": [
     {
       "name": "WorldRegionOrbital",
@@ -40,8 +40,48 @@
       "traits": [
         {
           "name": "WorldRegionNavigation",
-          "linkedEntity": "WorldRegion",
           "category": "interaction",
+          "linkedEntity": "WorldRegion",
+          "emits": [
+            {
+              "event": "WorldRegionLoaded",
+              "description": "Fired when WorldRegion finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "WorldRegionLoadFailed",
+              "description": "Fired when WorldRegion fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -78,6 +118,20 @@
               {
                 "key": "BACK",
                 "name": "Back"
+              },
+              {
+                "key": "WorldRegionLoaded",
+                "name": "WorldRegion loaded"
+              },
+              {
+                "key": "WorldRegionLoadFailed",
+                "name": "WorldRegion load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -88,110 +142,116 @@
                 "effects": [
                   [
                     "fetch",
-                    "WorldRegion"
+                    "WorldRegion",
+                    {
+                      "emit": {
+                        "failure": "WorldRegionLoadFailed",
+                        "success": "WorldRegionLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "map",
+                                  "type": "icon",
                                   "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "World Map",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ]
                             },
                             {
                               "type": "status-dot",
                               "status": "active",
-                              "pulse": false,
-                              "label": "Exploring"
+                              "label": "Exploring",
+                              "pulse": false
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "map-view",
                           "markers": [],
                           "height": "200px",
-                          "zoom": 10
+                          "zoom": 10.0,
+                          "type": "map-view"
                         },
                         {
-                          "type": "data-grid",
                           "entity": "WorldRegion",
-                          "emptyIcon": "compass",
-                          "emptyTitle": "No worldregions discovered",
-                          "emptyDescription": "Explore to discover new worldregions.",
                           "itemActions": [
                             {
                               "label": "Travel",
                               "event": "TRAVEL"
                             }
                           ],
+                          "emptyIcon": "compass",
+                          "emptyTitle": "No worldregions discovered",
+                          "emptyDescription": "Explore to discover new worldregions.",
+                          "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "map-pin",
-                                          "size": "sm"
+                                          "size": "sm",
+                                          "type": "icon"
                                         },
                                         {
-                                          "type": "typography",
                                           "variant": "h4",
+                                          "type": "typography",
                                           "content": "@item.name"
                                         }
-                                      ]
+                                      ],
+                                      "align": "center",
+                                      "gap": "sm",
+                                      "direction": "horizontal",
+                                      "type": "stack"
                                     },
                                     {
                                       "type": "badge",
                                       "label": "@item.description"
                                     }
-                                  ]
+                                  ],
+                                  "justify": "space-between",
+                                  "type": "stack",
+                                  "align": "center",
+                                  "direction": "horizontal"
                                 },
                                 {
+                                  "content": "@item.status",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@item.status"
+                                  "variant": "caption"
                                 }
                               ]
                             }
@@ -211,37 +271,37 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
+                              "size": "lg",
                               "name": "loader",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "Traveling...",
-                              "variant": "h2"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "variant": "body",
                           "type": "typography",
-                          "content": "Traveling to the destination worldregions map.",
-                          "variant": "body"
+                          "content": "Traveling to the destination worldregions map."
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -253,26 +313,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "WorldRegion"
+                    "WorldRegion",
+                    {
+                      "emit": {
+                        "success": "WorldRegionLoaded",
+                        "failure": "WorldRegionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
                           "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "md",
+                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "icon",
@@ -281,8 +345,8 @@
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "WorldRegions Map",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "WorldRegions Map"
                                 }
                               ]
                             },
@@ -291,36 +355,31 @@
                               "status": "success",
                               "label": "Entered"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
                           "entity": "WorldRegion",
+                          "emptyDescription": "This zone is empty.",
+                          "type": "data-grid",
                           "emptyIcon": "inbox",
                           "emptyTitle": "Nothing here",
-                          "emptyDescription": "This zone is empty.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "justify": "space-between",
-                                  "align": "center",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "sm",
                                       "align": "center",
+                                      "gap": "sm",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -329,23 +388,29 @@
                                         },
                                         {
                                           "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
+                                          "content": "@item.name",
+                                          "variant": "h4"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack"
                                     },
                                     {
                                       "type": "badge",
                                       "label": "@item.description"
                                     }
-                                  ]
+                                  ],
+                                  "align": "center",
+                                  "direction": "horizontal",
+                                  "type": "stack"
                                 },
                                 {
+                                  "content": "@item.status",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@item.status"
+                                  "variant": "caption"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm"
                             }
                           ]
                         },
@@ -359,15 +424,16 @@
                           "justify": "end",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Back to Map",
+                              "icon": "arrow-left",
                               "event": "BACK",
                               "variant": "ghost",
-                              "icon": "arrow-left"
+                              "type": "button",
+                              "label": "Back to Map"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -379,26 +445,23 @@
                 "effects": [
                   [
                     "fetch",
-                    "WorldRegion"
+                    "WorldRegion",
+                    {
+                      "emit": {
+                        "success": "WorldRegionLoaded",
+                        "failure": "WorldRegionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
@@ -410,68 +473,71 @@
                                   "content": "World Map",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
-                              "type": "status-dot",
-                              "status": "active",
                               "pulse": false,
+                              "status": "active",
+                              "type": "status-dot",
                               "label": "Exploring"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "map-view",
                           "markers": [],
-                          "height": "200px",
-                          "zoom": 10
+                          "type": "map-view",
+                          "zoom": 10.0,
+                          "height": "200px"
                         },
                         {
-                          "type": "data-grid",
                           "entity": "WorldRegion",
-                          "emptyIcon": "compass",
                           "emptyTitle": "No worldregions discovered",
-                          "emptyDescription": "Explore to discover new worldregions.",
                           "itemActions": [
                             {
                               "label": "Travel",
                               "event": "TRAVEL"
                             }
                           ],
+                          "type": "data-grid",
+                          "emptyDescription": "Explore to discover new worldregions.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "sm",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
                                   "justify": "space-between",
+                                  "direction": "horizontal",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
                                       "align": "center",
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "name": "map-pin",
-                                          "size": "sm"
+                                          "size": "sm",
+                                          "name": "map-pin"
                                         },
                                         {
                                           "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
+                                          "content": "@item.name",
+                                          "variant": "h4"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm"
                                     },
                                     {
                                       "type": "badge",
@@ -484,17 +550,24 @@
                                   "variant": "caption",
                                   "content": "@item.status"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "emptyIcon": "compass"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

@@ -1,7 +1,7 @@
 {
   "name": "std-service-content-pipeline",
   "version": "1.0.0",
-  "description": "Content research pipeline molecule. Composes youtube search + llm summarization into a sequential pipeline: search -> select -> summarize.",
+  "description": "std-service-content-pipeline as a Function",
   "orbitals": [
     {
       "name": "ServiceContentPipelineOrbital",
@@ -70,8 +70,8 @@
       "traits": [
         {
           "name": "ServiceContentPipelinePipeline",
-          "linkedEntity": "ServiceContentPipeline",
           "category": "interaction",
+          "linkedEntity": "ServiceContentPipeline",
           "stateMachine": {
             "states": [
               {
@@ -115,8 +115,19 @@
                 ]
               },
               {
+                "key": "FAILED",
+                "name": "Failed",
+                "payload": [
+                  {
+                    "name": "error",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              },
+              {
                 "key": "SELECT_AND_SUMMARIZE",
-                "name": "Select and Summarize",
+                "name": "Select And Summarize",
                 "payload": [
                   {
                     "name": "videoId",
@@ -124,6 +135,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
               },
               {
                 "key": "VIDEO_FETCHED",
@@ -151,21 +166,6 @@
                     "required": true
                   }
                 ]
-              },
-              {
-                "key": "FAILED",
-                "name": "Failed",
-                "payload": [
-                  {
-                    "name": "error",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "RESET",
-                "name": "Reset"
               }
             ],
             "transitions": [
@@ -178,25 +178,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "search",
-                              "size": "lg"
+                              "name": "search"
                             },
                             {
-                              "type": "typography",
                               "content": "Content Research",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ]
                         },
@@ -204,12 +203,11 @@
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
+                              "gap": "md",
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
                                   "type": "typography",
@@ -218,18 +216,20 @@
                                 },
                                 {
                                   "type": "form-section",
-                                  "entity": "ServiceContentPipeline",
-                                  "mode": "edit",
-                                  "submitEvent": "SEARCH",
                                   "fields": [
                                     "query"
-                                  ]
+                                  ],
+                                  "entity": "ServiceContentPipeline",
+                                  "mode": "edit",
+                                  "submitEvent": "SEARCH"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -249,40 +249,40 @@
                     "youtube",
                     "search",
                     {
-                      "query": "@entity.query",
-                      "maxResults": 5,
-                      "type": "video"
+                      "maxResults": 5.0,
+                      "type": "video",
+                      "query": "@entity.query"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "lg",
-                      "align": "center",
                       "children": [
                         {
+                          "size": "lg",
                           "type": "icon",
-                          "name": "search",
-                          "size": "lg"
+                          "name": "search"
                         },
                         {
-                          "type": "typography",
                           "content": "Searching YouTube...",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
-                          "type": "spinner",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "variant": "caption",
                           "content": "@entity.query",
-                          "variant": "caption"
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -301,52 +301,62 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "justify": "space-between",
                           "children": [
                             {
+                              "align": "center",
+                              "gap": "sm",
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "video",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "video"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Search Results",
-                                  "variant": "h2"
+                                  "content": "Search Results"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "New Search",
                               "event": "RESET",
                               "variant": "ghost",
+                              "type": "button",
+                              "label": "New Search",
                               "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "ServiceContentPipeline",
                           "emptyIcon": "inbox",
                           "emptyTitle": "No results found",
+                          "columns": [
+                            {
+                              "label": "Title",
+                              "name": "videoTitle",
+                              "icon": "video",
+                              "variant": "h4"
+                            },
+                            {
+                              "variant": "caption",
+                              "name": "videoDescription",
+                              "label": "Description"
+                            }
+                          ],
+                          "entity": "ServiceContentPipeline",
+                          "type": "data-grid",
                           "emptyDescription": "Try a different search query.",
                           "itemActions": [
                             {
@@ -355,22 +365,63 @@
                               "variant": "primary",
                               "size": "sm"
                             }
-                          ],
-                          "columns": [
-                            {
-                              "name": "videoTitle",
-                              "label": "Title",
-                              "variant": "h4",
-                              "icon": "video"
-                            },
-                            {
-                              "name": "videoDescription",
-                              "label": "Description",
-                              "variant": "caption"
-                            }
                           ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "searching",
+                "to": "error",
+                "event": "FAILED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.error",
+                    "@payload.error"
+                  ],
+                  [
+                    "set",
+                    "@entity.pipelineStatus",
+                    "error"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "size": "lg",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Pipeline Error",
+                          "variant": "h2"
+                        },
+                        {
+                          "type": "alert",
+                          "variant": "error",
+                          "message": "@entity.error"
+                        },
+                        {
+                          "label": "Try Again",
+                          "event": "RESET",
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
+                          "type": "button"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -397,31 +448,101 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
+                          "size": "lg",
                           "name": "cpu",
-                          "size": "lg"
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "Fetching & summarizing...",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "type": "spinner",
                           "size": "lg"
                         },
                         {
-                          "type": "typography",
                           "content": "@entity.videoTitle",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "results",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pipelineStatus",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "gap": "sm",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "name": "search",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Content Research",
+                              "variant": "h2"
+                            }
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "content": "Search YouTube for content to summarize",
+                                  "type": "typography",
+                                  "variant": "body"
+                                },
+                                {
+                                  "submitEvent": "SEARCH",
+                                  "entity": "ServiceContentPipeline",
+                                  "type": "form-section",
+                                  "fields": [
+                                    "query"
+                                  ],
+                                  "mode": "edit"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "md"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -470,21 +591,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "justify": "space-between",
+                          "align": "center",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
+                              "direction": "horizontal",
                               "align": "center",
                               "children": [
                                 {
@@ -493,20 +611,21 @@
                                   "size": "lg"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Research Complete",
-                                  "variant": "h2"
+                                  "content": "Research Complete"
                                 }
                               ]
                             },
                             {
-                              "type": "button",
-                              "label": "New Search",
                               "event": "RESET",
+                              "type": "button",
                               "variant": "ghost",
+                              "label": "New Search",
                               "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -515,15 +634,11 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "gap": "sm",
-                                  "align": "center",
+                                  "type": "stack",
                                   "children": [
                                     {
                                       "type": "icon",
@@ -531,81 +646,36 @@
                                       "size": "sm"
                                     },
                                     {
+                                      "variant": "h3",
                                       "type": "typography",
-                                      "content": "@entity.videoTitle",
-                                      "variant": "h3"
+                                      "content": "@entity.videoTitle"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "align": "center"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Summary",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.summary",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.summary"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md"
                             }
                           ]
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "searching",
-                "to": "error",
-                "event": "FAILED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.error",
-                    "@payload.error"
-                  ],
-                  [
-                    "set",
-                    "@entity.pipelineStatus",
-                    "error"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
+                      ],
                       "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Pipeline Error",
-                          "variant": "h2"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "error",
-                          "message": "@entity.error"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Try Again",
-                          "event": "RESET",
-                          "variant": "primary",
-                          "icon": "rotate-ccw"
-                        }
-                      ]
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -629,34 +699,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "alert-triangle",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
+                          "variant": "h2",
                           "type": "typography",
-                          "content": "Pipeline Error",
-                          "variant": "h2"
+                          "content": "Pipeline Error"
                         },
                         {
-                          "type": "alert",
+                          "message": "@entity.error",
                           "variant": "error",
-                          "message": "@entity.error"
+                          "type": "alert"
                         },
                         {
-                          "type": "button",
-                          "label": "Try Again",
                           "event": "RESET",
-                          "variant": "primary",
-                          "icon": "rotate-ccw"
+                          "label": "Try Again",
+                          "type": "button",
+                          "icon": "rotate-ccw",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -695,43 +765,40 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
+                              "size": "lg",
                               "type": "icon",
-                              "name": "search",
-                              "size": "lg"
+                              "name": "search"
                             },
                             {
                               "type": "typography",
                               "content": "Content Research",
                               "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "type": "stack",
                               "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
+                                  "variant": "body",
                                   "type": "typography",
-                                  "content": "Search YouTube for content to summarize",
-                                  "variant": "body"
+                                  "content": "Search YouTube for content to summarize"
                                 },
                                 {
                                   "type": "form-section",
@@ -742,81 +809,14 @@
                                     "query"
                                   ]
                                 }
-                              ]
+                              ],
+                              "gap": "md"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "results",
-                "to": "idle",
-                "event": "RESET",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.pipelineStatus",
-                    "idle"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "search",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Content Research",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "card",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "content": "Search YouTube for content to summarize",
-                                  "variant": "body"
-                                },
-                                {
-                                  "type": "form-section",
-                                  "entity": "ServiceContentPipeline",
-                                  "mode": "edit",
-                                  "submitEvent": "SEARCH",
-                                  "fields": [
-                                    "query"
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -840,27 +840,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "search",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "search"
                             },
                             {
-                              "type": "typography",
                               "content": "Content Research",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -869,8 +867,8 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
+                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
@@ -880,24 +878,27 @@
                                 },
                                 {
                                   "type": "form-section",
-                                  "entity": "ServiceContentPipeline",
-                                  "mode": "edit",
-                                  "submitEvent": "SEARCH",
                                   "fields": [
                                     "query"
-                                  ]
+                                  ],
+                                  "submitEvent": "SEARCH",
+                                  "mode": "edit",
+                                  "entity": "ServiceContentPipeline"
                                 }
                               ]
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

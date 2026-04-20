@@ -9,18 +9,23 @@ orbital PagedItemOrbital {
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
-  trait PagedItemPagination -> PagedItem [interaction] {
+
+  type PagedItemLoaded     = Event PagedItem                  "Fired when PagedItem finishes loading"
+  type PagedItemLoadFailed = Event { message : string } "Fired when PagedItem fails to load"
+  trait PagedItemPagination -> PagedItem [interaction, collection] {
     state idle {
       INIT -> idle
-        (fetch PagedItem)
+        (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "PagedItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "PagedItem", emptyIcon: "inbox", emptyTitle: "No pageditems yet", emptyDescription: "Add pageditems to see them here.", columns: [{ name: "name", label: "Name", variant: "h4" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "pagination", currentPage: 1, totalPages: 10, onPageChange: "PAGE", showPageSize: false }, { type: "infinite-scroll-sentinel", loadMoreEvent: "PAGE" }] })
       PAGE -> idle
-        (fetch PagedItem)
+        (fetch PagedItem { emit: { success: "PagedItemLoaded", failure: "PagedItemLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "PagedItems", variant: "h2" }] }] }, { type: "divider" }, { type: "data-grid", entity: "PagedItem", emptyIcon: "inbox", emptyTitle: "No pageditems yet", emptyDescription: "Add pageditems to see them here.", columns: [{ name: "name", label: "Name", variant: "h4" }, { name: "description", label: "Description", variant: "caption" }, { name: "status", label: "Status", variant: "badge" }] }, { type: "pagination", currentPage: "@payload.page", totalPages: 10, onPageChange: "PAGE", showPageSize: false }] })
     }
     listens {
       PAGE { page : number!, pageSize : number! }
+          PagedItemLoadFailed { message : string }
     }
+    emits: [PagedItemLoaded, PagedItemLoadFailed]
   }
   page "/pageditems/paginated" as PagedItemPaginationPage -> PagedItemPagination
 }

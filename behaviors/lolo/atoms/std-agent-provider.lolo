@@ -15,14 +15,17 @@ orbital AgentProviderOrbital {
     message : string = ""
     notificationType : string = "info"
   }
-  trait AgentProviderModal -> AgentProvider [interaction] {
+
+  type AgentProviderLoaded     = Event AgentProvider                  "Fired when AgentProvider finishes loading"
+  type AgentProviderLoadFailed = Event { message : string } "Fired when AgentProvider fails to load"
+  trait AgentProviderModal -> AgentProvider [interaction, instance] {
     initial: closed
     state closed {
       INIT -> closed
         (ref AgentProvider)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
       SWITCH -> open
-        (fetch AgentProvider)
+        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "repeat", size: "md" }, { type: "typography", content: "Switch Provider", variant: "h3" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Current:" }, { type: "badge", label: "@entity.currentProvider" }, { type: "badge", label: "@entity.currentModel" }] }, { type: "form-section", entity: "AgentProvider", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["currentProvider", "currentModel"] }] })
     }
     state open {
@@ -39,18 +42,20 @@ orbital AgentProviderOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
-      SAVE external
-      SWITCHED external
+      SAVE external { data: string }
+      SWITCHED external { id: string }
     }
     listens {
       SAVE { data : object! }
+          AgentProviderLoadFailed { message : string }
     }
+    emits: [AgentProviderLoaded, AgentProviderLoadFailed]
   }
-  trait AgentProviderNotification -> AgentProvider [interaction] {
+  trait AgentProviderNotification -> AgentProvider [interaction, instance] {
     initial: hidden
     state hidden {
       INIT -> hidden
-        (fetch AgentProvider)
+        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
       SHOW -> visible
         (set @entity.message @payload.message)
         (set @entity.notificationType @payload.notificationType)
@@ -66,13 +71,15 @@ orbital AgentProviderOrbital {
     }
     listens {
       SHOW { message : string!, notificationType : string }
+          AgentProviderLoadFailed { message : string }
     }
+    emits: [AgentProviderLoaded, AgentProviderLoadFailed]
   }
-  trait AgentProviderAgent -> AgentProvider [interaction] {
+  trait AgentProviderAgent -> AgentProvider [interaction, instance] {
     initial: idle
     state idle {
       INIT -> active
-        (fetch AgentProvider)
+        (fetch AgentProvider { emit: { success: "AgentProviderLoaded", failure: "AgentProviderLoadFailed" } })
         (agent/provider)
         (agent/model)
         (render-ui main { type: "empty-state", icon: "repeat", title: "Provider", description: "Provider is ready" })
@@ -105,7 +112,9 @@ orbital AgentProviderOrbital {
     listens {
       * SWITCHED -> SWITCHED
       DO_SWITCH { data : object! }
+          AgentProviderLoadFailed { message : string }
     }
+    emits: [AgentProviderLoaded, AgentProviderLoadFailed]
   }
   page "/agentproviders" as AgentProviderPage -> AgentProviderModal, AgentProviderNotification, AgentProviderAgent
 }

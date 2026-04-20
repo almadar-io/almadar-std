@@ -1,7 +1,7 @@
 {
   "name": "std-push-activity-log",
   "version": "1.0.0",
-  "description": "Push + activity log: PushIndicator status + ActivityLog of received messages, composed via @trait.X.",
+  "description": "std-push-activity-log as a Function",
   "orbitals": [
     {
       "name": "PushActivityLogOrbital",
@@ -63,7 +63,8 @@
             ],
             "events": [
               {
-                "key": "INIT"
+                "key": "INIT",
+                "name": "Initialize"
               }
             ],
             "transitions": [
@@ -73,22 +74,27 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "PushActivityItem"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         "@trait.PushActivityPush",
                         "@trait.PushActivityLog"
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

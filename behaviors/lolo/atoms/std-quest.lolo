@@ -9,19 +9,22 @@ orbital QuestLogOrbital {
     status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
-  trait QuestLogTracking -> QuestLog [interaction] {
+
+  type QuestLogLoaded     = Event QuestLog                  "Fired when QuestLog finishes loading"
+  type QuestLogLoadFailed = Event { message : string } "Fired when QuestLog fails to load"
+  trait QuestLogTracking -> QuestLog [interaction, collection] {
     initial: available
     state available {
       INIT -> available
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "QuestLog", groupBy: "status", emptyIcon: "inbox", emptyTitle: "No questlogs available", emptyDescription: "Check back later for new questlogs.", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
       ACCEPT -> active
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "QuestLog", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
     }
     state active {
       INIT -> active
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "QuestLog", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
       PROGRESS -> progressing
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "trending-up", size: "md" }, { type: "typography", content: "Update Progress", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "QuestLog", mode: "edit", submitEvent: "SAVE", cancelEvent: "CANCEL", fields: ["name", "description", "status", "createdAt"] }] })
@@ -34,31 +37,33 @@ orbital QuestLogOrbital {
       SAVE -> active
         (persist update QuestLog @payload.data)
         (render-ui modal null)
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "QuestLog", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
       CANCEL -> active
         (render-ui modal null)
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "QuestLog", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
       CLOSE -> active
         (render-ui modal null)
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }, { type: "badge", label: "Active" }] }, { type: "divider" }, { type: "progress-bar", value: 50, showPercentage: true }, { type: "data-grid", entity: "QuestLog", emptyIcon: "inbox", emptyTitle: "No active quests", emptyDescription: "Accept a quest to begin.", itemActions: [{ label: "Progress", event: "PROGRESS" }, { label: "Complete", event: "COMPLETE" }, { label: "Fail", event: "FAIL", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
     }
     state complete {
       RESET -> available
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "QuestLog", groupBy: "status", emptyIcon: "inbox", emptyTitle: "No questlogs available", emptyDescription: "Check back later for new questlogs.", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
     }
     state failed {
       RESET -> available
-        (fetch QuestLog)
+        (fetch QuestLog { emit: { success: "QuestLogLoaded", failure: "QuestLogLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "flag", size: "lg" }, { type: "typography", content: "QuestLogs Board", variant: "h2" }] }] }, { type: "divider" }, { type: "data-list", entity: "QuestLog", groupBy: "status", emptyIcon: "inbox", emptyTitle: "No questlogs available", emptyDescription: "Check back later for new questlogs.", itemActions: [{ label: "Accept", event: "ACCEPT" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "flag", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
     }
     listens {
       PROGRESS { data : object! }
       SAVE { data : object! }
+          QuestLogLoadFailed { message : string }
     }
+    emits: [QuestLogLoaded, QuestLogLoadFailed]
   }
   page "/questlogs" as QuestLogPage -> QuestLogTracking
 }

@@ -1,7 +1,7 @@
 {
   "name": "std-coding-academy",
   "version": "1.0.0",
-  "description": "Coding academy organism. Composes: stdSequencerGame(SeqChallenge) + stdBuilderGame(BuildChallenge) + stdEventHandlerGame(EventChallenge) + stdDisplay(StudentProgress)",
+  "description": "std-coding-academy as a Function",
   "orbitals": [
     {
       "name": "SeqChallengeOrbital",
@@ -27,7 +27,7 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "completed",
@@ -37,25 +37,61 @@
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Sequencer Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "SeqChallengeSequencerGame",
-          "linkedEntity": "SeqChallenge",
           "category": "interaction",
+          "linkedEntity": "SeqChallenge",
+          "emits": [
+            {
+              "event": "SeqChallengeLoaded",
+              "description": "Fired when SeqChallenge finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "difficulty",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "completed",
+                  "type": "boolean"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "SeqChallengeLoadFailed",
+              "description": "Fired when SeqChallenge fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -79,6 +115,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -87,8 +127,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "SeqChallengeLoaded",
+                "name": "SeqChallenge loaded"
+              },
+              {
+                "key": "SeqChallengeLoadFailed",
+                "name": "SeqChallenge load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -99,28 +149,34 @@
                 "effects": [
                   [
                     "fetch",
-                    "SeqChallenge"
+                    "SeqChallenge",
+                    {
+                      "emit": {
+                        "failure": "SeqChallengeLoadFailed",
+                        "success": "SeqChallengeLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Coding Academy",
                       "showTopBar": true,
                       "children": [
                         {
                           "type": "game-menu",
-                          "title": "Sequencer Challenge",
                           "menuItems": [
                             {
                               "label": "Start",
-                              "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "START"
                             }
-                          ]
+                          ],
+                          "title": "Sequencer Challenge"
                         }
-                      ]
+                      ],
+                      "appName": "Coding Academy"
                     }
                   ]
                 ]
@@ -134,14 +190,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
                               "type": "game-hud",
@@ -157,13 +208,18 @@
                               ]
                             },
                             {
-                              "type": "sequencer-board",
                               "entity": "SeqChallenge",
+                              "type": "sequencer-board",
                               "completeEvent": "COMPLETE"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "vertical"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "appName": "Coding Academy",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -171,8 +227,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -183,20 +238,20 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Coding Academy",
+                      "type": "game-shell",
                       "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-over-screen",
-                          "title": "Well Done!",
                           "menuItems": [
                             {
+                              "variant": "primary",
                               "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
+                              "event": "RESTART"
                             }
-                          ]
+                          ],
+                          "type": "game-over-screen",
+                          "title": "Well Done!"
                         }
                       ]
                     }
@@ -218,14 +273,14 @@
                       "children": [
                         {
                           "type": "game-menu",
-                          "title": "Sequencer Challenge",
                           "menuItems": [
                             {
                               "label": "Start",
                               "event": "START",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "title": "Sequencer Challenge"
                         }
                       ]
                     }
@@ -233,14 +288,14 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
           "name": "SequencerPage",
           "path": "/sequencer",
-          "isInitial": true,
           "traits": [
             {
               "ref": "SeqChallengeSequencerGame"
@@ -273,7 +328,7 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "completed",
@@ -283,25 +338,61 @@
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Builder Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "BuildChallengeBuilderGame",
-          "linkedEntity": "BuildChallenge",
           "category": "interaction",
+          "linkedEntity": "BuildChallenge",
+          "emits": [
+            {
+              "event": "BuildChallengeLoaded",
+              "description": "Fired when BuildChallenge finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "difficulty",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "completed",
+                  "type": "boolean"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "BuildChallengeLoadFailed",
+              "description": "Fired when BuildChallenge fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -325,6 +416,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -333,8 +428,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "BuildChallengeLoaded",
+                "name": "BuildChallenge loaded"
+              },
+              {
+                "key": "BuildChallengeLoadFailed",
+                "name": "BuildChallenge load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -345,24 +450,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "BuildChallenge"
+                    "BuildChallenge",
+                    {
+                      "emit": {
+                        "success": "BuildChallengeLoaded",
+                        "failure": "BuildChallengeLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "showTopBar": true,
                       "type": "game-shell",
                       "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "game-menu",
                           "title": "Builder Challenge",
                           "menuItems": [
                             {
+                              "variant": "primary",
                               "label": "Start",
-                              "event": "START",
-                              "variant": "primary"
+                              "event": "START"
                             }
                           ]
                         }
@@ -381,12 +492,10 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Coding Academy",
                       "showTopBar": true,
+                      "appName": "Coding Academy",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
                           "gap": "md",
                           "children": [
                             {
@@ -403,11 +512,13 @@
                               ]
                             },
                             {
+                              "completeEvent": "COMPLETE",
                               "type": "builder-board",
-                              "entity": "BuildChallenge",
-                              "completeEvent": "COMPLETE"
+                              "entity": "BuildChallenge"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "vertical"
                         }
                       ]
                     }
@@ -417,8 +528,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -429,8 +539,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Coding Academy",
+                      "type": "game-shell",
                       "showTopBar": true,
                       "children": [
                         {
@@ -438,9 +548,9 @@
                           "title": "Well Done!",
                           "menuItems": [
                             {
+                              "variant": "primary",
                               "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
+                              "event": "RESTART"
                             }
                           ]
                         }
@@ -458,33 +568,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-menu",
-                          "title": "Builder Challenge",
                           "menuItems": [
                             {
-                              "label": "Start",
                               "event": "START",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "label": "Start"
                             }
-                          ]
+                          ],
+                          "type": "game-menu",
+                          "title": "Builder Challenge"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "appName": "Coding Academy",
+                      "type": "game-shell"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "BuilderPage",
+          "name": "Builder",
           "path": "/builder",
           "traits": [
             {
@@ -518,7 +629,7 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "completed",
@@ -528,25 +639,61 @@
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Event Handler Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "EventChallengeEventHandlerGame",
-          "linkedEntity": "EventChallenge",
           "category": "interaction",
+          "linkedEntity": "EventChallenge",
+          "emits": [
+            {
+              "event": "EventChallengeLoaded",
+              "description": "Fired when EventChallenge finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "difficulty",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "completed",
+                  "type": "boolean"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "EventChallengeLoadFailed",
+              "description": "Fired when EventChallenge fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -570,6 +717,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -578,8 +729,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "EventChallengeLoaded",
+                "name": "EventChallenge loaded"
+              },
+              {
+                "key": "EventChallengeLoadFailed",
+                "name": "EventChallenge load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -590,24 +751,30 @@
                 "effects": [
                   [
                     "fetch",
-                    "EventChallenge"
+                    "EventChallenge",
+                    {
+                      "emit": {
+                        "success": "EventChallengeLoaded",
+                        "failure": "EventChallengeLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Coding Academy",
                       "showTopBar": true,
+                      "appName": "Coding Academy",
+                      "type": "game-shell",
                       "children": [
                         {
                           "type": "game-menu",
                           "title": "Event Handler Challenge",
                           "menuItems": [
                             {
-                              "label": "Start",
+                              "variant": "primary",
                               "event": "START",
-                              "variant": "primary"
+                              "label": "Start"
                             }
                           ]
                         }
@@ -626,35 +793,35 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "vertical",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "game-hud",
                               "stats": [
                                 {
-                                  "label": "Score",
-                                  "value": "@entity.score"
+                                  "value": "@entity.score",
+                                  "label": "Score"
                                 },
                                 {
                                   "label": "Level",
                                   "value": "@entity.level"
                                 }
-                              ]
+                              ],
+                              "type": "game-hud"
                             },
                             {
                               "type": "event-handler-board",
                               "entity": "EventChallenge",
                               "completeEvent": "COMPLETE"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "vertical",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "appName": "Coding Academy",
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -662,8 +829,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -675,21 +841,21 @@
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "game-over-screen",
                           "title": "Well Done!",
                           "menuItems": [
                             {
                               "label": "Play Again",
-                              "event": "RESTART",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "event": "RESTART"
                             }
-                          ]
+                          ],
+                          "type": "game-over-screen"
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "appName": "Coding Academy"
                     }
                   ]
                 ]
@@ -703,33 +869,34 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "game-menu",
                           "title": "Event Handler Challenge",
                           "menuItems": [
                             {
-                              "label": "Start",
                               "event": "START",
+                              "label": "Start",
                               "variant": "primary"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "appName": "Coding Academy",
+                      "showTopBar": true,
+                      "type": "game-shell"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "EventsPage",
+          "name": "Events",
           "path": "/events",
           "traits": [
             {
@@ -752,31 +919,68 @@
           },
           {
             "name": "totalLessons",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "completedLessons",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "averageScore",
-            "type": "number",
-            "default": 0
+            "type": "number"
           },
           {
             "name": "streak",
-            "type": "number",
-            "default": 0
+            "type": "number"
           }
         ]
       },
       "traits": [
         {
           "name": "StudentProgressDisplay",
-          "linkedEntity": "StudentProgress",
           "category": "interaction",
+          "linkedEntity": "StudentProgress",
+          "emits": [
+            {
+              "event": "StudentProgressLoaded",
+              "description": "Fired when StudentProgress finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "totalLessons",
+                  "type": "number"
+                },
+                {
+                  "name": "completedLessons",
+                  "type": "number"
+                },
+                {
+                  "name": "averageScore",
+                  "type": "number"
+                },
+                {
+                  "name": "streak",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "StudentProgressLoadFailed",
+              "description": "Fired when StudentProgress fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -806,6 +1010,20 @@
               {
                 "key": "REFRESHED",
                 "name": "Refreshed"
+              },
+              {
+                "key": "StudentProgressLoaded",
+                "name": "StudentProgress loaded"
+              },
+              {
+                "key": "StudentProgressLoadFailed",
+                "name": "StudentProgress load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -816,23 +1034,23 @@
                 "effects": [
                   [
                     "fetch",
-                    "StudentProgress"
+                    "StudentProgress",
+                    {
+                      "emit": {
+                        "failure": "StudentProgressLoadFailed",
+                        "success": "StudentProgressLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
@@ -847,36 +1065,36 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
                                           "type": "icon",
-                                          "name": "trending-up",
-                                          "size": "lg"
+                                          "size": "lg",
+                                          "name": "trending-up"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "Progress",
+                                          "type": "typography",
                                           "variant": "h2"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md"
                                     },
                                     {
-                                      "type": "button",
+                                      "icon": "refresh-cw",
                                       "label": "Refresh",
                                       "event": "REFRESH",
                                       "variant": "secondary",
-                                      "icon": "refresh-cw"
+                                      "type": "button"
                                     }
-                                  ]
+                                  ],
+                                  "justify": "space-between",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
@@ -887,11 +1105,8 @@
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "label": "TotalLessons",
                                           "value": [
                                             "object/get",
                                             [
@@ -899,7 +1114,9 @@
                                               "@entity"
                                             ],
                                             "totalLessons"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "TotalLessons"
                                         },
                                         {
                                           "type": "stat-display",
@@ -915,7 +1132,6 @@
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "AverageScore",
                                           "value": [
                                             "object/get",
                                             [
@@ -923,11 +1139,12 @@
                                               "@entity"
                                             ],
                                             "averageScore"
-                                          ]
+                                          ],
+                                          "label": "AverageScore"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Streak",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -937,7 +1154,8 @@
                                             "streak"
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "columns": 3.0
                                     }
                                   ]
                                 },
@@ -945,66 +1163,65 @@
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
+                                          "content": "Chart View",
                                           "variant": "caption",
-                                          "content": "Chart View"
+                                          "type": "typography"
                                         }
                                       ]
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
+                                    }
+                                  ],
+                                  "type": "grid",
+                                  "columns": 2.0
+                                },
+                                {
+                                  "xKey": "date",
+                                  "title": "Trend",
+                                  "yKey": "value",
+                                  "type": "line-chart",
+                                  "data": [
+                                    {
+                                      "value": 12.0,
+                                      "date": "Jan"
+                                    },
+                                    {
+                                      "date": "Feb",
+                                      "value": 19.0
+                                    },
+                                    {
+                                      "date": "Mar",
+                                      "value": 15.0
+                                    },
+                                    {
+                                      "value": 25.0,
+                                      "date": "Apr"
+                                    },
+                                    {
+                                      "value": 22.0,
+                                      "date": "May"
+                                    },
+                                    {
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "line-chart",
-                                  "data": [
-                                    {
-                                      "date": "Jan",
-                                      "value": 12
-                                    },
-                                    {
-                                      "date": "Feb",
-                                      "value": 19
-                                    },
-                                    {
-                                      "date": "Mar",
-                                      "value": 15
-                                    },
-                                    {
-                                      "date": "Apr",
-                                      "value": 25
-                                    },
-                                    {
-                                      "date": "May",
-                                      "value": 22
-                                    },
-                                    {
-                                      "date": "Jun",
-                                      "value": 30
-                                    }
-                                  ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
-                                },
-                                {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
@@ -1014,30 +1231,11 @@
                                       "label": "Previous",
                                       "color": "muted"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
                                   "type": "graph-view",
-                                  "nodes": [
-                                    {
-                                      "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
-                                    },
-                                    {
-                                      "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
-                                    },
-                                    {
-                                      "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
-                                    }
-                                  ],
                                   "edges": [
                                     {
                                       "from": "a",
@@ -1048,14 +1246,40 @@
                                       "to": "c"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "width": 400.0,
+                                  "nodes": [
+                                    {
+                                      "label": "Start",
+                                      "id": "a",
+                                      "x": 50.0,
+                                      "y": 100.0
+                                    },
+                                    {
+                                      "id": "b",
+                                      "x": 200.0,
+                                      "label": "Process",
+                                      "y": 50.0
+                                    },
+                                    {
+                                      "x": 350.0,
+                                      "label": "End",
+                                      "id": "c",
+                                      "y": 100.0
+                                    }
+                                  ],
+                                  "height": 200.0
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "lg",
+                              "direction": "vertical"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "showTopBar": true,
+                      "type": "game-shell",
+                      "appName": "Coding Academy"
                     }
                   ]
                 ]
@@ -1067,30 +1291,32 @@
                 "effects": [
                   [
                     "fetch",
-                    "StudentProgress"
+                    "StudentProgress",
+                    {
+                      "emit": {
+                        "failure": "StudentProgressLoadFailed",
+                        "success": "StudentProgressLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Coding Academy",
-                      "showTopBar": true,
+                      "type": "game-shell",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Progress"
@@ -1098,14 +1324,10 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
                                   "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "gap": "md",
                                       "children": [
                                         {
@@ -1114,34 +1336,35 @@
                                           "size": "lg"
                                         },
                                         {
+                                          "variant": "h2",
                                           "type": "typography",
-                                          "content": "Progress",
-                                          "variant": "h2"
+                                          "content": "Progress"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal"
                                     },
                                     {
+                                      "event": "REFRESH",
                                       "type": "button",
                                       "label": "Refresh",
-                                      "event": "REFRESH",
                                       "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
                                   "type": "box",
-                                  "padding": "md",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
                                           "label": "TotalLessons",
                                           "value": [
                                             "object/get",
@@ -1150,11 +1373,12 @@
                                               "@entity"
                                             ],
                                             "totalLessons"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "CompletedLessons",
+                                          "type": "stat-display",
                                           "value": [
                                             "object/get",
                                             [
@@ -1165,7 +1389,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "AverageScore",
                                           "value": [
                                             "object/get",
@@ -1174,11 +1397,10 @@
                                               "@entity"
                                             ],
                                             "averageScore"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "Streak",
                                           "value": [
                                             "object/get",
                                             [
@@ -1186,29 +1408,33 @@
                                               "@entity"
                                             ],
                                             "streak"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "Streak"
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid"
                                     }
-                                  ]
+                                  ],
+                                  "padding": "md"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
+                                  "columns": 2.0,
                                   "gap": "md",
+                                  "type": "grid",
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
                                           "variant": "caption",
                                           "content": "Chart View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
@@ -1223,90 +1449,94 @@
                                   ]
                                 },
                                 {
-                                  "type": "line-chart",
+                                  "yKey": "value",
+                                  "title": "Trend",
+                                  "xKey": "date",
                                   "data": [
                                     {
-                                      "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0,
+                                      "date": "Jan"
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
-                                      "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0,
+                                      "date": "Jun"
                                     }
                                   ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  "type": "line-chart"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
                                   "type": "graph-view",
+                                  "height": 200.0,
+                                  "width": 400.0,
                                   "nodes": [
                                     {
                                       "id": "a",
-                                      "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "x": 50.0,
+                                      "y": 100.0,
+                                      "label": "Start"
                                     },
                                     {
                                       "id": "b",
-                                      "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "x": 200.0,
+                                      "y": 50.0,
+                                      "label": "Process"
                                     },
                                     {
+                                      "y": 100.0,
+                                      "x": 350.0,
                                       "id": "c",
-                                      "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "label": "End"
                                     }
                                   ],
                                   "edges": [
                                     {
-                                      "from": "a",
-                                      "to": "b"
+                                      "to": "b",
+                                      "from": "a"
                                     },
                                     {
                                       "from": "b",
                                       "to": "c"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "showTopBar": true
                     }
                   ]
                 ]
@@ -1318,30 +1548,32 @@
                 "effects": [
                   [
                     "fetch",
-                    "StudentProgress"
+                    "StudentProgress",
+                    {
+                      "emit": {
+                        "success": "StudentProgressLoaded",
+                        "failure": "StudentProgressLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "type": "game-shell",
-                      "appName": "Coding Academy",
                       "showTopBar": true,
+                      "appName": "Coding Academy",
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "lg",
                               "children": [
                                 {
                                   "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Progress"
@@ -1349,36 +1581,36 @@
                                   ]
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
                                   "justify": "space-between",
+                                  "gap": "md",
+                                  "type": "stack",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
                                           "name": "trending-up",
-                                          "size": "lg"
+                                          "size": "lg",
+                                          "type": "icon"
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "Progress",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "content": "Progress"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md"
                                     },
                                     {
-                                      "type": "button",
                                       "label": "Refresh",
+                                      "type": "button",
                                       "event": "REFRESH",
                                       "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
@@ -1389,11 +1621,9 @@
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
+                                      "columns": 3.0,
                                       "children": [
                                         {
-                                          "type": "stat-display",
-                                          "label": "TotalLessons",
                                           "value": [
                                             "object/get",
                                             [
@@ -1401,11 +1631,11 @@
                                               "@entity"
                                             ],
                                             "totalLessons"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "TotalLessons"
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "CompletedLessons",
                                           "value": [
                                             "object/get",
                                             [
@@ -1413,10 +1643,11 @@
                                               "@entity"
                                             ],
                                             "completedLessons"
-                                          ]
+                                          ],
+                                          "label": "CompletedLessons",
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "AverageScore",
                                           "value": [
                                             "object/get",
@@ -1425,10 +1656,10 @@
                                               "@entity"
                                             ],
                                             "averageScore"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         },
                                         {
-                                          "type": "stat-display",
                                           "label": "Streak",
                                           "value": [
                                             "object/get",
@@ -1437,7 +1668,8 @@
                                               "@entity"
                                             ],
                                             "streak"
-                                          ]
+                                          ],
+                                          "type": "stat-display"
                                         }
                                       ]
                                     }
@@ -1448,114 +1680,118 @@
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
                                       "children": [
                                         {
+                                          "content": "Chart View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Chart View"
+                                          "variant": "caption"
                                         }
                                       ]
                                     },
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
+                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "variant": "caption"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     }
-                                  ]
+                                  ],
+                                  "columns": 2.0
                                 },
                                 {
+                                  "xKey": "date",
+                                  "yKey": "value",
+                                  "title": "Trend",
                                   "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
-                                      "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0,
+                                      "date": "Mar"
                                     },
                                     {
-                                      "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0,
+                                      "date": "Apr"
                                     },
                                     {
-                                      "date": "May",
-                                      "value": 22
+                                      "value": 22.0,
+                                      "date": "May"
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
-                                  ],
-                                  "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  ]
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
                                   "type": "graph-view",
                                   "nodes": [
                                     {
                                       "id": "a",
+                                      "y": 100.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "x": 50.0
                                     },
                                     {
-                                      "id": "b",
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "x": 200.0,
+                                      "id": "b",
+                                      "y": 50.0
                                     },
                                     {
-                                      "id": "c",
+                                      "y": 100.0,
+                                      "x": 350.0,
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "id": "c"
                                     }
                                   ],
+                                  "width": 400.0,
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "height": 200.0
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "lg"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
                       ]
                     }
@@ -1569,26 +1805,27 @@
                 "effects": [
                   [
                     "fetch",
-                    "StudentProgress"
+                    "StudentProgress",
+                    {
+                      "emit": {
+                        "success": "StudentProgressLoaded",
+                        "failure": "StudentProgressLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
-                      "appName": "Coding Academy",
                       "showTopBar": true,
                       "children": [
                         {
                           "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "lg",
                               "children": [
                                 {
-                                  "type": "breadcrumb",
                                   "items": [
                                     {
                                       "label": "Home",
@@ -1597,30 +1834,27 @@
                                     {
                                       "label": "Progress"
                                     }
-                                  ]
+                                  ],
+                                  "type": "breadcrumb"
                                 },
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
-                                          "type": "icon",
+                                          "size": "lg",
                                           "name": "trending-up",
-                                          "size": "lg"
+                                          "type": "icon"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "Progress",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "md"
                                     },
                                     {
                                       "type": "button",
@@ -1629,18 +1863,20 @@
                                       "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "justify": "space-between",
+                                  "direction": "horizontal"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
+                                  "type": "box",
                                   "children": [
                                     {
-                                      "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
                                           "type": "stat-display",
@@ -1655,8 +1891,6 @@
                                           ]
                                         },
                                         {
-                                          "type": "stat-display",
-                                          "label": "CompletedLessons",
                                           "value": [
                                             "object/get",
                                             [
@@ -1664,7 +1898,9 @@
                                               "@entity"
                                             ],
                                             "completedLessons"
-                                          ]
+                                          ],
+                                          "type": "stat-display",
+                                          "label": "CompletedLessons"
                                         },
                                         {
                                           "type": "stat-display",
@@ -1690,7 +1926,9 @@
                                             "streak"
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "type": "simple-grid",
+                                      "columns": 3.0
                                     }
                                   ]
                                 },
@@ -1699,98 +1937,100 @@
                                 },
                                 {
                                   "type": "grid",
-                                  "columns": 2,
                                   "gap": "md",
+                                  "columns": 2.0,
                                   "children": [
                                     {
-                                      "type": "card",
                                       "children": [
                                         {
                                           "type": "typography",
                                           "variant": "caption",
                                           "content": "Chart View"
                                         }
-                                      ]
+                                      ],
+                                      "type": "card"
                                     },
                                     {
                                       "type": "card",
                                       "children": [
                                         {
-                                          "type": "typography",
                                           "variant": "caption",
-                                          "content": "Graph View"
+                                          "content": "Graph View",
+                                          "type": "typography"
                                         }
                                       ]
                                     }
                                   ]
                                 },
                                 {
+                                  "yKey": "value",
                                   "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
                                   "xKey": "date",
-                                  "yKey": "value",
                                   "title": "Trend"
                                 },
                                 {
-                                  "type": "chart-legend",
                                   "items": [
                                     {
                                       "label": "Current",
                                       "color": "primary"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
-                                  ]
+                                  ],
+                                  "type": "chart-legend"
                                 },
                                 {
+                                  "width": 400.0,
                                   "type": "graph-view",
                                   "nodes": [
                                     {
                                       "id": "a",
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "y": 100.0,
+                                      "x": 50.0
                                     },
                                     {
-                                      "id": "b",
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "id": "b",
+                                      "x": 200.0,
+                                      "y": 50.0
                                     },
                                     {
-                                      "id": "c",
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "y": 100.0,
+                                      "x": 350.0,
+                                      "id": "c"
                                     }
                                   ],
+                                  "height": 200.0,
                                   "edges": [
                                     {
                                       "from": "a",
@@ -1800,15 +2040,17 @@
                                       "from": "b",
                                       "to": "c"
                                     }
-                                  ],
-                                  "width": 400,
-                                  "height": 200
+                                  ]
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "appName": "Coding Academy",
+                      "type": "game-shell"
                     }
                   ]
                 ]
@@ -1820,21 +2062,23 @@
                 "effects": [
                   [
                     "fetch",
-                    "StudentProgress"
+                    "StudentProgress",
+                    {
+                      "emit": {
+                        "success": "StudentProgressLoaded",
+                        "failure": "StudentProgressLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-shell",
                       "appName": "Coding Academy",
-                      "showTopBar": true,
                       "children": [
                         {
-                          "type": "scaled-diagram",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "vertical",
                               "gap": "lg",
                               "children": [
@@ -1842,8 +2086,8 @@
                                   "type": "breadcrumb",
                                   "items": [
                                     {
-                                      "label": "Home",
-                                      "href": "/"
+                                      "href": "/",
+                                      "label": "Home"
                                     },
                                     {
                                       "label": "Progress"
@@ -1852,46 +2096,44 @@
                                 },
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "md",
-                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "type": "stack",
                                       "direction": "horizontal",
-                                      "gap": "md",
                                       "children": [
                                         {
+                                          "size": "lg",
                                           "type": "icon",
-                                          "name": "trending-up",
-                                          "size": "lg"
+                                          "name": "trending-up"
                                         },
                                         {
-                                          "type": "typography",
                                           "content": "Progress",
-                                          "variant": "h2"
+                                          "variant": "h2",
+                                          "type": "typography"
                                         }
-                                      ]
+                                      ],
+                                      "type": "stack",
+                                      "gap": "md"
                                     },
                                     {
                                       "type": "button",
-                                      "label": "Refresh",
                                       "event": "REFRESH",
+                                      "label": "Refresh",
                                       "variant": "secondary",
                                       "icon": "refresh-cw"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "md",
+                                  "justify": "space-between"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "box",
                                   "padding": "md",
                                   "children": [
                                     {
                                       "type": "simple-grid",
-                                      "columns": 3,
                                       "children": [
                                         {
                                           "type": "stat-display",
@@ -1919,7 +2161,6 @@
                                         },
                                         {
                                           "type": "stat-display",
-                                          "label": "AverageScore",
                                           "value": [
                                             "object/get",
                                             [
@@ -1927,7 +2168,8 @@
                                               "@entity"
                                             ],
                                             "averageScore"
-                                          ]
+                                          ],
+                                          "label": "AverageScore"
                                         },
                                         {
                                           "type": "stat-display",
@@ -1941,17 +2183,16 @@
                                             "streak"
                                           ]
                                         }
-                                      ]
+                                      ],
+                                      "columns": 3.0
                                     }
-                                  ]
+                                  ],
+                                  "type": "box"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
-                                  "type": "grid",
-                                  "columns": 2,
-                                  "gap": "md",
                                   "children": [
                                     {
                                       "type": "card",
@@ -1967,110 +2208,118 @@
                                       "type": "card",
                                       "children": [
                                         {
+                                          "content": "Graph View",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "Graph View"
+                                          "variant": "caption"
                                         }
                                       ]
                                     }
-                                  ]
+                                  ],
+                                  "columns": 2.0,
+                                  "type": "grid",
+                                  "gap": "md"
                                 },
                                 {
-                                  "type": "line-chart",
                                   "data": [
                                     {
                                       "date": "Jan",
-                                      "value": 12
+                                      "value": 12.0
                                     },
                                     {
                                       "date": "Feb",
-                                      "value": 19
+                                      "value": 19.0
                                     },
                                     {
                                       "date": "Mar",
-                                      "value": 15
+                                      "value": 15.0
                                     },
                                     {
                                       "date": "Apr",
-                                      "value": 25
+                                      "value": 25.0
                                     },
                                     {
                                       "date": "May",
-                                      "value": 22
+                                      "value": 22.0
                                     },
                                     {
                                       "date": "Jun",
-                                      "value": 30
+                                      "value": 30.0
                                     }
                                   ],
+                                  "title": "Trend",
                                   "xKey": "date",
-                                  "yKey": "value",
-                                  "title": "Trend"
+                                  "type": "line-chart",
+                                  "yKey": "value"
                                 },
                                 {
                                   "type": "chart-legend",
                                   "items": [
                                     {
-                                      "label": "Current",
-                                      "color": "primary"
+                                      "color": "primary",
+                                      "label": "Current"
                                     },
                                     {
-                                      "label": "Previous",
-                                      "color": "muted"
+                                      "color": "muted",
+                                      "label": "Previous"
                                     }
                                   ]
                                 },
                                 {
-                                  "type": "graph-view",
                                   "nodes": [
                                     {
-                                      "id": "a",
+                                      "x": 50.0,
                                       "label": "Start",
-                                      "x": 50,
-                                      "y": 100
+                                      "id": "a",
+                                      "y": 100.0
                                     },
                                     {
-                                      "id": "b",
                                       "label": "Process",
-                                      "x": 200,
-                                      "y": 50
+                                      "id": "b",
+                                      "y": 50.0,
+                                      "x": 200.0
                                     },
                                     {
                                       "id": "c",
+                                      "x": 350.0,
                                       "label": "End",
-                                      "x": 350,
-                                      "y": 100
+                                      "y": 100.0
                                     }
                                   ],
+                                  "height": 200.0,
                                   "edges": [
                                     {
                                       "from": "a",
                                       "to": "b"
                                     },
                                     {
-                                      "from": "b",
-                                      "to": "c"
+                                      "to": "c",
+                                      "from": "b"
                                     }
                                   ],
-                                  "width": 400,
-                                  "height": 200
+                                  "width": 400.0,
+                                  "type": "graph-view"
                                 }
-                              ]
+                              ],
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "scaled-diagram"
                         }
-                      ]
+                      ],
+                      "type": "game-shell",
+                      "showTopBar": true
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [
         {
-          "name": "ProgressPage",
+          "name": "Progress",
           "path": "/progress",
           "traits": [
             {

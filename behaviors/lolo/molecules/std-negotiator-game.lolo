@@ -11,11 +11,14 @@ orbital NegotiatorGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait NegotiatorGameNegotiatorGame -> NegotiatorGame [interaction] {
+
+  type NegotiatorGameLoaded     = Event NegotiatorGame                  "Fired when NegotiatorGame finishes loading"
+  type NegotiatorGameLoadFailed = Event { message : string } "Fired when NegotiatorGame fails to load"
+  trait NegotiatorGameNegotiatorGame -> NegotiatorGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch NegotiatorGame)
+        (fetch NegotiatorGame { emit: { success: "NegotiatorGameLoaded", failure: "NegotiatorGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Negotiator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "negotiator-board", entity: "NegotiatorGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital NegotiatorGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Negotiator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [NegotiatorGameLoaded, NegotiatorGameLoadFailed]
+    listens {
+      NegotiatorGameLoadFailed { message : string }
     }
   }
   page "/negotiatorgames" as NegotiatorGamePage -> NegotiatorGameNegotiatorGame

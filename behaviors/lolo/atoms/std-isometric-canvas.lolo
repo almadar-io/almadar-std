@@ -12,11 +12,14 @@ orbital IsometricWorldOrbital {
     units : [string]
     features : [string]
   }
-  trait IsometricWorldIsometricCanvas -> IsometricWorld [interaction] {
+
+  type IsometricWorldLoaded     = Event IsometricWorld                  "Fired when IsometricWorld finishes loading"
+  type IsometricWorldLoadFailed = Event { message : string } "Fired when IsometricWorld fails to load"
+  trait IsometricWorldIsometricCanvas -> IsometricWorld [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch IsometricWorld)
+        (fetch IsometricWorld { emit: { success: "IsometricWorldLoaded", failure: "IsometricWorldLoadFailed" } })
         (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
       TILE_CLICK -> active
         (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
@@ -38,7 +41,9 @@ orbital IsometricWorldOrbital {
     listens {
       TILE_CLICK { tileId : string! }
       UNIT_CLICK { unitId : string! }
+          IsometricWorldLoadFailed { message : string }
     }
+    emits: [IsometricWorldLoaded, IsometricWorldLoadFailed]
   }
   page "/isometricworlds" as IsometricWorldCanvasPage -> IsometricWorldIsometricCanvas
 }

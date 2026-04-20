@@ -15,11 +15,14 @@ orbital PuzzleBoardOrbital {
     level : number = 1
     moves : number = 0
   }
-  trait PuzzleBoardPuzzleFlow -> PuzzleBoard [interaction] {
+
+  type PuzzleBoardLoaded     = Event PuzzleBoard                  "Fired when PuzzleBoard finishes loading"
+  type PuzzleBoardLoadFailed = Event { message : string } "Fired when PuzzleBoard fails to load"
+  trait PuzzleBoardPuzzleFlow -> PuzzleBoard [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch PuzzleBoard)
+        (fetch PuzzleBoard { emit: { success: "PuzzleBoardLoaded", failure: "PuzzleBoardLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Puzzle", subtitle: "Puzzle Challenge", menuItems: [{ label: "Start Puzzle", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "game-canvas-2d", width: 800, height: 600, fps: 60 })
@@ -51,11 +54,15 @@ orbital PuzzleBoardOrbital {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Puzzle", subtitle: "Puzzle Challenge", menuItems: [{ label: "Start Puzzle", event: "START", variant: "primary" }] })
     }
+    emits: [PuzzleBoardLoaded, PuzzleBoardLoadFailed]
+    listens {
+      PuzzleBoardLoadFailed { message : string }
+    }
   }
-  trait PuzzleBoardPuzzleScore -> PuzzleBoard [interaction] {
+  trait PuzzleBoardPuzzleScore -> PuzzleBoard [interaction, instance] {
     state idle {
       INIT -> idle
-        (fetch PuzzleBoard)
+        (fetch PuzzleBoard { emit: { success: "PuzzleBoardLoaded", failure: "PuzzleBoardLoadFailed" } })
       ADD_SCORE -> idle
         (set @entity.score (+ @entity.score @payload.points))
         (set @entity.combo (+ @entity.combo 1))
@@ -72,7 +79,9 @@ orbital PuzzleBoardOrbital {
     listens {
       ADD_SCORE { points : number! }
       COMBO { multiplier : number! }
+          PuzzleBoardLoadFailed { message : string }
     }
+    emits: [PuzzleBoardLoaded, PuzzleBoardLoadFailed]
   }
   page "/puzzleboards" as PuzzleBoardPage -> PuzzleBoardPuzzleFlow, PuzzleBoardPuzzleScore
 }

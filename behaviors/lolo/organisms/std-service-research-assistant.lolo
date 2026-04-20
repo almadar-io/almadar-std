@@ -11,7 +11,7 @@ orbital ResearchOrbital {
     pipelineStatus : string = "idle"
     error : string = ""
   }
-  trait ResearchPipeline -> Research [interaction] {
+  trait ResearchPipeline -> Research [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
@@ -88,11 +88,14 @@ orbital CacheEntryOrbital {
     redisStatus : string
     error : string = ""
   }
-  trait CacheEntryRedis -> CacheEntry [interaction] {
+
+  type CacheEntryLoaded     = Event CacheEntry                  "Fired when CacheEntry finishes loading"
+  type CacheEntryLoadFailed = Event { message : string } "Fired when CacheEntry fails to load"
+  trait CacheEntryRedis -> CacheEntry [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch CacheEntry)
+        (fetch CacheEntry { emit: { success: "CacheEntryLoaded", failure: "CacheEntryLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Key", bind: "@entity.key", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.value", placeholder: "cache-value" }, { type: "input", label: "TTL (seconds)", bind: "@entity.ttl", inputType: "number", placeholder: "3600" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] }] })
       GET_KEY -> executing
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "loading-state", title: "Executing...", message: "Running redis operation..." }] })
@@ -120,6 +123,12 @@ orbital CacheEntryOrbital {
       RESET -> idle
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h2" }] }, { type: "divider" }, { type: "stack", direction: "vertical", gap: "md", children: [{ type: "input", label: "Key", bind: "@entity.key", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.value", placeholder: "cache-value" }, { type: "input", label: "TTL (seconds)", bind: "@entity.ttl", inputType: "number", placeholder: "3600" }] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] }] })
     }
+    emits: [CacheEntryLoaded, CacheEntryLoadFailed]
+    listens {
+      CacheEntryLoadFailed { message : string }
+      EXECUTED { data : string }
+      FAILED { error : string }
+    }
   }
   page "/cache" -> CacheEntryRedis
 }
@@ -134,11 +143,14 @@ orbital ReportOrbital {
     result : string
     error : string = ""
   }
-  trait ReportStorage -> Report [interaction] {
+
+  type ReportLoaded     = Event Report                  "Fired when Report finishes loading"
+  type ReportLoadFailed = Event { message : string } "Fired when Report fails to load"
+  trait ReportStorage -> Report [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch Report)
+        (fetch Report { emit: { success: "ReportLoaded", failure: "ReportLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Report Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "input", label: "Prefix", bind: "@entity.prefix", placeholder: "path/prefix/" }, { type: "textarea", label: "Content", bind: "@entity.content", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] }] })
       UPLOAD_FILE -> executing
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "loading-state", title: "Processing...", message: "Executing storage operation on report..." }] })
@@ -173,6 +185,12 @@ orbital ReportOrbital {
         (set @entity.storageStatus idle)
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Report Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "input", label: "Prefix", bind: "@entity.prefix", placeholder: "path/prefix/" }, { type: "textarea", label: "Content", bind: "@entity.content", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] }] })
     }
+    emits: [ReportLoaded, ReportLoadFailed]
+    listens {
+      ReportLoadFailed { message : string }
+      EXECUTED { data : string }
+      FAILED { error : string }
+    }
   }
   page "/reports" -> ReportStorage
 }
@@ -187,11 +205,14 @@ orbital KnowledgeQueryOrbital {
     callStatus : string
     error : string = ""
   }
-  trait KnowledgeQueryCustomBearer -> KnowledgeQuery [interaction] {
+
+  type KnowledgeQueryLoaded     = Event KnowledgeQuery                  "Fired when KnowledgeQuery finishes loading"
+  type KnowledgeQueryLoadFailed = Event { message : string } "Fired when KnowledgeQuery fails to load"
+  trait KnowledgeQueryCustomBearer -> KnowledgeQuery [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch KnowledgeQuery)
+        (fetch KnowledgeQuery { emit: { success: "KnowledgeQueryLoaded", failure: "KnowledgeQueryLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield", size: "lg" }, { type: "typography", content: "Bearer API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] }] })
       CALL_API -> calling
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "loading-state", title: "Calling API...", message: "Sending request to knowledgequery endpoint..." }] })
@@ -215,6 +236,12 @@ orbital KnowledgeQueryOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield", size: "lg" }, { type: "typography", content: "Bearer API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] }] })
       RESET -> idle
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "shield", size: "lg" }, { type: "typography", content: "Bearer API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] }] })
+    }
+    emits: [KnowledgeQueryLoaded, KnowledgeQueryLoadFailed]
+    listens {
+      KnowledgeQueryLoadFailed { message : string }
+      API_RESPONSE { data : string, statusCode : string }
+      FAILED { error : string }
     }
   }
   page "/knowledge" -> KnowledgeQueryCustomBearer

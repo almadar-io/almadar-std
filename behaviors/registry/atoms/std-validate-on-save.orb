@@ -1,7 +1,7 @@
 {
   "name": "std-validate-on-save",
   "version": "1.0.0",
-  "description": "OS trigger that watches .orb files and validates them on save. Shows a status dashboard with validation results. Emits AGENT_INTERRUPT with validation results to interrupt autonomous agents with ground truth.",
+  "description": "std-validate-on-save as a Function",
   "orbitals": [
     {
       "name": "ValidateOnSave",
@@ -26,17 +26,23 @@
           {
             "name": "errors",
             "type": "array",
-            "default": []
+            "default": [],
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "warnings",
             "type": "array",
-            "default": []
+            "default": [],
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "timestamp",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "status",
@@ -48,19 +54,8 @@
       "traits": [
         {
           "name": "OrbFileWatcher",
-          "linkedEntity": "ValidateOnSave",
           "category": "interaction",
-          "listens": [
-            {
-              "event": "OS_FILE_MODIFIED",
-              "scope": "external",
-              "guard": [
-                "str/endsWith",
-                "@payload.path",
-                ".orb"
-              ]
-            }
-          ],
+          "linkedEntity": "ValidateOnSave",
           "emits": [
             {
               "event": "AGENT_INTERRUPT",
@@ -80,13 +75,19 @@
                 },
                 {
                   "name": "errors",
-                  "type": "array"
+                  "type": "[string]"
                 },
                 {
                   "name": "blocking",
                   "type": "boolean"
                 }
               ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "*.OS_FILE_MODIFIED",
+              "triggers": "undefined"
             }
           ],
           "stateMachine": {
@@ -112,33 +113,13 @@
               },
               {
                 "key": "OS_FILE_MODIFIED",
-                "name": "File Modified",
+                "name": "Os File Modified",
                 "payload": [
                   {
                     "name": "path",
                     "type": "string"
-                  },
-                  {
-                    "name": "name",
-                    "type": "string"
-                  },
-                  {
-                    "name": "dir",
-                    "type": "string"
-                  },
-                  {
-                    "name": "ext",
-                    "type": "string"
-                  },
-                  {
-                    "name": "timestamp",
-                    "type": "number"
                   }
                 ]
-              },
-              {
-                "key": "REFRESH",
-                "name": "Validate Now"
               },
               {
                 "key": "VALIDATION_PASSED",
@@ -163,13 +144,21 @@
                     "type": "array"
                   }
                 ]
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "key": "AGENT_INTERRUPT",
+                "name": "Agent Interrupt"
               }
             ],
             "transitions": [
               {
                 "from": "idle",
-                "event": "INIT",
                 "to": "idle",
+                "event": "INIT",
                 "effects": [
                   [
                     "os/watch-files",
@@ -177,7 +166,7 @@
                   ],
                   [
                     "os/debounce",
-                    500,
+                    500.0,
                     "OS_FILE_MODIFIED"
                   ],
                   [
@@ -190,16 +179,16 @@
                     "main",
                     {
                       "type": "page-header",
-                      "title": "Orb File Validator",
-                      "subtitle": "Watching **/*.orb for changes"
+                      "subtitle": "Watching **/*.orb for changes",
+                      "title": "Orb File Validator"
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "type": "empty-state",
                       "title": "Waiting for file changes",
+                      "type": "empty-state",
                       "description": "Watching **/*.orb. Save an .orb file to trigger validation."
                     }
                   ]
@@ -207,8 +196,8 @@
               },
               {
                 "from": "idle",
-                "event": "OS_FILE_MODIFIED",
                 "to": "validating",
+                "event": "OS_FILE_MODIFIED",
                 "effects": [
                   [
                     "set",
@@ -229,9 +218,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "page-header",
                       "title": "Orb File Validator",
-                      "subtitle": "Validating..."
+                      "subtitle": "Validating...",
+                      "type": "page-header"
                     }
                   ],
                   [
@@ -247,8 +236,8 @@
                     "orbital-cli",
                     "validate",
                     {
-                      "path": "@payload.path",
                       "onSuccess": "VALIDATION_PASSED",
+                      "path": "@payload.path",
                       "onError": "VALIDATION_FAILED"
                     }
                   ]
@@ -256,8 +245,8 @@
               },
               {
                 "from": "validating",
-                "event": "VALIDATION_PASSED",
                 "to": "valid",
+                "event": "VALIDATION_PASSED",
                 "effects": [
                   [
                     "set",
@@ -283,29 +272,66 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "page-header",
                       "title": "Orb File Validator",
                       "subtitle": "Validation passed",
                       "actions": [
                         {
-                          "event": "REFRESH",
+                          "variant": "primary",
                           "label": "Validate Now",
-                          "variant": "primary"
+                          "event": "REFRESH"
                         }
-                      ]
+                      ],
+                      "type": "page-header"
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "type": "entity-detail",
-                      "entity": "ValidateOnSave",
-                      "fields": [
-                        "path",
-                        "valid",
-                        "status",
-                        "timestamp"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "path"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.path",
+                          "type": "typography"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "valid",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@entity.valid",
+                          "variant": "body"
+                        },
+                        {
+                          "content": "status",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "content": "@entity.status",
+                          "variant": "body",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "timestamp"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.timestamp"
+                        }
                       ]
                     }
                   ],
@@ -328,8 +354,8 @@
               },
               {
                 "from": "validating",
-                "event": "VALIDATION_FAILED",
                 "to": "invalid",
+                "event": "VALIDATION_FAILED",
                 "effects": [
                   [
                     "set",
@@ -355,31 +381,67 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "page-header",
                       "title": "Orb File Validator",
-                      "subtitle": "Validation failed",
                       "actions": [
                         {
+                          "variant": "primary",
                           "event": "REFRESH",
-                          "label": "Validate Now",
-                          "variant": "primary"
+                          "label": "Validate Now"
                         }
-                      ]
+                      ],
+                      "type": "page-header",
+                      "subtitle": "Validation failed"
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "type": "entity-detail",
-                      "entity": "ValidateOnSave",
-                      "fields": [
-                        "path",
-                        "valid",
-                        "errors",
-                        "warnings",
-                        "status"
-                      ]
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "path"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@entity.path"
+                        },
+                        {
+                          "content": "status",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "@entity.status",
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "errors"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.errors",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "warnings",
+                          "variant": "caption",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "@entity.warnings",
+                          "type": "typography",
+                          "variant": "body"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ],
                   [
@@ -391,10 +453,10 @@
                     "emit",
                     "AGENT_INTERRUPT",
                     {
-                      "type": "validation",
                       "status": "failed",
-                      "path": "@entity.path",
+                      "type": "validation",
                       "errors": "@payload.errors",
+                      "path": "@entity.path",
                       "blocking": true
                     }
                   ]
@@ -402,8 +464,8 @@
               },
               {
                 "from": "valid",
-                "event": "OS_FILE_MODIFIED",
                 "to": "validating",
+                "event": "OS_FILE_MODIFIED",
                 "effects": [
                   [
                     "set",
@@ -424,17 +486,17 @@
                     "render-ui",
                     "main",
                     {
+                      "subtitle": "Re-validating...",
                       "type": "page-header",
-                      "title": "Orb File Validator",
-                      "subtitle": "Re-validating..."
+                      "title": "Orb File Validator"
                     }
                   ],
                   [
                     "render-ui",
                     "center",
                     {
-                      "type": "loading-state",
-                      "title": "Running orbital validate..."
+                      "title": "Running orbital validate...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -442,66 +504,17 @@
                     "orbital-cli",
                     "validate",
                     {
-                      "path": "@payload.path",
                       "onSuccess": "VALIDATION_PASSED",
-                      "onError": "VALIDATION_FAILED"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "invalid",
-                "event": "OS_FILE_MODIFIED",
-                "to": "validating",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.path",
-                    "@payload.path"
-                  ],
-                  [
-                    "set",
-                    "@entity.timestamp",
-                    "@now"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "validating"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "page-header",
-                      "title": "Orb File Validator",
-                      "subtitle": "Re-validating..."
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "center",
-                    {
-                      "type": "loading-state",
-                      "title": "Running orbital validate..."
-                    }
-                  ],
-                  [
-                    "call-service",
-                    "orbital-cli",
-                    "validate",
-                    {
-                      "path": "@payload.path",
-                      "onSuccess": "VALIDATION_PASSED",
-                      "onError": "VALIDATION_FAILED"
+                      "onError": "VALIDATION_FAILED",
+                      "path": "@payload.path"
                     }
                   ]
                 ]
               },
               {
                 "from": "valid",
-                "event": "REFRESH",
                 "to": "validating",
+                "event": "REFRESH",
                 "effects": [
                   [
                     "set",
@@ -539,8 +552,57 @@
               },
               {
                 "from": "invalid",
-                "event": "REFRESH",
                 "to": "validating",
+                "event": "OS_FILE_MODIFIED",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.path",
+                    "@payload.path"
+                  ],
+                  [
+                    "set",
+                    "@entity.timestamp",
+                    "@now"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Orb File Validator",
+                      "type": "page-header",
+                      "subtitle": "Re-validating..."
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "center",
+                    {
+                      "title": "Running orbital validate...",
+                      "type": "loading-state"
+                    }
+                  ],
+                  [
+                    "call-service",
+                    "orbital-cli",
+                    "validate",
+                    {
+                      "onSuccess": "VALIDATION_PASSED",
+                      "path": "@payload.path",
+                      "onError": "VALIDATION_FAILED"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "invalid",
+                "to": "validating",
+                "event": "REFRESH",
                 "effects": [
                   [
                     "set",
@@ -551,9 +613,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "page-header",
+                      "subtitle": "Re-validating...",
                       "title": "Orb File Validator",
-                      "subtitle": "Re-validating..."
+                      "type": "page-header"
                     }
                   ],
                   [
@@ -569,15 +631,16 @@
                     "orbital-cli",
                     "validate",
                     {
+                      "onError": "VALIDATION_FAILED",
                       "path": "@entity.path",
-                      "onSuccess": "VALIDATION_PASSED",
-                      "onError": "VALIDATION_FAILED"
+                      "onSuccess": "VALIDATION_PASSED"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

@@ -11,11 +11,14 @@ orbital BuilderGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait BuilderGameBuilderGame -> BuilderGame [interaction] {
+
+  type BuilderGameLoaded     = Event BuilderGame                  "Fired when BuilderGame finishes loading"
+  type BuilderGameLoadFailed = Event { message : string } "Fired when BuilderGame fails to load"
+  trait BuilderGameBuilderGame -> BuilderGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch BuilderGame)
+        (fetch BuilderGame { emit: { success: "BuilderGameLoaded", failure: "BuilderGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "builder-board", entity: "BuilderGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital BuilderGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Builder Challenge", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [BuilderGameLoaded, BuilderGameLoadFailed]
+    listens {
+      BuilderGameLoadFailed { message : string }
     }
   }
   page "/buildergames" as BuilderGamePage -> BuilderGameBuilderGame

@@ -11,11 +11,14 @@ orbital SimulatorGameOrbital {
     score : number = 0
     level : number = 1
   }
-  trait SimulatorGameSimulatorGame -> SimulatorGame [interaction] {
+
+  type SimulatorGameLoaded     = Event SimulatorGame                  "Fired when SimulatorGame finishes loading"
+  type SimulatorGameLoadFailed = Event { message : string } "Fired when SimulatorGame fails to load"
+  trait SimulatorGameSimulatorGame -> SimulatorGame [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch SimulatorGame)
+        (fetch SimulatorGame { emit: { success: "SimulatorGameLoaded", failure: "SimulatorGameLoadFailed" } })
         (render-ui main { type: "game-menu", title: "Simulator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "stack", direction: "vertical", gap: "md", children: [{ type: "game-hud", stats: [{ label: "Score", value: "@entity.score" }, { label: "Level", value: "@entity.level" }] }, { type: "simulator-board", entity: "SimulatorGame", completeEvent: "COMPLETE" }] })
@@ -28,6 +31,10 @@ orbital SimulatorGameOrbital {
     state complete {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "Simulator", menuItems: [{ label: "Start", event: "START", variant: "primary" }] })
+    }
+    emits: [SimulatorGameLoaded, SimulatorGameLoadFailed]
+    listens {
+      SimulatorGameLoadFailed { message : string }
     }
   }
   page "/simulatorgames" as SimulatorGamePage -> SimulatorGameSimulatorGame

@@ -9,7 +9,10 @@ orbital ChatMessageOrbital {
     channel : string
     timestamp : datetime
   }
-  trait ChatMessageBrowse -> ChatMessage [interaction] {
+
+  type ChatMessageLoaded     = Event ChatMessage                  "Fired when ChatMessage finishes loading"
+  type ChatMessageLoadFailed = Event { message : string } "Fired when ChatMessage fails to load"
+  trait ChatMessageBrowse -> ChatMessage [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref ChatMessage)
@@ -18,9 +21,11 @@ orbital ChatMessageOrbital {
     listens {
       * SEND -> INIT
       VIEW { id : string!, row : object }
+          ChatMessageLoadFailed { message : string }
     }
+    emits: [ChatMessageLoaded, ChatMessageLoadFailed]
   }
-  trait ChatMessageCompose -> ChatMessage [interaction] {
+  trait ChatMessageCompose -> ChatMessage [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
@@ -41,15 +46,17 @@ orbital ChatMessageOrbital {
     }
     listens {
       SEND { data : object! }
+          ChatMessageLoadFailed { message : string }
     }
+    emits: [ChatMessageLoaded, ChatMessageLoadFailed]
   }
-  trait ChatMessageView -> ChatMessage [interaction] {
+  trait ChatMessageView -> ChatMessage [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref ChatMessage)
       VIEW -> open
-        (fetch ChatMessage { id: "@payload.id" })
+        (fetch ChatMessage { id: "@payload.id" , emit: { success: "ChatMessageLoaded", failure: "ChatMessageLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.sender" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Sender" }, { type: "typography", variant: "body", content: "@entity.sender" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Content" }, { type: "typography", variant: "body", content: "@entity.content" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Channel" }, { type: "typography", variant: "body", content: "@entity.channel" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Timestamp" }, { type: "typography", variant: "body", content: "@entity.timestamp" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -65,7 +72,9 @@ orbital ChatMessageOrbital {
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
+          ChatMessageLoadFailed { message : string }
     }
+    emits: [ChatMessageLoaded, ChatMessageLoadFailed]
   }
   page "/chat" as ChatPage -> ChatMessageBrowse, ChatMessageCompose, ChatMessageView
 }
@@ -76,8 +85,12 @@ orbital ChannelOrbital {
     description : string
     memberCount : number
     isPrivate : boolean
+    pendingId : string = ""
   }
-  trait ChannelBrowse -> Channel [interaction] {
+
+  type ChannelLoaded     = Event Channel                  "Fired when Channel finishes loading"
+  type ChannelLoadFailed = Event { message : string } "Fired when Channel fails to load"
+  trait ChannelBrowse -> Channel [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref Channel)
@@ -87,15 +100,17 @@ orbital ChannelOrbital {
       * CHANNEL_CREATED -> INIT
       * CHANNEL_UPDATED -> INIT
       * CHANNEL_DELETED -> INIT
+          ChannelLoadFailed { message : string }
     }
+    emits: [ChannelLoaded, ChannelLoadFailed]
   }
-  trait ChannelCreate -> Channel [interaction] {
+  trait ChannelCreate -> Channel [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Channel)
       CREATE -> open
-        (fetch Channel)
+        (fetch Channel { emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Create Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Channel", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"] }] })
     }
     state open {
@@ -111,14 +126,19 @@ orbital ChannelOrbital {
       SAVE
       CHANNEL_CREATED
     }
+    emits: [ChannelLoaded, ChannelLoadFailed]
+    listens {
+      ChannelLoadFailed { message : string }
+      SAVE { data : string }
+    }
   }
-  trait ChannelEdit -> Channel [interaction] {
+  trait ChannelEdit -> Channel [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Channel)
       EDIT -> open
-        (fetch Channel { id: "@payload.id" })
+        (fetch Channel { id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "edit", size: "md" }, { type: "typography", content: "Edit Channel", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "Channel", mode: "edit", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["name", "description", "memberCount", "isPrivate"], entityId: "@entity.id" }] })
     }
     state open {
@@ -134,14 +154,20 @@ orbital ChannelOrbital {
       SAVE
       CHANNEL_UPDATED
     }
+    emits: [ChannelLoaded, ChannelLoadFailed]
+    listens {
+      ChannelLoadFailed { message : string }
+      EDIT { id : string }
+      SAVE { data : string }
+    }
   }
-  trait ChannelView -> Channel [interaction] {
+  trait ChannelView -> Channel [interaction, collection] {
     initial: closed
     state closed {
       INIT -> closed
         (ref Channel)
       VIEW -> open
-        (fetch Channel { id: "@payload.id" })
+        (fetch Channel { id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "eye", size: "md" }, { type: "typography", variant: "h3", content: "@entity.name" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: "@entity.name" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: "@entity.description" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Member Count" }, { type: "typography", variant: "body", content: "@entity.memberCount" }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Is Private" }, { type: "typography", variant: "body", content: "@entity.isPrivate" }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Edit", event: "EDIT", variant: "primary", icon: "edit" }, { type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] })
     }
     state open {
@@ -154,15 +180,20 @@ orbital ChannelOrbital {
     emits {
       SAVE
     }
+    emits: [ChannelLoaded, ChannelLoadFailed]
+    listens {
+      ChannelLoadFailed { message : string }
+      VIEW { id : string }
+    }
   }
-  trait ChannelDelete -> Channel [interaction] {
+  trait ChannelDelete -> Channel [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
         (ref Channel)
       DELETE -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch Channel { id: "@payload.id" })
+        (fetch Channel { id: "@payload.id" , emit: { success: "ChannelLoaded", failure: "ChannelLoadFailed" } })
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Delete Channel", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "This action cannot be undone." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Delete", event: "CONFIRM_DELETE", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
@@ -182,6 +213,11 @@ orbital ChannelOrbital {
       CONFIRM_DELETE
       CHANNEL_DELETED
     }
+    emits: [ChannelLoaded, ChannelLoadFailed]
+    listens {
+      ChannelLoadFailed { message : string }
+      DELETE { id : string }
+    }
   }
   page "/channels" -> ChannelBrowse, ChannelCreate, ChannelEdit, ChannelView, ChannelDelete
 }
@@ -193,28 +229,35 @@ orbital OnlineUserOrbital {
     lastActive : datetime
     avatar : string
   }
-  trait OnlineUserDisplay -> OnlineUser [interaction] {
+
+  type OnlineUserLoaded     = Event OnlineUser                  "Fired when OnlineUser finishes loading"
+  type OnlineUserLoadFailed = Event { message : string } "Fired when OnlineUser fails to load"
+  trait OnlineUserDisplay -> OnlineUser [interaction, collection] {
     initial: loading
     state loading {
       INIT -> displaying
-        (fetch OnlineUser)
+        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "username"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "lastActive"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avatar"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       LOADED -> displaying
-        (fetch OnlineUser)
+        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "username"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "lastActive"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avatar"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state displaying {
       INIT -> displaying
-        (fetch OnlineUser)
+        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "username"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "lastActive"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avatar"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
       REFRESH -> refreshing
-        (fetch OnlineUser)
+        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "username"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "lastActive"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avatar"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
     state refreshing {
       REFRESHED -> displaying
-        (fetch OnlineUser)
+        (fetch OnlineUser { emit: { success: "OnlineUserLoaded", failure: "OnlineUserLoadFailed" } })
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Online Users" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "users", size: "lg" }, { type: "typography", content: "Online Users", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Username" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "username"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "status"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "LastActive" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "lastActive"] }] }] }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "caption", content: "Avatar" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "avatar"] }] }] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
+    }
+    emits: [OnlineUserLoaded, OnlineUserLoadFailed]
+    listens {
+      OnlineUserLoadFailed { message : string }
     }
   }
   page "/online" -> OnlineUserDisplay

@@ -13,7 +13,10 @@ orbital AgentSearchOrbital {
     language : string = ""
     resultCount : number = 0
   }
-  trait AgentSearchBrowse -> AgentSearch [interaction] {
+
+  type AgentSearchLoaded     = Event AgentSearch                  "Fired when AgentSearch finishes loading"
+  type AgentSearchLoadFailed = Event { message : string } "Fired when AgentSearch fails to load"
+  trait AgentSearchBrowse -> AgentSearch [interaction, collection] {
     state browsing {
       INIT -> browsing
         (ref AgentSearch)
@@ -22,13 +25,15 @@ orbital AgentSearchOrbital {
     listens {
       * SEARCHED -> INIT
       VIEW { id : string!, row : object }
+          AgentSearchLoadFailed { message : string }
     }
+    emits: [AgentSearchLoaded, AgentSearchLoadFailed]
   }
-  trait AgentSearchAgent -> AgentSearch [interaction] {
+  trait AgentSearchAgent -> AgentSearch [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch AgentSearch)
+        (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
         (render-ui main { type: "empty-state", icon: "search", title: "Code Search", description: "Code Search is ready" })
       SEARCH -> searching
         (set @entity.query @payload.query)
@@ -37,7 +42,7 @@ orbital AgentSearchOrbital {
     }
     state searching {
       SEARCH -> results
-        (fetch AgentSearch)
+        (fetch AgentSearch { emit: { success: "AgentSearchLoaded", failure: "AgentSearchLoadFailed" } })
         (emit SEARCHED)
     }
     state results {
@@ -57,7 +62,9 @@ orbital AgentSearchOrbital {
     listens {
       * SEARCHED -> INIT
       SEARCH { query : string!, language : string }
+          AgentSearchLoadFailed { message : string }
     }
+    emits: [AgentSearchLoaded, AgentSearchLoadFailed]
   }
   page "/agentsearchs" as AgentSearchPage -> AgentSearchBrowse, AgentSearchAgent
 }

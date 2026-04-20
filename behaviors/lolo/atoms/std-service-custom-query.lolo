@@ -16,11 +16,14 @@ orbital ServiceCustomQueryOrbital {
     callStatus : string = "idle"
     error : string
   }
-  trait ServiceCustomQueryCustomQuery -> ServiceCustomQuery [interaction] {
+
+  type ServiceCustomQueryLoaded     = Event ServiceCustomQuery                  "Fired when ServiceCustomQuery finishes loading"
+  type ServiceCustomQueryLoadFailed = Event { message : string } "Fired when ServiceCustomQuery fails to load"
+  trait ServiceCustomQueryCustomQuery -> ServiceCustomQuery [interaction, instance] {
     initial: idle
     state idle {
       INIT -> idle
-        (fetch ServiceCustomQuery)
+        (fetch ServiceCustomQuery { emit: { success: "ServiceCustomQueryLoaded", failure: "ServiceCustomQueryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Query Auth API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] })
       CALL_API -> calling
         (render-ui main { type: "loading-state", title: "Calling API...", message: "Sending request to servicecustomquery endpoint..." })
@@ -48,7 +51,9 @@ orbital ServiceCustomQueryOrbital {
     listens {
       API_RESPONSE { data : string!, statusCode : number! }
       FAILED { error : string! }
+          ServiceCustomQueryLoadFailed { message : string }
     }
+    emits: [ServiceCustomQueryLoaded, ServiceCustomQueryLoadFailed]
   }
   page "/servicecustomquerys" as ServiceCustomQueryPage -> ServiceCustomQueryCustomQuery
 }

@@ -11,11 +11,14 @@ orbital GameSessionOrbital {
     score : number = 0
     level : number = 1
   }
-  trait GameSessionGameflow -> GameSession [interaction] {
+
+  type GameSessionLoaded     = Event GameSession                  "Fired when GameSession finishes loading"
+  type GameSessionLoadFailed = Event { message : string } "Fired when GameSession fails to load"
+  trait GameSessionGameflow -> GameSession [interaction, instance] {
     initial: menu
     state menu {
       INIT -> menu
-        (fetch GameSession)
+        (fetch GameSession { emit: { success: "GameSessionLoaded", failure: "GameSessionLoadFailed" } })
         (render-ui main { type: "game-menu", title: "GameSession", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })
       START -> playing
         (render-ui main { type: "game-hud", stats: [{ label: "Score", value: ["object/get", ["array/first", "@entity"], "score"] }, { label: "Level", value: ["object/get", ["array/first", "@entity"], "level"] }] })
@@ -42,6 +45,10 @@ orbital GameSessionOrbital {
     state gameover {
       RESTART -> menu
         (render-ui main { type: "game-menu", title: "GameSession", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })
+    }
+    emits: [GameSessionLoaded, GameSessionLoadFailed]
+    listens {
+      GameSessionLoadFailed { message : string }
     }
   }
   page "/gamesessions" as GameSessionPage -> GameSessionGameflow

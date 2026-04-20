@@ -1,7 +1,7 @@
 {
   "name": "std-event-handler-game",
   "version": "1.0.0",
-  "description": "Educational game molecule: menu -> playing -> complete. Uses the `event-handler-board` pattern for the playing state.",
+  "description": "std-event-handler-game as a Function",
   "orbitals": [
     {
       "name": "EventHandlerGameOrbital",
@@ -38,30 +38,68 @@
           {
             "name": "score",
             "type": "number",
-            "default": 0
+            "default": 0.0
           },
           {
             "name": "level",
             "type": "number",
-            "default": 1
-          }
-        ],
-        "instances": [
-          {
-            "id": "game-1",
-            "name": "Event Handler Session",
-            "description": "Active game session",
-            "status": "active",
-            "score": 0,
-            "level": 1
+            "default": 1.0
           }
         ]
       },
       "traits": [
         {
           "name": "EventHandlerGameEventHandlerGame",
-          "linkedEntity": "EventHandlerGame",
           "category": "interaction",
+          "linkedEntity": "EventHandlerGame",
+          "emits": [
+            {
+              "event": "EventHandlerGameLoaded",
+              "description": "Fired when EventHandlerGame finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "type": "number"
+                },
+                {
+                  "name": "level",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "EventHandlerGameLoadFailed",
+              "description": "Fired when EventHandlerGame fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -85,6 +123,10 @@
                 "name": "Start"
               },
               {
+                "key": "NAVIGATE",
+                "name": "Navigate"
+              },
+              {
                 "key": "COMPLETE",
                 "name": "Complete"
               },
@@ -93,8 +135,18 @@
                 "name": "Restart"
               },
               {
-                "key": "NAVIGATE",
-                "name": "Navigate"
+                "key": "EventHandlerGameLoaded",
+                "name": "EventHandlerGame loaded"
+              },
+              {
+                "key": "EventHandlerGameLoadFailed",
+                "name": "EventHandlerGame load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
@@ -105,19 +157,25 @@
                 "effects": [
                   [
                     "fetch",
-                    "EventHandlerGame"
+                    "EventHandlerGame",
+                    {
+                      "emit": {
+                        "success": "EventHandlerGameLoaded",
+                        "failure": "EventHandlerGameLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
                       "title": "Event Handler",
+                      "type": "game-menu",
                       "menuItems": [
                         {
-                          "label": "Start",
                           "event": "START",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "label": "Start"
                         }
                       ]
                     }
@@ -133,29 +191,29 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "game-hud",
                           "stats": [
                             {
-                              "label": "Score",
-                              "value": "@entity.score"
+                              "value": "@entity.score",
+                              "label": "Score"
                             },
                             {
-                              "label": "Level",
-                              "value": "@entity.level"
+                              "value": "@entity.level",
+                              "label": "Level"
                             }
                           ]
                         },
                         {
-                          "type": "event-handler-board",
                           "entity": "EventHandlerGame",
+                          "type": "event-handler-board",
                           "completeEvent": "COMPLETE"
                         }
-                      ]
+                      ],
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -163,8 +221,7 @@
               {
                 "from": "menu",
                 "to": "menu",
-                "event": "NAVIGATE",
-                "effects": []
+                "event": "NAVIGATE"
               },
               {
                 "from": "playing",
@@ -175,15 +232,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-over-screen",
-                      "title": "Well Done!",
                       "menuItems": [
                         {
                           "label": "Play Again",
                           "event": "RESTART",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "game-over-screen",
+                      "title": "Well Done!"
                     }
                   ]
                 ]
@@ -197,21 +254,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
-                      "title": "Event Handler",
                       "menuItems": [
                         {
                           "label": "Start",
-                          "event": "START",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "event": "START"
                         }
-                      ]
+                      ],
+                      "type": "game-menu",
+                      "title": "Event Handler"
                     }
                   ]
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
