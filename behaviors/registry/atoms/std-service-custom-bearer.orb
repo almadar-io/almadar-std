@@ -227,8 +227,8 @@
                     "ServiceCustomBearer",
                     {
                       "emit": {
-                        "failure": "ServiceCustomBearerLoadFailed",
-                        "success": "ServiceCustomBearerLoaded"
+                        "success": "ServiceCustomBearerLoaded",
+                        "failure": "ServiceCustomBearerLoadFailed"
                       }
                     }
                   ],
@@ -236,8 +236,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "type": "icon",
@@ -245,54 +246,53 @@
                           "size": "lg"
                         },
                         {
+                          "variant": "h2",
                           "content": "Bearer API Tester",
-                          "type": "typography",
-                          "variant": "h2"
+                          "type": "typography"
                         },
                         {
                           "type": "input",
-                          "placeholder": "/users",
                           "field": "endpoint",
+                          "placeholder": "/users",
                           "bind": "@entity.endpoint"
                         },
                         {
                           "bind": "@entity.method",
                           "options": [
                             {
-                              "value": "GET",
-                              "label": "GET"
+                              "label": "GET",
+                              "value": "GET"
                             },
                             {
-                              "label": "POST",
-                              "value": "POST"
+                              "value": "POST",
+                              "label": "POST"
                             },
                             {
-                              "label": "PUT",
-                              "value": "PUT"
+                              "value": "PUT",
+                              "label": "PUT"
                             },
                             {
-                              "value": "DELETE",
-                              "label": "DELETE"
+                              "label": "DELETE",
+                              "value": "DELETE"
                             }
                           ],
-                          "type": "select",
-                          "field": "method"
+                          "field": "method",
+                          "type": "select"
                         },
                         {
                           "type": "textarea",
-                          "bind": "@entity.requestBody",
+                          "field": "requestBody",
                           "placeholder": "JSON request body",
-                          "field": "requestBody"
+                          "bind": "@entity.requestBody"
                         },
                         {
-                          "variant": "primary",
-                          "icon": "send",
-                          "label": "Send Request",
                           "event": "CALL_API",
+                          "variant": "primary",
+                          "label": "Send Request",
+                          "icon": "send",
                           "type": "button"
                         }
                       ],
-                      "gap": "lg",
                       "align": "center"
                     }
                   ]
@@ -317,9 +317,9 @@
                     "custom-bearer-api",
                     "execute",
                     {
-                      "method": "@entity.method",
+                      "endpoint": "@entity.endpoint",
                       "body": "@entity.requestBody",
-                      "endpoint": "@entity.endpoint"
+                      "method": "@entity.method"
                     }
                   ]
                 ]
@@ -343,39 +343,39 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
                       "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
                           "size": "lg",
+                          "type": "icon",
                           "name": "check-circle"
                         },
                         {
                           "type": "typography",
-                          "content": "Response",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "Response"
                         },
                         {
-                          "type": "badge",
                           "variant": "info",
+                          "type": "badge",
                           "content": "@entity.statusCode"
                         },
                         {
                           "type": "code",
-                          "content": "@entity.responseData",
-                          "language": "json"
+                          "language": "json",
+                          "content": "@entity.responseData"
                         },
                         {
-                          "label": "New Request",
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
                           "type": "button",
+                          "label": "New Request",
+                          "icon": "rotate-ccw",
+                          "variant": "ghost",
                           "event": "RESET"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -411,81 +411,6 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "name": "shield",
-                          "type": "icon",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Bearer API Tester",
-                          "variant": "h2"
-                        },
-                        {
-                          "placeholder": "/users",
-                          "bind": "@entity.endpoint",
-                          "type": "input",
-                          "field": "endpoint"
-                        },
-                        {
-                          "bind": "@entity.method",
-                          "field": "method",
-                          "type": "select",
-                          "options": [
-                            {
-                              "value": "GET",
-                              "label": "GET"
-                            },
-                            {
-                              "value": "POST",
-                              "label": "POST"
-                            },
-                            {
-                              "label": "PUT",
-                              "value": "PUT"
-                            },
-                            {
-                              "label": "DELETE",
-                              "value": "DELETE"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "textarea",
-                          "placeholder": "JSON request body",
-                          "field": "requestBody",
-                          "bind": "@entity.requestBody"
-                        },
-                        {
-                          "variant": "primary",
-                          "icon": "send",
-                          "label": "Send Request",
-                          "event": "CALL_API",
-                          "type": "button"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "idle",
-                "event": "RETRY",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "name": "shield",
@@ -499,47 +424,51 @@
                         },
                         {
                           "type": "input",
-                          "field": "endpoint",
                           "bind": "@entity.endpoint",
+                          "field": "endpoint",
                           "placeholder": "/users"
                         },
                         {
+                          "field": "method",
                           "type": "select",
-                          "bind": "@entity.method",
                           "options": [
                             {
-                              "value": "GET",
-                              "label": "GET"
+                              "label": "GET",
+                              "value": "GET"
                             },
                             {
-                              "value": "POST",
-                              "label": "POST"
+                              "label": "POST",
+                              "value": "POST"
                             },
                             {
-                              "label": "PUT",
-                              "value": "PUT"
+                              "value": "PUT",
+                              "label": "PUT"
                             },
                             {
                               "label": "DELETE",
                               "value": "DELETE"
                             }
                           ],
-                          "field": "method"
+                          "bind": "@entity.method"
                         },
                         {
-                          "placeholder": "JSON request body",
+                          "field": "requestBody",
                           "type": "textarea",
-                          "bind": "@entity.requestBody",
-                          "field": "requestBody"
+                          "placeholder": "JSON request body",
+                          "bind": "@entity.requestBody"
                         },
                         {
-                          "event": "CALL_API",
+                          "type": "button",
                           "variant": "primary",
-                          "label": "Send Request",
                           "icon": "send",
-                          "type": "button"
+                          "label": "Send Request",
+                          "event": "CALL_API"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -547,41 +476,37 @@
               {
                 "from": "error",
                 "to": "idle",
-                "event": "RESET",
+                "event": "RETRY",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
+                          "type": "icon",
                           "name": "shield",
-                          "size": "lg",
-                          "type": "icon"
+                          "size": "lg"
                         },
                         {
-                          "content": "Bearer API Tester",
                           "type": "typography",
+                          "content": "Bearer API Tester",
                           "variant": "h2"
                         },
                         {
-                          "placeholder": "/users",
                           "field": "endpoint",
                           "type": "input",
-                          "bind": "@entity.endpoint"
+                          "bind": "@entity.endpoint",
+                          "placeholder": "/users"
                         },
                         {
-                          "bind": "@entity.method",
-                          "field": "method",
                           "type": "select",
+                          "field": "method",
+                          "bind": "@entity.method",
                           "options": [
                             {
-                              "value": "GET",
-                              "label": "GET"
+                              "label": "GET",
+                              "value": "GET"
                             },
                             {
                               "label": "POST",
@@ -598,17 +523,92 @@
                           ]
                         },
                         {
-                          "placeholder": "JSON request body",
                           "bind": "@entity.requestBody",
+                          "placeholder": "JSON request body",
                           "field": "requestBody",
                           "type": "textarea"
                         },
                         {
-                          "type": "button",
                           "variant": "primary",
                           "icon": "send",
                           "label": "Send Request",
+                          "type": "button",
                           "event": "CALL_API"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "idle",
+                "event": "RESET",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "lg",
+                          "type": "icon",
+                          "name": "shield"
+                        },
+                        {
+                          "content": "Bearer API Tester",
+                          "variant": "h2",
+                          "type": "typography"
+                        },
+                        {
+                          "field": "endpoint",
+                          "type": "input",
+                          "placeholder": "/users",
+                          "bind": "@entity.endpoint"
+                        },
+                        {
+                          "field": "method",
+                          "bind": "@entity.method",
+                          "options": [
+                            {
+                              "label": "GET",
+                              "value": "GET"
+                            },
+                            {
+                              "label": "POST",
+                              "value": "POST"
+                            },
+                            {
+                              "label": "PUT",
+                              "value": "PUT"
+                            },
+                            {
+                              "value": "DELETE",
+                              "label": "DELETE"
+                            }
+                          ],
+                          "type": "select"
+                        },
+                        {
+                          "type": "textarea",
+                          "field": "requestBody",
+                          "placeholder": "JSON request body",
+                          "bind": "@entity.requestBody"
+                        },
+                        {
+                          "label": "Send Request",
+                          "variant": "primary",
+                          "event": "CALL_API",
+                          "type": "button",
+                          "icon": "send"
                         }
                       ]
                     }

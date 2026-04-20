@@ -46,10 +46,12 @@ orbital ProductOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (persist create Product @payload.data)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (emit PRODUCT_CREATED)
     }
     emits {
@@ -74,10 +76,12 @@ orbital ProductOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (persist update Product @payload.data)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (emit PRODUCT_UPDATED)
     }
     emits {
@@ -103,9 +107,11 @@ orbital ProductOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
     }
     emits {
       SAVE
@@ -131,13 +137,16 @@ orbital ProductOrbital {
       CONFIRM_DELETE -> idle
         (persist delete Product @entity.pendingId)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref Product)
         (emit PRODUCT_DELETED)
       CANCEL -> idle
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref Product)
       CLOSE -> idle
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref Product)
     }
     emits {
@@ -307,7 +316,11 @@ orbital OrderPaymentOrbital {
         (set @entity.sendStatus error)
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "error-state", title: "Receipt Failed", message: "Could not send receipt email.", onRetry: "RETRY_RECEIPT" }, { type: "button", label: "Retry", event: "RETRY_RECEIPT", variant: "primary", icon: "refresh-cw" }] }] })
     }
-    state sent {}
+    state sent {
+      SEND_RECEIPT -> sending
+        (render-ui main { type: "loading-state", title: "Resending receipt..." })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+    }
     state receiptError {
       RETRY_RECEIPT -> sending
         (render-ui main { type: "dashboard-layout", appName: "ServiceMarketplace", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Login", href: "/login", icon: "layout-list" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." }] })
@@ -357,10 +370,12 @@ orbital OrderOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (persist create Order @payload.data)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (emit ORDER_CREATED)
     }
     emits {
@@ -385,10 +400,12 @@ orbital OrderOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (persist update Order @payload.data)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (emit ORDER_UPDATED)
     }
     emits {
@@ -414,9 +431,11 @@ orbital OrderOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
     }
     emits {
       SAVE
@@ -441,13 +460,16 @@ orbital OrderOrbital {
       CONFIRM_DELETE -> idle
         (persist delete Order @entity.pendingId)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref Order)
         (emit ORDER_DELETED)
       CANCEL -> idle
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref Order)
       CLOSE -> idle
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref Order)
     }
     emits {

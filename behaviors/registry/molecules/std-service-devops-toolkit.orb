@@ -280,8 +280,8 @@
                     "ServiceDevopsToolkit",
                     {
                       "emit": {
-                        "failure": "ServiceDevopsToolkitLoadFailed",
-                        "success": "ServiceDevopsToolkitLoaded"
+                        "success": "ServiceDevopsToolkitLoaded",
+                        "failure": "ServiceDevopsToolkitLoadFailed"
                       }
                     }
                   ],
@@ -289,19 +289,17 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
                               "name": "git-pull-request",
-                              "type": "icon",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
                               "variant": "h3",
@@ -309,16 +307,18 @@
                               "content": "GitHub: Create PR"
                             }
                           ],
+                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "label": "Title",
                           "bind": "@entity.title",
                           "type": "input",
-                          "placeholder": "PR title",
-                          "label": "Title"
+                          "placeholder": "PR title"
                         },
                         {
                           "type": "textarea",
@@ -327,23 +327,23 @@
                           "placeholder": "Describe your changes..."
                         },
                         {
-                          "bind": "@entity.head",
                           "placeholder": "feature-branch",
+                          "label": "Head Branch",
                           "type": "input",
-                          "label": "Head Branch"
+                          "bind": "@entity.head"
                         },
                         {
+                          "label": "Base Branch",
                           "placeholder": "main",
                           "bind": "@entity.base",
-                          "type": "input",
-                          "label": "Base Branch"
+                          "type": "input"
                         },
                         {
+                          "event": "CREATE_PR",
                           "label": "Create PR",
-                          "variant": "primary",
                           "icon": "git-pull-request",
-                          "type": "button",
-                          "event": "CREATE_PR"
+                          "variant": "primary",
+                          "type": "button"
                         }
                       ]
                     }
@@ -359,9 +359,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "title": "Creating pull request...",
-                      "message": "Submitting your PR to GitHub."
+                      "message": "Submitting your PR to GitHub.",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -369,9 +369,9 @@
                     "github",
                     "createPR",
                     {
+                      "title": "@entity.title",
                       "base": "@entity.base",
                       "body": "@entity.body",
-                      "title": "@entity.title",
                       "head": "@entity.head"
                     }
                   ]
@@ -396,10 +396,8 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "icon",
@@ -407,24 +405,26 @@
                           "size": "lg"
                         },
                         {
+                          "type": "alert",
                           "variant": "success",
-                          "message": "Pull request created!",
-                          "type": "alert"
+                          "message": "Pull request created!"
                         },
                         {
                           "type": "typography",
+                          "content": "@entity.prUrl",
                           "color": "muted",
-                          "variant": "body",
-                          "content": "@entity.prUrl"
+                          "variant": "body"
                         },
                         {
                           "event": "GH_RESET",
-                          "icon": "rotate-ccw",
                           "type": "button",
-                          "variant": "ghost",
-                          "label": "Create Another"
+                          "icon": "rotate-ccw",
+                          "label": "Create Another",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -448,9 +448,9 @@
                     "render-ui",
                     "main",
                     {
+                      "title": "PR Creation Failed",
                       "type": "error-state",
                       "message": "@entity.error",
-                      "title": "PR Creation Failed",
                       "onRetry": "GH_RETRY"
                     }
                   ]
@@ -470,63 +470,63 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
-                              "name": "git-pull-request"
+                              "name": "git-pull-request",
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
-                              "content": "GitHub: Create PR",
-                              "variant": "h3"
+                              "variant": "h3",
+                              "content": "GitHub: Create PR"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "bind": "@entity.title",
                           "placeholder": "PR title",
-                          "label": "Title",
                           "type": "input",
-                          "bind": "@entity.title"
+                          "label": "Title"
                         },
                         {
                           "label": "Body",
-                          "placeholder": "Describe your changes...",
                           "bind": "@entity.body",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "placeholder": "Describe your changes..."
                         },
                         {
-                          "bind": "@entity.head",
-                          "label": "Head Branch",
                           "type": "input",
-                          "placeholder": "feature-branch"
+                          "label": "Head Branch",
+                          "placeholder": "feature-branch",
+                          "bind": "@entity.head"
                         },
                         {
-                          "placeholder": "main",
+                          "bind": "@entity.base",
                           "type": "input",
                           "label": "Base Branch",
-                          "bind": "@entity.base"
+                          "placeholder": "main"
                         },
                         {
+                          "label": "Create PR",
                           "type": "button",
                           "event": "CREATE_PR",
-                          "label": "Create PR",
                           "variant": "primary",
                           "icon": "git-pull-request"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -547,61 +547,61 @@
                     {
                       "type": "stack",
                       "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "name": "git-pull-request",
+                              "type": "icon",
                               "size": "lg",
-                              "type": "icon"
+                              "name": "git-pull-request"
                             },
                             {
+                              "type": "typography",
                               "content": "GitHub: Create PR",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "bind": "@entity.title",
-                          "label": "Title",
                           "type": "input",
-                          "placeholder": "PR title"
+                          "placeholder": "PR title",
+                          "label": "Title",
+                          "bind": "@entity.title"
                         },
                         {
                           "type": "textarea",
-                          "bind": "@entity.body",
                           "label": "Body",
+                          "bind": "@entity.body",
                           "placeholder": "Describe your changes..."
                         },
                         {
                           "placeholder": "feature-branch",
-                          "bind": "@entity.head",
                           "type": "input",
-                          "label": "Head Branch"
+                          "label": "Head Branch",
+                          "bind": "@entity.head"
                         },
                         {
+                          "placeholder": "main",
                           "type": "input",
                           "label": "Base Branch",
-                          "placeholder": "main",
                           "bind": "@entity.base"
                         },
                         {
-                          "label": "Create PR",
                           "event": "CREATE_PR",
-                          "type": "button",
+                          "label": "Create PR",
                           "icon": "git-pull-request",
+                          "type": "button",
                           "variant": "primary"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -804,10 +804,9 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -820,7 +819,9 @@
                               "variant": "h3"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
@@ -828,49 +829,48 @@
                         },
                         {
                           "placeholder": "cache-key",
+                          "bind": "@entity.cacheKey",
                           "label": "Key",
-                          "type": "input",
-                          "bind": "@entity.cacheKey"
+                          "type": "input"
                         },
                         {
                           "type": "input",
                           "bind": "@entity.cacheValue",
-                          "label": "Value",
-                          "placeholder": "cache-value"
+                          "placeholder": "cache-value",
+                          "label": "Value"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "label": "Get",
                               "variant": "primary",
-                              "icon": "download",
+                              "type": "button",
+                              "label": "Get",
                               "event": "GET_KEY",
-                              "type": "button"
+                              "icon": "download"
                             },
                             {
-                              "icon": "upload",
+                              "event": "SET_KEY",
                               "type": "button",
                               "label": "Set",
-                              "event": "SET_KEY",
-                              "variant": "primary"
+                              "variant": "primary",
+                              "icon": "upload"
                             },
                             {
-                              "event": "DELETE_KEY",
-                              "type": "button",
                               "variant": "destructive",
                               "label": "Delete",
-                              "icon": "trash-2"
+                              "type": "button",
+                              "icon": "trash-2",
+                              "event": "DELETE_KEY"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
                           "justify": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -884,9 +884,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "title": "Executing...",
-                      "message": "Running Redis operation..."
+                      "message": "Running Redis operation...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -909,8 +909,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "title": "Executing...",
-                      "message": "Running Redis operation..."
+                      "message": "Running Redis operation...",
+                      "title": "Executing..."
                     }
                   ],
                   [
@@ -934,8 +934,8 @@
                     "main",
                     {
                       "message": "Running Redis operation...",
-                      "type": "loading-state",
-                      "title": "Executing..."
+                      "title": "Executing...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -969,8 +969,8 @@
                     {
                       "children": [
                         {
-                          "name": "check-circle",
                           "type": "icon",
+                          "name": "check-circle",
                           "size": "lg"
                         },
                         {
@@ -979,23 +979,23 @@
                           "variant": "success"
                         },
                         {
-                          "content": "@entity.result",
-                          "variant": "body",
+                          "color": "muted",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "body",
+                          "content": "@entity.result"
                         },
                         {
-                          "variant": "ghost",
-                          "icon": "rotate-ccw",
                           "label": "Reset",
+                          "icon": "rotate-ccw",
                           "event": "REDIS_RESET",
+                          "variant": "ghost",
                           "type": "button"
                         }
                       ],
                       "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "gap": "lg",
-                      "align": "center"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1020,9 +1020,9 @@
                     "main",
                     {
                       "message": "@entity.error",
-                      "onRetry": "REDIS_RETRY",
+                      "title": "Redis Error",
                       "type": "error-state",
-                      "title": "Redis Error"
+                      "onRetry": "REDIS_RETRY"
                     }
                   ]
                 ]
@@ -1041,73 +1041,73 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
-                              "name": "database",
+                              "size": "lg",
                               "type": "icon",
-                              "size": "lg"
+                              "name": "database"
                             },
                             {
-                              "type": "typography",
+                              "content": "Redis Cache",
                               "variant": "h3",
-                              "content": "Redis Cache"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center"
+                          "type": "stack",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "label": "Key",
                           "placeholder": "cache-key",
-                          "bind": "@entity.cacheKey"
-                        },
-                        {
                           "type": "input",
-                          "placeholder": "cache-value",
-                          "label": "Value",
-                          "bind": "@entity.cacheValue"
+                          "bind": "@entity.cacheKey",
+                          "label": "Key"
                         },
                         {
-                          "gap": "sm",
+                          "bind": "@entity.cacheValue",
+                          "label": "Value",
+                          "placeholder": "cache-value",
+                          "type": "input"
+                        },
+                        {
                           "type": "stack",
+                          "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
-                              "variant": "primary",
-                              "type": "button",
-                              "label": "Get",
                               "icon": "download",
-                              "event": "GET_KEY"
-                            },
-                            {
-                              "type": "button",
+                              "event": "GET_KEY",
+                              "label": "Get",
                               "variant": "primary",
-                              "event": "SET_KEY",
-                              "label": "Set",
-                              "icon": "upload"
+                              "type": "button"
                             },
                             {
-                              "icon": "trash-2",
-                              "event": "DELETE_KEY",
+                              "icon": "upload",
+                              "label": "Set",
+                              "event": "SET_KEY",
                               "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "type": "button",
+                              "icon": "trash-2",
                               "label": "Delete",
-                              "variant": "destructive"
+                              "variant": "destructive",
+                              "event": "DELETE_KEY"
                             }
                           ],
-                          "direction": "horizontal",
-                          "justify": "center"
+                          "direction": "horizontal"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1126,16 +1126,17 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
+                              "name": "database",
                               "type": "icon",
-                              "name": "database"
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
@@ -1143,6 +1144,8 @@
                               "variant": "h3"
                             }
                           ],
+                          "type": "stack",
+                          "align": "center",
                           "gap": "md"
                         },
                         {
@@ -1150,49 +1153,46 @@
                         },
                         {
                           "bind": "@entity.cacheKey",
+                          "placeholder": "cache-key",
                           "type": "input",
-                          "label": "Key",
-                          "placeholder": "cache-key"
+                          "label": "Key"
                         },
                         {
                           "type": "input",
+                          "bind": "@entity.cacheValue",
                           "placeholder": "cache-value",
-                          "label": "Value",
-                          "bind": "@entity.cacheValue"
+                          "label": "Value"
                         },
                         {
                           "justify": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "download",
-                              "variant": "primary",
+                              "type": "button",
                               "event": "GET_KEY",
-                              "label": "Get",
-                              "type": "button"
-                            },
-                            {
-                              "event": "SET_KEY",
                               "variant": "primary",
-                              "type": "button",
-                              "icon": "upload",
-                              "label": "Set"
+                              "icon": "download",
+                              "label": "Get"
                             },
                             {
-                              "event": "DELETE_KEY",
-                              "label": "Delete",
+                              "icon": "upload",
+                              "label": "Set",
                               "type": "button",
+                              "event": "SET_KEY",
+                              "variant": "primary"
+                            },
+                            {
+                              "icon": "trash-2",
                               "variant": "destructive",
-                              "icon": "trash-2"
+                              "type": "button",
+                              "label": "Delete",
+                              "event": "DELETE_KEY"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1390,8 +1390,8 @@
                     "ServiceDevopsToolkit",
                     {
                       "emit": {
-                        "success": "ServiceDevopsToolkitLoaded",
-                        "failure": "ServiceDevopsToolkitLoadFailed"
+                        "failure": "ServiceDevopsToolkitLoadFailed",
+                        "success": "ServiceDevopsToolkitLoaded"
                       }
                     }
                   ],
@@ -1400,79 +1400,79 @@
                     "main",
                     {
                       "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
                           "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "name": "hard-drive",
                               "size": "lg",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "hard-drive"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
+                              "variant": "h3",
                               "content": "Storage Files"
                             }
                           ],
+                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "bind": "@entity.bucket",
                           "type": "input",
                           "label": "Bucket",
-                          "bind": "@entity.bucket",
                           "placeholder": "bucket-name"
                         },
                         {
-                          "bind": "@entity.fileKey",
-                          "label": "File Key",
                           "placeholder": "path/to/file.txt",
-                          "type": "input"
+                          "type": "input",
+                          "label": "File Key",
+                          "bind": "@entity.fileKey"
                         },
                         {
-                          "justify": "center",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "button",
-                              "event": "UPLOAD",
                               "label": "Upload",
+                              "event": "UPLOAD",
                               "variant": "primary",
+                              "type": "button",
                               "icon": "upload"
                             },
                             {
-                              "type": "button",
-                              "label": "Download",
-                              "icon": "download",
                               "event": "DOWNLOAD",
-                              "variant": "secondary"
+                              "variant": "secondary",
+                              "icon": "download",
+                              "type": "button",
+                              "label": "Download"
                             },
                             {
-                              "type": "button",
                               "icon": "list",
+                              "event": "LIST",
                               "variant": "secondary",
-                              "label": "List",
-                              "event": "LIST"
+                              "type": "button",
+                              "label": "List"
                             },
                             {
                               "label": "Delete",
                               "icon": "trash-2",
-                              "type": "button",
                               "event": "DELETE_FILE",
+                              "type": "button",
                               "variant": "destructive"
                             }
                           ],
                           "gap": "sm",
-                          "type": "stack",
+                          "justify": "center",
                           "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1486,8 +1486,8 @@
                     "render-ui",
                     "main",
                     {
-                      "message": "Executing storage operation...",
                       "type": "loading-state",
+                      "message": "Executing storage operation...",
                       "title": "Processing..."
                     }
                   ],
@@ -1496,8 +1496,8 @@
                     "storage",
                     "upload",
                     {
-                      "bucket": "@entity.bucket",
-                      "key": "@entity.fileKey"
+                      "key": "@entity.fileKey",
+                      "bucket": "@entity.bucket"
                     }
                   ]
                 ]
@@ -1511,8 +1511,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "message": "Executing storage operation...",
+                      "type": "loading-state",
                       "title": "Processing..."
                     }
                   ],
@@ -1521,8 +1521,8 @@
                     "storage",
                     "download",
                     {
-                      "bucket": "@entity.bucket",
-                      "key": "@entity.fileKey"
+                      "key": "@entity.fileKey",
+                      "bucket": "@entity.bucket"
                     }
                   ]
                 ]
@@ -1537,8 +1537,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "title": "Processing...",
-                      "message": "Executing storage operation..."
+                      "message": "Executing storage operation...",
+                      "title": "Processing..."
                     }
                   ],
                   [
@@ -1560,8 +1560,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "title": "Processing...",
+                      "type": "loading-state",
                       "message": "Executing storage operation..."
                     }
                   ],
@@ -1570,8 +1570,8 @@
                     "storage",
                     "delete",
                     {
-                      "bucket": "@entity.bucket",
-                      "key": "@entity.fileKey"
+                      "key": "@entity.fileKey",
+                      "bucket": "@entity.bucket"
                     }
                   ]
                 ]
@@ -1595,35 +1595,35 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "align": "center",
+                      "gap": "lg",
                       "direction": "vertical",
                       "children": [
                         {
-                          "name": "check-circle",
                           "size": "lg",
+                          "name": "check-circle",
                           "type": "icon"
                         },
                         {
-                          "message": "Storage operation complete",
                           "type": "alert",
+                          "message": "Storage operation complete",
                           "variant": "success"
                         },
                         {
                           "variant": "body",
-                          "color": "muted",
                           "type": "typography",
+                          "color": "muted",
                           "content": "@entity.result"
                         },
                         {
                           "type": "button",
-                          "label": "Back",
-                          "icon": "rotate-ccw",
                           "variant": "ghost",
-                          "event": "STORAGE_RESET"
+                          "icon": "rotate-ccw",
+                          "event": "STORAGE_RESET",
+                          "label": "Back"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1647,10 +1647,10 @@
                     "render-ui",
                     "main",
                     {
-                      "onRetry": "STORAGE_RETRY",
                       "title": "Storage Error",
-                      "message": "@entity.error",
-                      "type": "error-state"
+                      "onRetry": "STORAGE_RETRY",
+                      "type": "error-state",
+                      "message": "@entity.error"
                     }
                   ]
                 ]
@@ -1669,80 +1669,80 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
-                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "type": "icon",
                               "name": "hard-drive",
-                              "size": "lg",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Storage Files"
+                              "content": "Storage Files",
+                              "variant": "h3"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "bind": "@entity.bucket",
                           "type": "input",
                           "placeholder": "bucket-name",
+                          "bind": "@entity.bucket",
                           "label": "Bucket"
                         },
                         {
-                          "bind": "@entity.fileKey",
-                          "label": "File Key",
                           "placeholder": "path/to/file.txt",
-                          "type": "input"
+                          "bind": "@entity.fileKey",
+                          "type": "input",
+                          "label": "File Key"
                         },
                         {
+                          "type": "stack",
+                          "justify": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Upload",
                               "variant": "primary",
                               "event": "UPLOAD",
-                              "icon": "upload"
+                              "icon": "upload",
+                              "type": "button",
+                              "label": "Upload"
                             },
                             {
-                              "variant": "secondary",
-                              "event": "DOWNLOAD",
                               "type": "button",
+                              "event": "DOWNLOAD",
+                              "variant": "secondary",
                               "icon": "download",
                               "label": "Download"
                             },
                             {
-                              "event": "LIST",
                               "icon": "list",
                               "variant": "secondary",
+                              "type": "button",
                               "label": "List",
-                              "type": "button"
+                              "event": "LIST"
                             },
                             {
-                              "event": "DELETE_FILE",
+                              "type": "button",
                               "label": "Delete",
                               "icon": "trash-2",
-                              "type": "button",
-                              "variant": "destructive"
+                              "variant": "destructive",
+                              "event": "DELETE_FILE"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "center",
-                          "gap": "sm"
+                          ]
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -1763,78 +1763,78 @@
                     {
                       "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "hard-drive"
-                            },
-                            {
-                              "variant": "h3",
-                              "type": "typography",
-                              "content": "Storage Files"
-                            }
-                          ],
                           "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
-                          "align": "center"
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "hard-drive",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Storage Files",
+                              "variant": "h3"
+                            }
+                          ],
+                          "align": "center",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "label": "Bucket",
-                          "placeholder": "bucket-name",
                           "bind": "@entity.bucket",
+                          "placeholder": "bucket-name",
                           "type": "input"
                         },
                         {
                           "label": "File Key",
                           "placeholder": "path/to/file.txt",
-                          "type": "input",
-                          "bind": "@entity.fileKey"
+                          "bind": "@entity.fileKey",
+                          "type": "input"
                         },
                         {
-                          "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
-                              "variant": "primary",
-                              "event": "UPLOAD",
                               "label": "Upload",
-                              "icon": "upload"
+                              "variant": "primary",
+                              "icon": "upload",
+                              "event": "UPLOAD"
                             },
                             {
-                              "label": "Download",
                               "event": "DOWNLOAD",
-                              "icon": "download",
-                              "variant": "secondary",
-                              "type": "button"
-                            },
-                            {
+                              "label": "Download",
                               "variant": "secondary",
                               "type": "button",
-                              "event": "LIST",
+                              "icon": "download"
+                            },
+                            {
+                              "type": "button",
                               "icon": "list",
+                              "variant": "secondary",
+                              "event": "LIST",
                               "label": "List"
                             },
                             {
                               "label": "Delete",
-                              "event": "DELETE_FILE",
+                              "type": "button",
                               "variant": "destructive",
                               "icon": "trash-2",
-                              "type": "button"
+                              "event": "DELETE_FILE"
                             }
                           ],
-                          "justify": "center",
+                          "direction": "horizontal",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "sm"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]

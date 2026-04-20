@@ -73,79 +73,79 @@
                 {
                   "gap": "lg",
                   "direction": "vertical",
+                  "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
-                      "gap": "md",
                       "justify": "space-between",
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "horizontal",
                       "align": "center",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "file-text",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "DetailRecords"
+                              "content": "DetailRecords",
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
+                          "event": "CREATE",
                           "type": "button",
                           "label": "Create DetailRecord",
                           "variant": "primary",
-                          "icon": "plus",
-                          "event": "CREATE"
+                          "icon": "plus"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal"
+                      ]
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "entity": "DetailRecord",
+                      "emptyTitle": "No detailrecords yet",
+                      "emptyDescription": "Create your first detailrecord to get started.",
                       "itemActions": [
                         {
-                          "variant": "ghost",
                           "label": "View",
+                          "variant": "ghost",
                           "size": "sm",
                           "event": "VIEW"
                         }
                       ],
-                      "emptyTitle": "No detailrecords yet",
+                      "type": "data-grid",
                       "columns": [
                         {
-                          "label": "Name",
-                          "variant": "h4",
                           "name": "name",
-                          "icon": "file-text"
+                          "variant": "h4",
+                          "icon": "file-text",
+                          "label": "Name"
                         },
                         {
+                          "variant": "badge",
                           "name": "description",
-                          "label": "Description",
-                          "variant": "badge"
+                          "label": "Description"
                         },
                         {
-                          "variant": "caption",
+                          "name": "status",
                           "label": "Status",
-                          "name": "status"
+                          "variant": "caption"
                         }
                       ],
-                      "type": "data-grid",
-                      "entity": "DetailRecord",
-                      "emptyIcon": "inbox",
-                      "emptyDescription": "Create your first detailrecord to get started."
+                      "emptyIcon": "inbox"
                     }
                   ],
-                  "className": "max-w-5xl mx-auto w-full",
                   "type": "stack"
                 }
               ]
@@ -160,24 +160,6 @@
             "OPEN": "CREATE"
           },
           "effects": {
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ]
-            ],
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
-            ],
             "SAVE": [
               [
                 "persist",
@@ -189,6 +171,32 @@
                 "render-ui",
                 "modal",
                 null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
               ]
             ],
             "CREATE": [
@@ -196,44 +204,50 @@
                 "render-ui",
                 "modal",
                 {
-                  "direction": "vertical",
-                  "gap": "md",
                   "type": "stack",
+                  "direction": "vertical",
                   "children": [
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
                       "children": [
                         {
                           "name": "plus-circle",
-                          "size": "md",
-                          "type": "icon"
+                          "type": "icon",
+                          "size": "md"
                         },
                         {
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "New DetailRecord"
+                          "content": "New DetailRecord",
+                          "type": "typography"
                         }
                       ],
+                      "direction": "horizontal",
+                      "type": "stack",
                       "gap": "sm"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "entity": "DetailRecord",
-                      "mode": "create",
                       "fields": [
                         "name",
                         "description",
                         "status"
                       ],
-                      "submitEvent": "SAVE",
+                      "cancelEvent": "CLOSE",
+                      "entity": "DetailRecord",
                       "type": "form-section",
-                      "cancelEvent": "CLOSE"
+                      "mode": "create",
+                      "submitEvent": "SAVE"
                     }
-                  ]
+                  ],
+                  "gap": "md"
                 }
+              ]
+            ],
+            "INIT": [
+              [
+                "fetch",
+                "DetailRecord"
               ]
             ]
           }
@@ -246,20 +260,6 @@
             "OPEN": "VIEW"
           },
           "effects": {
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ]
-            ],
-            "SAVE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ]
-            ],
             "VIEW": [
               [
                 "fetch",
@@ -272,13 +272,14 @@
                 "render-ui",
                 "modal",
                 {
+                  "direction": "vertical",
                   "children": [
                     {
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "name": "eye",
                           "type": "icon",
+                          "name": "eye",
                           "size": "md"
                         },
                         {
@@ -287,16 +288,14 @@
                           "variant": "h3"
                         }
                       ],
-                      "gap": "sm",
+                      "type": "stack",
                       "direction": "horizontal",
-                      "align": "center"
+                      "gap": "sm"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
                       "children": [
                         {
                           "type": "typography",
@@ -304,34 +303,34 @@
                           "content": "Name"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
-                          "content": "@entity.name"
+                          "content": "@entity.name",
+                          "type": "typography"
                         }
                       ],
+                      "direction": "horizontal",
+                      "type": "stack",
                       "gap": "md"
                     },
                     {
-                      "gap": "md",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "Description",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "type": "typography"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
-                          "content": "@entity.description"
+                          "content": "@entity.description",
+                          "type": "typography"
                         }
                       ],
+                      "type": "stack",
                       "direction": "horizontal",
-                      "type": "stack"
+                      "gap": "md"
                     },
                     {
                       "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
                       "children": [
                         {
                           "content": "Status",
@@ -340,32 +339,33 @@
                         },
                         {
                           "type": "typography",
-                          "content": "@entity.status",
-                          "variant": "body"
+                          "variant": "body",
+                          "content": "@entity.status"
                         }
-                      ]
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "stack",
-                      "justify": "end",
-                      "direction": "horizontal",
                       "children": [
                         {
-                          "variant": "ghost",
-                          "type": "button",
                           "event": "CLOSE",
-                          "label": "Close"
+                          "variant": "ghost",
+                          "label": "Close",
+                          "type": "button"
                         }
                       ],
-                      "gap": "sm"
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "justify": "end"
                     }
                   ],
-                  "direction": "vertical",
-                  "gap": "md",
-                  "type": "stack"
+                  "type": "stack",
+                  "gap": "md"
                 }
               ]
             ],
@@ -373,6 +373,34 @@
               [
                 "fetch",
                 "DetailRecord"
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ]
+            ],
+            "SAVE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
               ]
             ]
           }

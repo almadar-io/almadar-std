@@ -69,11 +69,13 @@ orbital AgentMemoryOrbital {
     state open {
       CLOSE -> closed
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
       SAVE -> closed
         (persist create AgentMemory @payload.data)
         (emit MEMORIZED { id: "@payload.data.id" })
         (render-ui modal null)
+        (render-ui main { type: "box" })
     }
     ;; consumers: AgentMemoryBrowse.listens * MEMORIZED -> INIT triggers refresh; downstream agents may listen
     emits {
@@ -124,6 +126,7 @@ orbital AgentMemoryOrbital {
       REINFORCED external { id: string }
       DECAYED external { id: string }
       PINNED external { id: string }
+      MEMORIZED external { id: string }
     }
     emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]
     listens {

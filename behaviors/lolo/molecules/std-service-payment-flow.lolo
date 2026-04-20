@@ -88,7 +88,11 @@ orbital ServicePaymentFlowOrbital {
         (set @entity.sendStatus error)
         (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "error-state", title: "Receipt Failed", message: "Could not send receipt email.", onRetry: "RETRY_RECEIPT" }, { type: "button", label: "Retry", event: "RETRY_RECEIPT", variant: "primary", icon: "refresh-cw" }] })
     }
-    state sent {}
+    state sent {
+      SEND_RECEIPT -> sending
+        (render-ui main { type: "loading-state", title: "Resending receipt..." })
+        (call-service email send { to: "@entity.to", subject: "@entity.subject", body: "@entity.body" })
+    }
     state receiptError {
       RETRY_RECEIPT -> sending
         (render-ui main { type: "loading-state", title: "Sending receipt...", message: "Delivering your payment receipt." })

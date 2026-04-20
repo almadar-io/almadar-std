@@ -36,12 +36,13 @@ orbital InventoryItemOrbital {
     }
     on CLOSE {
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
     }
     on SAVE {
         (persist create InventoryItem @payload.data)
         (render-ui modal null)
-        (emit ITEM_ADDED)
+        (render-ui main { type: "box" })
     }
   }
   trait InventoryItemUse = Modal.traits.ModalRecordModal -> InventoryItem {
@@ -57,12 +58,13 @@ orbital InventoryItemOrbital {
     }
     on CLOSE {
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (notify Cancelled info)
     }
     on SAVE {
         (persist update InventoryItem @payload.data)
         (render-ui modal null)
-        (emit ITEM_USED)
+        (render-ui main { type: "box" })
     }
   }
   trait InventoryItemDrop = Confirmation.traits.ConfirmActionConfirmation -> InventoryItem {
@@ -81,14 +83,17 @@ orbital InventoryItemOrbital {
     on CONFIRM_DROP {
         (persist delete InventoryItem @entity.pendingId)
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref InventoryItem)
     }
     on CANCEL {
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref InventoryItem)
     }
     on CLOSE {
         (render-ui modal null)
+        (render-ui main { type: "box" })
         (ref InventoryItem)
     }
   }
