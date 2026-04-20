@@ -1,5 +1,11 @@
 app std-confirmation "1.0.0"
 "std-confirmation as a Function"
+;;
+;; Modal-only confirmation trait: renders ONLY to the `modal` slot.
+;; Consumers configure icon/title/alertMessage/confirmLabel at the
+;; trait-ref call site via `config: { ... }`. Side effects (persist delete,
+;; notify, etc.) belong in a sibling coordinator trait that
+;; `listens { ConfirmTrait CONFIRM -> DO_DELETE }`.
 
 orbital ConfirmActionOrbital {
   entity ConfirmAction [runtime] {
@@ -11,54 +17,31 @@ orbital ConfirmActionOrbital {
     pendingId : string = ""
   }
 
-  type ConfirmActionLoaded     = Event ConfirmAction "Fired when ConfirmAction finishes loading"
-  type ConfirmActionLoadFailed = Event { message : string } "Fired when ConfirmAction fails to load"
-
   trait ConfirmActionConfirmation -> ConfirmAction [interaction, instance] {
-    initial: loading
-    state loading {
-      INIT -> loading
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "spinner", size: "lg" }, { type: "typography", variant: "caption", color: "muted", content: "Loading…" }] })
-      ConfirmActionLoaded -> idle
-        (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "shield-check", size: "lg" }, { type: "typography", content: "ConfirmActions", variant: "h2" }] }, { type: "divider" }, { type: "data-grid", entity: "ConfirmAction", emptyIcon: "inbox", emptyTitle: "No confirmactions yet", emptyDescription: "Items will appear here.", itemActions: [{ label: "Confirm Action", event: "REQUEST", variant: "danger" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "typography", variant: "h4", content: "@item.name" }] }] }] })
-      ConfirmActionLoadFailed -> error
-        (render-ui main { type: "stack", direction: "vertical", gap: "md", align: "center", className: "py-12", children: [{ type: "icon", name: "alert-triangle", size: "xl", color: "destructive" }, { type: "typography", variant: "h3", content: "Failed to load" }, { type: "typography", variant: "body", color: "muted", content: "@payload.message" }, { type: "button", label: "Retry", event: "INIT", variant: "primary", icon: "rotate-ccw" }] })
+    config {
+      icon : string = "alert-triangle"
+      title : string = "Confirm Action"
+      alertMessage : string = "Are you sure?"
+      confirmLabel : string = "Confirm"
     }
+    initial: idle
     state idle {
-      INIT -> loading
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
-        (render-ui main { type: "spinner", size: "lg" })
+      INIT -> idle
+        (fetch ConfirmAction)
       REQUEST -> confirming
         (set @entity.pendingId @payload.id)
-        (fetch ConfirmAction { id: "@payload.id" })
-        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "md" }, { type: "typography", content: "Confirm Action", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "Are you sure?" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "Confirm", event: "CONFIRM", variant: "danger", icon: "check" }] }] })
+        (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "@config.icon", size: "md" }, { type: "typography", content: "@config.title", variant: "h3" }] }, { type: "divider" }, { type: "alert", variant: "danger", message: "@config.alertMessage" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Cancel", event: "CANCEL", variant: "ghost" }, { type: "button", label: "@config.confirmLabel", event: "CONFIRM", variant: "danger", icon: "check" }] }] })
     }
     state confirming {
       CONFIRM -> idle
         (render-ui modal null)
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
-        (render-ui main { type: "spinner", size: "lg" })
       CANCEL -> idle
         (render-ui modal null)
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
-        (render-ui main { type: "spinner", size: "lg" })
       CLOSE -> idle
         (render-ui modal null)
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
-    
-        (render-ui main { type: "spinner", size: "lg" })}
-    state error {
-      INIT -> loading
-        (fetch ConfirmAction { emit: { success: "ConfirmActionLoaded", failure: "ConfirmActionLoadFailed" } })
-        (render-ui main { type: "spinner", size: "lg" })
     }
-    ;; consumer: parent molecule that composes ConfirmActionConfirmation (e.g. std-cart's CartItemRemoveConfirm)
-
-    emits: [ConfirmActionLoaded, ConfirmActionLoadFailed]
     listens {
       REQUEST { id : string! }
-      ConfirmActionLoadFailed { message : string }
     }
   }
   page "/confirmactions/confirm" as ConfirmActionConfirmPage -> ConfirmActionConfirmation

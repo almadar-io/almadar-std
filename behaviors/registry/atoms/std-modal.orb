@@ -42,80 +42,20 @@
           "name": "ModalRecordModal",
           "category": "interaction",
           "linkedEntity": "ModalRecord",
-          "emits": [
-            {
-              "event": "ModalRecordLoaded",
-              "description": "Fired when ModalRecord finishes loading",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ModalRecordLoadFailed",
-              "description": "Fired when ModalRecord fails to load",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "message",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "closed",
                 "isInitial": true
               },
               {
-                "name": "closed"
-              },
-              {
                 "name": "open"
-              },
-              {
-                "name": "error"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "ModalRecordLoaded",
-                "name": "ModalRecord loaded"
-              },
-              {
-                "key": "ModalRecordLoadFailed",
-                "name": "ModalRecord load failed",
-                "payload": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "key": "OPEN",
@@ -145,170 +85,13 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ModalRecord",
-                    {
-                      "emit": {
-                        "failure": "ModalRecordLoadFailed",
-                        "success": "ModalRecordLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading…"
-                        }
-                      ],
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "closed",
-                "event": "ModalRecordLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "justify": "space-between",
-                          "children": [
-                            {
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "size": "lg",
-                                  "name": "layout-panel-top",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Details",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack"
-                            },
-                            {
-                              "label": "Open",
-                              "event": "OPEN",
-                              "variant": "primary",
-                              "type": "button",
-                              "icon": "layout-panel-top"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "md"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "description": "Click Open to view details in a modal overlay.",
-                          "icon": "layout-panel-top",
-                          "type": "empty-state",
-                          "title": "Nothing open"
-                        }
-                      ],
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "ModalRecordLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "size": "xl",
-                          "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Failed to load",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@payload.message",
-                          "type": "typography",
-                          "color": "muted"
-                        },
-                        {
-                          "event": "INIT",
-                          "variant": "primary",
-                          "type": "button",
-                          "label": "Retry",
-                          "icon": "rotate-ccw"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
                 "from": "closed",
-                "to": "loading",
+                "to": "closed",
                 "event": "INIT",
                 "effects": [
                   [
                     "fetch",
-                    "ModalRecord",
-                    {
-                      "emit": {
-                        "failure": "ModalRecordLoadFailed",
-                        "success": "ModalRecordLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner",
-                      "size": "lg"
-                    }
+                    "ModalRecord"
                   ]
                 ]
               },
@@ -321,107 +104,39 @@
                     "render-ui",
                     "modal",
                     {
-                      "type": "modal",
-                      "title": "Details",
-                      "isOpen": true,
+                      "gap": "md",
+                      "type": "stack",
                       "children": [
                         {
                           "children": [
                             {
-                              "gap": "md",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Name",
-                                  "type": "typography"
-                                },
-                                {
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "name"
-                                  ],
-                                  "variant": "body",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "horizontal"
+                              "size": "md",
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "content": "Description",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "description"
-                                  ],
-                                  "variant": "body"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "content": "Status",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": [
-                                    "object/get",
-                                    [
-                                      "array/first",
-                                      "@entity"
-                                    ],
-                                    "status"
-                                  ]
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "label": "Close",
-                                  "variant": "ghost",
-                                  "event": "CLOSE"
-                                }
-                              ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "justify": "end"
+                              "content": "@config.title",
+                              "variant": "h3",
+                              "type": "typography"
                             }
                           ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "mode": "@config.mode",
+                          "type": "form-section",
+                          "cancelEvent": "CLOSE",
+                          "submitEvent": "SAVE",
+                          "fields": "@config.fields",
+                          "entity": "ModalRecord"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -440,69 +155,18 @@
                     "notify",
                     "Cancelled",
                     "info"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner",
-                      "size": "lg"
-                    }
                   ]
                 ]
               },
               {
                 "from": "open",
-                "to": "loading",
+                "to": "closed",
                 "event": "SAVE",
                 "effects": [
                   [
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "fetch",
-                    "ModalRecord",
-                    {
-                      "emit": {
-                        "failure": "ModalRecordLoadFailed",
-                        "success": "ModalRecordLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "lg",
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ModalRecord",
-                    {
-                      "emit": {
-                        "success": "ModalRecordLoaded",
-                        "failure": "ModalRecordLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner",
-                      "size": "lg"
-                    }
                   ]
                 ]
               }

@@ -104,19 +104,19 @@
           ],
           "listens": [
             {
-              "event": "SAVE",
+              "event": "ITEM_CREATED",
               "triggers": "INIT",
               "source": {
                 "kind": "trait",
-                "trait": "CartItemAddItem"
+                "trait": "CartItemPersistor"
               }
             },
             {
-              "event": "CONFIRM_REMOVE",
+              "event": "ITEM_DELETED",
               "triggers": "INIT",
               "source": {
                 "kind": "trait",
-                "trait": "CartItemRemoveConfirm"
+                "trait": "CartItemPersistor"
               }
             }
           ],
@@ -128,9 +128,6 @@
               },
               {
                 "name": "browsing"
-              },
-              {
-                "name": "checkout"
               },
               {
                 "name": "error"
@@ -154,29 +151,6 @@
                     "type": "string"
                   }
                 ]
-              },
-              {
-                "key": "PROCEED_CHECKOUT",
-                "name": "Proceed Checkout"
-              },
-              {
-                "key": "BACK_TO_CART",
-                "name": "Back To Cart"
-              },
-              {
-                "key": "CONFIRM_ORDER",
-                "name": "Confirm Order"
-              },
-              {
-                "key": "REQUEST_REMOVE",
-                "name": "Request Remove",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
               }
             ],
             "transitions": [
@@ -190,8 +164,8 @@
                     "CartItem",
                     {
                       "emit": {
-                        "success": "CartItemLoaded",
-                        "failure": "CartItemLoadFailed"
+                        "failure": "CartItemLoadFailed",
+                        "success": "CartItemLoaded"
                       }
                     }
                   ],
@@ -199,23 +173,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "className": "py-12",
-                      "align": "center",
+                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner",
                           "size": "lg"
                         },
                         {
-                          "type": "typography",
-                          "color": "muted",
                           "variant": "caption",
-                          "content": "Loading cart…"
+                          "color": "muted",
+                          "content": "Loading cart…",
+                          "type": "typography"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md"
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -234,115 +208,72 @@
                       "gap": "lg",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "space-between",
                           "children": [
                             {
+                              "gap": "md",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "name": "shopping-cart",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "shopping-cart"
                                 },
                                 {
-                                  "content": "Shopping Cart",
                                   "variant": "h2",
+                                  "content": "Shopping Cart",
                                   "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
-                              "type": "button",
-                              "icon": "plus",
-                              "event": "ADD_ITEM",
                               "label": "Add Item",
-                              "variant": "primary"
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "md",
-                          "justify": "space-between"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "children": [
-                            {
-                              "label": "Items",
-                              "value": [
-                                "array/len",
-                                "@entity"
-                              ],
-                              "icon": "package",
-                              "type": "stat-display"
-                            },
-                            {
-                              "icon": "dollar-sign",
-                              "type": "stat-display",
-                              "label": "Subtotal",
-                              "value": [
-                                "array/len",
-                                "@entity"
-                              ]
-                            },
-                            {
-                              "label": "Total",
-                              "type": "stat-display",
-                              "icon": "receipt",
-                              "value": [
-                                "array/len",
-                                "@entity"
-                              ]
-                            }
-                          ],
-                          "columns": 3.0,
-                          "type": "simple-grid"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "entity": "CartItem",
-                          "emptyTitle": "Your cart is empty",
-                          "columns": [
-                            {
-                              "variant": "h4",
-                              "name": "name",
-                              "label": "Name",
-                              "icon": "shopping-cart"
-                            },
-                            {
-                              "label": "Description",
-                              "variant": "caption",
-                              "name": "description"
-                            },
-                            {
-                              "variant": "badge",
-                              "label": "Status",
-                              "name": "status"
-                            }
-                          ],
-                          "emptyIcon": "inbox",
-                          "type": "data-grid",
-                          "emptyDescription": "Add items to get started.",
-                          "itemActions": [
-                            {
-                              "variant": "danger",
-                              "label": "Remove",
-                              "event": "REQUEST_REMOVE",
-                              "size": "sm"
+                              "event": "ADD_ITEM",
+                              "type": "button",
+                              "variant": "primary",
+                              "icon": "plus"
                             }
                           ]
                         },
                         {
-                          "event": "PROCEED_CHECKOUT",
-                          "variant": "primary",
-                          "icon": "arrow-right",
-                          "label": "Proceed to Checkout",
-                          "type": "button"
+                          "type": "divider"
+                        },
+                        {
+                          "emptyDescription": "Add items to get started.",
+                          "itemActions": [
+                            {
+                              "label": "Remove",
+                              "variant": "danger",
+                              "size": "sm",
+                              "event": "REQUEST_REMOVE"
+                            }
+                          ],
+                          "type": "data-grid",
+                          "emptyTitle": "Your cart is empty",
+                          "entity": "CartItem",
+                          "columns": [
+                            {
+                              "name": "name",
+                              "icon": "shopping-cart",
+                              "label": "Name",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Description",
+                              "name": "description",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            }
+                          ],
+                          "emptyIcon": "inbox"
                         }
                       ]
                     }
@@ -359,36 +290,36 @@
                     "main",
                     {
                       "align": "center",
+                      "className": "py-12",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "alert-triangle",
                           "size": "xl",
-                          "color": "destructive"
+                          "name": "alert-triangle",
+                          "color": "destructive",
+                          "type": "icon"
                         },
                         {
+                          "content": "Failed to load cart",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Failed to load cart"
+                          "variant": "h3"
                         },
                         {
-                          "variant": "body",
                           "color": "muted",
+                          "content": "@payload.message",
                           "type": "typography",
-                          "content": "@payload.message"
+                          "variant": "body"
                         },
                         {
                           "variant": "primary",
+                          "label": "Retry",
                           "icon": "rotate-ccw",
                           "type": "button",
-                          "event": "INIT",
-                          "label": "Retry"
+                          "event": "INIT"
                         }
                       ],
                       "type": "stack",
-                      "className": "py-12"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -403,8 +334,8 @@
                     "CartItem",
                     {
                       "emit": {
-                        "failure": "CartItemLoadFailed",
-                        "success": "CartItemLoaded"
+                        "success": "CartItemLoaded",
+                        "failure": "CartItemLoadFailed"
                       }
                     }
                   ],
@@ -419,156 +350,6 @@
                 ]
               },
               {
-                "from": "browsing",
-                "to": "checkout",
-                "event": "PROCEED_CHECKOUT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "clipboard",
-                              "size": "lg",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Checkout"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "emptyIcon": "inbox",
-                          "columns": [
-                            {
-                              "label": "Name",
-                              "icon": "shopping-cart",
-                              "name": "name",
-                              "variant": "h4"
-                            },
-                            {
-                              "label": "Description",
-                              "variant": "caption",
-                              "name": "description"
-                            },
-                            {
-                              "label": "Status",
-                              "variant": "badge",
-                              "name": "status"
-                            }
-                          ],
-                          "entity": "CartItem",
-                          "emptyTitle": "Your cart is empty",
-                          "emptyDescription": "Add items to get started."
-                        },
-                        {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "variant": "ghost",
-                              "icon": "arrow-left",
-                              "label": "Back to Cart",
-                              "event": "BACK_TO_CART"
-                            },
-                            {
-                              "icon": "check",
-                              "event": "CONFIRM_ORDER",
-                              "label": "Confirm Order",
-                              "type": "button",
-                              "variant": "primary"
-                            }
-                          ],
-                          "type": "stack"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "checkout",
-                "to": "loading",
-                "event": "BACK_TO_CART",
-                "effects": [
-                  [
-                    "fetch",
-                    "CartItem",
-                    {
-                      "emit": {
-                        "failure": "CartItemLoadFailed",
-                        "success": "CartItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "lg",
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "checkout",
-                "to": "browsing",
-                "event": "CONFIRM_ORDER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "name": "check-circle",
-                          "size": "lg",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "Order Confirmed",
-                          "type": "typography",
-                          "variant": "h2"
-                        },
-                        {
-                          "variant": "body",
-                          "type": "typography",
-                          "content": "Your order has been placed successfully."
-                        },
-                        {
-                          "event": "INIT",
-                          "label": "Continue Shopping",
-                          "type": "button",
-                          "variant": "primary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
                 "from": "error",
                 "to": "loading",
                 "event": "INIT",
@@ -578,8 +359,8 @@
                     "CartItem",
                     {
                       "emit": {
-                        "success": "CartItemLoaded",
-                        "failure": "CartItemLoadFailed"
+                        "failure": "CartItemLoadFailed",
+                        "success": "CartItemLoaded"
                       }
                     }
                   ],
@@ -601,231 +382,171 @@
           "ref": "Modal.traits.ModalRecordModal",
           "name": "CartItemAddItem",
           "linkedEntity": "CartItem",
+          "config": {
+            "mode": "create",
+            "icon": "plus-circle",
+            "title": "Add Item",
+            "openButtonLabel": "Add Item",
+            "fields": [
+              "name",
+              "description",
+              "status"
+            ]
+          },
           "events": {
             "OPEN": "ADD_ITEM"
-          },
-          "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "CartItem"
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ]
-            ],
-            "SAVE": [
-              [
-                "persist",
-                "create",
-                "CartItem",
-                "@payload.data"
-              ],
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
-            ],
-            "ADD_ITEM": [
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "type": "stack",
-                  "gap": "md",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "plus-circle",
-                          "size": "md"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Add Item",
-                          "variant": "h3"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "mode": "create",
-                      "type": "form-section",
-                      "cancelEvent": "CLOSE",
-                      "entity": "CartItem",
-                      "submitEvent": "SAVE",
-                      "fields": [
-                        "name",
-                        "description",
-                        "status"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ]
           }
         },
         {
           "ref": "Confirmation.traits.ConfirmActionConfirmation",
           "name": "CartItemRemoveConfirm",
           "linkedEntity": "CartItem",
-          "events": {
-            "REQUEST": "REQUEST_REMOVE",
-            "CONFIRM": "CONFIRM_REMOVE"
+          "config": {
+            "icon": "alert-triangle",
+            "title": "Remove Item",
+            "confirmLabel": "Remove",
+            "alertMessage": "Are you sure you want to remove this item from your cart?"
           },
-          "effects": {
-            "CANCEL": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
+          "events": {
+            "CONFIRM": "CONFIRM_REMOVE",
+            "REQUEST": "REQUEST_REMOVE"
+          }
+        },
+        {
+          "name": "CartItemPersistor",
+          "category": "lifecycle",
+          "linkedEntity": "CartItem",
+          "emits": [
+            {
+              "event": "ITEM_CREATED",
+              "scope": "external",
+              "payload": [
                 {
-                  "type": "box"
+                  "name": "id",
+                  "type": "string"
                 }
               ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
+            },
+            {
+              "event": "ITEM_DELETED",
+              "scope": "external",
+              "payload": [
                 {
-                  "type": "box"
+                  "name": "id",
+                  "type": "string"
                 }
               ]
+            }
+          ],
+          "listens": [
+            {
+              "event": "SAVE",
+              "triggers": "DO_CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "CartItemAddItem"
+              }
+            },
+            {
+              "event": "CONFIRM_REMOVE",
+              "triggers": "DO_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "CartItemRemoveConfirm"
+              }
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
             ],
-            "INIT": [
-              [
-                "fetch",
-                "CartItem"
-              ]
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ITEM_CREATED",
+                "name": "Item Created"
+              },
+              {
+                "key": "ITEM_DELETED",
+                "name": "Item Deleted"
+              }
             ],
-            "CONFIRM_REMOVE": [
-              [
-                "persist",
-                "delete",
-                "CartItem",
-                "@entity.pendingId"
-              ],
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
-            ],
-            "REQUEST_REMOVE": [
-              [
-                "set",
-                "@entity.pendingId",
-                "@payload.id"
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "gap": "md",
-                  "direction": "vertical",
-                  "type": "stack",
-                  "children": [
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT"
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_CREATE",
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "CartItem",
+                    "@payload.data"
+                  ],
+                  [
+                    "emit",
+                    "ITEM_CREATED",
                     {
-                      "align": "center",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "size": "md",
-                          "type": "icon",
-                          "name": "alert-triangle"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Remove Item",
-                          "variant": "h3"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "message": "Are you sure you want to remove this item from your cart?",
-                      "type": "alert",
-                      "variant": "danger"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "justify": "end",
-                      "children": [
-                        {
-                          "variant": "ghost",
-                          "type": "button",
-                          "label": "Cancel",
-                          "event": "CANCEL"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Remove",
-                          "event": "CONFIRM_REMOVE",
-                          "variant": "danger",
-                          "icon": "check"
-                        }
-                      ]
+                      "id": "@payload.data.id"
                     }
                   ]
-                }
-              ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DO_DELETE",
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "CartItem",
+                    "@entity.pendingId"
+                  ],
+                  [
+                    "emit",
+                    "ITEM_DELETED",
+                    {
+                      "id": "@entity.pendingId"
+                    }
+                  ]
+                ]
+              }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [
@@ -841,6 +562,9 @@
             },
             {
               "ref": "CartItemRemoveConfirm"
+            },
+            {
+              "ref": "CartItemPersistor"
             }
           ]
         }

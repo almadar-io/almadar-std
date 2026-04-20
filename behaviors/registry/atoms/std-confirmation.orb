@@ -47,84 +47,20 @@
           "name": "ConfirmActionConfirmation",
           "category": "interaction",
           "linkedEntity": "ConfirmAction",
-          "emits": [
-            {
-              "event": "ConfirmActionLoaded",
-              "description": "Fired when ConfirmAction finishes loading",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "pendingId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ConfirmActionLoadFailed",
-              "description": "Fired when ConfirmAction fails to load",
-              "scope": "internal",
-              "payload": [
-                {
-                  "name": "message",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
           "stateMachine": {
             "states": [
               {
-                "name": "loading",
+                "name": "idle",
                 "isInitial": true
               },
               {
-                "name": "idle"
-              },
-              {
                 "name": "confirming"
-              },
-              {
-                "name": "error"
               }
             ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
-              },
-              {
-                "key": "ConfirmActionLoaded",
-                "name": "ConfirmAction loaded"
-              },
-              {
-                "key": "ConfirmActionLoadFailed",
-                "name": "ConfirmAction load failed",
-                "payload": [
-                  {
-                    "name": "message",
-                    "type": "string"
-                  }
-                ]
               },
               {
                 "key": "REQUEST",
@@ -152,180 +88,13 @@
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ConfirmAction",
-                    {
-                      "emit": {
-                        "success": "ConfirmActionLoaded",
-                        "failure": "ConfirmActionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "spinner",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "content": "Loading…",
-                          "variant": "caption"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "idle",
-                "event": "ConfirmActionLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md",
-                          "children": [
-                            {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "shield-check"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "ConfirmActions",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "emptyDescription": "Items will appear here.",
-                          "itemActions": [
-                            {
-                              "label": "Confirm Action",
-                              "event": "REQUEST",
-                              "variant": "danger"
-                            }
-                          ],
-                          "entity": "ConfirmAction",
-                          "type": "data-grid",
-                          "emptyTitle": "No confirmactions yet",
-                          "emptyIcon": "inbox",
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "direction": "vertical",
-                              "type": "stack",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "content": "@item.name",
-                                  "type": "typography",
-                                  "variant": "h4"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "ConfirmActionLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "size": "xl",
-                          "name": "alert-triangle",
-                          "color": "destructive",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Failed to load",
-                          "variant": "h3"
-                        },
-                        {
-                          "type": "typography",
-                          "color": "muted",
-                          "variant": "body",
-                          "content": "@payload.message"
-                        },
-                        {
-                          "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "event": "INIT",
-                          "type": "button",
-                          "variant": "primary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
                 "from": "idle",
-                "to": "loading",
+                "to": "idle",
                 "event": "INIT",
                 "effects": [
                   [
                     "fetch",
-                    "ConfirmAction",
-                    {
-                      "emit": {
-                        "failure": "ConfirmActionLoadFailed",
-                        "success": "ConfirmActionLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "lg",
-                      "type": "spinner"
-                    }
+                    "ConfirmAction"
                   ]
                 ]
               },
@@ -340,54 +109,42 @@
                     "@payload.id"
                   ],
                   [
-                    "fetch",
-                    "ConfirmAction",
-                    {
-                      "id": "@payload.id"
-                    }
-                  ],
-                  [
                     "render-ui",
                     "modal",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
                           "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "name": "@config.icon",
                               "size": "md",
-                              "name": "alert-triangle",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "type": "typography",
-                              "content": "Confirm Action"
+                              "content": "@config.title",
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "alert",
-                          "variant": "danger",
-                          "message": "Are you sure?"
+                          "message": "@config.alertMessage",
+                          "variant": "danger"
                         },
                         {
-                          "justify": "end",
-                          "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "event": "CANCEL",
                               "type": "button",
+                              "event": "CANCEL",
                               "label": "Cancel",
                               "variant": "ghost"
                             },
@@ -396,12 +153,17 @@
                               "type": "button",
                               "variant": "danger",
                               "event": "CONFIRM",
-                              "label": "Confirm"
+                              "label": "@config.confirmLabel"
                             }
-                          ]
+                          ],
+                          "justify": "end",
+                          "type": "stack",
+                          "gap": "sm"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -415,24 +177,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "fetch",
-                    "ConfirmAction",
-                    {
-                      "emit": {
-                        "success": "ConfirmActionLoaded",
-                        "failure": "ConfirmActionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner",
-                      "size": "lg"
-                    }
                   ]
                 ]
               },
@@ -445,24 +189,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "fetch",
-                    "ConfirmAction",
-                    {
-                      "emit": {
-                        "success": "ConfirmActionLoaded",
-                        "failure": "ConfirmActionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "lg",
-                      "type": "spinner"
-                    }
                   ]
                 ]
               },
@@ -475,49 +201,6 @@
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "fetch",
-                    "ConfirmAction",
-                    {
-                      "emit": {
-                        "failure": "ConfirmActionLoadFailed",
-                        "success": "ConfirmActionLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "lg",
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ConfirmAction",
-                    {
-                      "emit": {
-                        "success": "ConfirmActionLoaded",
-                        "failure": "ConfirmActionLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "lg",
-                      "type": "spinner"
-                    }
                   ]
                 ]
               }
