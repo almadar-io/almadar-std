@@ -1,13 +1,14 @@
-;; app std-hr-portal
+app std-hr-portal "1.0.0"
+"std-hr-portal as a Function"
 
 orbital EmployeeOrbital {
   entity Employee [runtime] {
     id : string!
-    name : string
-    email : string
-    department : string
-    role : string
-    startDate : datetime
+    name : string = ""
+    email : string = ""
+    department : string = ""
+    role : string = ""
+    startDate : datetime = ""
   }
   trait EmployeeBrowse -> Employee [interaction] {
     state browsing {
@@ -22,6 +23,9 @@ orbital EmployeeOrbital {
       * EMPLOYEE_CREATED -> INIT
       * EMPLOYEE_UPDATED -> INIT
       * EMPLOYEE_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait EmployeeCreate -> Employee [interaction] {
@@ -44,7 +48,10 @@ orbital EmployeeOrbital {
     }
     emits {
       SAVE
-      EMPLOYEE_CREATED
+      EMPLOYEE_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait EmployeeEdit -> Employee [interaction] {
@@ -67,7 +74,11 @@ orbital EmployeeOrbital {
     }
     emits {
       SAVE
-      EMPLOYEE_UPDATED
+      EMPLOYEE_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait EmployeeView -> Employee [interaction] {
@@ -88,6 +99,10 @@ orbital EmployeeOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait EmployeeDelete -> Employee [interaction] {
@@ -115,16 +130,19 @@ orbital EmployeeOrbital {
     }
     emits {
       CONFIRM_DELETE
-      EMPLOYEE_DELETED
+      EMPLOYEE_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/employees" -> EmployeeBrowse, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete
+  page "/employees" as EmployeesPage -> EmployeeBrowse, EmployeeCreate, EmployeeEdit, EmployeeView, EmployeeDelete
 }
 orbital OnboardingOrbital {
   entity Onboarding [runtime] {
     id : string!
     employeeName : string
-    department : string
+    department : string = ""
     manager : string
     equipmentReady : boolean
     accessGranted : boolean
@@ -183,7 +201,7 @@ orbital TimeOffOrbital {
     id : string!
     employeeName : string
     leaveType : string
-    startDate : datetime
+    startDate : datetime = ""
     endDate : datetime
     status : string
   }

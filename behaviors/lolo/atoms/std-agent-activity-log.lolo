@@ -1,17 +1,18 @@
-;; app std-agent-activity-log
+app std-agent-activity-log "1.0.0"
+"std-agent-activity-log as a Function"
 
 orbital AgentActivityLogOrbital {
   entity AgentActivityLog [persistent: agentactivitylogs] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
-    icon : string
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
+    icon : string = "circle"
   }
   trait AgentActivityLogLog -> AgentActivityLog [interaction] {
     state logging {
@@ -34,5 +35,5 @@ orbital AgentActivityLogOrbital {
       * LOG_ENTRY -> LOG_ENTRY
     }
   }
-  page "/agentactivitylogs" -> AgentActivityLogLog
+  page "/agentactivitylogs" as AgentActivityLogPage -> AgentActivityLogLog
 }

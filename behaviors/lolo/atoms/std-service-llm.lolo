@@ -1,16 +1,17 @@
-;; app std-service-llm
+app std-service-llm "1.0.0"
+"std-service-llm as a Function"
 
 orbital ServiceLlmOrbital {
   entity ServiceLlm [runtime] {
     id : string!
-    inputText : string
-    action : string
-    result : string
-    llmStatus : string
-    error : string
+    inputText : string = ""
+    action : string = "generate"
+    result : string = ""
+    llmStatus : string = "idle"
+    error : string = ""
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
   trait ServiceLlmLlm -> ServiceLlm [interaction] {
@@ -55,6 +56,10 @@ orbital ServiceLlmOrbital {
         (set @entity.llmStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "ServiceLlm LLM", variant: "h2" }] }, { type: "divider" }, { type: "textarea", label: "Input Text", bind: "@entity.inputText", placeholder: "Enter text for LLM processing..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Generate", event: "GENERATE", variant: "primary", icon: "sparkles" }, { type: "button", label: "Classify", event: "CLASSIFY", variant: "secondary", icon: "tag" }, { type: "button", label: "Summarize", event: "SUMMARIZE", variant: "secondary", icon: "align-left" }] }] })
     }
+    listens {
+      COMPLETE { content : string! }
+      FAILED { error : string! }
+    }
   }
-  page "/servicellms" -> ServiceLlmLlm
+  page "/servicellms" as ServiceLlmPage -> ServiceLlmLlm
 }

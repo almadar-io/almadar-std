@@ -1,15 +1,16 @@
-;; app std-game-canvas3d
+app std-game-canvas3d "1.0.0"
+"std-game-canvas3d as a Function"
 
 orbital Canvas3dSceneOrbital {
   entity Canvas3dScene [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    tiles : [string]
-    units : [string]
-    features : [string]
+    tiles : [string] = []
+    units : [string] = []
+    features : [string] = []
   }
   trait Canvas3dSceneGameCanvas3d -> Canvas3dScene [interaction] {
     initial: idle
@@ -30,6 +31,10 @@ orbital Canvas3dSceneOrbital {
         (render-ui main { type: "game-canvas-3d", tiles: ["object/get", ["array/first", "@Canvas3dScene"], "tiles"], units: ["object/get", ["array/first", "@Canvas3dScene"], "units"], features: ["object/get", ["array/first", "@Canvas3dScene"], "features"], orientation: "isometric", cameraMode: "orbital", showGrid: true, shadows: true, backgroundColor: "#1a1a2e", tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK" })
       CAMERA_CHANGE -> active
     }
+    listens {
+      TILE_CLICK { tileId : string! }
+      UNIT_CLICK { unitId : string! }
+    }
   }
-  page "/canvas3dscenes" -> Canvas3dSceneGameCanvas3d
+  page "/canvas3dscenes" as Canvas3dSceneCanvas3dPage -> Canvas3dSceneGameCanvas3d
 }

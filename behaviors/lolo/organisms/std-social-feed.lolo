@@ -1,13 +1,14 @@
-;; app std-social-feed
+app std-social-feed "1.0.0"
+"std-social-feed as a Function"
 
 orbital PostOrbital {
   entity Post [runtime] {
     id : string!
-    title : string
-    content : string
-    author : string
-    createdAt : datetime
-    likes : number
+    title : string = ""
+    content : string = ""
+    author : string = ""
+    createdAt : datetime = ""
+    likes : number = 0
   }
   trait PostBrowse -> Post [interaction] {
     state browsing {
@@ -20,6 +21,7 @@ orbital PostOrbital {
     }
     listens {
       * SAVE -> INIT
+      VIEW { id : string!, row : object }
     }
   }
   trait PostCreate -> Post [interaction] {
@@ -42,6 +44,9 @@ orbital PostOrbital {
     emits {
       SAVE
     }
+    listens {
+      SAVE { data : object! }
+    }
   }
   trait PostView -> Post [interaction] {
     initial: closed
@@ -62,16 +67,20 @@ orbital PostOrbital {
     emits {
       SAVE
     }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
+    }
   }
-  page "/feed" -> PostBrowse, PostCreate, PostView
+  page "/feed" as FeedPage -> PostBrowse, PostCreate, PostView
 }
 orbital CommentOrbital {
   entity Comment [runtime] {
     id : string!
     body : string
-    author : string
+    author : string = ""
     postId : string
-    createdAt : datetime
+    createdAt : datetime = ""
   }
   trait CommentBrowse -> Comment [interaction] {
     state browsing {

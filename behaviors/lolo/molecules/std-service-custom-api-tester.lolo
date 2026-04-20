@@ -1,19 +1,20 @@
-;; app std-service-custom-api-tester
+app std-service-custom-api-tester "1.0.0"
+"std-service-custom-api-tester as a Function"
 
 orbital ServiceCustomApiTesterOrbital {
   entity ServiceCustomApiTester [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     endpoint : string
-    method : string
+    method : string = "GET"
     requestBody : string
     responseData : string
-    statusCode : number
-    authType : string
-    callStatus : string
+    statusCode : number = 0
+    authType : string = "header"
+    callStatus : string = "idle"
     error : string
   }
   trait ServiceCustomApiTesterApiTester -> ServiceCustomApiTester [interaction] {
@@ -58,6 +59,10 @@ orbital ServiceCustomApiTesterOrbital {
       RESET -> idle
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Unified API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "Request body (JSON)", bind: "@entity.requestBody" }, { type: "divider" }, { type: "typography", content: "Select Auth Type", variant: "h4" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Header API Key", event: "CALL_HEADER_API", variant: "primary", icon: "key" }, { type: "button", label: "Bearer Token", event: "CALL_BEARER_API", variant: "primary", icon: "shield" }, { type: "button", label: "Query Param", event: "CALL_QUERY_API", variant: "primary", icon: "search" }, { type: "button", label: "No Auth", event: "CALL_NOAUTH_API", variant: "primary", icon: "unlock" }] }] })
     }
+    listens {
+      API_RESPONSE { data : string!, statusCode : number! }
+      FAILED { error : string! }
+    }
   }
-  page "/servicecustomapitesters" -> ServiceCustomApiTesterApiTester
+  page "/servicecustomapitesters" as ServiceCustomApiTesterPage -> ServiceCustomApiTesterApiTester
 }

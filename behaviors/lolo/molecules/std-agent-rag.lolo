@@ -1,4 +1,5 @@
-;; app std-agent-rag
+app std-agent-rag "1.0.0"
+"std-agent-rag as a Function"
 
 orbital AgentRagOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
@@ -10,25 +11,25 @@ orbital AgentRagOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    query : string
-    context : string
-    response : string
-    memoryHits : number
-    searchHits : number
-    error : string
-    content : string
-    category : string
-    scope : string
-    strength : number
-    pinned : boolean
-    language : string
-    resultCount : number
-    results : string
-    prompt : string
-    provider : string
-    model : string
+    query : string = ""
+    context : string = ""
+    response : string = ""
+    memoryHits : number = 0
+    searchHits : number = 0
+    error : string = ""
+    content : string = ""
+    category : string = ""
+    scope : string = ""
+    strength : number = 1
+    pinned : boolean = false
+    language : string = ""
+    resultCount : number = 0
+    results : string = "[]"
+    prompt : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
   }
   trait AgentRagRag -> AgentRag [interaction] {
     initial: idle
@@ -74,6 +75,11 @@ orbital AgentRagOrbital {
         (set @entity.searchHits 0)
         (set @entity.error "")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "RAG Pipeline", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Enter a query to retrieve context and generate a response", variant: "body" }, { type: "form-section", entity: "AgentRag", mode: "edit", submitEvent: "GENERATE", fields: ["query"] }] }] }] })
+    }
+    listens {
+      RETRIEVAL_DONE { context : string!, memoryHits : number!, searchHits : number! }
+      GENERATION_DONE { response : string! }
+      FAILED { error : string! }
     }
   }
   trait RagTabs = Tabs.traits.TabContentTabs -> AgentRag {
@@ -126,5 +132,5 @@ orbital AgentRagOrbital {
     listens {}
     emitsScope internal
   }
-  page "/agentrags" -> AgentRagRag, RagTabs, RagMemoryLifecycle, RagSearchLifecycle, RagCompletionFlow
+  page "/agentrags" as AgentRagPage -> AgentRagRag, RagTabs, RagMemoryLifecycle, RagSearchLifecycle, RagCompletionFlow
 }

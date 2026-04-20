@@ -1,15 +1,16 @@
-;; app std-agent-session
+app std-agent-session "1.0.0"
+"std-agent-session as a Function"
 
 orbital AgentSessionOrbital {
   entity AgentSession [persistent: agentsessions] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    sessionId : string
-    parentId : string
-    label : string
+    sessionId : string = ""
+    parentId : string = ""
+    label : string = ""
   }
   trait AgentSessionBrowse -> AgentSession [interaction] {
     state browsing {
@@ -21,6 +22,7 @@ orbital AgentSessionOrbital {
       * FORKED -> INIT
       * LABELED -> INIT
       * ENDED -> INIT
+      VIEW { id : string!, row : object }
     }
   }
   trait AgentSessionLabel -> AgentSession [interaction] {
@@ -42,8 +44,11 @@ orbital AgentSessionOrbital {
         (emit LABELED)
     }
     emits {
-      SAVE
-      LABELED
+      SAVE external
+      LABELED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait AgentSessionAgent -> AgentSession [interaction] {
@@ -102,7 +107,9 @@ orbital AgentSessionOrbital {
     listens {
       * ENDED -> INIT
       * FORKED -> INIT
+      DO_LABEL { data : object! }
+      LABELED { data : object! }
     }
   }
-  page "/agentsessions" -> AgentSessionBrowse, AgentSessionLabel, AgentSessionAgent
+  page "/agentsessions" as AgentSessionPage -> AgentSessionBrowse, AgentSessionLabel, AgentSessionAgent
 }

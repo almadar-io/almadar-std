@@ -1,4 +1,5 @@
-;; app std-agent-builder
+app std-agent-builder "1.0.0"
+"std-agent-builder as a Function"
 
 orbital BuildPlanOrbital {
   uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
@@ -6,28 +7,28 @@ orbital BuildPlanOrbital {
 
   entity BuildPlan [runtime] {
     id : string!
-    task : string
-    category : string
-    steps : string
-    confidence : number
-    status : string
-    relevantMemories : string
-    memoryCount : number
-    error : string
-    input : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
-    content : string
-    scope : string
-    strength : number
-    pinned : boolean
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
-    icon : string
+    task : string = ""
+    category : string = ""
+    steps : string = ""
+    confidence : number = 0
+    status : string = "idle"
+    relevantMemories : string = ""
+    memoryCount : number = 0
+    error : string = ""
+    input : string = ""
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
+    content : string = ""
+    scope : string = ""
+    strength : number = 1
+    pinned : boolean = false
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
+    icon : string = "circle"
   }
   trait BuildPlanner -> BuildPlan [interaction] {
     initial: idle
@@ -93,6 +94,10 @@ orbital BuildPlanOrbital {
     }
     listens {
       * PLAN_READY -> INIT
+      CLASSIFIED { category : string! }
+      MEMORIES_LOADED { memories : string!, count : number! }
+      PLAN_GENERATED { steps : string!, confidence : number! }
+      FAILED { error : string! }
     }
   }
   trait PlannerTaskInput -> BuildPlan [interaction] {
@@ -112,6 +117,9 @@ orbital BuildPlanOrbital {
     }
     emits {
       PLAN
+    }
+    listens {
+      PLAN { data : object! }
     }
   }
   trait PlannerClassifierFlow -> BuildPlan [interaction] {
@@ -140,6 +148,9 @@ orbital BuildPlanOrbital {
       SAVE internal
       CLASSIFIED internal
     }
+    listens {
+      SAVE { data : object! }
+    }
   }
   trait PlannerCompletionFlow -> BuildPlan [interaction] {
     initial: closed
@@ -167,6 +178,9 @@ orbital BuildPlanOrbital {
       SAVE internal
       GENERATED internal
     }
+    listens {
+      SAVE { data : object! }
+    }
   }
   trait PlannerMemoryLifecycle -> BuildPlan [interaction] {
     state browsing {
@@ -174,30 +188,35 @@ orbital BuildPlanOrbital {
         (ref BuildPlan)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "BuildPlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BuildPlan", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
+    listens {
+      PIN { id : string!, row : object }
+      REINFORCE { id : string!, row : object }
+      FORGET { id : string!, row : object }
+    }
   }
-  page "/plan" -> BuildPlanner
+  page "/plan" as PlanPage -> BuildPlanner
 }
 orbital BuildLoopOrbital {
   entity BuildLoop [runtime] {
     id : string!
-    task : string
+    task : string = ""
     plan : string
     iterations : number
     maxIterations : number
-    status : string
+    status : string = "idle"
     result : string
     currentTool : string
     lastToolResult : string
-    error : string
+    error : string = ""
     currentStep : number
     totalSteps : number
-    steps : string
+    steps : string = ""
     toolName : string
     args : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
     tokenCount : number
     maxTokens : number
     usage : number
@@ -205,10 +224,10 @@ orbital BuildLoopOrbital {
     max : number
     threshold : number
     lastCompactedAt : string
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
   }
   trait SchemaBuilder -> BuildLoop [interaction] {
     initial: idle
@@ -306,8 +325,7 @@ orbital BuildLoopOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "BuildLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
     }
     state in_progress {
-      ADVANCE -> in_progress
-        ? (< @entity.currentStep @entity.totalSteps)
+      ADVANCE -> in_progress when (< @entity.currentStep @entity.totalSteps)
         (set @entity.currentStep (+ @entity.currentStep 1))
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "BuildLoop", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       COMPLETE -> completed
@@ -400,16 +418,13 @@ orbital BuildLoopOrbital {
       INIT -> normal
         (fetch BuildLoop)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       COMPACT -> normal
@@ -422,16 +437,13 @@ orbital BuildLoopOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     state warning {
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       COMPACT -> normal
@@ -444,16 +456,13 @@ orbital BuildLoopOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     state critical {
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       COMPACT -> normal
@@ -475,20 +484,20 @@ orbital BuildFixOrbital {
     validationErrors : string
     fixAttempts : number
     maxAttempts : number
-    status : string
+    status : string = "idle"
     currentFix : string
     errorCount : number
-    error : string
+    error : string = ""
     currentStep : number
     totalSteps : number
-    steps : string
+    steps : string = ""
     toolName : string
     args : string
     result : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
   }
   trait FixLoop -> BuildFix [interaction] {
     initial: idle
@@ -592,8 +601,7 @@ orbital BuildFixOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "BuildFix", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
     }
     state in_progress {
-      ADVANCE -> in_progress
-        ? (< @entity.currentStep @entity.totalSteps)
+      ADVANCE -> in_progress when (< @entity.currentStep @entity.totalSteps)
         (set @entity.currentStep (+ @entity.currentStep 1))
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "BuildFix", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       COMPLETE -> completed
@@ -722,7 +730,7 @@ orbital BuildSessionOrbital {
     sessionId : string
     parentId : string
     label : string
-    status : string
+    status : string = "idle"
     createdAt : string
   }
   trait BuildSessionManager -> BuildSession [interaction] {
@@ -823,14 +831,14 @@ orbital BuildSessionOrbital {
 orbital BuildTaskOrbital {
   entity BuildTask [runtime] {
     id : string!
-    prompt : string
+    prompt : string = ""
     plan : string
     schema : string
     validationStatus : string
     buildPhase : string
     attempts : number
     sessionId : string
-    error : string
+    error : string = ""
   }
   trait BuilderTabs = Tabs.traits.TabContentTabs -> BuildTask {
     on INIT {
@@ -847,10 +855,10 @@ orbital BuildTaskOrbital {
 orbital BuildProgressOrbital {
   entity BuildProgress [runtime] {
     id : string!
-    steps : string
+    steps : string = ""
     currentStep : number
     totalSteps : number
-    status : string
+    status : string = "idle"
   }
   trait BuildStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> BuildProgress {
     on INIT {

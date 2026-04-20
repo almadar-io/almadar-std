@@ -1,11 +1,12 @@
-;; app std-isometric-canvas
+app std-isometric-canvas "1.0.0"
+"std-isometric-canvas as a Function"
 
 orbital IsometricWorldOrbital {
   entity IsometricWorld [singleton] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     tiles : [string]
     units : [string]
@@ -34,6 +35,10 @@ orbital IsometricWorldOrbital {
       DESELECT -> idle
         (render-ui main { type: "isometric-canvas", tiles: "@entity.tiles", boardWidth: 8, boardHeight: 8, scale: 1, unitScale: 2, debug: false, showMinimap: false, enableCamera: true, tileClickEvent: "TILE_CLICK", unitClickEvent: "UNIT_CLICK", tileHoverEvent: "TILE_HOVER", tileLeaveEvent: "TILE_LEAVE" })
     }
+    listens {
+      TILE_CLICK { tileId : string! }
+      UNIT_CLICK { unitId : string! }
+    }
   }
-  page "/isometricworlds" -> IsometricWorldIsometricCanvas
+  page "/isometricworlds" as IsometricWorldCanvasPage -> IsometricWorldIsometricCanvas
 }

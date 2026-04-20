@@ -1,13 +1,14 @@
-;; app std-helpdesk
+app std-helpdesk "1.0.0"
+"std-helpdesk as a Function"
 
 orbital TicketOrbital {
   entity Ticket [runtime] {
     id : string!
-    subject : string
-    description : string
-    priority : string
-    status : string
-    assignee : string
+    subject : string = ""
+    description : string = ""
+    priority : "low" | "medium" | "high" | "critical" = "medium"
+    status : "open" | "in-progress" | "resolved" | "closed" = "open"
+    assignee : string = ""
   }
   trait TicketBrowse -> Ticket [interaction] {
     state browsing {
@@ -22,6 +23,9 @@ orbital TicketOrbital {
       * TICKET_CREATED -> INIT
       * TICKET_UPDATED -> INIT
       * TICKET_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait TicketCreate -> Ticket [interaction] {
@@ -44,7 +48,10 @@ orbital TicketOrbital {
     }
     emits {
       SAVE
-      TICKET_CREATED
+      TICKET_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait TicketEdit -> Ticket [interaction] {
@@ -67,7 +74,11 @@ orbital TicketOrbital {
     }
     emits {
       SAVE
-      TICKET_UPDATED
+      TICKET_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait TicketView -> Ticket [interaction] {
@@ -88,6 +99,10 @@ orbital TicketOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait TicketDelete -> Ticket [interaction] {
@@ -115,10 +130,13 @@ orbital TicketOrbital {
     }
     emits {
       CONFIRM_DELETE
-      TICKET_DELETED
+      TICKET_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/tickets" -> TicketBrowse, TicketCreate, TicketEdit, TicketView, TicketDelete
+  page "/tickets" as TicketsPage -> TicketBrowse, TicketCreate, TicketEdit, TicketView, TicketDelete
 }
 orbital ResponseOrbital {
   entity Response [runtime] {

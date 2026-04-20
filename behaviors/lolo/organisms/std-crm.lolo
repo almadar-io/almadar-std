@@ -1,13 +1,14 @@
-;; app std-crm
+app std-crm "1.0.0"
+"std-crm as a Function"
 
 orbital ContactOrbital {
   entity Contact [runtime] {
     id : string!
-    name : string
-    company : string
-    email : string
-    phone : string
-    status : string
+    name : string = ""
+    company : string = ""
+    email : string = ""
+    phone : string = ""
+    status : "lead" | "prospect" | "customer" | "inactive" = "lead"
   }
   trait ContactBrowse -> Contact [interaction] {
     state browsing {
@@ -22,6 +23,9 @@ orbital ContactOrbital {
       * CONTACT_CREATED -> INIT
       * CONTACT_UPDATED -> INIT
       * CONTACT_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait ContactCreate -> Contact [interaction] {
@@ -44,7 +48,10 @@ orbital ContactOrbital {
     }
     emits {
       SAVE
-      CONTACT_CREATED
+      CONTACT_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait ContactEdit -> Contact [interaction] {
@@ -67,7 +74,11 @@ orbital ContactOrbital {
     }
     emits {
       SAVE
-      CONTACT_UPDATED
+      CONTACT_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ContactView -> Contact [interaction] {
@@ -88,6 +99,10 @@ orbital ContactOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ContactDelete -> Contact [interaction] {
@@ -115,10 +130,13 @@ orbital ContactOrbital {
     }
     emits {
       CONFIRM_DELETE
-      CONTACT_DELETED
+      CONTACT_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/contacts" -> ContactBrowse, ContactCreate, ContactEdit, ContactView, ContactDelete
+  page "/contacts" as ContactsPage -> ContactBrowse, ContactCreate, ContactEdit, ContactView, ContactDelete
 }
 orbital DealOrbital {
   entity Deal [runtime] {

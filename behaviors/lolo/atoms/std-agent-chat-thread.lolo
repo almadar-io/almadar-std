@@ -1,16 +1,17 @@
-;; app std-agent-chat-thread
+app std-agent-chat-thread "1.0.0"
+"std-agent-chat-thread as a Function"
 
 orbital AgentChatThreadOrbital {
   entity AgentChatThread [persistent: agentchatthreads] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    role : string
-    content : string
-    timestamp : string
-    toolName : string
+    role : string = "user"
+    content : string = ""
+    timestamp : string = ""
+    toolName : string = ""
   }
   trait AgentChatThreadThread -> AgentChatThread [interaction] {
     initial: idle
@@ -43,6 +44,9 @@ orbital AgentChatThreadOrbital {
     emits {
       SEND_MESSAGE internal { content: string }
     }
+    listens {
+      SEND { content : string! }
+    }
   }
-  page "/agentchatthreads" -> AgentChatThreadThread
+  page "/agentchatthreads" as AgentChatThreadPage -> AgentChatThreadThread
 }

@@ -1,15 +1,16 @@
-;; app std-upload
+app std-upload "1.0.0"
+"std-upload as a Function"
 
 orbital UploadFileOrbital {
   entity UploadFile [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    fileName : string
-    fileSize : number
-    uploadStatus : string
+    fileName : string = ""
+    fileSize : number = 0
+    uploadStatus : string = "idle"
   }
   trait UploadFileUpload -> UploadFile [interaction] {
     initial: idle
@@ -42,6 +43,9 @@ orbital UploadFileOrbital {
         (set @entity.uploadStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "upload", size: "lg" }, { type: "typography", content: "Upload", variant: "h2" }] }, { type: "divider" }, { type: "upload-drop-zone", accept: "*/*", event: "UPLOAD", multiple: false, maxSize: 10485760 }] })
     }
+    listens {
+      UPLOAD { fileName : string! }
+    }
   }
-  page "/uploadfiles/upload" -> UploadFileUpload
+  page "/uploadfiles/upload" as UploadFileUploadPage -> UploadFileUpload
 }

@@ -1,4 +1,5 @@
-;; app std-cms
+app std-cms "1.0.0"
+"std-cms as a Function"
 
 orbital ArticleOrbital {
   entity Article [persistent: articles] {
@@ -7,7 +8,7 @@ orbital ArticleOrbital {
     slug : string!
     content : string
     author : string
-    status : string
+    status : "draft" | "review" | "published" | "archived" = "draft"
     publishedAt : datetime
   }
   trait ArticleBrowse -> Article [interaction] {
@@ -24,6 +25,9 @@ orbital ArticleOrbital {
       * ARTICLE_CREATED -> INIT
       * ARTICLE_UPDATED -> INIT
       * ARTICLE_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait ArticleCreate -> Article [interaction] {
@@ -46,7 +50,10 @@ orbital ArticleOrbital {
     }
     emits {
       SAVE
-      ARTICLE_CREATED
+      ARTICLE_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait ArticleEdit -> Article [interaction] {
@@ -69,7 +76,11 @@ orbital ArticleOrbital {
     }
     emits {
       SAVE
-      ARTICLE_UPDATED
+      ARTICLE_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ArticleView -> Article [interaction] {
@@ -90,6 +101,10 @@ orbital ArticleOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ArticleDelete -> Article [interaction] {
@@ -117,10 +132,13 @@ orbital ArticleOrbital {
     }
     emits {
       CONFIRM_DELETE
-      ARTICLE_DELETED
+      ARTICLE_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/articles" -> ArticleBrowse, ArticleCreate, ArticleEdit, ArticleView, ArticleDelete
+  page "/articles" as ArticlesPage -> ArticleBrowse, ArticleCreate, ArticleEdit, ArticleView, ArticleDelete
 }
 orbital MediaAssetOrbital {
   entity MediaAsset [persistent: mediaassets] {

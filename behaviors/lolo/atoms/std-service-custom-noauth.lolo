@@ -1,18 +1,19 @@
-;; app std-service-custom-noauth
+app std-service-custom-noauth "1.0.0"
+"std-service-custom-noauth as a Function"
 
 orbital ServiceCustomNoauthOrbital {
   entity ServiceCustomNoauth [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     endpoint : string
-    method : string
+    method : string = "GET"
     requestBody : string
     responseData : string
-    statusCode : number
-    callStatus : string
+    statusCode : number = 0
+    callStatus : string = "idle"
     error : string
   }
   trait ServiceCustomNoauthCustomNoauth -> ServiceCustomNoauth [interaction] {
@@ -44,6 +45,10 @@ orbital ServiceCustomNoauthOrbital {
       RESET -> idle
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "globe", size: "lg" }, { type: "typography", content: "Public API Tester", variant: "h2" }, { type: "input", field: "endpoint", placeholder: "/users", bind: "@entity.endpoint" }, { type: "select", field: "method", bind: "@entity.method", options: [{ label: "GET", value: "GET" }, { label: "POST", value: "POST" }, { label: "PUT", value: "PUT" }, { label: "DELETE", value: "DELETE" }] }, { type: "textarea", field: "requestBody", placeholder: "JSON request body", bind: "@entity.requestBody" }, { type: "button", label: "Send Request", event: "CALL_API", variant: "primary", icon: "send" }] })
     }
+    listens {
+      API_RESPONSE { data : string!, statusCode : number! }
+      FAILED { error : string! }
+    }
   }
-  page "/servicecustomnoauths" -> ServiceCustomNoauthCustomNoauth
+  page "/servicecustomnoauths" as ServiceCustomNoauthPage -> ServiceCustomNoauthCustomNoauth
 }

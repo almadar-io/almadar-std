@@ -1,14 +1,15 @@
-;; app std-dialogue-box
+app std-dialogue-box "1.0.0"
+"std-dialogue-box as a Function"
 
 orbital DialogueNodeOrbital {
   entity DialogueNode [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    speaker : string
-    text : string
+    speaker : string = "Narrator"
+    text : string = "Welcome, adventurer. Your journey begins here."
   }
   trait DialogueNodeDialogue -> DialogueNode [interaction] {
     initial: talking
@@ -31,6 +32,9 @@ orbital DialogueNodeOrbital {
         (fetch DialogueNode)
         (render-ui main { type: "dialogue-box", dialogue: { speaker: "@entity.speaker", text: "@entity.text" }, typewriterSpeed: 30, position: "bottom" })
     }
+    listens {
+      CHOICE { choiceId : string! }
+    }
   }
-  page "/dialoguenodes" -> DialogueNodeDialogue
+  page "/dialoguenodes" as DialogueNodeDialoguePage -> DialogueNodeDialogue
 }

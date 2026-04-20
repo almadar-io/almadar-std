@@ -1,16 +1,17 @@
-;; app std-browse
+app std-browse "1.0.0"
+"std-browse as a Function"
 
 orbital BrowseItemOrbital {
   entity BrowseItem [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
 
-  type BrowseItemLoaded     = Event BrowseItem
-  type BrowseItemLoadFailed = Event { message : string }
+  type BrowseItemLoaded     = Event BrowseItem "Fired when the BrowseItem collection finishes loading"
+  type BrowseItemLoadFailed = Event { message : string } "Fired when the BrowseItem collection fails to load"
 
   trait BrowseItemBrowse -> BrowseItem [interaction, collection] {
     state browsing {
@@ -20,5 +21,5 @@ orbital BrowseItemOrbital {
     }
     emits: [BrowseItemLoaded, BrowseItemLoadFailed]
   }
-  page "/browseitems" -> BrowseItemBrowse
+  page "/browseitems" as BrowseItemPage -> BrowseItemBrowse
 }

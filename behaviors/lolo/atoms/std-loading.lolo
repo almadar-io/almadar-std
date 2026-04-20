@@ -1,13 +1,14 @@
-;; app std-loading
+app std-loading "1.0.0"
+"std-loading as a Function"
 
 orbital LoadableItemOrbital {
   entity LoadableItem [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    loadingStatus : string
+    loadingStatus : string = "idle"
   }
   trait LoadableItemLoading -> LoadableItem [interaction] {
     initial: idle
@@ -41,5 +42,5 @@ orbital LoadableItemOrbital {
         (render-ui main { type: "center", children: [{ type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "play-circle", size: "lg" }, { type: "typography", content: "LoadableItem", variant: "h2" }] }, { type: "divider" }, { type: "typography", variant: "body", color: "muted", content: "Ready to load loadableitem. Click Start to begin." }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
     }
   }
-  page "/loadableitems/loading" -> LoadableItemLoading
+  page "/loadableitems/loading" as LoadableItemLoadingPage -> LoadableItemLoading
 }

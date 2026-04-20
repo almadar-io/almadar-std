@@ -1,14 +1,15 @@
-;; app std-turn-based-battle
+app std-turn-based-battle "1.0.0"
+"std-turn-based-battle as a Function"
 
 orbital BattleUnitOrbital {
   entity BattleUnit [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    turn : number
-    score : number
+    turn : number = 0
+    score : number = 0
   }
   trait BattleUnitBattleFlow -> BattleUnit [interaction] {
     initial: menu
@@ -55,6 +56,9 @@ orbital BattleUnitOrbital {
       CLEAR -> idle
         (render-ui main { type: "combat-log", events: "@BattleUnit", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
     }
+    listens {
+      LOG_EVENT { data : object! }
+    }
   }
-  page "/battleunits" -> BattleUnitBattleFlow, BattleUnitCombatLog
+  page "/battleunits" as BattleUnitPage -> BattleUnitBattleFlow, BattleUnitCombatLog
 }

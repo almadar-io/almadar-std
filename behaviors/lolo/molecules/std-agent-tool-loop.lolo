@@ -1,4 +1,5 @@
-;; app std-agent-tool-loop
+app std-agent-tool-loop "1.0.0"
+"std-agent-tool-loop as a Function"
 
 orbital AgentToolLoopOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
@@ -10,36 +11,36 @@ orbital AgentToolLoopOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    task : string
-    plan : string
-    iterations : number
-    maxIterations : number
-    result : string
-    currentTool : string
-    lastToolResult : string
-    error : string
-    currentStep : number
-    totalSteps : number
-    steps : string
-    toolName : string
-    args : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
-    tokenCount : number
-    maxTokens : number
-    usage : number
-    current : number
-    max : number
-    threshold : number
-    lastCompactedAt : string
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
+    task : string = ""
+    plan : string = ""
+    iterations : number = 0
+    maxIterations : number = 10
+    result : string = ""
+    currentTool : string = ""
+    lastToolResult : string = ""
+    error : string = ""
+    currentStep : number = 0
+    totalSteps : number = 4
+    steps : string = "Plan,Execute,Check,Complete"
+    toolName : string = ""
+    args : string = ""
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
+    tokenCount : number = 0
+    maxTokens : number = 200000
+    usage : number = 0
+    current : number = 0
+    max : number = 200000
+    threshold : number = 0.85
+    lastCompactedAt : string = ""
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
   }
   trait AgentToolLoopLoop -> AgentToolLoop [interaction] {
     initial: idle
@@ -113,6 +114,14 @@ orbital AgentToolLoopOrbital {
         (set @entity.iterations 0)
         (set @entity.error "")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Tool Execution Loop", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Describe the task to execute with tools", variant: "body" }, { type: "form-section", entity: "AgentToolLoop", mode: "edit", submitEvent: "EXECUTE", fields: ["task"] }] }] }] })
+    }
+    listens {
+      PLAN_GENERATED { plan : string!, toolName : string!, toolArgs : object! }
+      TOOL_RESULT { output : string! }
+      CHECK_PASSED { result : string! }
+      CHECK_NEEDS_MORE { toolName : string!, toolArgs : object! }
+      MAX_ITERATIONS { error : string! }
+      FAILED { error : string! }
     }
   }
   trait ToolLoopStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> AgentToolLoop {
@@ -202,5 +211,5 @@ orbital AgentToolLoopOrbital {
     listens {}
     emitsScope internal
   }
-  page "/agenttoolloops" -> AgentToolLoopLoop, ToolLoopStepProgress, ToolLoopCompletionFlow, ToolLoopToolCallFlow, ToolLoopContextMonitor
+  page "/agenttoolloops" as AgentToolLoopPage -> AgentToolLoopLoop, ToolLoopStepProgress, ToolLoopCompletionFlow, ToolLoopToolCallFlow, ToolLoopContextMonitor
 }

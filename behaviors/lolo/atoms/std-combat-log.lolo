@@ -1,19 +1,20 @@
-;; app std-combat-log
+app std-combat-log "1.0.0"
+"std-combat-log as a Function"
 
 orbital CombatLogEntryOrbital {
   entity CombatLogEntry [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    type : string
+    type : "attack" | "defend" | "heal" | "move" | "special" | "death" | "spawn" = "attack"
     message : string
-    timestamp : number
+    timestamp : number = 0
     actorName : string
     targetName : string
-    value : number
-    turn : number
+    value : number = 0
+    turn : number = 1
   }
   trait CombatLogEntryCombatLog -> CombatLogEntry [interaction] {
     state idle {
@@ -25,6 +26,9 @@ orbital CombatLogEntryOrbital {
       CLEAR -> idle
         (render-ui main { type: "combat-log", events: "@CombatLogEntry", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" })
     }
+    listens {
+      LOG_EVENT { data : object! }
+    }
   }
-  page "/combatlogentrys" -> CombatLogEntryCombatLog
+  page "/combatlogentrys" as CombatLogEntryLogPage -> CombatLogEntryCombatLog
 }

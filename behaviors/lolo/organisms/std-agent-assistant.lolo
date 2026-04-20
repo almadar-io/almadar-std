@@ -1,24 +1,25 @@
-;; app std-agent-assistant
+app std-agent-assistant "1.0.0"
+"std-agent-assistant as a Function"
 
 orbital AssistantOrbital {
   entity Assistant [runtime] {
     id : string!
-    messages : string
-    currentMessage : string
-    response : string
-    memoryCount : number
-    contextUsage : number
-    provider : string
-    sessionId : string
-    status : string
-    error : string
-    turnCount : number
-    lastMessage : string
-    tokenCount : number
-    role : string
-    content : string
-    timestamp : string
-    toolName : string
+    messages : string = "[]"
+    currentMessage : string = ""
+    response : string = ""
+    memoryCount : number = 0
+    contextUsage : number = 0
+    provider : string = "default"
+    sessionId : string = ""
+    status : string = "idle"
+    error : string = ""
+    turnCount : number = 0
+    lastMessage : string = ""
+    tokenCount : number = 0
+    role : string = "user"
+    content : string = ""
+    timestamp : string = ""
+    toolName : string = ""
   }
   trait AssistantConversation -> Assistant [interaction] {
     initial: idle
@@ -55,6 +56,7 @@ orbital AssistantOrbital {
     }
     listens {
       * PROVIDER_CHANGED -> INIT
+      SEND { content : string! }
     }
   }
   trait AssistantAgent -> Assistant [interaction] {
@@ -93,13 +95,16 @@ orbital AssistantOrbital {
     emits {
       TOKEN_UPDATE internal { tokenCount: number }
     }
+    listens {
+      SEND_MESSAGE { content : string! }
+    }
   }
-  page "/chat" -> AssistantConversation
+  page "/chat" as ChatPage -> AssistantConversation
 }
 orbital MemoryOrbital {
   entity Memory [persistent: memorys] {
     id : string!
-    content : string
+    content : string = ""
     category : string
     strength : number
     pinned : boolean
@@ -161,8 +166,7 @@ orbital MemoryOrbital {
     state active {
       RECALL -> active
         (agent/recall @payload.query)
-      PIN -> active
-        ? (not (agent/is-pinned @payload.id))
+      PIN -> active when (not (agent/is-pinned @payload.id))
         (agent/pin @payload.id)
         (set @entity.pinned true)
         (emit PINNED)
@@ -191,7 +195,7 @@ orbital MemoryOrbital {
 orbital AssistantContextOrbital {
   entity AssistantContext [runtime] {
     id : string!
-    tokenCount : number
+    tokenCount : number = 0
     maxTokens : number
     usage : number
     lastCompactedAt : string
@@ -207,16 +211,13 @@ orbital AssistantContextOrbital {
       INIT -> normal
         (fetch AssistantContext)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       COMPACT -> normal
@@ -229,16 +230,13 @@ orbital AssistantContextOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     state warning {
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       COMPACT -> normal
@@ -251,16 +249,13 @@ orbital AssistantContextOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     state critical {
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       COMPACT -> normal
@@ -300,15 +295,13 @@ orbital AssistantContextOrbital {
         (agent/token-count)
         (agent/context-usage)
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "empty-state", icon: "layers", title: "Context Window", description: "Context Window is ready" }] })
-      UPDATE_TOKENS -> normal
-        ? (< (/ @entity.tokenCount @entity.maxTokens) 0.85)
+      UPDATE_TOKENS -> normal when (< (/ @entity.tokenCount @entity.maxTokens) 0.85)
         (agent/token-count)
         (agent/context-usage)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
         (emit UPDATE)
-      UPDATE_TOKENS -> approaching_limit
-        ? (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
+      UPDATE_TOKENS -> approaching_limit when (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
         (agent/token-count)
         (agent/context-usage)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
@@ -317,8 +310,7 @@ orbital AssistantContextOrbital {
         (emit SHOW)
     }
     state approaching_limit {
-      UPDATE_TOKENS -> at_limit
-        ? (>= (/ @entity.tokenCount @entity.maxTokens) 1)
+      UPDATE_TOKENS -> at_limit when (>= (/ @entity.tokenCount @entity.maxTokens) 1)
         (agent/token-count)
         (agent/context-usage)
         (set @entity.usage 100)
@@ -333,8 +325,7 @@ orbital AssistantContextOrbital {
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
         (set @entity.current @entity.tokenCount)
         (emit UPDATE)
-      UPDATE_TOKENS -> approaching_limit
-        ? (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
+      UPDATE_TOKENS -> approaching_limit when (and (>= (/ @entity.tokenCount @entity.maxTokens) 0.85) (< (/ @entity.tokenCount @entity.maxTokens) 1))
         (agent/token-count)
         (agent/context-usage)
         (set @entity.usage (* (/ @entity.tokenCount @entity.maxTokens) 100))
@@ -460,15 +451,15 @@ orbital ProviderConfigOrbital {
 orbital AssistantNavOrbital {
   entity AssistantNav [runtime] {
     id : string!
-    messages : string
-    currentMessage : string
-    response : string
-    memoryCount : number
-    contextUsage : number
-    provider : string
-    sessionId : string
-    status : string
-    error : string
+    messages : string = "[]"
+    currentMessage : string = ""
+    response : string = ""
+    memoryCount : number = 0
+    contextUsage : number = 0
+    provider : string = "default"
+    sessionId : string = ""
+    status : string = "idle"
+    error : string = ""
   }
   trait AssistantTabs -> Assistant [interaction] {
     state idle {
@@ -485,7 +476,7 @@ orbital AssistantNavOrbital {
 orbital MemorySidebarOrbital {
   entity MemorySidebar [runtime] {
     id : string!
-    content : string
+    content : string = ""
     query : string
     strength : number
   }

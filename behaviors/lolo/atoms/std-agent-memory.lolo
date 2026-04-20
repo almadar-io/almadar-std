@@ -1,22 +1,23 @@
-;; app std-agent-memory
+app std-agent-memory "1.0.0"
+"std-agent-memory as a Function"
 
 orbital AgentMemoryOrbital {
   entity AgentMemory [persistent: agentmemorys] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    content : string
-    category : string
-    strength : number
-    pinned : boolean
-    scope : string
-    lastAccessedAt : string
+    content : string = ""
+    category : string = "general"
+    strength : number = 1
+    pinned : boolean = false
+    scope : string = "session"
+    lastAccessedAt : string = ""
   }
 
-  type AgentMemoryLoaded     = Event AgentMemory
-  type AgentMemoryLoadFailed = Event { message : string }
+  type AgentMemoryLoaded     = Event AgentMemory "Fired when AgentMemory finishes loading"
+  type AgentMemoryLoadFailed = Event { message : string } "Fired when AgentMemory fails to load"
 
   trait AgentMemoryBrowse -> AgentMemory [interaction, collection] {
     state browsing {
@@ -30,6 +31,9 @@ orbital AgentMemoryOrbital {
       * FORGOT -> INIT
       * REINFORCED -> INIT
       * DECAYED -> INIT
+      PIN { id : string!, row : object }
+      REINFORCE { id : string!, row : object }
+      FORGET { id : string!, row : object }
     }
     emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]
   }
@@ -51,10 +55,13 @@ orbital AgentMemoryOrbital {
         (emit MEMORIZED)
     }
     emits {
-      SAVE
-      MEMORIZED
+      SAVE external
+      MEMORIZED external
     }
     emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]
+    listens {
+      SAVE { data : object! }
+    }
   }
   trait AgentMemoryAgent -> AgentMemory [interaction, collection] {
     initial: idle
@@ -74,8 +81,7 @@ orbital AgentMemoryOrbital {
     state active {
       RECALL -> active
         (agent/recall @payload.query)
-      PIN -> active
-        ? (not (agent/is-pinned @payload.id))
+      PIN -> active when (not (agent/is-pinned @payload.id))
         (agent/pin @payload.id)
         (set @entity.pinned true)
         (emit PINNED)
@@ -95,6 +101,14 @@ orbital AgentMemoryOrbital {
       DECAYED external { id: string }
       PINNED external { id: string }
     }
+    listens {
+      DO_MEMORIZE { data : object! }
+      RECALL { query : string! }
+      PIN { id : string! }
+      FORGET { id : string! }
+      REINFORCE { id : string! }
+      MEMORIZED { data : object! }
+    }
   }
-  page "/agentmemorys" -> AgentMemoryBrowse, AgentMemoryCreate, AgentMemoryAgent
+  page "/agentmemorys" as AgentMemoryPage -> AgentMemoryBrowse, AgentMemoryCreate, AgentMemoryAgent
 }

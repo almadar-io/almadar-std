@@ -1,4 +1,5 @@
-;; app std-project-manager
+app std-project-manager "1.0.0"
+"std-project-manager as a Function"
 
 orbital TaskOrbital {
   entity Task [persistent: tasks] {
@@ -6,9 +7,9 @@ orbital TaskOrbital {
     title : string!
     description : string
     assignee : string
-    priority : string
-    status : string
-    storyPoints : number
+    priority : "low" | "medium" | "high" | "critical" = "medium"
+    status : "todo" | "in-progress" | "review" | "done" = "todo"
+    storyPoints : number = 0
     dueDate : datetime
   }
   trait TaskBrowse -> Task [interaction] {
@@ -22,6 +23,9 @@ orbital TaskOrbital {
       * TASK_UPDATED -> INIT
       * TASK_DELETED -> INIT
       * ASSIGN_TASK -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait TaskCreate -> Task [interaction] {
@@ -44,7 +48,10 @@ orbital TaskOrbital {
     }
     emits {
       SAVE
-      TASK_CREATED
+      TASK_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait TaskEdit -> Task [interaction] {
@@ -67,7 +74,11 @@ orbital TaskOrbital {
     }
     emits {
       SAVE
-      TASK_UPDATED
+      TASK_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait TaskView -> Task [interaction] {
@@ -88,6 +99,10 @@ orbital TaskOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait TaskDelete -> Task [interaction] {
@@ -115,10 +130,13 @@ orbital TaskOrbital {
     }
     emits {
       CONFIRM_DELETE
-      TASK_DELETED
+      TASK_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/tasks" -> TaskBrowse, TaskCreate, TaskEdit, TaskView, TaskDelete
+  page "/tasks" as TasksPage -> TaskBrowse, TaskCreate, TaskEdit, TaskView, TaskDelete
 }
 orbital SprintOrbital {
   entity Sprint [persistent: sprints] {
@@ -127,7 +145,7 @@ orbital SprintOrbital {
     startDate : datetime!
     endDate : datetime!
     goal : string
-    status : string
+    status : "todo" | "in-progress" | "review" | "done" = "todo"
     taskCount : number
   }
   trait SprintBrowse -> Sprint [interaction] {

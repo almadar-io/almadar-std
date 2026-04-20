@@ -1,11 +1,12 @@
-;; app std-rpg-game
+app std-rpg-game "1.0.0"
+"std-rpg-game as a Function"
 
 orbital BattleStateOrbital {
   entity BattleState [runtime] {
     id : string!
-    turn : number
-    score : number
-    phase : string
+    turn : number = 0
+    score : number = 0
+    phase : string = "setup"
     outcome : string
   }
   trait BattleStateBattleFlow -> BattleState [interaction] {
@@ -59,8 +60,11 @@ orbital BattleStateOrbital {
       CLEAR -> idle
         (render-ui main { type: "game-shell", appName: "RPG Game", showTopBar: true, children: [{ type: "combat-log", events: "@BattleState", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
     }
+    listens {
+      LOG_EVENT { data : object! }
+    }
   }
-  page "/battle" -> BattleStateBattleFlow, BattleStateCombatLog
+  page "/battle" as BattlePage -> BattleStateBattleFlow, BattleStateCombatLog
 }
 orbital WorldZoneOrbital {
   entity WorldZone [runtime] {

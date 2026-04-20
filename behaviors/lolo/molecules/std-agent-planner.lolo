@@ -1,4 +1,5 @@
-;; app std-agent-planner
+app std-agent-planner "1.0.0"
+"std-agent-planner as a Function"
 
 orbital AgentPlannerOrbital {
   uses AgentClassifier from "std/behaviors/std-agent-classifier"
@@ -10,29 +11,29 @@ orbital AgentPlannerOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    task : string
-    category : string
-    steps : string
-    confidence : number
-    relevantMemories : string
-    memoryCount : number
-    error : string
-    input : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
-    content : string
-    scope : string
-    strength : number
-    pinned : boolean
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
-    icon : string
+    task : string = ""
+    category : string = ""
+    steps : string = ""
+    confidence : number = 0
+    relevantMemories : string = ""
+    memoryCount : number = 0
+    error : string = ""
+    input : string = ""
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
+    content : string = ""
+    scope : string = ""
+    strength : number = 1
+    pinned : boolean = false
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
+    icon : string = "circle"
   }
   trait AgentPlannerPlanner -> AgentPlanner [interaction] {
     initial: idle
@@ -97,6 +98,10 @@ orbital AgentPlannerOrbital {
     }
     listens {
       * PLAN_READY -> INIT
+      CLASSIFIED { category : string! }
+      MEMORIES_LOADED { memories : string!, count : number! }
+      PLAN_GENERATED { steps : string!, confidence : number! }
+      FAILED { error : string! }
     }
   }
   trait PlannerTaskInput = Modal.traits.ModalRecordModal -> AgentPlanner {
@@ -174,5 +179,5 @@ orbital AgentPlannerOrbital {
     listens {}
     emitsScope internal
   }
-  page "/agentplanners" -> AgentPlannerPlanner, PlannerTaskInput, PlannerClassifierFlow, PlannerCompletionFlow, PlannerMemoryLifecycle
+  page "/agentplanners" as AgentPlannerPage -> AgentPlannerPlanner, PlannerTaskInput, PlannerClassifierFlow, PlannerCompletionFlow, PlannerMemoryLifecycle
 }

@@ -1,10 +1,11 @@
-;; app std-api-gateway
+app std-api-gateway "1.0.0"
+"std-api-gateway as a Function"
 
 orbital RouteOrbital {
   entity Route [persistent: routes] {
     id : string!
     path : string!
-    method : string!
+    method : "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
     backend : string!
     rateLimit : number
   }
@@ -18,6 +19,9 @@ orbital RouteOrbital {
       * ROUTE_CREATED -> INIT
       * ROUTE_UPDATED -> INIT
       * ROUTE_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait RouteCreate -> Route [interaction] {
@@ -40,7 +44,10 @@ orbital RouteOrbital {
     }
     emits {
       SAVE
-      ROUTE_CREATED
+      ROUTE_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait RouteEdit -> Route [interaction] {
@@ -63,7 +70,11 @@ orbital RouteOrbital {
     }
     emits {
       SAVE
-      ROUTE_UPDATED
+      ROUTE_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait RouteView -> Route [interaction] {
@@ -84,6 +95,10 @@ orbital RouteOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait RouteDelete -> Route [interaction] {
@@ -111,10 +126,13 @@ orbital RouteOrbital {
     }
     emits {
       CONFIRM_DELETE
-      ROUTE_DELETED
+      ROUTE_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/routes" -> RouteBrowse, RouteCreate, RouteEdit, RouteView, RouteDelete
+  page "/routes" as RoutesPage -> RouteBrowse, RouteCreate, RouteEdit, RouteView, RouteDelete
 }
 orbital BackendOrbital {
   entity Backend [runtime] {

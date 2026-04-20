@@ -1,4 +1,5 @@
-;; app std-agent-pipeline
+app std-agent-pipeline "1.0.0"
+"std-agent-pipeline as a Function"
 
 orbital PipelinePlanOrbital {
   uses AgentStepProgress from "std/behaviors/std-agent-step-progress"
@@ -6,28 +7,28 @@ orbital PipelinePlanOrbital {
 
   entity PipelinePlan [runtime] {
     id : string!
-    task : string
-    category : string
-    steps : string
-    confidence : number
-    status : string
-    relevantMemories : string
-    memoryCount : number
-    error : string
-    input : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
-    content : string
-    scope : string
-    strength : number
-    pinned : boolean
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
-    icon : string
+    task : string = ""
+    category : string = ""
+    steps : string = ""
+    confidence : number = 0
+    status : string = "idle"
+    relevantMemories : string = ""
+    memoryCount : number = 0
+    error : string = ""
+    input : string = ""
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
+    content : string = ""
+    scope : string = ""
+    strength : number = 1
+    pinned : boolean = false
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
+    icon : string = "circle"
   }
   trait PipelinePlanner -> PipelinePlan [interaction] {
     initial: idle
@@ -94,6 +95,10 @@ orbital PipelinePlanOrbital {
     }
     listens {
       * PLAN_READY -> INIT
+      CLASSIFIED { category : string! }
+      MEMORIES_LOADED { memories : string!, count : number! }
+      PLAN_GENERATED { steps : string!, confidence : number! }
+      FAILED { error : string! }
     }
   }
   trait PlannerTaskInput -> PipelinePlan [interaction] {
@@ -113,6 +118,9 @@ orbital PipelinePlanOrbital {
     }
     emits {
       PLAN
+    }
+    listens {
+      PLAN { data : object! }
     }
   }
   trait PlannerClassifierFlow -> PipelinePlan [interaction] {
@@ -141,6 +149,9 @@ orbital PipelinePlanOrbital {
       SAVE internal
       CLASSIFIED internal
     }
+    listens {
+      SAVE { data : object! }
+    }
   }
   trait PlannerCompletionFlow -> PipelinePlan [interaction] {
     initial: closed
@@ -168,6 +179,9 @@ orbital PipelinePlanOrbital {
       SAVE internal
       GENERATED internal
     }
+    listens {
+      SAVE { data : object! }
+    }
   }
   trait PlannerMemoryLifecycle -> PipelinePlan [interaction] {
     state browsing {
@@ -175,30 +189,35 @@ orbital PipelinePlanOrbital {
         (ref PipelinePlan)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "PipelinePlan Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "PipelinePlan", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
+    listens {
+      PIN { id : string!, row : object }
+      REINFORCE { id : string!, row : object }
+      FORGET { id : string!, row : object }
+    }
   }
-  page "/pipeline" -> PipelinePlanner
+  page "/pipeline" as PipelinePage -> PipelinePlanner
 }
 orbital PipelineExecOrbital {
   entity PipelineExec [runtime] {
     id : string!
-    task : string
+    task : string = ""
     plan : string
     iterations : number
     maxIterations : number
-    status : string
+    status : string = "idle"
     result : string
     currentTool : string
     lastToolResult : string
-    error : string
+    error : string = ""
     currentStep : number
     totalSteps : number
-    steps : string
+    steps : string = ""
     toolName : string
     args : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
     tokenCount : number
     maxTokens : number
     usage : number
@@ -206,10 +225,10 @@ orbital PipelineExecOrbital {
     max : number
     threshold : number
     lastCompactedAt : string
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
   }
   trait PipelineExecutor -> PipelineExec [interaction] {
     initial: idle
@@ -310,8 +329,7 @@ orbital PipelineExecOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "PipelineExec", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
     }
     state in_progress {
-      ADVANCE -> in_progress
-        ? (< @entity.currentStep @entity.totalSteps)
+      ADVANCE -> in_progress when (< @entity.currentStep @entity.totalSteps)
         (set @entity.currentStep (+ @entity.currentStep 1))
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "loader", size: "lg" }, { type: "typography", content: "PipelineExec", variant: "h2" }, { type: "badge", label: "In Progress", variant: "warning" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "stat-display", label: "Current Step", value: "@entity.currentStep" }, { type: "stat-display", label: "Total Steps", value: "@entity.totalSteps" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Advance", event: "ADVANCE", variant: "primary", icon: "chevron-right" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       COMPLETE -> completed
@@ -404,16 +422,13 @@ orbital PipelineExecOrbital {
       INIT -> normal
         (fetch PipelineExec)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
       COMPACT -> normal
@@ -426,16 +441,13 @@ orbital PipelineExecOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     state warning {
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       COMPACT -> normal
@@ -448,16 +460,13 @@ orbital PipelineExecOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
     }
     state critical {
-      UPDATE -> critical
-        ? (>= (/ @payload.current @entity.max) 0.95)
+      UPDATE -> critical when (>= (/ @payload.current @entity.max) 0.95)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-octagon", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Critical", variant: "destructive" }] }, { type: "divider" }, { type: "alert", variant: "error", message: "Token usage critical. Compact immediately to avoid truncation." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact Now", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> warning
-        ? (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
+      UPDATE -> warning when (and (>= (/ @payload.current @entity.max) 0.85) (< (/ @payload.current @entity.max) 0.95))
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "alert-triangle", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Warning", variant: "warning" }] }, { type: "divider" }, { type: "alert", variant: "warning", message: "Token usage approaching limit. Consider compacting." }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compact", event: "COMPACT", variant: "primary", icon: "minimize-2" }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] }] })
-      UPDATE -> normal
-        ? (< (/ @payload.current @entity.max) 0.85)
+      UPDATE -> normal when (< (/ @payload.current @entity.max) 0.85)
         (set @entity.current @payload.current)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "gauge", size: "lg" }, { type: "typography", content: "Token Usage", variant: "h2" }, { type: "badge", label: "Normal", variant: "default" }] }, { type: "divider" }, { type: "progress-bar", value: "@entity.current", max: "@entity.max" }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "stat-display", label: "Tokens Used", value: "@entity.current" }, { type: "stat-display", label: "Max Tokens", value: "@entity.max" }] }, { type: "button", label: "Reset", event: "RESET", variant: "ghost", icon: "rotate-ccw" }] }] })
       COMPACT -> normal
@@ -478,7 +487,7 @@ orbital PipelineSessionOrbital {
     sessionId : string
     parentId : string
     label : string
-    status : string
+    status : string = "idle"
     createdAt : string
   }
   trait PipelineSessionManager -> PipelineSession [interaction] {
@@ -580,11 +589,11 @@ orbital PipelineSessionOrbital {
 orbital ExecutionLogOrbital {
   entity ExecutionLog [persistent: executionlogs] {
     id : string!
-    content : string
-    category : string
-    strength : number
-    pinned : boolean
-    scope : string
+    content : string = ""
+    category : string = ""
+    strength : number = 1
+    pinned : boolean = false
+    scope : string = ""
     lastAccessedAt : string
     createdAt : string
   }
@@ -642,8 +651,7 @@ orbital ExecutionLogOrbital {
     state active {
       RECALL -> active
         (agent/recall @payload.query)
-      PIN -> active
-        ? (not (agent/is-pinned @payload.id))
+      PIN -> active when (not (agent/is-pinned @payload.id))
         (agent/pin @payload.id)
         (set @entity.pinned true)
         (emit PINNED)
@@ -672,10 +680,10 @@ orbital ExecutionLogOrbital {
 orbital PipelineProgressOrbital {
   entity PipelineProgress [runtime] {
     id : string!
-    steps : string
+    steps : string = ""
     currentStep : number
     totalSteps : number
-    status : string
+    status : string = "idle"
   }
   trait PipelineStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> PipelineProgress {
     on INIT {
@@ -713,7 +721,7 @@ orbital SessionTreeOrbital {
     id : string!
     branchId : string
     label : string
-    status : string
+    status : string = "idle"
   }
   trait SessionTreeDrawer = Drawer.traits.DrawerContentDrawer -> SessionTree {
     on INIT {

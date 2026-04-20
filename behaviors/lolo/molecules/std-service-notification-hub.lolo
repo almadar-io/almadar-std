@@ -1,17 +1,18 @@
-;; app std-service-notification-hub
+app std-service-notification-hub "1.0.0"
+"std-service-notification-hub as a Function"
 
 orbital ServiceNotificationHubOrbital {
   entity ServiceNotificationHub [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     recipient : string
     subject : string
     messageBody : string
-    channel : string
-    sendStatus : string
+    channel : string = "email"
+    sendStatus : string = "idle"
     error : string
   }
   trait ServiceNotificationHubNotificationHub -> ServiceNotificationHub [interaction] {
@@ -54,6 +55,9 @@ orbital ServiceNotificationHubOrbital {
         (set @entity.sendStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "bell", size: "lg" }, { type: "typography", content: "ServiceNotificationHub Notification Hub", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Recipient", bind: "@entity.recipient", placeholder: "Email or phone number" }, { type: "input", label: "Subject", bind: "@entity.subject", placeholder: "Notification subject" }, { type: "textarea", label: "Message", bind: "@entity.messageBody", placeholder: "Write your message..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Email", event: "SEND_EMAIL", variant: "primary", icon: "mail" }, { type: "button", label: "SMS", event: "SEND_SMS", variant: "secondary", icon: "message-circle" }, { type: "button", label: "WhatsApp", event: "SEND_WHATSAPP", variant: "secondary", icon: "phone" }] }] })
     }
+    listens {
+      FAILED { error : string! }
+    }
   }
-  page "/servicenotificationhubs" -> ServiceNotificationHubNotificationHub
+  page "/servicenotificationhubs" as ServiceNotificationHubPage -> ServiceNotificationHubNotificationHub
 }

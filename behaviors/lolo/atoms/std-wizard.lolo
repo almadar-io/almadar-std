@@ -1,11 +1,12 @@
-;; app std-wizard
+app std-wizard "1.0.0"
+"std-wizard as a Function"
 
 orbital WizardEntryOrbital {
   entity WizardEntry [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
   trait WizardEntryWizard -> WizardEntry [interaction] {
@@ -51,6 +52,10 @@ orbital WizardEntryOrbital {
         (fetch WizardEntry)
         (render-ui main { type: "container", maxWidth: "lg", padding: "lg", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard", size: "lg" }, { type: "typography", content: "Setup Wizard", variant: "h2" }] }, { type: "progress-dots", count: 3, currentIndex: 0 }, { type: "wizard-progress", steps: ["Personal Info", "Settings", "Review"], currentStep: 0 }, { type: "divider" }, { type: "typography", content: "Personal Info", variant: "h3" }, { type: "form-section", entity: "WizardEntry", mode: "create", submitEvent: "NEXT", cancelEvent: "INIT", fields: ["name", "description"] }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Next", event: "NEXT", variant: "primary", icon: "arrow-right" }] }] }] })
     }
+    listens {
+      NEXT { data : object! }
+      COMPLETE { data : object! }
+    }
   }
-  page "/wizard" -> WizardEntryWizard
+  page "/wizard" as WizardEntryPage -> WizardEntryWizard
 }

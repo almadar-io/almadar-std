@@ -1,11 +1,12 @@
-;; app std-inventory-panel
+app std-inventory-panel "1.0.0"
+"std-inventory-panel as a Function"
 
 orbital InventorySlotOrbital {
   entity InventorySlot [singleton] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     items : [string]
   }
@@ -24,6 +25,11 @@ orbital InventorySlotOrbital {
         (fetch InventorySlot)
         (render-ui main { type: "inventory-panel", items: "@entity.items", slots: 16, columns: 4, selectSlotEvent: "SELECT_SLOT", useItemEvent: "USE_ITEM", dropItemEvent: "DROP_ITEM", showTooltips: true })
     }
+    listens {
+      SELECT_SLOT { slotId : string! }
+      USE_ITEM { id : string! }
+      DROP_ITEM { id : string! }
+    }
   }
-  page "/inventoryslots" -> InventorySlotInventoryPanel
+  page "/inventoryslots" as InventorySlotInventoryPage -> InventorySlotInventoryPanel
 }

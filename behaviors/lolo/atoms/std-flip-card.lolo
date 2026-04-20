@@ -1,14 +1,15 @@
-;; app std-flip-card
+app std-flip-card "1.0.0"
+"std-flip-card as a Function"
 
 orbital FlashcardOrbital {
   entity Flashcard [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    question : string
-    answer : string
+    question : string = ""
+    answer : string = ""
   }
   trait FlashcardFlipCard -> Flashcard [interaction] {
     initial: front
@@ -27,5 +28,5 @@ orbital FlashcardOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "rotate-3d", size: "lg" }, { type: "typography", content: "Flashcards Flashcards", variant: "h2" }] }, { type: "divider" }, { type: "flip-card", front: { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "help-circle", size: "lg" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }, { type: "typography", variant: "caption", color: "muted", content: "Tap to reveal answer" }] }, back: { type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "lightbulb", size: "lg" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "description"] }, { type: "badge", label: "Answer" }] }, flipped: false }, { type: "button", label: "Flip", event: "FLIP", variant: "primary", icon: "rotate-3d" }] })
     }
   }
-  page "/flashcards/flashcards" -> FlashcardFlipCard
+  page "/flashcards/flashcards" as FlashcardFlipCardPage -> FlashcardFlipCard
 }

@@ -1,20 +1,21 @@
-;; app std-agent-conversation
+app std-agent-conversation "1.0.0"
+"std-agent-conversation as a Function"
 
 orbital AgentConversationOrbital {
   entity AgentConversation [persistent: agentconversations] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    messages : [string]
-    turnCount : number
-    lastMessage : string
-    tokenCount : number
-    role : string
-    content : string
-    timestamp : string
-    toolName : string
+    messages : [string] = []
+    turnCount : number = 0
+    lastMessage : string = ""
+    tokenCount : number = 0
+    role : string = "user"
+    content : string = ""
+    timestamp : string = ""
+    toolName : string = ""
   }
   trait AgentConversationThread -> AgentConversation [interaction] {
     initial: idle
@@ -46,6 +47,9 @@ orbital AgentConversationOrbital {
     }
     emits {
       SEND_MESSAGE internal { content: string }
+    }
+    listens {
+      SEND { content : string! }
     }
   }
   trait AgentConversationAgent -> AgentConversation [interaction] {
@@ -84,6 +88,9 @@ orbital AgentConversationOrbital {
     emits {
       TOKEN_UPDATE internal { tokenCount: number }
     }
+    listens {
+      SEND_MESSAGE { content : string! }
+    }
   }
-  page "/agentconversations" -> AgentConversationThread, AgentConversationAgent
+  page "/agentconversations" as AgentConversationPage -> AgentConversationThread, AgentConversationAgent
 }

@@ -1,15 +1,16 @@
-;; app std-devops-dashboard
+app std-devops-dashboard "1.0.0"
+"std-devops-dashboard as a Function"
 
 orbital ServiceNodeOrbital {
   entity ServiceNode [runtime] {
     id : string!
     name : string!
-    status : string!
+    status : "healthy" | "degraded" | "down"
     url : string
     lastChecked : datetime
-    failureCount : number
-    successCount : number
-    threshold : number
+    failureCount : number = 0
+    successCount : number = 0
+    threshold : number = 5
   }
   trait ServiceNodeCircuitBreaker -> ServiceNode [interaction] {
     initial: closed
@@ -37,7 +38,7 @@ orbital ServiceNodeOrbital {
         (render-ui main { type: "dashboard-layout", appName: "DevOps Dashboard", navItems: [{ label: "Services", href: "/services", icon: "server" }, { label: "Alerts", href: "/alerts", icon: "bell" }, { label: "Logs", href: "/logs", icon: "terminal" }, { label: "Metrics", href: "/metrics", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "ServiceNode", variant: "h2" }] }, { type: "status-dot", status: "success", pulse: false, label: "Circuit Closed" }] }, { type: "divider" }, { type: "alert", variant: "success", message: "Service is healthy. All requests are being processed." }, { type: "simple-grid", columns: 2, children: [{ type: "stat-display", label: "Failures", value: ["object/get", ["array/first", "@entity"], "failureCount"] }, { type: "stat-display", label: "Successes", value: ["object/get", ["array/first", "@entity"], "successCount"] }] }, { type: "meter", value: ["object/get", ["array/first", "@entity"], "failureCount"], min: 0, max: ["object/get", ["array/first", "@entity"], "threshold"] }] }] })
     }
   }
-  page "/services" -> ServiceNodeCircuitBreaker
+  page "/services" as ServicesPage -> ServiceNodeCircuitBreaker
 }
 orbital AlertMetricOrbital {
   entity AlertMetric [runtime] {

@@ -1,4 +1,5 @@
-;; app std-agent-learner
+app std-agent-learner "1.0.0"
+"std-agent-learner as a Function"
 
 orbital AgentLearnerOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
@@ -10,34 +11,34 @@ orbital AgentLearnerOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    outcome : string
-    category : string
-    impact : string
-    memoryId : string
-    isSuccess : boolean
-    provider : string
-    consecutiveFailures : number
-    totalSuccesses : number
-    totalFailures : number
-    error : string
-    content : string
-    scope : string
-    strength : number
-    pinned : boolean
-    prompt : string
-    response : string
-    model : string
-    currentProvider : string
-    currentModel : string
-    fallbackProvider : string
-    requestCount : number
-    action : string
-    detail : string
-    timestamp : string
-    duration : number
-    icon : string
+    outcome : string = ""
+    category : string = ""
+    impact : string = ""
+    memoryId : string = ""
+    isSuccess : boolean = false
+    provider : string = ""
+    consecutiveFailures : number = 0
+    totalSuccesses : number = 0
+    totalFailures : number = 0
+    error : string = ""
+    content : string = ""
+    scope : string = ""
+    strength : number = 1
+    pinned : boolean = false
+    prompt : string = ""
+    response : string = ""
+    model : string = "claude-sonnet-4-20250514"
+    currentProvider : string = "anthropic"
+    currentModel : string = "claude-sonnet-4-20250514"
+    fallbackProvider : string = "anthropic"
+    requestCount : number = 0
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
+    duration : number = 0
+    icon : string = "circle"
   }
   trait AgentLearnerLearner -> AgentLearner [interaction] {
     initial: idle
@@ -98,6 +99,9 @@ orbital AgentLearnerOrbital {
     listens {
       * TASK_SUCCEEDED -> TASK_SUCCEEDED
       * TASK_FAILED -> TASK_FAILED
+      RECORDED { memoryId : string! }
+      ANALYSIS_DONE { impact : string! }
+      FAILED { error : string! }
     }
   }
   trait LearnerRecordsBrowse = Browse.traits.BrowseItemBrowse -> AgentLearner {
@@ -163,5 +167,5 @@ orbital AgentLearnerOrbital {
     listens {}
     emitsScope internal
   }
-  page "/agentlearners" -> AgentLearnerLearner, LearnerRecordsBrowse, LearnerMemoryLifecycle, LearnerCompletionFlow, LearnerProviderManager
+  page "/agentlearners" as AgentLearnerPage -> AgentLearnerLearner, LearnerRecordsBrowse, LearnerMemoryLifecycle, LearnerCompletionFlow, LearnerProviderManager
 }

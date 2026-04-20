@@ -1,20 +1,21 @@
-;; app std-agent-tool-call
+app std-agent-tool-call "1.0.0"
+"std-agent-tool-call as a Function"
 
 orbital AgentToolCallOrbital {
   entity AgentToolCall [persistent: agenttoolcalls] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    toolName : string
-    args : string
-    result : string
-    error : string
-    duration : number
-    action : string
-    detail : string
-    timestamp : string
+    toolName : string = ""
+    args : string = ""
+    result : string = ""
+    error : string = ""
+    duration : number = 0
+    action : string = ""
+    detail : string = ""
+    timestamp : string = ""
   }
   trait AgentToolCallModal -> AgentToolCall [interaction] {
     initial: closed
@@ -39,8 +40,11 @@ orbital AgentToolCallOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
-      SAVE
-      INVOKED
+      SAVE external
+      INVOKED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait AgentToolCallAgent -> AgentToolCall [interaction] {
@@ -68,8 +72,7 @@ orbital AgentToolCallOrbital {
         (set @entity.result @payload.data.result)
         (emit TOOL_COMPLETED)
         (emit LOG_ENTRY)
-      CANCEL -> failed
-        ? (= @entity.status executing)
+      CANCEL -> failed when (= @entity.status executing)
         (set @entity.status failed)
         (set @entity.error Cancelled)
         (emit TOOL_COMPLETED)
@@ -102,7 +105,8 @@ orbital AgentToolCallOrbital {
     }
     listens {
       * INVOKED -> INVOKED
+      DO_INVOKE { data : object! }
     }
   }
-  page "/agenttoolcalls" -> AgentToolCallModal, AgentToolCallAgent
+  page "/agenttoolcalls" as AgentToolCallPage -> AgentToolCallModal, AgentToolCallAgent
 }

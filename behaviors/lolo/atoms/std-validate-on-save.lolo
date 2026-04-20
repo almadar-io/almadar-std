@@ -1,14 +1,15 @@
-;; app std-validate-on-save
+app std-validate-on-save "1.0.0"
+"std-validate-on-save as a Function"
 
 orbital ValidateOnSave {
   entity ValidateOnSave [runtime] {
     id : string!
     path : string
-    valid : boolean
-    errors : [string]
-    warnings : [string]
-    timestamp : number
-    status : string
+    valid : boolean = false
+    errors : [string] = []
+    warnings : [string] = []
+    timestamp : number = 0
+    status : string = "idle"
   }
   trait OrbFileWatcher -> ValidateOnSave [interaction] {
     initial: idle
@@ -76,11 +77,13 @@ orbital ValidateOnSave {
         (call-service orbital-cli validate { path: "@entity.path", onSuccess: "VALIDATION_PASSED", onError: "VALIDATION_FAILED" })
     }
     emits {
-      AGENT_INTERRUPT external { type: string, status: string, path: string, errors: array, blocking: boolean }
+      AGENT_INTERRUPT external { type: string, status: string, path: string, errors: [string], blocking: boolean }
     }
     listens {
       * OS_FILE_MODIFIED -> undefined
+      VALIDATION_PASSED { warnings : array }
+      VALIDATION_FAILED { errors : array, warnings : array }
     }
   }
-  page "/validator" -> OrbFileWatcher
+  page "/validator" as ValidatorPage -> OrbFileWatcher
 }

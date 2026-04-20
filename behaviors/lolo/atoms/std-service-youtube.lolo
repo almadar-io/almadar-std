@@ -1,17 +1,18 @@
-;; app std-service-youtube
+app std-service-youtube "1.0.0"
+"std-service-youtube as a Function"
 
 orbital ServiceYoutubeOrbital {
   entity ServiceYoutube [runtime] {
     id : string!
-    query : string
-    selectedVideoId : string
-    videoTitle : string
-    videoDescription : string
-    searchStatus : string
-    error : string
+    query : string = ""
+    selectedVideoId : string = ""
+    videoTitle : string = ""
+    videoDescription : string = ""
+    searchStatus : string = "idle"
+    error : string = ""
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
   trait ServiceYoutubeYoutube -> ServiceYoutube [interaction] {
@@ -59,6 +60,12 @@ orbital ServiceYoutubeOrbital {
         (set @entity.error "")
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "video", size: "lg" }, { type: "typography", content: "YouTube Search", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Search", bind: "@entity.query", placeholder: "Search YouTube videos..." }, { type: "button", label: "Search", event: "SEARCH", variant: "primary", icon: "search" }] })
     }
+    listens {
+      SEARCH_COMPLETE { results : string! }
+      SELECT_VIDEO { videoId : string! }
+      VIDEO_LOADED { title : string!, description : string! }
+      FAILED { error : string! }
+    }
   }
-  page "/serviceyoutubes" -> ServiceYoutubeYoutube
+  page "/serviceyoutubes" as ServiceYoutubePage -> ServiceYoutubeYoutube
 }

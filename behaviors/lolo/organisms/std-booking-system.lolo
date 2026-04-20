@@ -1,4 +1,5 @@
-;; app std-booking-system
+app std-booking-system "1.0.0"
+"std-booking-system as a Function"
 
 orbital ProviderOrbital {
   entity Provider [persistent: providers] {
@@ -7,8 +8,8 @@ orbital ProviderOrbital {
     specialty : string!
     location : string
     phone : string
-    rating : number
-    available : boolean
+    rating : number = 0
+    available : boolean = true
   }
   trait ProviderBrowse -> Provider [interaction] {
     state browsing {
@@ -23,6 +24,9 @@ orbital ProviderOrbital {
       * PROVIDER_CREATED -> INIT
       * PROVIDER_UPDATED -> INIT
       * PROVIDER_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait ProviderCreate -> Provider [interaction] {
@@ -45,7 +49,10 @@ orbital ProviderOrbital {
     }
     emits {
       SAVE
-      PROVIDER_CREATED
+      PROVIDER_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait ProviderEdit -> Provider [interaction] {
@@ -68,7 +75,11 @@ orbital ProviderOrbital {
     }
     emits {
       SAVE
-      PROVIDER_UPDATED
+      PROVIDER_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ProviderView -> Provider [interaction] {
@@ -89,6 +100,10 @@ orbital ProviderOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ProviderDelete -> Provider [interaction] {
@@ -116,10 +131,13 @@ orbital ProviderOrbital {
     }
     emits {
       CONFIRM_DELETE
-      PROVIDER_DELETED
+      PROVIDER_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/providers" -> ProviderBrowse, ProviderCreate, ProviderEdit, ProviderView, ProviderDelete
+  page "/providers" as ProvidersPage -> ProviderBrowse, ProviderCreate, ProviderEdit, ProviderView, ProviderDelete
 }
 orbital BookingOrbital {
   entity Booking [runtime] {

@@ -1,12 +1,13 @@
-;; app std-arcade-game
+app std-arcade-game "1.0.0"
+"std-arcade-game as a Function"
 
 orbital ArcadeStateOrbital {
   entity ArcadeState [runtime] {
     id : string!
-    level : number
-    score : number
-    lives : number
-    highScore : number
+    level : number = 1
+    score : number = 0
+    lives : number = 3
+    highScore : number = 0
   }
   trait ArcadeStateGameflow -> ArcadeState [interaction] {
     initial: menu
@@ -41,7 +42,7 @@ orbital ArcadeStateOrbital {
         (render-ui main { type: "game-shell", appName: "Arcade Game", showTopBar: true, children: [{ type: "game-menu", title: "Arcade", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] }] })
     }
   }
-  page "/game" -> ArcadeStateGameflow
+  page "/game" as GamePage -> ArcadeStateGameflow
 }
 orbital ArcadeCanvasOrbital {
   entity ArcadeCanvas [runtime] {
@@ -72,10 +73,10 @@ orbital ArcadeScoreOrbital {
   entity ArcadeScore [runtime] {
     id : string!
     playerName : string!
-    score : number!
-    level : number
+    score : number! = 0
+    level : number = 1
     completedAt : string
-    highScore : number
+    highScore : number = 0
     combo : number
     multiplier : number
   }
@@ -103,9 +104,9 @@ orbital ArcadeScoreOrbital {
 orbital ArcadeHudOrbital {
   entity ArcadeHud [runtime] {
     id : string!
-    score : number
-    lives : number
-    level : number
+    score : number = 0
+    lives : number = 3
+    level : number = 1
     timer : number
   }
   trait ArcadeHudHud -> ArcadeHud [interaction] {

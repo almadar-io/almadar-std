@@ -1,19 +1,20 @@
-;; app std-physics2d
+app std-physics2d "1.0.0"
+"std-physics2d as a Function"
 
 orbital PhysicsBodyOrbital {
   entity PhysicsBody [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    x : number
-    y : number
-    vx : number
-    vy : number
-    forceX : number
-    forceY : number
-    physicsStatus : string
+    x : number = 0
+    y : number = 0
+    vx : number = 0
+    vy : number = 0
+    forceX : number = 0
+    forceY : number = 0
+    physicsStatus : string = "idle"
   }
   trait PhysicsBodyPhysics -> PhysicsBody [interaction] {
     initial: idle
@@ -37,6 +38,9 @@ orbital PhysicsBodyOrbital {
       INIT -> simulating
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "simulation-canvas", preset: "spring", width: 800, height: 400, running: true, speed: 1 }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Apply Force", event: "APPLY_FORCE", variant: "secondary", icon: "move" }, { type: "button", label: "Stop", event: "STOP", variant: "ghost", icon: "square" }] }] })
     }
+    listens {
+      APPLY_FORCE { forceX : number!, forceY : number! }
+    }
   }
-  page "/physicsbodys/physics" -> PhysicsBodyPhysics
+  page "/physicsbodys/physics" as PhysicsBodyPhysicsPage -> PhysicsBodyPhysics
 }

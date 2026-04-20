@@ -1,17 +1,18 @@
-;; app std-service-oauth
+app std-service-oauth "1.0.0"
+"std-service-oauth as a Function"
 
 orbital ServiceOauthOrbital {
   entity ServiceOauth [runtime] {
     id : string!
-    provider : string
-    authUrl : string
-    accessToken : string
-    refreshToken : string
-    authStatus : string
-    error : string
+    provider : string = "google"
+    authUrl : string = ""
+    accessToken : string = ""
+    refreshToken : string = ""
+    authStatus : string = "unauthenticated"
+    error : string = ""
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
   trait ServiceOauthOauth -> ServiceOauth [interaction] {
@@ -60,6 +61,13 @@ orbital ServiceOauthOrbital {
       RETRY -> unauthenticated
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "lock", size: "lg" }, { type: "typography", content: "Sign In", variant: "h2" }] }, { type: "divider" }, { type: "select", label: "Provider", field: "provider", bind: "@entity.provider", options: [{ label: "Google", value: "google" }, { label: "GitHub", value: "github" }, { label: "Microsoft", value: "microsoft" }] }, { type: "button", label: "Login", event: "LOGIN", variant: "primary", icon: "log-in" }] })
     }
+    listens {
+      AUTH_URL_RECEIVED { authUrl : string! }
+      CALLBACK { code : string! }
+      TOKEN_RECEIVED { accessToken : string!, refreshToken : string! }
+      TOKEN_REFRESHED { accessToken : string! }
+      FAILED { error : string! }
+    }
   }
-  page "/serviceoauths" -> ServiceOauthOauth
+  page "/serviceoauths" as ServiceOauthPage -> ServiceOauthOauth
 }

@@ -1,17 +1,18 @@
-;; app std-score-board
+app std-score-board "1.0.0"
+"std-score-board as a Function"
 
 orbital ScoreBoardEntryOrbital {
   entity ScoreBoardEntry [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number
-    highScore : number
-    combo : number
-    multiplier : number
-    level : number
+    score : number = 0
+    highScore : number = 0
+    combo : number = 0
+    multiplier : number = 1
+    level : number = 1
   }
   trait ScoreBoardEntryScoreBoard -> ScoreBoardEntry [interaction] {
     state idle {
@@ -31,6 +32,10 @@ orbital ScoreBoardEntryOrbital {
         (set @entity.multiplier 1)
         (render-ui main { type: "score-board", score: "@entity.score", highScore: "@entity.highScore", combo: "@entity.combo", multiplier: "@entity.multiplier", level: "@entity.level" })
     }
+    listens {
+      ADD_SCORE { points : number! }
+      COMBO { multiplier : number! }
+    }
   }
-  page "/scoreboardentrys" -> ScoreBoardEntryScoreBoard
+  page "/scoreboardentrys" as ScoreBoardEntryScorePage -> ScoreBoardEntryScoreBoard
 }

@@ -1,18 +1,19 @@
-;; app std-agent-provider
+app std-agent-provider "1.0.0"
+"std-agent-provider as a Function"
 
 orbital AgentProviderOrbital {
   entity AgentProvider [persistent: agentproviders] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    currentProvider : string
-    currentModel : string
-    fallbackProvider : string
-    requestCount : number
-    message : string
-    notificationType : string
+    currentProvider : string = "anthropic"
+    currentModel : string = "claude-sonnet-4-20250514"
+    fallbackProvider : string = "openai"
+    requestCount : number = 0
+    message : string = ""
+    notificationType : string = "info"
   }
   trait AgentProviderModal -> AgentProvider [interaction] {
     initial: closed
@@ -38,8 +39,11 @@ orbital AgentProviderOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
-      SAVE
-      SWITCHED
+      SAVE external
+      SWITCHED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait AgentProviderNotification -> AgentProvider [interaction] {
@@ -59,6 +63,9 @@ orbital AgentProviderOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "server", size: "lg" }, { type: "typography", content: "Provider Status", variant: "h2" }] }, { type: "button", label: "Dismiss", event: "HIDE", variant: "ghost", icon: "x" }] }, { type: "divider" }, { type: "alert", variant: ["object/get", ["array/first", "@entity"], "notificationType"], message: ["object/get", ["array/first", "@entity"], "message"] }, { type: "toast-slot", position: "top-right" }, { type: "violation-alert", severity: "warning", message: ["object/get", ["array/first", "@entity"], "message"], category: "compliance" }] })
       HIDE -> hidden
         (set @entity.message "")
+    }
+    listens {
+      SHOW { message : string!, notificationType : string }
     }
   }
   trait AgentProviderAgent -> AgentProvider [interaction] {
@@ -97,7 +104,8 @@ orbital AgentProviderOrbital {
     }
     listens {
       * SWITCHED -> SWITCHED
+      DO_SWITCH { data : object! }
     }
   }
-  page "/agentproviders" -> AgentProviderModal, AgentProviderNotification, AgentProviderAgent
+  page "/agentproviders" as AgentProviderPage -> AgentProviderModal, AgentProviderNotification, AgentProviderAgent
 }

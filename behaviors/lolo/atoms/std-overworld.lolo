@@ -1,11 +1,12 @@
-;; app std-overworld
+app std-overworld "1.0.0"
+"std-overworld as a Function"
 
 orbital WorldRegionOrbital {
   entity WorldRegion [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
   }
   trait WorldRegionNavigation -> WorldRegion [interaction] {
@@ -27,6 +28,9 @@ orbital WorldRegionOrbital {
         (fetch WorldRegion)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "map", size: "lg" }, { type: "typography", content: "World Map", variant: "h2" }] }, { type: "status-dot", status: "active", pulse: false, label: "Exploring" }] }, { type: "divider" }, { type: "map-view", markers: [], height: "200px", zoom: 10 }, { type: "data-grid", entity: "WorldRegion", emptyIcon: "compass", emptyTitle: "No worldregions discovered", emptyDescription: "Explore to discover new worldregions.", itemActions: [{ label: "Travel", event: "TRAVEL" }], renderItem: ["fn", "item", { type: "stack", direction: "vertical", gap: "sm", children: [{ type: "stack", direction: "horizontal", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "map-pin", size: "sm" }, { type: "typography", variant: "h4", content: "@item.name" }] }, { type: "badge", label: "@item.description" }] }, { type: "typography", variant: "caption", content: "@item.status" }] }] }] })
     }
+    listens {
+      TRAVEL { zoneId : string! }
+    }
   }
-  page "/worldregions" -> WorldRegionNavigation
+  page "/worldregions" as WorldRegionPage -> WorldRegionNavigation
 }

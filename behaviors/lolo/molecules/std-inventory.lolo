@@ -1,4 +1,5 @@
-;; app std-inventory
+app std-inventory "1.0.0"
+"std-inventory as a Function"
 
 orbital InventoryItemOrbital {
   uses Browse from "std/behaviors/std-browse"
@@ -9,9 +10,9 @@ orbital InventoryItemOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    pendingId : string
+    pendingId : string = ""
   }
   trait InventoryItemBrowse = Browse.traits.BrowseItemBrowse -> InventoryItem {
     on INIT {
@@ -88,5 +89,5 @@ orbital InventoryItemOrbital {
         (ref InventoryItem)
     }
   }
-  page "/inventoryitems" -> InventoryItemBrowse, InventoryItemAdd, InventoryItemUse, InventoryItemDrop
+  page "/inventoryitems" as InventoryItemPage -> InventoryItemBrowse, InventoryItemAdd, InventoryItemUse, InventoryItemDrop
 }

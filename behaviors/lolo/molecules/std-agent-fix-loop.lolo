@@ -1,4 +1,5 @@
-;; app std-agent-fix-loop
+app std-agent-fix-loop "1.0.0"
+"std-agent-fix-loop as a Function"
 
 orbital AgentFixLoopOrbital {
   uses AgentCompletion from "std/behaviors/std-agent-completion"
@@ -10,25 +11,25 @@ orbital AgentFixLoopOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    target : string
-    validationErrors : string
-    fixAttempts : number
-    maxAttempts : number
-    currentFix : string
-    errorCount : number
-    error : string
-    currentStep : number
-    totalSteps : number
-    steps : string
-    toolName : string
-    args : string
-    result : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
+    target : string = ""
+    validationErrors : string = ""
+    fixAttempts : number = 0
+    maxAttempts : number = 5
+    currentFix : string = ""
+    errorCount : number = 0
+    error : string = ""
+    currentStep : number = 0
+    totalSteps : number = 4
+    steps : string = "Validate,Analyze,Fix,Re-validate"
+    toolName : string = ""
+    args : string = ""
+    result : string = ""
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
   }
   trait AgentFixLoopCycle -> AgentFixLoop [interaction] {
     initial: idle
@@ -113,6 +114,10 @@ orbital AgentFixLoopOrbital {
     listens {
       * FIX_SUCCEEDED -> INIT
       * FIX_FAILED -> INIT
+      VALIDATION_ERRORS { errors : string!, count : number! }
+      FIX_GENERATED { fix : string! }
+      EXCEEDED_ATTEMPTS { error : string! }
+      FAILED { error : string! }
     }
   }
   trait FixLoopStepProgress = AgentStepProgress.traits.AgentStepProgressProgress -> AgentFixLoop {
@@ -224,5 +229,5 @@ orbital AgentFixLoopOrbital {
     listens {}
     emitsScope internal
   }
-  page "/agentfixloops" -> AgentFixLoopCycle, FixLoopStepProgress, FixLoopErrorsBrowse, FixLoopValidateCall, FixLoopFixCall, FixLoopCompletionFlow
+  page "/agentfixloops" as AgentFixLoopPage -> AgentFixLoopCycle, FixLoopStepProgress, FixLoopErrorsBrowse, FixLoopValidateCall, FixLoopFixCall, FixLoopCompletionFlow
 }

@@ -1,21 +1,22 @@
-;; app std-service-payment-flow
+app std-service-payment-flow "1.0.0"
+"std-service-payment-flow as a Function"
 
 orbital ServicePaymentFlowOrbital {
   entity ServicePaymentFlow [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
     amount : number
-    currency : string
+    currency : string = "usd"
     paymentIntentId : string
     clientSecret : string
-    paymentStatus : string
+    paymentStatus : string = "idle"
     to : string
-    subject : string
+    subject : string = "Payment Receipt"
     body : string
-    sendStatus : string
+    sendStatus : string = "idle"
     error : string
   }
   trait ServicePaymentFlowPayment -> ServicePaymentFlow [interaction] {
@@ -60,6 +61,10 @@ orbital ServicePaymentFlowOrbital {
     emits {
       SEND_RECEIPT
     }
+    listens {
+      PAYMENT_CREATED { id : string!, clientSecret : string! }
+      FAILED { error : string! }
+    }
   }
   trait ServicePaymentFlowReceipt -> ServicePaymentFlow [interaction] {
     initial: waiting
@@ -86,7 +91,8 @@ orbital ServicePaymentFlowOrbital {
     }
     listens {
       * SEND_RECEIPT -> SEND_RECEIPT
+      FAILED { error : string! }
     }
   }
-  page "/servicepaymentflows" -> ServicePaymentFlowPayment, ServicePaymentFlowReceipt
+  page "/servicepaymentflows" as ServicePaymentFlowPage -> ServicePaymentFlowPayment, ServicePaymentFlowReceipt
 }

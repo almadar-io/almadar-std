@@ -1,4 +1,5 @@
-;; app std-ecommerce
+app std-ecommerce "1.0.0"
+"std-ecommerce as a Function"
 
 orbital ProductOrbital {
   entity Product [persistent: products] {
@@ -8,7 +9,7 @@ orbital ProductOrbital {
     price : number!
     category : string
     sku : string
-    inStock : boolean
+    inStock : boolean = true
   }
   trait ProductBrowse -> Product [interaction] {
     state browsing {
@@ -23,6 +24,9 @@ orbital ProductOrbital {
       * PRODUCT_CREATED -> INIT
       * PRODUCT_UPDATED -> INIT
       * PRODUCT_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait ProductCreate -> Product [interaction] {
@@ -45,7 +49,10 @@ orbital ProductOrbital {
     }
     emits {
       SAVE
-      PRODUCT_CREATED
+      PRODUCT_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait ProductEdit -> Product [interaction] {
@@ -68,7 +75,11 @@ orbital ProductOrbital {
     }
     emits {
       SAVE
-      PRODUCT_UPDATED
+      PRODUCT_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ProductView -> Product [interaction] {
@@ -89,6 +100,10 @@ orbital ProductOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait ProductDelete -> Product [interaction] {
@@ -116,10 +131,13 @@ orbital ProductOrbital {
     }
     emits {
       CONFIRM_DELETE
-      PRODUCT_DELETED
+      PRODUCT_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/products" -> ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
+  page "/products" as ProductsPage -> ProductBrowse, ProductCreate, ProductEdit, ProductView, ProductDelete
 }
 orbital CartItemOrbital {
   entity CartItem [persistent: cartitems] {
@@ -128,7 +146,7 @@ orbital CartItemOrbital {
     quantity : number!
     unitPrice : number!
     totalPrice : number
-    pendingId : string
+    pendingId : string = ""
   }
   trait CartItemCartBrowse -> CartItem [interaction] {
     initial: browsing

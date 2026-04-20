@@ -1,13 +1,14 @@
-;; app std-lms
+app std-lms "1.0.0"
+"std-lms as a Function"
 
 orbital CourseOrbital {
   entity Course [runtime] {
     id : string!
-    title : string
-    description : string
-    instructor : string
-    duration : string
-    level : string
+    title : string = ""
+    description : string = ""
+    instructor : string = ""
+    duration : string = ""
+    level : "Beginner" | "Intermediate" | "Advanced" = "Beginner"
   }
   trait CourseBrowse -> Course [interaction] {
     state browsing {
@@ -22,6 +23,9 @@ orbital CourseOrbital {
       * COURSE_CREATED -> INIT
       * COURSE_UPDATED -> INIT
       * COURSE_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait CourseCreate -> Course [interaction] {
@@ -44,7 +48,10 @@ orbital CourseOrbital {
     }
     emits {
       SAVE
-      COURSE_CREATED
+      COURSE_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait CourseEdit -> Course [interaction] {
@@ -67,7 +74,11 @@ orbital CourseOrbital {
     }
     emits {
       SAVE
-      COURSE_UPDATED
+      COURSE_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait CourseView -> Course [interaction] {
@@ -88,6 +99,10 @@ orbital CourseOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait CourseDelete -> Course [interaction] {
@@ -115,10 +130,13 @@ orbital CourseOrbital {
     }
     emits {
       CONFIRM_DELETE
-      COURSE_DELETED
+      COURSE_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/courses" -> CourseBrowse, CourseCreate, CourseEdit, CourseView, CourseDelete
+  page "/courses" as CoursesPage -> CourseBrowse, CourseCreate, CourseEdit, CourseView, CourseDelete
 }
 orbital EnrollmentOrbital {
   entity Enrollment [runtime] {

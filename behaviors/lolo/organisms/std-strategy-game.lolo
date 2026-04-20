@@ -1,12 +1,13 @@
-;; app std-strategy-game
+app std-strategy-game "1.0.0"
+"std-strategy-game as a Function"
 
 orbital ArmyBattleOrbital {
   entity ArmyBattle [runtime] {
     id : string!
-    turn : number
-    score : number
-    armySize : number
-    morale : number
+    turn : number = 0
+    score : number = 0
+    armySize : number = 10
+    morale : number = 100
   }
   trait ArmyBattleBattleFlow -> ArmyBattle [interaction] {
     initial: menu
@@ -53,8 +54,11 @@ orbital ArmyBattleOrbital {
       CLEAR -> idle
         (render-ui main { type: "game-shell", appName: "Strategy Game", showTopBar: true, children: [{ type: "combat-log", events: "@ArmyBattle", maxVisible: 10, autoScroll: true, showTimestamps: true, title: "Combat Log" }] })
     }
+    listens {
+      LOG_EVENT { data : object! }
+    }
   }
-  page "/battle" -> ArmyBattleBattleFlow, ArmyBattleCombatLog
+  page "/battle" as BattlePage -> ArmyBattleBattleFlow, ArmyBattleCombatLog
 }
 orbital TerritoryOrbital {
   entity Territory [runtime] {

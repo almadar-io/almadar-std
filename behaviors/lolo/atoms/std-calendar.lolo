@@ -1,15 +1,16 @@
-;; app std-calendar
+app std-calendar "1.0.0"
+"std-calendar as a Function"
 
 orbital CalendarEventOrbital {
   entity CalendarEvent [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    date : string
-    time : string
-    duration : number
+    date : string = ""
+    time : string = ""
+    duration : number = 60
   }
   trait CalendarEventCalendar -> CalendarEvent [interaction] {
     initial: month-view
@@ -37,6 +38,10 @@ orbital CalendarEventOrbital {
         (fetch CalendarEvent)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clock", size: "lg" }, { type: "typography", content: "Day View", variant: "h2" }] }, { type: "button", label: "Back to Month", event: "BACK", variant: "ghost", icon: "arrow-left" }] }, { type: "divider" }, { type: "typography", variant: "h4", content: "Events for Selected Day" }, { type: "data-grid", entity: "CalendarEvent", emptyIcon: "calendar", emptyTitle: "No events today", emptyDescription: "Select a time slot to add an event.", columns: [{ name: "name", label: "Event", variant: "h4", icon: "clock" }, { name: "time", label: "Time", variant: "badge" }, { name: "status", label: "Status", variant: "badge" }], itemActions: [{ label: "Select", event: "SELECT_SLOT", icon: "check" }] }] })
     }
+    listens {
+      SELECT_DAY { date : string! }
+      SELECT_SLOT { time : string! }
+    }
   }
-  page "/calendarevents/calendar" -> CalendarEventCalendar
+  page "/calendarevents/calendar" as CalendarEventCalendarPage -> CalendarEventCalendar
 }

@@ -1,14 +1,15 @@
-;; app std-gameflow
+app std-gameflow "1.0.0"
+"std-gameflow as a Function"
 
 orbital GameSessionOrbital {
   entity GameSession [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    score : number
-    level : number
+    score : number = 0
+    level : number = 1
   }
   trait GameSessionGameflow -> GameSession [interaction] {
     initial: menu
@@ -43,5 +44,5 @@ orbital GameSessionOrbital {
         (render-ui main { type: "game-menu", title: "GameSession", subtitle: "Main Menu", menuItems: [{ label: "Start Game", event: "START", variant: "primary" }] })
     }
   }
-  page "/gamesessions" -> GameSessionGameflow
+  page "/gamesessions" as GameSessionPage -> GameSessionGameflow
 }

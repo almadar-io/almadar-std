@@ -1,12 +1,13 @@
-;; app std-trading-dashboard
+app std-trading-dashboard "1.0.0"
+"std-trading-dashboard as a Function"
 
 orbital PortfolioOrbital {
   entity Portfolio [runtime] {
     id : string!
-    totalValue : number
-    dailyChange : number
-    positions : number
-    cashBalance : number
+    totalValue : number = 0
+    dailyChange : number = 0
+    positions : number = 0
+    cashBalance : number = 0
   }
   trait PortfolioDisplay -> Portfolio [interaction] {
     initial: loading
@@ -32,7 +33,7 @@ orbital PortfolioOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Trading Dashboard", navItems: [{ label: "Portfolio", href: "/portfolio", icon: "layout-list" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }, { label: "Market", href: "/market", icon: "layout-list" }], children: [{ type: "scaled-diagram", children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "breadcrumb", items: [{ label: "Home", href: "/" }, { label: "Portfolio" }] }, { type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "trending-up", size: "lg" }, { type: "typography", content: "Portfolio", variant: "h2" }] }, { type: "button", label: "Refresh", event: "REFRESH", variant: "secondary", icon: "refresh-cw" }] }, { type: "divider" }, { type: "box", padding: "md", children: [{ type: "simple-grid", columns: 3, children: [{ type: "stat-display", label: "TotalValue", value: ["object/get", ["array/first", "@entity"], "totalValue"] }, { type: "stat-display", label: "DailyChange", value: ["object/get", ["array/first", "@entity"], "dailyChange"] }, { type: "stat-display", label: "Positions", value: ["object/get", ["array/first", "@entity"], "positions"] }, { type: "stat-display", label: "CashBalance", value: ["object/get", ["array/first", "@entity"], "cashBalance"] }] }] }, { type: "divider" }, { type: "grid", columns: 2, gap: "md", children: [{ type: "card", children: [{ type: "typography", variant: "caption", content: "Chart View" }] }, { type: "card", children: [{ type: "typography", variant: "caption", content: "Graph View" }] }] }, { type: "line-chart", data: [{ date: "Jan", value: 12 }, { date: "Feb", value: 19 }, { date: "Mar", value: 15 }, { date: "Apr", value: 25 }, { date: "May", value: 22 }, { date: "Jun", value: 30 }], xKey: "date", yKey: "value", title: "Trend" }, { type: "chart-legend", items: [{ label: "Current", color: "primary" }, { label: "Previous", color: "muted" }] }, { type: "graph-view", nodes: [{ id: "a", label: "Start", x: 50, y: 100 }, { id: "b", label: "Process", x: 200, y: 50 }, { id: "c", label: "End", x: 350, y: 100 }], edges: [{ from: "a", to: "b" }, { from: "b", to: "c" }], width: 400, height: 200 }] }] }] })
     }
   }
-  page "/portfolio" -> PortfolioDisplay
+  page "/portfolio" as PortfolioPage -> PortfolioDisplay
 }
 orbital TradeOrderOrbital {
   entity TradeOrder [persistent: tradeorders] {

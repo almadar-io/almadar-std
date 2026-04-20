@@ -1,10 +1,11 @@
-;; app std-cicd-pipeline
+app std-cicd-pipeline "1.0.0"
+"std-cicd-pipeline as a Function"
 
 orbital BuildOrbital {
   entity Build [persistent: builds] {
     id : string!
     branch : string!
-    status : string!
+    status : "pending" | "running" | "success" | "failed"
     commit : string
     triggeredBy : string
   }
@@ -18,6 +19,9 @@ orbital BuildOrbital {
       * BUILD_CREATED -> INIT
       * BUILD_UPDATED -> INIT
       * BUILD_DELETED -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait BuildCreate -> Build [interaction] {
@@ -40,7 +44,10 @@ orbital BuildOrbital {
     }
     emits {
       SAVE
-      BUILD_CREATED
+      BUILD_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait BuildEdit -> Build [interaction] {
@@ -63,7 +70,11 @@ orbital BuildOrbital {
     }
     emits {
       SAVE
-      BUILD_UPDATED
+      BUILD_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait BuildView -> Build [interaction] {
@@ -84,6 +95,10 @@ orbital BuildOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait BuildDelete -> Build [interaction] {
@@ -111,16 +126,19 @@ orbital BuildOrbital {
     }
     emits {
       CONFIRM_DELETE
-      BUILD_DELETED
+      BUILD_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/builds" -> BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
+  page "/builds" as BuildsPage -> BuildBrowse, BuildCreate, BuildEdit, BuildView, BuildDelete
 }
 orbital StageOrbital {
   entity Stage [runtime] {
     id : string!
     name : string!
-    status : string!
+    status : "pending" | "running" | "success" | "failed"
     duration : string
     output : string
   }
@@ -155,7 +173,7 @@ orbital DeploymentOrbital {
     id : string!
     environment : string!
     version : string!
-    status : string
+    status : "pending" | "running" | "success" | "failed"
     deployedAt : datetime
   }
   trait DeploymentAsync -> Deployment [interaction] {

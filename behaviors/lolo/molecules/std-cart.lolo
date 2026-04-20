@@ -1,4 +1,5 @@
-;; app std-cart
+app std-cart "1.0.0"
+"std-cart as a Function"
 
 orbital CartItemOrbital {
   uses Confirmation from "std/behaviors/std-confirmation"
@@ -8,9 +9,9 @@ orbital CartItemOrbital {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    pendingId : string
+    pendingId : string = ""
   }
   trait CartItemCartBrowse -> CartItem [interaction, collection] {
     initial: browsing
@@ -28,6 +29,9 @@ orbital CartItemOrbital {
       CONFIRM_ORDER -> browsing
         (fetch CartItem)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "icon", name: "check-circle", size: "lg" }, { type: "typography", content: "Order Confirmed", variant: "h2" }, { type: "typography", content: "Your order has been placed successfully.", variant: "body" }, { type: "button", label: "Continue Shopping", event: "INIT", variant: "primary" }] })
+    }
+    listens {
+      REQUEST_REMOVE { id : string! }
     }
   }
   trait CartItemAddItem = Modal.traits.ModalRecordModal -> CartItem {
@@ -77,5 +81,5 @@ orbital CartItemOrbital {
         (fetch CartItem)
     }
   }
-  page "/cart" -> CartItemCartBrowse, CartItemAddItem, CartItemRemoveConfirm
+  page "/cart" as CartItemPage -> CartItemCartBrowse, CartItemAddItem, CartItemRemoveConfirm
 }

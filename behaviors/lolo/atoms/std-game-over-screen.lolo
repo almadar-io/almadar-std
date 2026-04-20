@@ -1,14 +1,15 @@
-;; app std-game-over-screen
+app std-game-over-screen "1.0.0"
+"std-game-over-screen as a Function"
 
 orbital GameOverStateOrbital {
   entity GameOverState [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    currentScore : number
-    highScore : number
+    currentScore : number = 0
+    highScore : number = 0
   }
   trait GameOverStateGameOver -> GameOverState [interaction] {
     state idle {
@@ -23,5 +24,5 @@ orbital GameOverStateOrbital {
         (render-ui main { type: "game-over-screen", title: "Game Over", message: "Better luck next time!", currentScore: "@entity.currentScore", highScore: "@entity.highScore", menuItems: [{ label: "Play Again", action: "RETRY" }, { label: "Main Menu", action: "QUIT" }] })
     }
   }
-  page "/gameoverstates" -> GameOverStateGameOver
+  page "/gameoverstates" as GameOverStateGameOverPage -> GameOverStateGameOver
 }

@@ -1,4 +1,5 @@
-;; app std-agent-reviewer
+app std-agent-reviewer "1.0.0"
+"std-agent-reviewer as a Function"
 
 orbital ReviewOrbital {
   uses Browse from "std/behaviors/std-browse"
@@ -6,13 +7,13 @@ orbital ReviewOrbital {
 
   entity Review [runtime] {
     id : string!
-    target : string
-    category : string
-    issues : string
-    suggestions : string
-    score : number
-    reviewStatus : string
-    error : string
+    target : string = ""
+    category : string = ""
+    issues : string = "[]"
+    suggestions : string = "[]"
+    score : number = 0
+    reviewStatus : string = "idle"
+    error : string = ""
   }
   trait ReviewGenerator -> Review [interaction] {
     initial: idle
@@ -57,7 +58,7 @@ orbital ReviewOrbital {
       * CLASSIFIED -> SUBMIT_REVIEW
     }
   }
-  page "/review" -> ReviewGenerator
+  page "/review" as ReviewPage -> ReviewGenerator
 }
 orbital ReviewRagOrbital {
   entity ReviewRag [runtime] {
@@ -68,9 +69,9 @@ orbital ReviewRagOrbital {
     memoryHits : number
     searchHits : number
     status : string
-    error : string
+    error : string = ""
     content : string
-    category : string
+    category : string = ""
     scope : string
     strength : number
     pinned : boolean
@@ -184,7 +185,7 @@ orbital AnalysisOrbital {
   entity Analysis [runtime] {
     id : string!
     input : string
-    category : string
+    category : string = ""
     confidence : number
     model : string
     message : string
@@ -275,7 +276,7 @@ orbital ReviewCompletionOrbital {
     provider : string
     model : string
     status : string
-    error : string
+    error : string = ""
     message : string
     notificationType : string
   }
@@ -343,8 +344,7 @@ orbital ReviewCompletionOrbital {
         (set @entity.response @payload.data.prompt)
         (set @entity.status completed)
         (emit SHOW)
-      RESET -> error
-        ? (= @entity.status generating)
+      RESET -> error when (= @entity.status generating)
         (set @entity.status error)
         (set @entity.error "Generation was cancelled")
     }
@@ -355,8 +355,7 @@ orbital ReviewCompletionOrbital {
         (set @entity.prompt "")
     }
     state error {
-      RETRY -> generating
-        ? (= @entity.status error)
+      RETRY -> generating when (= @entity.status error)
         (set @entity.status generating)
         (set @entity.error "")
         (agent/generate @entity.prompt)
@@ -376,13 +375,13 @@ orbital ReviewCompletionOrbital {
 orbital ReviewNavOrbital {
   entity ReviewNav [runtime] {
     id : string!
-    target : string
-    category : string
-    issues : string
-    suggestions : string
-    score : number
-    reviewStatus : string
-    error : string
+    target : string = ""
+    category : string = ""
+    issues : string = "[]"
+    suggestions : string = "[]"
+    score : number = 0
+    reviewStatus : string = "idle"
+    error : string = ""
   }
   trait ReviewerTabs = Tabs.traits.TabContentTabs -> Review {
     on INIT {

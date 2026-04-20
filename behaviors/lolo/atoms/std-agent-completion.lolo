@@ -1,19 +1,20 @@
-;; app std-agent-completion
+app std-agent-completion "1.0.0"
+"std-agent-completion as a Function"
 
 orbital AgentCompletionOrbital {
   entity AgentCompletion [persistent: agentcompletions] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    prompt : string
-    response : string
-    provider : string
-    model : string
-    error : string
-    message : string
-    notificationType : string
+    prompt : string = ""
+    response : string = ""
+    provider : string = "anthropic"
+    model : string = "claude-sonnet-4-20250514"
+    error : string = ""
+    message : string = ""
+    notificationType : string = "info"
   }
   trait AgentCompletionModal -> AgentCompletion [interaction] {
     initial: closed
@@ -38,8 +39,11 @@ orbital AgentCompletionOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentCompletion", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
-      SAVE
-      GENERATED
+      SAVE external
+      GENERATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait AgentCompletionNotification -> AgentCompletion [interaction] {
@@ -60,6 +64,9 @@ orbital AgentCompletionOrbital {
       HIDE -> hidden
         (set @entity.message "")
     }
+    listens {
+      SHOW { message : string!, notificationType : string }
+    }
   }
   trait AgentCompletionAgent -> AgentCompletion [interaction] {
     initial: idle
@@ -79,8 +86,7 @@ orbital AgentCompletionOrbital {
         (set @entity.response @payload.data.prompt)
         (set @entity.status completed)
         (emit SHOW)
-      RESET -> error
-        ? (= @entity.status generating)
+      RESET -> error when (= @entity.status generating)
         (set @entity.status error)
         (set @entity.error "Generation was cancelled")
     }
@@ -91,8 +97,7 @@ orbital AgentCompletionOrbital {
         (set @entity.prompt "")
     }
     state error {
-      RETRY -> generating
-        ? (= @entity.status error)
+      RETRY -> generating when (= @entity.status error)
         (set @entity.status generating)
         (set @entity.error "")
         (agent/generate @entity.prompt)
@@ -105,7 +110,8 @@ orbital AgentCompletionOrbital {
     }
     listens {
       * GENERATED -> GENERATED
+      DO_GENERATE { data : object! }
     }
   }
-  page "/agentcompletions" -> AgentCompletionModal, AgentCompletionNotification, AgentCompletionAgent
+  page "/agentcompletions" as AgentCompletionPage -> AgentCompletionModal, AgentCompletionNotification, AgentCompletionAgent
 }

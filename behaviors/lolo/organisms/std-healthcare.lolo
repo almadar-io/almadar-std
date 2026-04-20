@@ -1,4 +1,5 @@
-;; app std-healthcare
+app std-healthcare "1.0.0"
+"std-healthcare as a Function"
 
 orbital PatientOrbital {
   entity Patient [persistent: patients] {
@@ -8,7 +9,7 @@ orbital PatientOrbital {
     dateOfBirth : datetime!
     phone : string
     insuranceId : string
-    status : string
+    status : "active" | "inactive" | "discharged" = "active"
   }
   trait PatientBrowse -> Patient [interaction] {
     state browsing {
@@ -21,6 +22,9 @@ orbital PatientOrbital {
       * PATIENT_UPDATED -> INIT
       * PATIENT_DELETED -> INIT
       * INTAKE_COMPLETE -> INIT
+      VIEW { id : string!, row : object }
+      EDIT { id : string!, row : object }
+      DELETE { id : string!, row : object }
     }
   }
   trait PatientCreate -> Patient [interaction] {
@@ -43,7 +47,10 @@ orbital PatientOrbital {
     }
     emits {
       SAVE
-      PATIENT_CREATED
+      PATIENT_CREATED external
+    }
+    listens {
+      SAVE { data : object! }
     }
   }
   trait PatientEdit -> Patient [interaction] {
@@ -66,7 +73,11 @@ orbital PatientOrbital {
     }
     emits {
       SAVE
-      PATIENT_UPDATED
+      PATIENT_UPDATED external
+    }
+    listens {
+      EDIT { id : string! }
+      SAVE { data : object! }
     }
   }
   trait PatientView -> Patient [interaction] {
@@ -87,6 +98,10 @@ orbital PatientOrbital {
     }
     emits {
       SAVE
+    }
+    listens {
+      VIEW { id : string! }
+      SAVE { data : object! }
     }
   }
   trait PatientDelete -> Patient [interaction] {
@@ -114,10 +129,13 @@ orbital PatientOrbital {
     }
     emits {
       CONFIRM_DELETE
-      PATIENT_DELETED
+      PATIENT_DELETED external
+    }
+    listens {
+      DELETE { id : string! }
     }
   }
-  page "/patients" -> PatientBrowse, PatientCreate, PatientEdit, PatientView, PatientDelete
+  page "/patients" as PatientsPage -> PatientBrowse, PatientCreate, PatientEdit, PatientView, PatientDelete
 }
 orbital AppointmentOrbital {
   entity Appointment [persistent: appointments] {
@@ -127,7 +145,7 @@ orbital AppointmentOrbital {
     date : datetime!
     time : string!
     reason : string
-    status : string
+    status : "active" | "inactive" | "discharged" = "active"
   }
   trait AppointmentBrowse -> Appointment [interaction] {
     state browsing {

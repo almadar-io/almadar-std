@@ -1,14 +1,15 @@
-;; app std-service-research-assistant
+app std-service-research-assistant "1.0.0"
+"std-service-research-assistant as a Function"
 
 orbital ResearchOrbital {
   entity Research [runtime] {
     id : string!
-    query : string
-    videoTitle : string
-    videoDescription : string
-    summary : string
-    pipelineStatus : string
-    error : string
+    query : string = ""
+    videoTitle : string = ""
+    videoDescription : string = ""
+    summary : string = ""
+    pipelineStatus : string = "idle"
+    error : string = ""
   }
   trait ResearchPipeline -> Research [interaction] {
     initial: idle
@@ -67,8 +68,15 @@ orbital ResearchOrbital {
         (set @entity.error "")
         (render-ui main { type: "dashboard-layout", appName: "ResearchAssistant", navItems: [{ label: "Research", href: "/research", icon: "search" }, { label: "Cache", href: "/cache", icon: "database" }, { label: "Reports", href: "/reports", icon: "file-text" }, { label: "Knowledge", href: "/knowledge", icon: "book-open" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "Content Research", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Search YouTube for content to summarize", variant: "body" }, { type: "form-section", entity: "Research", mode: "edit", submitEvent: "SEARCH", fields: ["query"] }] }] }] }] })
     }
+    listens {
+      SEARCH_COMPLETE { results : array! }
+      SELECT_AND_SUMMARIZE { videoId : string! }
+      VIDEO_FETCHED { title : string!, description : string! }
+      SUMMARY_COMPLETE { content : string! }
+      FAILED { error : string! }
+    }
   }
-  page "/research" -> ResearchPipeline
+  page "/research" as ResearchPage -> ResearchPipeline
 }
 orbital CacheEntryOrbital {
   entity CacheEntry [runtime] {
@@ -78,7 +86,7 @@ orbital CacheEntryOrbital {
     ttl : number
     result : string
     redisStatus : string
-    error : string
+    error : string = ""
   }
   trait CacheEntryRedis -> CacheEntry [interaction] {
     initial: idle
@@ -124,7 +132,7 @@ orbital ReportOrbital {
     content : string
     storageStatus : string
     result : string
-    error : string
+    error : string = ""
   }
   trait ReportStorage -> Report [interaction] {
     initial: idle
@@ -177,7 +185,7 @@ orbital KnowledgeQueryOrbital {
     responseData : string
     statusCode : number
     callStatus : string
-    error : string
+    error : string = ""
   }
   trait KnowledgeQueryCustomBearer -> KnowledgeQuery [interaction] {
     initial: idle

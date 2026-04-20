@@ -1,4 +1,5 @@
-;; app std-agent-tutor
+app std-agent-tutor "1.0.0"
+"std-agent-tutor as a Function"
 
 orbital TutorSessionOrbital {
   uses Browse from "std/behaviors/std-browse"
@@ -6,13 +7,13 @@ orbital TutorSessionOrbital {
 
   entity TutorSession [runtime] {
     id : string!
-    topic : string
-    studentLevel : string
-    explanation : string
-    questionsAsked : number
-    correctAnswers : number
-    sessionStatus : string
-    error : string
+    topic : string = ""
+    studentLevel : string = "unknown"
+    explanation : string = ""
+    questionsAsked : number = 0
+    correctAnswers : number = 0
+    sessionStatus : string = "idle"
+    error : string = ""
   }
   trait TeachingSession -> TutorSession [interaction] {
     initial: idle
@@ -53,8 +54,11 @@ orbital TutorSessionOrbital {
       ASSESSMENT_DONE internal { level: string }
       ASSESSMENT_DONE external { level: string }
     }
+    listens {
+      START_SESSION { topic : string! }
+    }
   }
-  page "/teach" -> TeachingSession
+  page "/teach" as TeachPage -> TeachingSession
 }
 orbital QuizQuestionOrbital {
   entity QuizQuestion [runtime] {
@@ -259,8 +263,7 @@ orbital ConceptOrbital {
     state active {
       RECALL -> active
         (agent/recall @payload.query)
-      PIN -> active
-        ? (not (agent/is-pinned @payload.id))
+      PIN -> active when (not (agent/is-pinned @payload.id))
         (agent/pin @payload.id)
         (set @entity.pinned true)
         (emit PINNED)
@@ -376,13 +379,13 @@ orbital StudentAssessmentOrbital {
 orbital TutorNavOrbital {
   entity TutorNav [runtime] {
     id : string!
-    topic : string
-    studentLevel : string
-    explanation : string
-    questionsAsked : number
-    correctAnswers : number
-    sessionStatus : string
-    error : string
+    topic : string = ""
+    studentLevel : string = "unknown"
+    explanation : string = ""
+    questionsAsked : number = 0
+    correctAnswers : number = 0
+    sessionStatus : string = "idle"
+    error : string = ""
   }
   trait TutorTabs = Tabs.traits.TabContentTabs -> TutorSession {
     on INIT {

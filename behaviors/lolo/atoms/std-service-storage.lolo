@@ -1,17 +1,18 @@
-;; app std-service-storage
+app std-service-storage "1.0.0"
+"std-service-storage as a Function"
 
 orbital ServiceStorageOrbital {
   entity ServiceStorage [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    bucket : string
+    bucket : string = "uploads"
     fileKey : string
     prefix : string
     content : string
-    storageStatus : string
+    storageStatus : string = "idle"
     result : string
     error : string
   }
@@ -54,6 +55,10 @@ orbital ServiceStorageOrbital {
         (set @entity.storageStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "stretch", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "ServiceStorage Storage", variant: "h2" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "input", label: "Prefix", bind: "@entity.prefix", placeholder: "path/prefix/" }, { type: "textarea", label: "Content", bind: "@entity.content", placeholder: "File content..." }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD_FILE", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD_FILE", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST_FILES", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] })
     }
+    listens {
+      EXECUTED { data : string! }
+      FAILED { error : string! }
+    }
   }
-  page "/servicestorages" -> ServiceStorageStorage
+  page "/servicestorages" as ServiceStoragePage -> ServiceStorageStorage
 }

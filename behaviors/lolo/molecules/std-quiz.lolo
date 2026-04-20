@@ -1,21 +1,22 @@
-;; app std-quiz
+app std-quiz "1.0.0"
+"std-quiz as a Function"
 
 orbital QuizItemOrbital {
   entity QuizItem [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    question : string
-    answer : string
-    optionA : string
-    optionB : string
-    optionC : string
-    optionD : string
-    difficulty : string
-    currentIndex : number
-    totalQuestions : number
+    question : string = ""
+    answer : string = ""
+    optionA : string = ""
+    optionB : string = ""
+    optionC : string = ""
+    optionD : string = ""
+    difficulty : string = "medium"
+    currentIndex : number = 0
+    totalQuestions : number = 3
   }
   trait QuizItemQuiz -> QuizItem [interaction] {
     initial: question
@@ -39,6 +40,9 @@ orbital QuizItemOrbital {
         (fetch QuizItem)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "help-circle", size: "lg" }, { type: "typography", content: "Quiz", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", align: "center", children: [{ type: "icon", name: "help-circle", size: "lg" }, { type: "typography", variant: "h3", content: ["object/get", ["array/first", "@entity"], "name"] }] }] }, { type: "simple-grid", columns: 2, children: [{ type: "button", label: ["object/get", ["array/first", "@entity"], "optionA"], event: "ANSWER", variant: "secondary", actionPayload: { answer: "A" } }, { type: "button", label: ["object/get", ["array/first", "@entity"], "optionB"], event: "ANSWER", variant: "secondary", actionPayload: { answer: "B" } }, { type: "button", label: ["object/get", ["array/first", "@entity"], "optionC"], event: "ANSWER", variant: "secondary", actionPayload: { answer: "C" } }, { type: "button", label: ["object/get", ["array/first", "@entity"], "optionD"], event: "ANSWER", variant: "secondary", actionPayload: { answer: "D" } }] }, { type: "stack", direction: "horizontal", gap: "md", align: "center", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "signal", size: "sm" }, { type: "typography", variant: "caption", color: "muted", content: "Difficulty:" }, { type: "badge", label: ["object/get", ["array/first", "@entity"], "difficulty"] }] }, { type: "stack", direction: "horizontal", gap: "xs", align: "center", children: [{ type: "typography", variant: "caption", color: "muted", content: "Question" }, { type: "typography", variant: "caption", content: ["+", ["or", ["object/get", ["array/first", "@entity"], "currentIndex"], 0], 1] }, { type: "typography", variant: "caption", color: "muted", content: "of" }, { type: "typography", variant: "caption", content: ["or", ["object/get", ["array/first", "@entity"], "totalQuestions"], 0] }] }] }] })
     }
+    listens {
+      ANSWER { answer : string! }
+    }
   }
-  page "/quizitems/quiz" -> QuizItemQuiz
+  page "/quizitems/quiz" as QuizItemQuizPage -> QuizItemQuiz
 }

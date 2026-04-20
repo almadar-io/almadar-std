@@ -1,25 +1,26 @@
-;; app std-service-devops-toolkit
+app std-service-devops-toolkit "1.0.0"
+"std-service-devops-toolkit as a Function"
 
 orbital ServiceDevopsToolkitOrbital {
   entity ServiceDevopsToolkit [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    title : string
-    body : string
-    head : string
-    base : string
-    prUrl : string
-    cacheKey : string
-    cacheValue : string
-    bucket : string
-    fileKey : string
-    result : string
-    toolStatus : string
-    activeTab : string
-    error : string
+    title : string = ""
+    body : string = ""
+    head : string = ""
+    base : string = "main"
+    prUrl : string = ""
+    cacheKey : string = ""
+    cacheValue : string = ""
+    bucket : string = "uploads"
+    fileKey : string = ""
+    result : string = ""
+    toolStatus : string = "idle"
+    activeTab : string = "github"
+    error : string = ""
   }
   trait ServiceDevopsToolkitGithub -> ServiceDevopsToolkit [interaction] {
     initial: ghIdle
@@ -50,6 +51,10 @@ orbital ServiceDevopsToolkitOrbital {
       GH_RETRY -> ghIdle
         (set @entity.toolStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "git-pull-request", size: "lg" }, { type: "typography", content: "GitHub: Create PR", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Title", bind: "@entity.title", placeholder: "PR title" }, { type: "textarea", label: "Body", bind: "@entity.body", placeholder: "Describe your changes..." }, { type: "input", label: "Head Branch", bind: "@entity.head", placeholder: "feature-branch" }, { type: "input", label: "Base Branch", bind: "@entity.base", placeholder: "main" }, { type: "button", label: "Create PR", event: "CREATE_PR", variant: "primary", icon: "git-pull-request" }] })
+    }
+    listens {
+      PR_CREATED { url : string! }
+      GH_FAILED { error : string! }
     }
   }
   trait ServiceDevopsToolkitRedis -> ServiceDevopsToolkit [interaction] {
@@ -87,6 +92,10 @@ orbital ServiceDevopsToolkitOrbital {
       REDIS_RETRY -> redisIdle
         (set @entity.toolStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "database", size: "lg" }, { type: "typography", content: "Redis Cache", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Key", bind: "@entity.cacheKey", placeholder: "cache-key" }, { type: "input", label: "Value", bind: "@entity.cacheValue", placeholder: "cache-value" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Get", event: "GET_KEY", variant: "primary", icon: "download" }, { type: "button", label: "Set", event: "SET_KEY", variant: "primary", icon: "upload" }, { type: "button", label: "Delete", event: "DELETE_KEY", variant: "destructive", icon: "trash-2" }] }] })
+    }
+    listens {
+      REDIS_DONE { data : string! }
+      REDIS_FAILED { error : string! }
     }
   }
   trait ServiceDevopsToolkitStorage -> ServiceDevopsToolkit [interaction] {
@@ -128,6 +137,10 @@ orbital ServiceDevopsToolkitOrbital {
         (set @entity.toolStatus idle)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", align: "center", children: [{ type: "icon", name: "hard-drive", size: "lg" }, { type: "typography", content: "Storage Files", variant: "h3" }] }, { type: "divider" }, { type: "input", label: "Bucket", bind: "@entity.bucket", placeholder: "bucket-name" }, { type: "input", label: "File Key", bind: "@entity.fileKey", placeholder: "path/to/file.txt" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "center", children: [{ type: "button", label: "Upload", event: "UPLOAD", variant: "primary", icon: "upload" }, { type: "button", label: "Download", event: "DOWNLOAD", variant: "secondary", icon: "download" }, { type: "button", label: "List", event: "LIST", variant: "secondary", icon: "list" }, { type: "button", label: "Delete", event: "DELETE_FILE", variant: "destructive", icon: "trash-2" }] }] })
     }
+    listens {
+      STORAGE_DONE { data : string! }
+      STORAGE_FAILED { error : string! }
+    }
   }
-  page "/servicedevopstoolkits" -> ServiceDevopsToolkitGithub, ServiceDevopsToolkitRedis, ServiceDevopsToolkitStorage
+  page "/servicedevopstoolkits" as ServiceDevopsToolkitPage -> ServiceDevopsToolkitGithub, ServiceDevopsToolkitRedis, ServiceDevopsToolkitStorage
 }

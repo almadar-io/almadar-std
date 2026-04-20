@@ -1,14 +1,15 @@
-;; app std-platformer-app
+app std-platformer-app "1.0.0"
+"std-platformer-app as a Function"
 
 orbital PlatLevelOrbital {
   entity PlatLevel [runtime] {
     id : string!
-    level : number
-    score : number
-    lives : number
-    time : number
-    player : string
-    platforms : string
+    level : number = 1
+    score : number = 0
+    lives : number = 3
+    time : number = 0
+    player : string = ""
+    platforms : string = ""
   }
   trait PlatLevelPlatformerFlow -> PlatLevel [interaction] {
     initial: menu
@@ -63,14 +64,14 @@ orbital PlatLevelOrbital {
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "platformer-canvas", platforms: "@entity.platforms", player: "@entity.player", canvasWidth: 800, canvasHeight: 400, worldWidth: 2400, worldHeight: 400, followCamera: true, bgColor: "#1a1a2e", leftEvent: "LEFT", rightEvent: "RIGHT", jumpEvent: "JUMP", stopEvent: "STOP" }] })
     }
   }
-  page "/game" -> PlatLevelPlatformerFlow, PlatLevelPlatformerCanvas
+  page "/game" as GamePage -> PlatLevelPlatformerFlow, PlatLevelPlatformerCanvas
 }
 orbital PlatScoreOrbital {
   entity PlatScore [runtime] {
     id : string!
     playerName : string!
-    score : number!
-    level : number
+    score : number! = 0
+    level : number = 1
     completedAt : string
     highScore : number
     combo : number

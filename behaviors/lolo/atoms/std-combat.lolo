@@ -1,15 +1,16 @@
-;; app std-combat
+app std-combat "1.0.0"
+"std-combat as a Function"
 
 orbital CombatantOrbital {
   entity Combatant [runtime] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    hp : number
-    attack : number
-    defense : number
+    hp : number = 100
+    attack : number = 10
+    defense : number = 5
   }
   trait CombatantCombat -> Combatant [interaction] {
     initial: ready
@@ -36,6 +37,10 @@ orbital CombatantOrbital {
       RESET -> ready
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", align: "center", children: [{ type: "game-hud", position: "top", stats: [{ label: "HP", value: "@entity.hp" }, { label: "Attack", value: "@entity.attack" }, { label: "Defense", value: "@entity.defense" }] }, { type: "button", label: "Attack", event: "ATTACK", variant: "primary", icon: "swords" }] })
     }
+    listens {
+      ATTACK { targetId : string! }
+      HIT { damage : number! }
+    }
   }
-  page "/combatants" -> CombatantCombat
+  page "/combatants" as CombatantPage -> CombatantCombat
 }

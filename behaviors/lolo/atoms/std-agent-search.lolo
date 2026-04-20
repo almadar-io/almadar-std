@@ -1,16 +1,17 @@
-;; app std-agent-search
+app std-agent-search "1.0.0"
+"std-agent-search as a Function"
 
 orbital AgentSearchOrbital {
   entity AgentSearch [persistent: agentsearchs] {
     id : string
     name : string
     description : string
-    status : string
+    status : "active" | "inactive" | "pending" = "active"
     createdAt : string
-    query : string
-    results : [string]
-    language : string
-    resultCount : number
+    query : string = ""
+    results : [string] = []
+    language : string = ""
+    resultCount : number = 0
   }
   trait AgentSearchBrowse -> AgentSearch [interaction] {
     state browsing {
@@ -20,6 +21,7 @@ orbital AgentSearchOrbital {
     }
     listens {
       * SEARCHED -> INIT
+      VIEW { id : string!, row : object }
     }
   }
   trait AgentSearchAgent -> AgentSearch [interaction] {
@@ -54,7 +56,8 @@ orbital AgentSearchOrbital {
     }
     listens {
       * SEARCHED -> INIT
+      SEARCH { query : string!, language : string }
     }
   }
-  page "/agentsearchs" -> AgentSearchBrowse, AgentSearchAgent
+  page "/agentsearchs" as AgentSearchPage -> AgentSearchBrowse, AgentSearchAgent
 }
