@@ -135,23 +135,23 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "spinner",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "spinner"
                         },
                         {
                           "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading BrowseItems…",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
+                      "direction": "vertical",
                       "type": "stack",
-                      "align": "center"
+                      "align": "center",
+                      "className": "max-w-5xl mx-auto w-full py-12"
                     }
                   ]
                 ]
@@ -166,86 +166,86 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
                       "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
+                          "justify": "space-between",
                           "children": [
                             {
                               "type": "stack",
-                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "name": "list",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "type": "icon"
                                 },
                                 {
+                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "BrowseItems",
-                                  "variant": "h2"
+                                  "content": "BrowseItems"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal"
+                              "align": "center"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "justify": "space-between",
                           "direction": "horizontal",
-                          "align": "center"
+                          "align": "center",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No browseitems yet",
                           "columns": [
                             {
-                              "icon": "list",
+                              "label": "Name",
                               "name": "name",
                               "variant": "h4",
-                              "label": "Name"
+                              "icon": "list"
                             },
                             {
+                              "label": "Description",
+                              "variant": "badge",
                               "colorMap": {
                                 "disabled": "neutral",
-                                "error": "destructive",
-                                "completed": "success",
-                                "active": "success",
-                                "scheduled": "warning",
-                                "done": "success",
-                                "inactive": "neutral",
-                                "cancelled": "destructive",
                                 "failed": "destructive",
                                 "archived": "neutral",
                                 "draft": "warning",
-                                "pending": "warning"
+                                "cancelled": "destructive",
+                                "done": "success",
+                                "error": "destructive",
+                                "scheduled": "warning",
+                                "completed": "success",
+                                "inactive": "neutral",
+                                "pending": "warning",
+                                "active": "success"
                               },
-                              "label": "Description",
-                              "name": "description",
-                              "variant": "badge"
+                              "name": "description"
                             },
                             {
                               "label": "Status",
-                              "name": "status",
-                              "variant": "caption"
+                              "variant": "caption",
+                              "name": "status"
                             }
                           ],
-                          "emptyDescription": "Create your first browseitem to get started.",
                           "type": "data-grid",
                           "entity": "BrowseItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No browseitems yet"
+                          "emptyDescription": "Create your first browseitem to get started."
                         },
                         {
-                          "tooltip": "Create",
-                          "icon": "plus",
-                          "label": "Create",
+                          "type": "floating-action-button",
                           "event": "INIT",
-                          "type": "floating-action-button"
+                          "icon": "plus",
+                          "tooltip": "Create",
+                          "label": "Create"
                         }
                       ],
-                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
@@ -260,83 +260,43 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
                       "className": "max-w-5xl mx-auto w-full py-12",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "color": "destructive",
-                          "size": "xl",
-                          "name": "alert-triangle"
+                          "name": "alert-triangle",
+                          "type": "icon",
+                          "size": "xl"
                         },
                         {
                           "content": "Failed to load BrowseItems",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         },
                         {
+                          "variant": "body",
                           "color": "muted",
-                          "type": "typography",
                           "content": "@payload.message",
-                          "variant": "body"
+                          "type": "typography"
                         },
                         {
-                          "label": "Retry",
+                          "variant": "primary",
                           "type": "button",
                           "icon": "rotate-ccw",
-                          "variant": "primary",
-                          "event": "INIT"
+                          "event": "INIT",
+                          "label": "Retry"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BrowseItem",
-                    {
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "size": "lg",
-                          "type": "spinner"
-                        },
-                        {
-                          "content": "Refreshing…",
-                          "variant": "caption",
-                          "color": "muted",
-                          "type": "typography"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
                 "to": "loading",
                 "event": "INIT",
                 "effects": [
@@ -354,23 +314,63 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "align": "center",
                       "direction": "vertical",
-                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "spinner",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "spinner"
                         },
                         {
-                          "content": "Retrying…",
-                          "type": "typography",
                           "color": "muted",
+                          "type": "typography",
+                          "content": "Refreshing…",
                           "variant": "caption"
                         }
                       ],
+                      "className": "max-w-5xl mx-auto w-full py-12",
+                      "gap": "lg",
                       "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "lg",
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Retrying…"
+                        }
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "className": "max-w-5xl mx-auto w-full py-12"
                     }
                   ]
                 ]

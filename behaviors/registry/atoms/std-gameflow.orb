@@ -175,8 +175,8 @@
                     "GameSession",
                     {
                       "emit": {
-                        "success": "GameSessionLoaded",
-                        "failure": "GameSessionLoadFailed"
+                        "failure": "GameSessionLoadFailed",
+                        "success": "GameSessionLoaded"
                       }
                     }
                   ],
@@ -184,16 +184,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "game-menu",
-                      "title": "GameSession",
                       "subtitle": "Main Menu",
+                      "type": "game-menu",
                       "menuItems": [
                         {
+                          "variant": "primary",
                           "label": "Start Game",
-                          "event": "START",
-                          "variant": "primary"
+                          "event": "START"
                         }
-                      ]
+                      ],
+                      "title": "GameSession"
                     }
                   ]
                 ]
@@ -203,6 +203,137 @@
                 "to": "playing",
                 "event": "START",
                 "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-hud",
+                      "stats": [
+                        {
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "score"
+                          ],
+                          "label": "Score"
+                        },
+                        {
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "level"
+                          ],
+                          "label": "Level"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "menu",
+                "to": "menu",
+                "event": "NAVIGATE"
+              },
+              {
+                "from": "playing",
+                "to": "paused",
+                "event": "PAUSE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    {
+                      "type": "game-menu",
+                      "title": "Paused",
+                      "menuItems": [
+                        {
+                          "label": "Resume",
+                          "event": "RESUME",
+                          "variant": "primary"
+                        },
+                        {
+                          "variant": "ghost",
+                          "label": "Quit",
+                          "event": "RESTART"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "playing",
+                "to": "gameover",
+                "event": "GAME_OVER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-over-screen",
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "score"
+                          ]
+                        },
+                        {
+                          "value": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "level"
+                          ],
+                          "label": "Level"
+                        }
+                      ],
+                      "title": "Game Over",
+                      "menuItems": [
+                        {
+                          "event": "RESTART",
+                          "variant": "primary",
+                          "label": "Play Again"
+                        },
+                        {
+                          "label": "Main Menu",
+                          "variant": "secondary",
+                          "event": "RESTART"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "paused",
+                "to": "paused",
+                "event": "NAVIGATE"
+              },
+              {
+                "from": "paused",
+                "to": "playing",
+                "event": "RESUME",
+                "effects": [
+                  [
+                    "render-ui",
+                    "modal",
+                    null
+                  ],
                   [
                     "render-ui",
                     "main",
@@ -237,97 +368,9 @@
                 ]
               },
               {
-                "from": "menu",
-                "to": "menu",
-                "event": "NAVIGATE"
-              },
-              {
-                "from": "playing",
-                "to": "paused",
-                "event": "PAUSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    {
-                      "type": "game-menu",
-                      "title": "Paused",
-                      "menuItems": [
-                        {
-                          "label": "Resume",
-                          "event": "RESUME",
-                          "variant": "primary"
-                        },
-                        {
-                          "label": "Quit",
-                          "variant": "ghost",
-                          "event": "RESTART"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "playing",
-                "to": "gameover",
-                "event": "GAME_OVER",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "Game Over",
-                      "stats": [
-                        {
-                          "label": "Score",
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "score"
-                          ]
-                        },
-                        {
-                          "label": "Level",
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "level"
-                          ]
-                        }
-                      ],
-                      "menuItems": [
-                        {
-                          "label": "Play Again",
-                          "variant": "primary",
-                          "event": "RESTART"
-                        },
-                        {
-                          "variant": "secondary",
-                          "event": "RESTART",
-                          "label": "Main Menu"
-                        }
-                      ],
-                      "type": "game-over-screen"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "paused",
-                "to": "paused",
-                "event": "NAVIGATE"
-              },
-              {
                 "from": "paused",
                 "to": "playing",
-                "event": "RESUME",
+                "event": "CLOSE",
                 "effects": [
                   [
                     "render-ui",
@@ -338,6 +381,7 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-hud",
                       "stats": [
                         {
                           "value": [
@@ -361,51 +405,7 @@
                           ],
                           "label": "Level"
                         }
-                      ],
-                      "type": "game-hud"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "paused",
-                "to": "playing",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "modal",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "stats": [
-                        {
-                          "label": "Score",
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "score"
-                          ]
-                        },
-                        {
-                          "label": "Level",
-                          "value": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "level"
-                          ]
-                        }
-                      ],
-                      "type": "game-hud"
+                      ]
                     }
                   ]
                 ]
@@ -424,16 +424,16 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "game-menu",
+                      "title": "GameSession",
                       "menuItems": [
                         {
-                          "label": "Start Game",
                           "variant": "primary",
+                          "label": "Start Game",
                           "event": "START"
                         }
                       ],
-                      "subtitle": "Main Menu",
-                      "type": "game-menu",
-                      "title": "GameSession"
+                      "subtitle": "Main Menu"
                     }
                   ]
                 ]
@@ -447,14 +447,14 @@
                     "render-ui",
                     "main",
                     {
-                      "subtitle": "Main Menu",
                       "type": "game-menu",
                       "title": "GameSession",
+                      "subtitle": "Main Menu",
                       "menuItems": [
                         {
                           "event": "START",
-                          "label": "Start Game",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "label": "Start Game"
                         }
                       ]
                     }

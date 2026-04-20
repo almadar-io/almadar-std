@@ -264,8 +264,8 @@
                     "ServiceOauth",
                     {
                       "emit": {
-                        "failure": "ServiceOauthLoadFailed",
-                        "success": "ServiceOauthLoaded"
+                        "success": "ServiceOauthLoaded",
+                        "failure": "ServiceOauthLoadFailed"
                       }
                     }
                   ],
@@ -273,32 +273,36 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
-                              "name": "lock"
+                              "name": "lock",
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
-                              "content": "Sign In",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "Sign In"
                             }
                           ],
                           "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "field": "provider",
                           "type": "select",
+                          "label": "Provider",
+                          "field": "provider",
                           "bind": "@entity.provider",
                           "options": [
                             {
@@ -310,23 +314,19 @@
                               "label": "GitHub"
                             },
                             {
-                              "value": "microsoft",
-                              "label": "Microsoft"
+                              "label": "Microsoft",
+                              "value": "microsoft"
                             }
-                          ],
-                          "label": "Provider"
+                          ]
                         },
                         {
-                          "type": "button",
-                          "event": "LOGIN",
                           "variant": "primary",
+                          "icon": "log-in",
+                          "type": "button",
                           "label": "Login",
-                          "icon": "log-in"
+                          "event": "LOGIN"
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center"
+                      ]
                     }
                   ]
                 ]
@@ -340,9 +340,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "title": "Authorizing...",
-                      "message": "Redirecting to provider for authorization."
+                      "message": "Redirecting to provider for authorization.",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -350,11 +350,11 @@
                     "oauth",
                     "authorize",
                     {
+                      "provider": "@entity.provider",
                       "scopes": [
                         "openid",
                         "email"
-                      ],
-                      "provider": "@entity.provider"
+                      ]
                     }
                   ]
                 ]
@@ -373,7 +373,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
@@ -382,32 +381,33 @@
                           "name": "external-link"
                         },
                         {
+                          "variant": "h2",
                           "content": "Authorization Required",
-                          "type": "typography",
-                          "variant": "h2"
+                          "type": "typography"
                         },
                         {
-                          "type": "typography",
-                          "content": "@entity.authUrl",
+                          "color": "muted",
                           "variant": "body",
-                          "color": "muted"
+                          "type": "typography",
+                          "content": "@entity.authUrl"
                         },
                         {
-                          "type": "input",
-                          "label": "Authorization Code",
                           "placeholder": "Paste authorization code here",
-                          "field": "code"
+                          "field": "code",
+                          "label": "Authorization Code",
+                          "type": "input"
                         },
                         {
-                          "type": "button",
-                          "label": "Submit",
                           "event": "CALLBACK",
+                          "type": "button",
                           "variant": "primary",
-                          "icon": "check"
+                          "icon": "check",
+                          "label": "Submit"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -429,7 +429,7 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "gap": "lg",
                       "align": "center",
                       "children": [
                         {
@@ -439,34 +439,34 @@
                         },
                         {
                           "variant": "success",
-                          "type": "alert",
-                          "message": "Authenticated successfully"
+                          "message": "Authenticated successfully",
+                          "type": "alert"
                         },
                         {
+                          "justify": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
                               "event": "REFRESH",
                               "label": "Refresh Token",
-                              "variant": "outline",
-                              "icon": "refresh-cw"
+                              "type": "button",
+                              "icon": "refresh-cw",
+                              "variant": "outline"
                             },
                             {
-                              "icon": "log-out",
-                              "type": "button",
                               "event": "LOGOUT",
+                              "type": "button",
                               "label": "Logout",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "icon": "log-out"
                             }
                           ],
-                          "type": "stack",
                           "gap": "sm",
-                          "justify": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         }
                       ],
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -485,24 +485,24 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "gap": "lg",
                       "children": [
                         {
-                          "title": "Authentication Failed",
-                          "message": "@entity.error",
                           "onRetry": "RETRY",
-                          "type": "error-state"
+                          "message": "@entity.error",
+                          "type": "error-state",
+                          "title": "Authentication Failed"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "label": "Try Again",
                           "type": "button",
+                          "variant": "primary",
                           "event": "RETRY",
-                          "variant": "primary"
+                          "icon": "rotate-ccw",
+                          "label": "Try Again"
                         }
                       ],
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical"
                     }
                   ]
@@ -532,44 +532,44 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "align": "center",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "check-circle",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
-                          "type": "alert",
+                          "message": "Authenticated successfully",
                           "variant": "success",
-                          "message": "Authenticated successfully"
+                          "type": "alert"
                         },
                         {
-                          "gap": "sm",
                           "children": [
                             {
-                              "icon": "refresh-cw",
-                              "event": "REFRESH",
-                              "type": "button",
                               "variant": "outline",
-                              "label": "Refresh Token"
+                              "label": "Refresh Token",
+                              "type": "button",
+                              "event": "REFRESH",
+                              "icon": "refresh-cw"
                             },
                             {
+                              "variant": "ghost",
                               "type": "button",
                               "label": "Logout",
-                              "variant": "ghost",
-                              "icon": "log-out",
-                              "event": "LOGOUT"
+                              "event": "LOGOUT",
+                              "icon": "log-out"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal",
-                          "justify": "center",
-                          "type": "stack"
+                          "gap": "sm",
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -612,15 +612,13 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "align": "center",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
+                              "size": "lg",
                               "name": "lock"
                             },
                             {
@@ -630,42 +628,44 @@
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md"
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "label": "Provider",
-                          "field": "provider",
                           "type": "select",
-                          "bind": "@entity.provider",
                           "options": [
                             {
-                              "value": "google",
-                              "label": "Google"
+                              "label": "Google",
+                              "value": "google"
                             },
                             {
                               "value": "github",
                               "label": "GitHub"
                             },
                             {
-                              "value": "microsoft",
-                              "label": "Microsoft"
+                              "label": "Microsoft",
+                              "value": "microsoft"
                             }
-                          ]
+                          ],
+                          "field": "provider",
+                          "bind": "@entity.provider"
                         },
                         {
-                          "type": "button",
-                          "icon": "log-in",
                           "event": "LOGIN",
+                          "type": "button",
                           "label": "Login",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "icon": "log-in"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -684,44 +684,44 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "size": "lg",
+                          "type": "icon",
                           "name": "check-circle",
-                          "type": "icon"
+                          "size": "lg"
                         },
                         {
-                          "type": "alert",
+                          "variant": "success",
                           "message": "Authenticated successfully",
-                          "variant": "success"
+                          "type": "alert"
                         },
                         {
-                          "gap": "sm",
                           "justify": "center",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "icon": "refresh-cw",
+                              "type": "button",
                               "event": "REFRESH",
                               "label": "Refresh Token",
-                              "type": "button",
-                              "variant": "outline",
-                              "icon": "refresh-cw"
+                              "variant": "outline"
                             },
                             {
-                              "type": "button",
                               "label": "Logout",
-                              "event": "LOGOUT",
                               "icon": "log-out",
-                              "variant": "ghost"
+                              "type": "button",
+                              "variant": "ghost",
+                              "event": "LOGOUT"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "align": "center",
                       "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -740,25 +740,25 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "message": "@entity.error",
                           "title": "Authentication Failed",
-                          "onRetry": "RETRY",
-                          "type": "error-state"
+                          "type": "error-state",
+                          "message": "@entity.error",
+                          "onRetry": "RETRY"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "variant": "primary",
                           "type": "button",
                           "event": "RETRY",
+                          "icon": "rotate-ccw",
+                          "variant": "primary",
                           "label": "Try Again"
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -772,24 +772,27 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
+                              "type": "icon",
                               "name": "lock",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
                               "content": "Sign In",
-                              "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
                           "gap": "md",
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -797,6 +800,7 @@
                         {
                           "type": "select",
                           "bind": "@entity.provider",
+                          "label": "Provider",
                           "options": [
                             {
                               "label": "Google",
@@ -811,21 +815,17 @@
                               "value": "microsoft"
                             }
                           ],
-                          "label": "Provider",
                           "field": "provider"
                         },
                         {
+                          "event": "LOGIN",
                           "type": "button",
-                          "label": "Login",
-                          "icon": "log-in",
                           "variant": "primary",
-                          "event": "LOGIN"
+                          "icon": "log-in",
+                          "label": "Login"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
