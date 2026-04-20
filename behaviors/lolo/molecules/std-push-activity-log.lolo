@@ -17,7 +17,12 @@ orbital PushActivityLogOrbital {
   }
 
   trait PushActivityPush = Push.traits.PushSubscriberIndicator    -> PushActivityItem {}
-  trait PushActivityLog  = ActivityLog.traits.AgentActivityLogLog -> PushActivityItem {}
+  trait PushActivityLog  = ActivityLog.traits.AgentActivityLogLog -> PushActivityItem {
+    listens {
+      PushActivityPush PUSH_RECEIVED     -> LOG_ENTRY
+      PushActivityPush PUSH_DISCONNECTED -> LOG_ENTRY
+    }
+  }
 
   trait PushActivityLayout -> PushActivityItem [interaction, instance] {
     state composing {

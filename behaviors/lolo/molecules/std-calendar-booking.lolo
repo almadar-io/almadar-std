@@ -17,7 +17,12 @@ orbital BookingOrbital {
     status : string
   }
 
-  trait BookingCalendar     = Calendar.traits.CalendarEventCalendar        -> Booking {}
+  trait BookingCalendar     = Calendar.traits.CalendarEventCalendar        -> Booking {
+    listens {
+      BookingModal SAVE -> INIT
+      BookingConfirmation CONFIRM -> INIT
+    }
+  }
   trait BookingModal        = Modal.traits.ModalRecordModal                -> Booking {}
   trait BookingConfirmation = Confirmation.traits.ConfirmActionConfirmation -> Booking {}
 

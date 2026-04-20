@@ -135,6 +135,7 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "max-w-5xl mx-auto w-full py-12",
                       "children": [
                         {
                           "type": "spinner",
@@ -142,16 +143,15 @@
                         },
                         {
                           "type": "typography",
+                          "content": "Loading BrowseItems…",
                           "variant": "caption",
-                          "color": "muted",
-                          "content": "Loading BrowseItems…"
+                          "color": "muted"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
                       "direction": "vertical",
                       "align": "center",
-                      "className": "max-w-5xl mx-auto w-full py-12"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -165,19 +165,20 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
+                      "type": "stack",
                       "children": [
                         {
-                          "align": "center",
+                          "type": "stack",
+                          "justify": "space-between",
+                          "direction": "horizontal",
                           "gap": "md",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
                                   "name": "list",
@@ -185,68 +186,67 @@
                                   "size": "lg"
                                 },
                                 {
+                                  "content": "BrowseItems",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "BrowseItems"
+                                  "variant": "h2"
                                 }
                               ]
                             }
-                          ],
-                          "justify": "space-between",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "BrowseItem",
-                          "emptyIcon": "inbox",
-                          "emptyDescription": "Create your first browseitem to get started.",
                           "type": "data-grid",
-                          "emptyTitle": "No browseitems yet",
+                          "emptyDescription": "Create your first browseitem to get started.",
                           "columns": [
                             {
+                              "name": "name",
                               "icon": "list",
                               "label": "Name",
-                              "name": "name",
                               "variant": "h4"
                             },
                             {
+                              "name": "description",
                               "colorMap": {
+                                "disabled": "neutral",
+                                "error": "destructive",
                                 "cancelled": "destructive",
-                                "failed": "destructive",
-                                "scheduled": "warning",
+                                "active": "success",
                                 "inactive": "neutral",
                                 "archived": "neutral",
-                                "active": "success",
-                                "pending": "warning",
-                                "disabled": "neutral",
-                                "draft": "warning",
-                                "error": "destructive",
                                 "completed": "success",
-                                "done": "success"
+                                "draft": "warning",
+                                "failed": "destructive",
+                                "done": "success",
+                                "scheduled": "warning",
+                                "pending": "warning"
                               },
-                              "name": "description",
-                              "variant": "badge",
-                              "label": "Description"
+                              "label": "Description",
+                              "variant": "badge"
                             },
                             {
-                              "name": "status",
                               "variant": "caption",
+                              "name": "status",
                               "label": "Status"
                             }
-                          ]
+                          ],
+                          "entity": "BrowseItem",
+                          "emptyTitle": "No browseitems yet",
+                          "emptyIcon": "inbox"
                         },
                         {
-                          "type": "floating-action-button",
                           "icon": "plus",
-                          "label": "Create",
                           "tooltip": "Create",
-                          "event": "INIT"
+                          "type": "floating-action-button",
+                          "event": "INIT",
+                          "label": "Create"
                         }
                       ],
-                      "type": "stack"
+                      "className": "max-w-5xl mx-auto w-full",
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -263,9 +263,9 @@
                       "className": "max-w-5xl mx-auto w-full py-12",
                       "children": [
                         {
-                          "size": "xl",
                           "type": "icon",
                           "name": "alert-triangle",
+                          "size": "xl",
                           "color": "destructive"
                         },
                         {
@@ -274,29 +274,69 @@
                           "variant": "h3"
                         },
                         {
-                          "type": "typography",
                           "content": "@payload.message",
                           "variant": "body",
+                          "type": "typography",
                           "color": "muted"
                         },
                         {
-                          "type": "button",
-                          "variant": "primary",
                           "label": "Retry",
                           "icon": "rotate-ccw",
-                          "event": "INIT"
+                          "event": "INIT",
+                          "variant": "primary",
+                          "type": "button"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "md",
                       "type": "stack",
-                      "align": "center"
+                      "align": "center",
+                      "direction": "vertical",
+                      "gap": "md"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full py-12",
+                      "children": [
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Refreshing…",
+                          "color": "muted",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
                 "to": "loading",
                 "event": "INIT",
                 "effects": [
@@ -316,61 +356,21 @@
                     {
                       "children": [
                         {
-                          "size": "lg",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "lg"
                         },
                         {
                           "color": "muted",
                           "type": "typography",
-                          "content": "Refreshing…",
-                          "variant": "caption"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BrowseItem",
-                    {
-                      "emit": {
-                        "success": "BrowseItemLoaded",
-                        "failure": "BrowseItemLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "children": [
-                        {
-                          "size": "lg",
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
                           "variant": "caption",
-                          "type": "typography",
                           "content": "Retrying…"
                         }
                       ],
-                      "align": "center"
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full py-12"
                     }
                   ]
                 ]

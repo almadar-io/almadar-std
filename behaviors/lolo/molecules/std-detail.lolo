@@ -28,12 +28,14 @@ orbital DetailRecordOrbital {
     }
     listens {
       BrowseItemLoadFailed { message : string }
+      DetailRecordCreate DETAIL_RECORD_CREATED -> INIT
     }
   }
 
   trait DetailRecordCreate = Modal.traits.ModalRecordModal -> DetailRecord {
     events {
       OPEN: CREATE
+      SAVE: DETAIL_RECORD_CREATED
     }
     on INIT {
       (fetch DetailRecord)
@@ -46,16 +48,17 @@ orbital DetailRecordOrbital {
         (render-ui main { type: "box" })
       (notify Cancelled info)
     }
-    on SAVE {
+    on DETAIL_RECORD_CREATED {
       (persist create DetailRecord @payload.data)
       (render-ui modal null)
-        (render-ui main { type: "box" })
+      (render-ui main { type: "box" })
     }
   }
 
   trait DetailRecordView = Modal.traits.ModalRecordModal -> DetailRecord {
     events {
       OPEN: VIEW
+      SAVE: DETAIL_RECORD_VIEWED
     }
     on INIT {
       (fetch DetailRecord)
@@ -68,9 +71,9 @@ orbital DetailRecordOrbital {
       (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    on SAVE {
+    on DETAIL_RECORD_VIEWED {
       (render-ui modal null)
-        (render-ui main { type: "box" })
+      (render-ui main { type: "box" })
     }
   }
 

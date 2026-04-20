@@ -53,6 +53,24 @@
           "ref": "Browse.traits.BrowseItemBrowse",
           "name": "ChatMessageBrowse",
           "linkedEntity": "ChatMessage",
+          "listens": [
+            {
+              "event": "SEND",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ChatMessageCompose"
+              }
+            },
+            {
+              "event": "MESSAGE_VIEWED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ChatMessageView"
+              }
+            }
+          ],
           "effects": {
             "INIT": [
               [
@@ -63,90 +81,90 @@
                 "render-ui",
                 "main",
                 {
+                  "type": "stack",
+                  "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
                       "type": "stack",
                       "justify": "space-between",
-                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
                               "size": "lg",
-                              "type": "icon",
-                              "name": "message-circle"
+                              "name": "message-circle",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "ChatMessages",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
                           "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
+                          "direction": "horizontal",
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "button",
-                              "event": "COMPOSE",
                               "variant": "primary",
+                              "icon": "edit",
+                              "type": "button",
                               "label": "Compose",
-                              "icon": "edit"
+                              "event": "COMPOSE"
                             }
                           ]
                         }
                       ],
+                      "gap": "md",
                       "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "emptyTitle": "No messages yet",
+                      "emptyDescription": "Start a new conversation.",
+                      "emptyIcon": "inbox",
+                      "entity": "ChatMessage",
+                      "variant": "compact",
+                      "itemActions": [
+                        {
+                          "variant": "ghost",
+                          "label": "View",
+                          "size": "sm",
+                          "event": "VIEW"
+                        }
+                      ],
+                      "type": "data-grid",
                       "columns": [
                         {
-                          "name": "name",
                           "icon": "message-circle",
+                          "name": "name",
                           "label": "Name",
                           "variant": "h4"
                         },
                         {
-                          "label": "Description",
                           "name": "description",
+                          "label": "Description",
                           "variant": "caption"
                         },
                         {
+                          "format": "date",
                           "name": "status",
                           "variant": "caption",
-                          "format": "date",
                           "label": "Status"
                         }
-                      ],
-                      "variant": "compact",
-                      "itemActions": [
-                        {
-                          "event": "VIEW",
-                          "size": "sm",
-                          "variant": "ghost",
-                          "label": "View"
-                        }
-                      ],
-                      "type": "data-grid",
-                      "entity": "ChatMessage",
-                      "emptyDescription": "Start a new conversation.",
-                      "emptyTitle": "No messages yet",
-                      "emptyIcon": "inbox"
+                      ]
                     }
                   ],
-                  "className": "max-w-5xl mx-auto w-full",
                   "gap": "lg",
-                  "type": "stack",
                   "direction": "vertical"
                 }
               ]
@@ -162,26 +180,6 @@
             "SAVE": "SEND"
           },
           "effects": {
-            "SEND": [
-              [
-                "persist",
-                "create",
-                "ChatMessage",
-                "@payload.data"
-              ],
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ]
-            ],
             "INIT": [
               [
                 "ref",
@@ -194,23 +192,23 @@
                 "modal",
                 {
                   "type": "stack",
-                  "direction": "vertical",
                   "gap": "md",
+                  "direction": "vertical",
                   "children": [
                     {
-                      "direction": "horizontal",
                       "gap": "sm",
                       "type": "stack",
+                      "direction": "horizontal",
                       "children": [
                         {
-                          "name": "edit",
                           "size": "md",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "edit"
                         },
                         {
                           "content": "New ChatMessage",
-                          "type": "typography",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "type": "typography"
                         }
                       ]
                     },
@@ -218,15 +216,15 @@
                       "type": "divider"
                     },
                     {
+                      "mode": "create",
+                      "type": "form-section",
+                      "submitEvent": "SEND",
+                      "cancelEvent": "CLOSE",
                       "fields": [
                         "name",
                         "description",
                         "status"
                       ],
-                      "submitEvent": "SEND",
-                      "mode": "create",
-                      "cancelEvent": "CLOSE",
-                      "type": "form-section",
                       "entity": "ChatMessage"
                     }
                   ]
@@ -251,18 +249,14 @@
                 "Cancelled",
                 "info"
               ]
-            ]
-          }
-        },
-        {
-          "ref": "Modal.traits.ModalRecordModal",
-          "name": "ChatMessageView",
-          "linkedEntity": "ChatMessage",
-          "events": {
-            "OPEN": "VIEW"
-          },
-          "effects": {
-            "SAVE": [
+            ],
+            "SEND": [
+              [
+                "persist",
+                "create",
+                "ChatMessage",
+                "@payload.data"
+              ],
               [
                 "render-ui",
                 "modal",
@@ -274,6 +268,23 @@
                 {
                   "type": "box"
                 }
+              ]
+            ]
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ChatMessageView",
+          "linkedEntity": "ChatMessage",
+          "events": {
+            "SAVE": "MESSAGE_VIEWED",
+            "OPEN": "VIEW"
+          },
+          "effects": {
+            "INIT": [
+              [
+                "ref",
+                "ChatMessage"
               ]
             ],
             "CLOSE": [
@@ -295,6 +306,20 @@
                 "info"
               ]
             ],
+            "MESSAGE_VIEWED": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ]
+            ],
             "VIEW": [
               [
                 "fetch",
@@ -307,12 +332,11 @@
                 "render-ui",
                 "modal",
                 {
+                  "gap": "md",
                   "direction": "vertical",
                   "type": "stack",
-                  "gap": "md",
                   "children": [
                     {
-                      "direction": "horizontal",
                       "type": "stack",
                       "gap": "sm",
                       "align": "center",
@@ -323,80 +347,81 @@
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "@entity.name",
+                          "type": "typography",
                           "variant": "h3"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Name"
-                        },
-                        {
-                          "content": "@entity.name",
-                          "type": "typography",
-                          "variant": "body"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "stack",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Description"
-                        },
-                        {
-                          "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.description"
                         }
                       ],
                       "direction": "horizontal"
                     },
                     {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "content": "Status",
-                          "type": "typography",
-                          "variant": "caption"
-                        },
-                        {
-                          "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.status"
-                        }
-                      ],
-                      "gap": "md"
+                      "type": "divider"
                     },
                     {
-                      "direction": "horizontal",
                       "gap": "md",
-                      "type": "stack",
+                      "direction": "horizontal",
                       "children": [
                         {
+                          "content": "Name",
                           "type": "typography",
-                          "content": "Created At",
                           "variant": "caption"
                         },
                         {
                           "variant": "body",
+                          "content": "@entity.name",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack"
+                    },
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Description",
+                          "type": "typography"
+                        },
+                        {
                           "type": "typography",
-                          "content": "@entity.createdAt"
+                          "variant": "body",
+                          "content": "@entity.description"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal"
+                    },
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Status",
+                          "variant": "caption"
+                        },
+                        {
+                          "content": "@entity.status",
+                          "variant": "body",
+                          "type": "typography"
+                        }
+                      ]
+                    },
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Created At",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.createdAt",
+                          "type": "typography"
                         }
                       ]
                     },
@@ -404,8 +429,6 @@
                       "type": "divider"
                     },
                     {
-                      "gap": "sm",
-                      "justify": "end",
                       "children": [
                         {
                           "variant": "ghost",
@@ -414,17 +437,13 @@
                           "type": "button"
                         }
                       ],
+                      "type": "stack",
                       "direction": "horizontal",
-                      "type": "stack"
+                      "gap": "sm",
+                      "justify": "end"
                     }
                   ]
                 }
-              ]
-            ],
-            "INIT": [
-              [
-                "ref",
-                "ChatMessage"
               ]
             ]
           }

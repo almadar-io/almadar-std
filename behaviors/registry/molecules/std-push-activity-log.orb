@@ -48,7 +48,25 @@
         {
           "ref": "ActivityLog.traits.AgentActivityLogLog",
           "name": "PushActivityLog",
-          "linkedEntity": "PushActivityItem"
+          "linkedEntity": "PushActivityItem",
+          "listens": [
+            {
+              "event": "PUSH_RECEIVED",
+              "triggers": "LOG_ENTRY",
+              "source": {
+                "kind": "trait",
+                "trait": "PushActivityPush"
+              }
+            },
+            {
+              "event": "PUSH_DISCONNECTED",
+              "triggers": "LOG_ENTRY",
+              "source": {
+                "kind": "trait",
+                "trait": "PushActivityPush"
+              }
+            }
+          ]
         },
         {
           "name": "PushActivityLayout",
@@ -81,9 +99,9 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "type": "stack",
                       "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         "@trait.PushActivityPush",
                         "@trait.PushActivityLog"

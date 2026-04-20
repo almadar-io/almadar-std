@@ -21,10 +21,16 @@ orbital ListItemOrbital {
         (ref ListItem)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list", size: "lg" }, { type: "typography", content: "ListItems", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create ListItem", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ListItem", emptyIcon: "inbox", emptyTitle: "No listitems yet", emptyDescription: "Create your first listitem to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "list" }, { name: "description", label: "Description", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "status", label: "Status", variant: "caption" }] }] })
     }
+    listens {
+      ListItemCreate LIST_ITEM_CREATED -> INIT
+      ListItemEdit   LIST_ITEM_UPDATED -> INIT
+      ListItemDelete CONFIRM_DELETE    -> INIT
+    }
   }
   trait ListItemCreate = Modal.traits.ModalRecordModal -> ListItem {
     events {
       OPEN: CREATE
+      SAVE: LIST_ITEM_CREATED
     }
     on INIT {
         (ref ListItem)
@@ -38,7 +44,7 @@ orbital ListItemOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
     }
-    on SAVE {
+    on LIST_ITEM_CREATED {
         (persist create ListItem @payload.data)
         (render-ui modal null)
         (render-ui main { type: "box" })
@@ -47,6 +53,7 @@ orbital ListItemOrbital {
   trait ListItemEdit = Modal.traits.ModalRecordModal -> ListItem {
     events {
       OPEN: EDIT
+      SAVE: LIST_ITEM_UPDATED
     }
     on INIT {
         (ref ListItem)
@@ -60,7 +67,7 @@ orbital ListItemOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
     }
-    on SAVE {
+    on LIST_ITEM_UPDATED {
         (persist update ListItem @payload.data)
         (render-ui modal null)
         (render-ui main { type: "box" })
@@ -69,6 +76,7 @@ orbital ListItemOrbital {
   trait ListItemView = Modal.traits.ModalRecordModal -> ListItem {
     events {
       OPEN: VIEW
+      SAVE: LIST_ITEM_VIEWED
     }
     on INIT {
         (ref ListItem)
@@ -82,7 +90,7 @@ orbital ListItemOrbital {
         (render-ui main { type: "box" })
         (notify Cancelled info)
     }
-    on SAVE {
+    on LIST_ITEM_VIEWED {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
