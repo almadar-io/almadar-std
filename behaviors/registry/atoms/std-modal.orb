@@ -46,6 +46,44 @@
             {
               "event": "SAVE",
               "scope": "external"
+            },
+            {
+              "event": "ModalRecordLoaded",
+              "scope": "internal",
+              "description": "Fired when ModalRecord finishes loading",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ModalRecordLoadFailed",
+              "scope": "internal",
+              "description": "Fired when ModalRecord fails to load",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -87,6 +125,14 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "ModalRecordLoaded",
+                "name": "ModalRecord loaded"
+              },
+              {
+                "key": "ModalRecordLoadFailed",
+                "name": "ModalRecord load failed"
               }
             ],
             "transitions": [
@@ -96,8 +142,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "ModalRecord"
+                    "fetch",
+                    "ModalRecord",
+                    {
+                      "emit": {
+                        "success": "ModalRecordLoaded",
+                        "failure": "ModalRecordLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -283,8 +335,14 @@
                     "info"
                   ],
                   [
-                    "ref",
-                    "ModalRecord"
+                    "fetch",
+                    "ModalRecord",
+                    {
+                      "emit": {
+                        "success": "ModalRecordLoaded",
+                        "failure": "ModalRecordLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -351,8 +409,14 @@
                     null
                   ],
                   [
-                    "ref",
-                    "ModalRecord"
+                    "fetch",
+                    "ModalRecord",
+                    {
+                      "emit": {
+                        "success": "ModalRecordLoaded",
+                        "failure": "ModalRecordLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -409,7 +473,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

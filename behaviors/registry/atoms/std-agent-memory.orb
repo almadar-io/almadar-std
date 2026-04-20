@@ -168,6 +168,14 @@
                     "type": "object"
                   }
                 ]
+              },
+              {
+                "key": "AgentMemoryLoaded",
+                "name": "AgentMemory loaded"
+              },
+              {
+                "key": "AgentMemoryLoadFailed",
+                "name": "AgentMemory load failed"
               }
             ],
             "transitions": [
@@ -177,8 +185,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "AgentMemory"
+                    "fetch",
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -312,7 +326,72 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection",
+          "emits": [
+            {
+              "event": "AgentMemoryLoaded",
+              "scope": "internal",
+              "description": "Fired when AgentMemory finishes loading",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "strength",
+                  "type": "number"
+                },
+                {
+                  "name": "pinned",
+                  "type": "boolean"
+                },
+                {
+                  "name": "scope",
+                  "type": "string"
+                },
+                {
+                  "name": "lastAccessedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentMemoryLoadFailed",
+              "scope": "internal",
+              "description": "Fired when AgentMemory fails to load",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ]
         },
         {
           "name": "AgentMemoryCreate",
@@ -326,6 +405,68 @@
             {
               "event": "MEMORIZED",
               "scope": "external"
+            },
+            {
+              "event": "AgentMemoryLoaded",
+              "scope": "internal",
+              "description": "Fired when AgentMemory finishes loading",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "strength",
+                  "type": "number"
+                },
+                {
+                  "name": "pinned",
+                  "type": "boolean"
+                },
+                {
+                  "name": "scope",
+                  "type": "string"
+                },
+                {
+                  "name": "lastAccessedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentMemoryLoadFailed",
+              "scope": "internal",
+              "description": "Fired when AgentMemory fails to load",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -361,6 +502,14 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "AgentMemoryLoaded",
+                "name": "AgentMemory loaded"
+              },
+              {
+                "key": "AgentMemoryLoadFailed",
+                "name": "AgentMemory load failed"
               }
             ],
             "transitions": [
@@ -370,8 +519,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "AgentMemory"
+                    "fetch",
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -465,7 +620,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         },
         {
           "name": "AgentMemoryAgent",
@@ -747,7 +903,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

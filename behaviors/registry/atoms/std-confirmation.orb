@@ -51,6 +51,48 @@
             {
               "event": "CONFIRM",
               "scope": "external"
+            },
+            {
+              "event": "ConfirmActionLoaded",
+              "scope": "internal",
+              "description": "Fired when ConfirmAction finishes loading",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ConfirmActionLoadFailed",
+              "scope": "internal",
+              "description": "Fired when ConfirmAction fails to load",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -90,6 +132,14 @@
               {
                 "key": "CLOSE",
                 "name": "Close"
+              },
+              {
+                "key": "ConfirmActionLoaded",
+                "name": "ConfirmAction loaded"
+              },
+              {
+                "key": "ConfirmActionLoadFailed",
+                "name": "ConfirmAction load failed"
               }
             ],
             "transitions": [
@@ -99,8 +149,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "ConfirmAction"
+                    "fetch",
+                    "ConfirmAction",
+                    {
+                      "emit": {
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -254,8 +310,14 @@
                     null
                   ],
                   [
-                    "ref",
-                    "ConfirmAction"
+                    "fetch",
+                    "ConfirmAction",
+                    {
+                      "emit": {
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -332,8 +394,14 @@
                     null
                   ],
                   [
-                    "ref",
-                    "ConfirmAction"
+                    "fetch",
+                    "ConfirmAction",
+                    {
+                      "emit": {
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -410,8 +478,14 @@
                     null
                   ],
                   [
-                    "ref",
-                    "ConfirmAction"
+                    "fetch",
+                    "ConfirmAction",
+                    {
+                      "emit": {
+                        "success": "ConfirmActionLoaded",
+                        "failure": "ConfirmActionLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -478,7 +552,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "instance"
         }
       ],
       "pages": [

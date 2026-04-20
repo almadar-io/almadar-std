@@ -8,11 +8,15 @@ orbital ModalRecordOrbital {
     status : string
     createdAt : string
   }
-  trait ModalRecordModal -> ModalRecord [interaction] {
+
+  type ModalRecordLoaded     = Event ModalRecord
+  type ModalRecordLoadFailed = Event { message : string }
+
+  trait ModalRecordModal -> ModalRecord [interaction, instance] {
     initial: closed
     state closed {
       INIT -> closed
-        (ref ModalRecord)
+        (fetch ModalRecord { emit: { success: "ModalRecordLoaded", failure: "ModalRecordLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layout-panel-top", size: "lg" }, { type: "typography", content: "Details", variant: "h2" }] }, { type: "button", label: "Open", event: "OPEN", variant: "primary", icon: "layout-panel-top" }] }, { type: "divider" }, { type: "empty-state", icon: "layout-panel-top", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
       OPEN -> open
         (render-ui modal { type: "modal", title: "Details", isOpen: true, children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Name" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "name"] }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Description" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "description"] }] }, { type: "stack", direction: "horizontal", gap: "md", children: [{ type: "typography", variant: "caption", content: "Status" }, { type: "typography", variant: "body", content: ["object/get", ["array/first", "@entity"], "status"] }] }, { type: "divider" }, { type: "stack", direction: "horizontal", gap: "sm", justify: "end", children: [{ type: "button", label: "Close", event: "CLOSE", variant: "ghost" }] }] }] })
@@ -21,16 +25,17 @@ orbital ModalRecordOrbital {
       CLOSE -> closed
         (render-ui modal null)
         (notify Cancelled info)
-        (ref ModalRecord)
+        (fetch ModalRecord { emit: { success: "ModalRecordLoaded", failure: "ModalRecordLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layout-panel-top", size: "lg" }, { type: "typography", content: "Details", variant: "h2" }] }, { type: "button", label: "Open", event: "OPEN", variant: "primary", icon: "layout-panel-top" }] }, { type: "divider" }, { type: "empty-state", icon: "layout-panel-top", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
       SAVE -> closed
         (render-ui modal null)
-        (ref ModalRecord)
+        (fetch ModalRecord { emit: { success: "ModalRecordLoaded", failure: "ModalRecordLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "layout-panel-top", size: "lg" }, { type: "typography", content: "Details", variant: "h2" }] }, { type: "button", label: "Open", event: "OPEN", variant: "primary", icon: "layout-panel-top" }] }, { type: "divider" }, { type: "empty-state", icon: "layout-panel-top", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
     emits {
       SAVE
     }
+    emits: [ModalRecordLoaded, ModalRecordLoadFailed]
   }
   page "/modalrecords/modal" -> ModalRecordModal
 }

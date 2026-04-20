@@ -14,10 +14,14 @@ orbital AgentMemoryOrbital {
     scope : string
     lastAccessedAt : string
   }
-  trait AgentMemoryBrowse -> AgentMemory [interaction] {
+
+  type AgentMemoryLoaded     = Event AgentMemory
+  type AgentMemoryLoadFailed = Event { message : string }
+
+  trait AgentMemoryBrowse -> AgentMemory [interaction, collection] {
     state browsing {
       INIT -> browsing
-        (ref AgentMemory)
+        (fetch AgentMemory { emit: { success: "AgentMemoryLoaded", failure: "AgentMemoryLoadFailed" } })
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "AgentMemory Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentMemory", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] })
     }
     listens {
@@ -27,12 +31,13 @@ orbital AgentMemoryOrbital {
       * REINFORCED -> INIT
       * DECAYED -> INIT
     }
+    emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]
   }
-  trait AgentMemoryCreate -> AgentMemory [interaction] {
+  trait AgentMemoryCreate -> AgentMemory [interaction, instance] {
     initial: closed
     state closed {
       INIT -> closed
-        (ref AgentMemory)
+        (fetch AgentMemory { emit: { success: "AgentMemoryLoaded", failure: "AgentMemoryLoadFailed" } })
       MEMORIZE -> open
         (render-ui modal { type: "stack", direction: "vertical", gap: "md", children: [{ type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "icon", name: "plus-circle", size: "md" }, { type: "typography", content: "Memorize", variant: "h3" }] }, { type: "divider" }, { type: "form-section", entity: "AgentMemory", mode: "create", submitEvent: "SAVE", cancelEvent: "CLOSE", fields: ["content", "category", "scope"] }] })
     }
@@ -49,8 +54,9 @@ orbital AgentMemoryOrbital {
       SAVE
       MEMORIZED
     }
+    emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]
   }
-  trait AgentMemoryAgent -> AgentMemory [interaction] {
+  trait AgentMemoryAgent -> AgentMemory [interaction, collection] {
     initial: idle
     state idle {
       INIT -> idle

@@ -99,6 +99,14 @@
               {
                 "key": "CONFIRM_ORDER",
                 "name": "Confirm Order"
+              },
+              {
+                "key": "CART_ITEM_LOADED",
+                "name": "CartItem loaded"
+              },
+              {
+                "key": "CART_ITEM_LOAD_FAILED",
+                "name": "CartItem load failed"
               }
             ],
             "transitions": [
@@ -108,8 +116,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "CartItem"
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CART_ITEM_LOADED",
+                        "failure": "CART_ITEM_LOAD_FAILED"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -242,8 +256,14 @@
                 "event": "PROCEED_CHECKOUT",
                 "effects": [
                   [
-                    "ref",
-                    "CartItem"
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CART_ITEM_LOADED",
+                        "failure": "CART_ITEM_LOAD_FAILED"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -340,8 +360,14 @@
                 "event": "BACK_TO_CART",
                 "effects": [
                   [
-                    "ref",
-                    "CartItem"
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CART_ITEM_LOADED",
+                        "failure": "CART_ITEM_LOAD_FAILED"
+                      }
+                    }
                   ]
                 ]
               },
@@ -351,8 +377,14 @@
                 "event": "CONFIRM_ORDER",
                 "effects": [
                   [
-                    "ref",
-                    "CartItem"
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CART_ITEM_LOADED",
+                        "failure": "CART_ITEM_LOAD_FAILED"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -390,7 +422,52 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection",
+          "emits": [
+            {
+              "event": "CART_ITEM_LOADED",
+              "scope": "internal",
+              "description": "Fired when CartItem finishes loading",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "pendingId",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CART_ITEM_LOAD_FAILED",
+              "scope": "internal",
+              "description": "Fired when CartItem fails to load",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ]
         },
         {
           "ref": "Modal.traits.ModalRecordModal",
@@ -402,7 +479,7 @@
           "effects": {
             "INIT": [
               [
-                "ref",
+                "fetch",
                 "CartItem"
               ]
             ],
@@ -493,7 +570,7 @@
           "effects": {
             "INIT": [
               [
-                "ref",
+                "fetch",
                 "CartItem"
               ]
             ],
@@ -582,7 +659,7 @@
                 null
               ],
               [
-                "ref",
+                "fetch",
                 "CartItem"
               ]
             ],
@@ -593,7 +670,7 @@
                 null
               ],
               [
-                "ref",
+                "fetch",
                 "CartItem"
               ]
             ],
@@ -604,7 +681,7 @@
                 null
               ],
               [
-                "ref",
+                "fetch",
                 "CartItem"
               ]
             ]

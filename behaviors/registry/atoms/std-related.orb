@@ -29,6 +29,32 @@
           "emits": [
             {
               "event": "SELECT_RELATED"
+            },
+            {
+              "event": "RelatedItemLoaded",
+              "scope": "internal",
+              "description": "Fired when RelatedItem finishes loading",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "RelatedItemLoadFailed",
+              "scope": "internal",
+              "description": "Fired when RelatedItem fails to load",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -41,6 +67,14 @@
             "events": [
               {
                 "key": "INIT"
+              },
+              {
+                "key": "RelatedItemLoaded",
+                "name": "RelatedItem loaded"
+              },
+              {
+                "key": "RelatedItemLoadFailed",
+                "name": "RelatedItem load failed"
               }
             ],
             "transitions": [
@@ -50,8 +84,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "RelatedItem"
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "success": "RelatedItemLoaded",
+                        "failure": "RelatedItemLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -111,7 +151,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

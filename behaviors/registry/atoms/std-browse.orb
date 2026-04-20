@@ -114,6 +114,29 @@
           "name": "BrowseItemBrowse",
           "linkedEntity": "BrowseItem",
           "category": "interaction",
+          "scope": "collection",
+          "emits": [
+            {
+              "event": "BrowseItemLoaded",
+              "scope": "internal",
+              "description": "Fired when the BrowseItem collection finishes loading",
+              "payload": [
+                { "name": "id", "type": "string" },
+                { "name": "name", "type": "string" },
+                { "name": "description", "type": "string" },
+                { "name": "status", "type": "string" },
+                { "name": "createdAt", "type": "string" }
+              ]
+            },
+            {
+              "event": "BrowseItemLoadFailed",
+              "scope": "internal",
+              "description": "Fired when the BrowseItem collection fails to load",
+              "payload": [
+                { "name": "message", "type": "string" }
+              ]
+            }
+          ],
           "stateMachine": {
             "states": [
               {
@@ -125,6 +148,14 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "BrowseItemLoaded",
+                "name": "Browse items loaded"
+              },
+              {
+                "key": "BrowseItemLoadFailed",
+                "name": "Browse items load failed"
               }
             ],
             "transitions": [
@@ -134,8 +165,14 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "ref",
-                    "BrowseItem"
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
