@@ -1,7 +1,7 @@
 {
   "name": "std-browse",
   "version": "1.0.0",
-  "description": "Data grid browsing atom. Renders a list of entities with configurable item actions. The browsing view that molecules compose with modal/confirmation atoms.",
+  "description": "std-browse as a Function",
   "orbitals": [
     {
       "name": "BrowseItemOrbital",
@@ -35,113 +35,64 @@
             "name": "createdAt",
             "type": "string"
           }
-        ],
-        "instances": [
-          {
-            "id": "bi-1",
-            "name": "Terry Schultz",
-            "description": "Senior product designer with 8 years of experience",
-            "status": "active",
-            "createdAt": "2026-01-15"
-          },
-          {
-            "id": "bi-2",
-            "name": "Dale Franey",
-            "description": "Full-stack developer specializing in React and Node.js",
-            "status": "active",
-            "createdAt": "2026-01-18"
-          },
-          {
-            "id": "bi-3",
-            "name": "Lorena Mayer",
-            "description": "Data analyst focused on business intelligence",
-            "status": "pending",
-            "createdAt": "2026-01-20"
-          },
-          {
-            "id": "bi-4",
-            "name": "Andrea Paucek",
-            "description": "Project manager with PMP certification",
-            "status": "active",
-            "createdAt": "2026-02-01"
-          },
-          {
-            "id": "bi-5",
-            "name": "Geneva Durgan",
-            "description": "UX researcher conducting user interviews",
-            "status": "inactive",
-            "createdAt": "2026-02-05"
-          },
-          {
-            "id": "bi-6",
-            "name": "Samantha Okuneva",
-            "description": "DevOps engineer managing cloud infrastructure",
-            "status": "active",
-            "createdAt": "2026-02-10"
-          },
-          {
-            "id": "bi-7",
-            "name": "Nelson Halby",
-            "description": "Technical writer documenting APIs",
-            "status": "active",
-            "createdAt": "2026-02-15"
-          },
-          {
-            "id": "bi-8",
-            "name": "Tanya Hand",
-            "description": "QA lead overseeing test automation",
-            "status": "pending",
-            "createdAt": "2026-02-20"
-          },
-          {
-            "id": "bi-9",
-            "name": "Rosemary Lind",
-            "description": "Marketing analyst tracking campaign performance",
-            "status": "active",
-            "createdAt": "2026-03-01"
-          },
-          {
-            "id": "bi-10",
-            "name": "Bernadette Anderson",
-            "description": "Security engineer conducting penetration tests",
-            "status": "active",
-            "createdAt": "2026-03-05"
-          }
         ]
       },
       "traits": [
         {
           "name": "BrowseItemBrowse",
-          "linkedEntity": "BrowseItem",
           "category": "interaction",
-          "scope": "collection",
+          "linkedEntity": "BrowseItem",
           "emits": [
             {
               "event": "BrowseItemLoaded",
-              "scope": "internal",
               "description": "Fired when the BrowseItem collection finishes loading",
+              "scope": "internal",
               "payload": [
-                { "name": "id", "type": "string" },
-                { "name": "name", "type": "string" },
-                { "name": "description", "type": "string" },
-                { "name": "status", "type": "string" },
-                { "name": "createdAt", "type": "string" }
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                }
               ]
             },
             {
               "event": "BrowseItemLoadFailed",
-              "scope": "internal",
               "description": "Fired when the BrowseItem collection fails to load",
+              "scope": "internal",
               "payload": [
-                { "name": "message", "type": "string" }
+                {
+                  "name": "message",
+                  "type": "string"
+                }
               ]
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "loading",
                 "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
               }
             ],
             "events": [
@@ -151,17 +102,23 @@
               },
               {
                 "key": "BrowseItemLoaded",
-                "name": "Browse items loaded"
+                "name": "BrowseItem loaded"
               },
               {
                 "key": "BrowseItemLoadFailed",
-                "name": "Browse items load failed"
+                "name": "BrowseItem load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "transitions": [
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "loading",
+                "to": "loading",
                 "event": "INIT",
                 "effects": [
                   [
@@ -178,101 +135,240 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
-                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
+                          "size": "lg",
+                          "type": "spinner"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "Loading BrowseItems…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "max-w-5xl mx-auto w-full py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "BrowseItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
                           "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
                               "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "list",
-                                  "size": "lg"
+                                  "name": "list"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "BrowseItems",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "type": "typography"
                                 }
                               ]
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "pull-to-refresh",
-                          "event": "REFRESH"
-                        },
-                        {
-                          "type": "swipeable-row",
-                          "leadingAction": {
-                            "label": "Edit",
-                            "event": "EDIT"
-                          },
-                          "trailingAction": {
-                            "label": "Delete",
-                            "event": "DELETE"
-                          }
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "BrowseItem",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No browseitems yet",
                           "emptyDescription": "Create your first browseitem to get started.",
                           "columns": [
                             {
-                              "name": "name",
                               "label": "Name",
-                              "variant": "h4",
-                              "icon": "list"
+                              "icon": "list",
+                              "name": "name",
+                              "variant": "h4"
                             },
                             {
-                              "name": "description",
-                              "label": "Description",
                               "variant": "badge",
                               "colorMap": {
-                                "active": "success",
-                                "completed": "success",
-                                "done": "success",
-                                "pending": "warning",
-                                "draft": "warning",
                                 "scheduled": "warning",
                                 "inactive": "neutral",
+                                "active": "success",
+                                "pending": "warning",
                                 "archived": "neutral",
                                 "disabled": "neutral",
-                                "error": "destructive",
+                                "failed": "destructive",
                                 "cancelled": "destructive",
-                                "failed": "destructive"
-                              }
+                                "error": "destructive",
+                                "completed": "success",
+                                "draft": "warning",
+                                "done": "success"
+                              },
+                              "name": "description",
+                              "label": "Description"
                             },
                             {
+                              "variant": "caption",
                               "name": "status",
-                              "label": "Status",
-                              "variant": "caption"
+                              "label": "Status"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "entity": "BrowseItem",
+                          "emptyIcon": "inbox"
                         },
                         {
-                          "type": "floating-action-button",
                           "icon": "plus",
                           "event": "INIT",
                           "label": "Create",
-                          "tooltip": "Create"
+                          "tooltip": "Create",
+                          "type": "floating-action-button"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "BrowseItemLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "size": "xl",
+                          "type": "icon",
+                          "name": "alert-triangle",
+                          "color": "destructive"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Failed to load BrowseItems",
+                          "variant": "h3"
+                        },
+                        {
+                          "content": "@payload.message",
+                          "type": "typography",
+                          "variant": "body",
+                          "color": "muted"
+                        },
+                        {
+                          "variant": "primary",
+                          "label": "Retry",
+                          "type": "button",
+                          "event": "INIT",
+                          "icon": "rotate-ccw"
+                        }
+                      ],
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full py-12"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "max-w-5xl mx-auto w-full py-12",
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "color": "muted",
+                          "content": "Refreshing…"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "className": "max-w-5xl mx-auto w-full py-12",
+                      "children": [
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "variant": "caption",
+                          "content": "Retrying…",
+                          "color": "muted",
+                          "type": "typography"
                         }
                       ]
                     }
@@ -280,7 +376,8 @@
                 ]
               }
             ]
-          }
+          },
+          "scope": "collection"
         }
       ],
       "pages": [

@@ -1,7 +1,7 @@
 {
   "name": "std-cart",
   "version": "1.0.0",
-  "description": "Shopping cart molecule. Composes atoms: - Cart-specific browse trait (empty/hasItems/checkout states) - stdModal for the add-item form (responds to ADD_ITEM)",
+  "description": "std-cart as a Function",
   "orbitals": [
     {
       "name": "CartItemOrbital",
@@ -17,8 +17,8 @@
       ],
       "entity": {
         "name": "CartItem",
-        "persistence": "persistent",
         "collection": "cartitems",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -56,379 +56,13 @@
       "traits": [
         {
           "name": "CartItemCartBrowse",
-          "linkedEntity": "CartItem",
           "category": "interaction",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "browsing",
-                "isInitial": true
-              },
-              {
-                "name": "checkout"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ADD_ITEM",
-                "name": "Add Item"
-              },
-              {
-                "key": "REQUEST_REMOVE",
-                "name": "Request Remove",
-                "payload": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PROCEED_CHECKOUT",
-                "name": "Proceed to Checkout"
-              },
-              {
-                "key": "BACK_TO_CART",
-                "name": "Back to Cart"
-              },
-              {
-                "key": "CONFIRM_ORDER",
-                "name": "Confirm Order"
-              },
-              {
-                "key": "CART_ITEM_LOADED",
-                "name": "CartItem loaded"
-              },
-              {
-                "key": "CART_ITEM_LOAD_FAILED",
-                "name": "CartItem load failed"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "CartItem",
-                    {
-                      "emit": {
-                        "success": "CART_ITEM_LOADED",
-                        "failure": "CART_ITEM_LOAD_FAILED"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "shopping-cart",
-                                  "size": "lg"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Shopping Cart",
-                                  "variant": "h2"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "button",
-                              "label": "Add Item",
-                              "event": "ADD_ITEM",
-                              "variant": "primary",
-                              "icon": "plus"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "simple-grid",
-                          "columns": 3,
-                          "children": [
-                            {
-                              "type": "stat-display",
-                              "label": "Items",
-                              "value": [
-                                "array/len",
-                                "@entity"
-                              ],
-                              "icon": "package"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Subtotal",
-                              "value": [
-                                "array/len",
-                                "@entity"
-                              ],
-                              "icon": "dollar-sign"
-                            },
-                            {
-                              "type": "stat-display",
-                              "label": "Total",
-                              "value": [
-                                "array/len",
-                                "@entity"
-                              ],
-                              "icon": "receipt"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "CartItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "Your cart is empty",
-                          "emptyDescription": "Add items to get started.",
-                          "itemActions": [
-                            {
-                              "label": "Remove",
-                              "event": "REQUEST_REMOVE",
-                              "variant": "danger",
-                              "size": "sm"
-                            }
-                          ],
-                          "columns": [
-                            {
-                              "name": "name",
-                              "label": "Name",
-                              "variant": "h4",
-                              "icon": "shopping-cart"
-                            },
-                            {
-                              "name": "description",
-                              "label": "Description",
-                              "variant": "caption",
-                              "format": "currency"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "label": "Proceed to Checkout",
-                          "event": "PROCEED_CHECKOUT",
-                          "variant": "primary",
-                          "icon": "arrow-right"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "checkout",
-                "event": "PROCEED_CHECKOUT",
-                "effects": [
-                  [
-                    "fetch",
-                    "CartItem",
-                    {
-                      "emit": {
-                        "success": "CART_ITEM_LOADED",
-                        "failure": "CART_ITEM_LOAD_FAILED"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "clipboard",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "content": "Checkout",
-                              "variant": "h2"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "CartItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "Your cart is empty",
-                          "emptyDescription": "Add items to get started.",
-                          "itemActions": [
-                            {
-                              "label": "Remove",
-                              "event": "REQUEST_REMOVE",
-                              "variant": "danger",
-                              "size": "sm"
-                            }
-                          ],
-                          "columns": [
-                            {
-                              "name": "name",
-                              "label": "Name",
-                              "variant": "h4",
-                              "icon": "shopping-cart"
-                            },
-                            {
-                              "name": "description",
-                              "label": "Description",
-                              "variant": "caption",
-                              "format": "currency"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
-                              "variant": "badge"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "end",
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Back to Cart",
-                              "event": "BACK_TO_CART",
-                              "variant": "ghost",
-                              "icon": "arrow-left"
-                            },
-                            {
-                              "type": "button",
-                              "label": "Confirm Order",
-                              "event": "CONFIRM_ORDER",
-                              "variant": "primary",
-                              "icon": "check"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "checkout",
-                "to": "browsing",
-                "event": "BACK_TO_CART",
-                "effects": [
-                  [
-                    "fetch",
-                    "CartItem",
-                    {
-                      "emit": {
-                        "success": "CART_ITEM_LOADED",
-                        "failure": "CART_ITEM_LOAD_FAILED"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "checkout",
-                "to": "browsing",
-                "event": "CONFIRM_ORDER",
-                "effects": [
-                  [
-                    "fetch",
-                    "CartItem",
-                    {
-                      "emit": {
-                        "success": "CART_ITEM_LOADED",
-                        "failure": "CART_ITEM_LOAD_FAILED"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "check-circle",
-                          "size": "lg"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Order Confirmed",
-                          "variant": "h2"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Your order has been placed successfully.",
-                          "variant": "body"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Continue Shopping",
-                          "event": "INIT",
-                          "variant": "primary"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection",
+          "linkedEntity": "CartItem",
           "emits": [
             {
-              "event": "CART_ITEM_LOADED",
+              "event": "CartItemLoaded",
+              "description": "Fired when the cart collection finishes loading",
               "scope": "internal",
-              "description": "Fired when CartItem finishes loading",
               "payload": [
                 {
                   "name": "id",
@@ -457,9 +91,9 @@
               ]
             },
             {
-              "event": "CART_ITEM_LOAD_FAILED",
+              "event": "CartItemLoadFailed",
+              "description": "Fired when the cart collection fails to load",
               "scope": "internal",
-              "description": "Fired when CartItem fails to load",
               "payload": [
                 {
                   "name": "message",
@@ -467,7 +101,493 @@
                 }
               ]
             }
-          ]
+          ],
+          "listens": [
+            {
+              "event": "CartItemAddItem.SAVE",
+              "triggers": "INIT"
+            },
+            {
+              "event": "CartItemRemoveConfirm.CONFIRM",
+              "triggers": "INIT"
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "loading",
+                "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "checkout"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "CartItemLoaded",
+                "name": "CartItem loaded"
+              },
+              {
+                "key": "CartItemLoadFailed",
+                "name": "CartItem load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROCEED_CHECKOUT",
+                "name": "Proceed Checkout"
+              },
+              {
+                "key": "BACK_TO_CART",
+                "name": "Back To Cart"
+              },
+              {
+                "key": "CONFIRM_ORDER",
+                "name": "Confirm Order"
+              },
+              {
+                "key": "REQUEST_REMOVE",
+                "name": "Request Remove",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "loading",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "failure": "CartItemLoadFailed",
+                        "success": "CartItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "lg",
+                          "type": "spinner"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading cart…",
+                          "color": "muted"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "CartItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "justify": "space-between",
+                          "children": [
+                            {
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "type": "icon",
+                                  "name": "shopping-cart"
+                                },
+                                {
+                                  "content": "Shopping Cart",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "gap": "md",
+                              "direction": "horizontal"
+                            },
+                            {
+                              "type": "button",
+                              "event": "ADD_ITEM",
+                              "label": "Add Item",
+                              "variant": "primary",
+                              "icon": "plus"
+                            }
+                          ],
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "columns": 3.0,
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ],
+                              "label": "Items",
+                              "type": "stat-display",
+                              "icon": "package"
+                            },
+                            {
+                              "icon": "dollar-sign",
+                              "type": "stat-display",
+                              "label": "Subtotal",
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ]
+                            },
+                            {
+                              "value": [
+                                "array/len",
+                                "@entity"
+                              ],
+                              "icon": "receipt",
+                              "type": "stat-display",
+                              "label": "Total"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "type": "data-grid",
+                          "entity": "CartItem",
+                          "emptyIcon": "inbox",
+                          "itemActions": [
+                            {
+                              "label": "Remove",
+                              "size": "sm",
+                              "event": "REQUEST_REMOVE",
+                              "variant": "danger"
+                            }
+                          ],
+                          "columns": [
+                            {
+                              "label": "Name",
+                              "name": "name",
+                              "icon": "shopping-cart",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Description",
+                              "name": "description",
+                              "variant": "caption"
+                            },
+                            {
+                              "variant": "badge",
+                              "name": "status",
+                              "label": "Status"
+                            }
+                          ],
+                          "emptyDescription": "Add items to get started.",
+                          "emptyTitle": "Your cart is empty"
+                        },
+                        {
+                          "label": "Proceed to Checkout",
+                          "variant": "primary",
+                          "icon": "arrow-right",
+                          "type": "button",
+                          "event": "PROCEED_CHECKOUT"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "CartItemLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "align": "center",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "size": "xl",
+                          "type": "icon",
+                          "color": "destructive",
+                          "name": "alert-triangle"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Failed to load cart",
+                          "variant": "h3"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "content": "@payload.message",
+                          "variant": "body"
+                        },
+                        {
+                          "variant": "primary",
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "event": "INIT",
+                          "type": "button"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CartItemLoaded",
+                        "failure": "CartItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "checkout",
+                "event": "PROCEED_CHECKOUT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "name": "clipboard",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Checkout",
+                              "variant": "h2"
+                            }
+                          ],
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "emptyIcon": "inbox",
+                          "type": "data-grid",
+                          "emptyTitle": "Your cart is empty",
+                          "entity": "CartItem",
+                          "emptyDescription": "Add items to get started.",
+                          "columns": [
+                            {
+                              "label": "Name",
+                              "variant": "h4",
+                              "name": "name",
+                              "icon": "shopping-cart"
+                            },
+                            {
+                              "label": "Description",
+                              "variant": "caption",
+                              "name": "description"
+                            },
+                            {
+                              "name": "status",
+                              "label": "Status",
+                              "variant": "badge"
+                            }
+                          ]
+                        },
+                        {
+                          "gap": "sm",
+                          "justify": "end",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "label": "Back to Cart",
+                              "variant": "ghost",
+                              "type": "button",
+                              "event": "BACK_TO_CART",
+                              "icon": "arrow-left"
+                            },
+                            {
+                              "icon": "check",
+                              "event": "CONFIRM_ORDER",
+                              "label": "Confirm Order",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        }
+                      ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "checkout",
+                "to": "loading",
+                "event": "BACK_TO_CART",
+                "effects": [
+                  [
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CartItemLoaded",
+                        "failure": "CartItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "checkout",
+                "to": "browsing",
+                "event": "CONFIRM_ORDER",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "children": [
+                        {
+                          "size": "lg",
+                          "name": "check-circle",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "Order Confirmed"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "Your order has been placed successfully."
+                        },
+                        {
+                          "event": "INIT",
+                          "variant": "primary",
+                          "label": "Continue Shopping",
+                          "type": "button"
+                        }
+                      ],
+                      "align": "center",
+                      "gap": "lg"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CartItem",
+                    {
+                      "emit": {
+                        "success": "CartItemLoaded",
+                        "failure": "CartItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "lg",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "scope": "collection"
         },
         {
           "ref": "Modal.traits.ModalRecordModal",
@@ -483,55 +603,6 @@
                 "CartItem"
               ]
             ],
-            "ADD_ITEM": [
-              [
-                "fetch",
-                "CartItem"
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "md",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "plus-circle",
-                          "size": "md"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Add Item",
-                          "variant": "h3"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "form-section",
-                      "entity": "CartItem",
-                      "mode": "create",
-                      "submitEvent": "SAVE",
-                      "cancelEvent": "CLOSE",
-                      "fields": [
-                        "name",
-                        "description",
-                        "status"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ],
             "CLOSE": [
               [
                 "render-ui",
@@ -544,12 +615,61 @@
                 "info"
               ]
             ],
+            "ADD_ITEM": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "size": "md",
+                          "name": "plus-circle",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Add Item",
+                          "variant": "h3"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "sm"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "cancelEvent": "CLOSE",
+                      "entity": "CartItem",
+                      "type": "form-section",
+                      "mode": "create",
+                      "fields": [
+                        "name",
+                        "description",
+                        "status"
+                      ],
+                      "submitEvent": "SAVE"
+                    }
+                  ],
+                  "gap": "md",
+                  "direction": "vertical"
+                }
+              ]
+            ],
             "SAVE": [
               [
                 "persist",
                 "create",
                 "CartItem",
                 "@payload.data"
+              ],
+              [
+                "emit",
+                "CartItemLoaded"
               ],
               [
                 "render-ui",
@@ -564,111 +684,11 @@
           "name": "CartItemRemoveConfirm",
           "linkedEntity": "CartItem",
           "events": {
-            "REQUEST": "REQUEST_REMOVE",
-            "CONFIRM": "CONFIRM_REMOVE"
+            "CONFIRM": "CONFIRM_REMOVE",
+            "REQUEST": "REQUEST_REMOVE"
           },
           "effects": {
             "INIT": [
-              [
-                "fetch",
-                "CartItem"
-              ]
-            ],
-            "REQUEST_REMOVE": [
-              [
-                "set",
-                "@entity.pendingId",
-                "@payload.id"
-              ],
-              [
-                "fetch",
-                "CartItem",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "md",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "alert-triangle",
-                          "size": "md"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Remove Item",
-                          "variant": "h3"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "alert",
-                      "variant": "danger",
-                      "message": "Are you sure you want to remove this item from your cart?"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "justify": "end",
-                      "children": [
-                        {
-                          "type": "button",
-                          "label": "Cancel",
-                          "event": "CANCEL",
-                          "variant": "ghost"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Remove",
-                          "event": "CONFIRM_REMOVE",
-                          "variant": "danger",
-                          "icon": "check"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ],
-            "CONFIRM_REMOVE": [
-              [
-                "persist",
-                "delete",
-                "CartItem",
-                "@entity.pendingId"
-              ],
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "fetch",
-                "CartItem"
-              ]
-            ],
-            "CANCEL": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
               [
                 "fetch",
                 "CartItem"
@@ -679,10 +699,95 @@
                 "render-ui",
                 "modal",
                 null
+              ]
+            ],
+            "CONFIRM_REMOVE": [
+              [
+                "persist",
+                "delete",
+                "CartItem",
+                "@entity.pendingId"
               ],
               [
-                "fetch",
-                "CartItem"
+                "emit",
+                "CartItemLoaded"
+              ],
+              [
+                "render-ui",
+                "modal",
+                null
+              ]
+            ],
+            "REQUEST_REMOVE": [
+              [
+                "set",
+                "@entity.pendingId",
+                "@payload.id"
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "gap": "md",
+                  "type": "stack",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "type": "icon",
+                          "size": "md"
+                        },
+                        {
+                          "content": "Remove Item",
+                          "variant": "h3",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "horizontal",
+                      "type": "stack"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "alert",
+                      "variant": "danger",
+                      "message": "Are you sure you want to remove this item from your cart?"
+                    },
+                    {
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "justify": "end",
+                      "children": [
+                        {
+                          "event": "CANCEL",
+                          "type": "button",
+                          "label": "Cancel",
+                          "variant": "ghost"
+                        },
+                        {
+                          "icon": "check",
+                          "variant": "danger",
+                          "type": "button",
+                          "event": "CONFIRM_REMOVE",
+                          "label": "Remove"
+                        }
+                      ]
+                    }
+                  ],
+                  "direction": "vertical"
+                }
+              ]
+            ],
+            "CANCEL": [
+              [
+                "render-ui",
+                "modal",
+                null
               ]
             ]
           }

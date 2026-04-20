@@ -1,7 +1,7 @@
 {
   "name": "std-related",
   "version": "1.0.0",
-  "description": "Relation-rendering atom. Renders the linked entity as a data-list; consumers hydrate data via upstream fetch include: and rebind linkedEntity. Canonical @trait.X showcase in std-related-master-detail.",
+  "description": "std-related as a Function",
   "orbitals": [
     {
       "name": "RelatedItemOrbital",
@@ -28,16 +28,18 @@
           "linkedEntity": "RelatedItem",
           "emits": [
             {
-              "event": "SELECT_RELATED"
+              "event": "SELECT_RELATED",
+              "scope": "external"
             },
             {
               "event": "RelatedItemLoaded",
-              "scope": "internal",
               "description": "Fired when RelatedItem finishes loading",
+              "scope": "internal",
               "payload": [
                 {
                   "name": "id",
-                  "type": "string"
+                  "type": "string",
+                  "required": true
                 },
                 {
                   "name": "name",
@@ -47,8 +49,8 @@
             },
             {
               "event": "RelatedItemLoadFailed",
-              "scope": "internal",
               "description": "Fired when RelatedItem fails to load",
+              "scope": "internal",
               "payload": [
                 {
                   "name": "message",
@@ -60,13 +62,20 @@
           "stateMachine": {
             "states": [
               {
-                "name": "loaded",
+                "name": "loading",
                 "isInitial": true
+              },
+              {
+                "name": "loaded"
+              },
+              {
+                "name": "error"
               }
             ],
             "events": [
               {
-                "key": "INIT"
+                "key": "INIT",
+                "name": "Initialize"
               },
               {
                 "key": "RelatedItemLoaded",
@@ -74,13 +83,23 @@
               },
               {
                 "key": "RelatedItemLoadFailed",
-                "name": "RelatedItem load failed"
+                "name": "RelatedItem load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SELECT_RELATED",
+                "name": "Select Related"
               }
             ],
             "transitions": [
               {
-                "from": "loaded",
-                "to": "loaded",
+                "from": "loading",
+                "to": "loading",
                 "event": "INIT",
                 "effects": [
                   [
@@ -97,55 +116,179 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "align": "center",
-                          "direction": "horizontal",
+                          "type": "spinner",
+                          "size": "md"
+                        },
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Loading related…",
+                          "color": "muted"
+                        }
+                      ],
+                      "align": "center",
+                      "className": "py-8",
+                      "gap": "sm",
+                      "direction": "vertical",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "loaded",
+                "event": "RelatedItemLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "children": [
+                        {
                           "type": "stack",
-                          "gap": "sm",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "size": "md",
                               "type": "icon",
-                              "name": "link"
+                              "name": "link",
+                              "size": "md"
                             },
                             {
                               "variant": "h3",
-                              "content": "Related",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Related"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "data-list",
-                          "entity": "RelatedItem",
-                          "emptyTitle": "No related items",
                           "emptyIcon": "inbox",
                           "emptyDescription": "Nothing to show.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
+                              "type": "stack",
+                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@item.name"
                                 }
                               ],
-                              "direction": "vertical",
-                              "type": "stack",
-                              "gap": "xs"
+                              "direction": "vertical"
                             }
-                          ]
+                          ],
+                          "entity": "RelatedItem",
+                          "emptyTitle": "No related items"
                         }
                       ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "RelatedItemLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "size": "lg",
+                          "type": "icon",
+                          "color": "destructive"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "Failed to load related"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "@payload.message",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "button",
+                          "event": "INIT",
+                          "variant": "ghost",
+                          "icon": "rotate-ccw",
+                          "label": "Retry"
+                        }
+                      ],
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "align": "center",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loaded",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "success": "RelatedItemLoaded",
+                        "failure": "RelatedItemLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner",
+                      "size": "md"
                     }
                   ]
                 ]

@@ -1,14 +1,14 @@
 {
   "name": "std-agent-memory",
   "version": "1.0.0",
-  "description": "Memory lifecycle atom for agent memory operations. Composes UI atoms (stdBrowse for memory table, stdModal for memorize form) with an agent trait that handles agent/memorize, agent/recall, agent/pin, agent/forget, agent/reinforce, and agent/decay operators.",
+  "description": "std-agent-memory as a Function",
   "orbitals": [
     {
       "name": "AgentMemoryOrbital",
       "entity": {
         "name": "AgentMemory",
-        "persistence": "persistent",
         "collection": "agentmemorys",
+        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
@@ -49,7 +49,7 @@
           {
             "name": "strength",
             "type": "number",
-            "default": 1
+            "default": 1.0
           },
           {
             "name": "pinned",
@@ -71,40 +71,105 @@
       "traits": [
         {
           "name": "AgentMemoryBrowse",
-          "linkedEntity": "AgentMemory",
           "category": "interaction",
+          "linkedEntity": "AgentMemory",
+          "emits": [
+            {
+              "event": "AgentMemoryLoaded",
+              "description": "Fired when AgentMemory finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "strength",
+                  "type": "number"
+                },
+                {
+                  "name": "pinned",
+                  "type": "boolean"
+                },
+                {
+                  "name": "scope",
+                  "type": "string"
+                },
+                {
+                  "name": "lastAccessedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentMemoryLoadFailed",
+              "description": "Fired when AgentMemory fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
           "listens": [
             {
-              "event": "MEMORIZED",
-              "scope": "external",
+              "event": "*.MEMORIZED",
               "triggers": "INIT"
             },
             {
-              "event": "PINNED",
-              "scope": "external",
+              "event": "*.PINNED",
               "triggers": "INIT"
             },
             {
-              "event": "FORGOT",
-              "scope": "external",
+              "event": "*.FORGOT",
               "triggers": "INIT"
             },
             {
-              "event": "REINFORCED",
-              "scope": "external",
+              "event": "*.REINFORCED",
               "triggers": "INIT"
             },
             {
-              "event": "DECAYED",
-              "scope": "external",
+              "event": "*.DECAYED",
               "triggers": "INIT"
             }
           ],
           "stateMachine": {
             "states": [
               {
-                "name": "browsing",
+                "name": "loading",
                 "isInitial": true
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
               }
             ],
             "events": [
@@ -113,20 +178,22 @@
                 "name": "Initialize"
               },
               {
-                "key": "MEMORIZE",
-                "name": "MEMORIZE"
+                "key": "AgentMemoryLoaded",
+                "name": "AgentMemory loaded"
               },
               {
-                "key": "RECALL",
-                "name": "RECALL"
-              },
-              {
-                "key": "DECAY",
-                "name": "DECAY"
+                "key": "AgentMemoryLoadFailed",
+                "name": "AgentMemory load failed",
+                "payload": [
+                  {
+                    "name": "message",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "PIN",
-                "name": "PIN",
+                "name": "Pin",
                 "payload": [
                   {
                     "name": "id",
@@ -141,7 +208,7 @@
               },
               {
                 "key": "REINFORCE",
-                "name": "REINFORCE",
+                "name": "Reinforce",
                 "payload": [
                   {
                     "name": "id",
@@ -156,7 +223,7 @@
               },
               {
                 "key": "FORGET",
-                "name": "FORGET",
+                "name": "Forget",
                 "payload": [
                   {
                     "name": "id",
@@ -168,20 +235,12 @@
                     "type": "object"
                   }
                 ]
-              },
-              {
-                "key": "AgentMemoryLoaded",
-                "name": "AgentMemory loaded"
-              },
-              {
-                "key": "AgentMemoryLoadFailed",
-                "name": "AgentMemory load failed"
               }
             ],
             "transitions": [
               {
-                "from": "browsing",
-                "to": "browsing",
+                "from": "loading",
+                "to": "loading",
                 "event": "INIT",
                 "effects": [
                   [
@@ -198,54 +257,78 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
+                      "children": [
+                        {
+                          "type": "spinner",
+                          "size": "lg"
+                        },
+                        {
+                          "content": "Loading memories…",
+                          "color": "muted",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "browsing",
+                "event": "AgentMemoryLoaded",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
                       "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack",
                       "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "space-between",
-                          "align": "center",
                           "children": [
                             {
                               "type": "stack",
                               "direction": "horizontal",
-                              "gap": "sm",
-                              "align": "center",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "brain",
-                                  "size": "lg"
+                                  "name": "brain"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "AgentMemory Manager",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "AgentMemory Manager"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "align": "center"
                             },
                             {
                               "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "button",
                                   "label": "Memorize",
-                                  "event": "MEMORIZE",
                                   "variant": "primary",
-                                  "icon": "plus"
+                                  "icon": "plus",
+                                  "type": "button",
+                                  "event": "MEMORIZE"
                                 },
                                 {
-                                  "type": "button",
-                                  "label": "Recall",
-                                  "event": "RECALL",
                                   "variant": "secondary",
-                                  "icon": "search"
+                                  "type": "button",
+                                  "icon": "search",
+                                  "label": "Recall",
+                                  "event": "RECALL"
                                 },
                                 {
                                   "type": "button",
@@ -254,149 +337,171 @@
                                   "variant": "ghost",
                                   "icon": "clock"
                                 }
-                              ]
+                              ],
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "type": "stack",
+                          "justify": "space-between",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "AgentMemory",
-                          "emptyIcon": "inbox",
                           "emptyTitle": "No memories yet",
-                          "emptyDescription": "Create your first memory to get started.",
                           "itemActions": [
                             {
                               "label": "Pin",
+                              "variant": "ghost",
                               "event": "PIN",
-                              "variant": "ghost",
                               "size": "sm"
                             },
                             {
-                              "label": "Reinforce",
+                              "variant": "ghost",
+                              "size": "sm",
                               "event": "REINFORCE",
-                              "variant": "ghost",
-                              "size": "sm"
+                              "label": "Reinforce"
                             },
                             {
-                              "label": "Forget",
-                              "event": "FORGET",
                               "variant": "danger",
-                              "size": "sm"
+                              "label": "Forget",
+                              "size": "sm",
+                              "event": "FORGET"
                             }
                           ],
+                          "emptyDescription": "Create your first memory to get started.",
+                          "entity": "AgentMemory",
+                          "emptyIcon": "inbox",
                           "columns": [
                             {
                               "name": "content",
-                              "label": "Content",
                               "variant": "h4",
-                              "icon": "brain"
+                              "icon": "brain",
+                              "label": "Content"
                             },
                             {
                               "name": "category",
                               "label": "Category",
-                              "variant": "badge",
-                              "colorMap": {
-                                "active": "success",
-                                "completed": "success",
-                                "done": "success",
-                                "pending": "warning",
-                                "draft": "warning",
-                                "scheduled": "warning",
-                                "inactive": "neutral",
-                                "archived": "neutral",
-                                "disabled": "neutral",
-                                "error": "destructive",
-                                "cancelled": "destructive",
-                                "failed": "destructive"
-                              }
+                              "variant": "badge"
                             },
                             {
+                              "variant": "caption",
                               "name": "strength",
-                              "label": "Strength",
-                              "variant": "caption"
+                              "label": "Strength"
                             }
-                          ]
+                          ],
+                          "type": "data-grid"
                         }
                       ]
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "loading",
+                "to": "error",
+                "event": "AgentMemoryLoadFailed",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "direction": "vertical",
+                      "className": "py-12",
+                      "children": [
+                        {
+                          "name": "alert-triangle",
+                          "size": "xl",
+                          "color": "destructive",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "Failed to load memories"
+                        },
+                        {
+                          "type": "typography",
+                          "color": "muted",
+                          "variant": "body",
+                          "content": "@payload.message"
+                        },
+                        {
+                          "icon": "rotate-ccw",
+                          "event": "INIT",
+                          "label": "Retry",
+                          "variant": "primary",
+                          "type": "button"
+                        }
+                      ],
+                      "align": "center",
+                      "type": "stack",
+                      "gap": "md"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "lg",
+                      "type": "spinner"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "lg",
+                      "type": "spinner"
                     }
                   ]
                 ]
               }
             ]
           },
-          "scope": "collection",
-          "emits": [
-            {
-              "event": "AgentMemoryLoaded",
-              "scope": "internal",
-              "description": "Fired when AgentMemory finishes loading",
-              "payload": [
-                {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "name",
-                  "type": "string"
-                },
-                {
-                  "name": "description",
-                  "type": "string"
-                },
-                {
-                  "name": "status",
-                  "type": "string"
-                },
-                {
-                  "name": "createdAt",
-                  "type": "string"
-                },
-                {
-                  "name": "content",
-                  "type": "string"
-                },
-                {
-                  "name": "category",
-                  "type": "string"
-                },
-                {
-                  "name": "strength",
-                  "type": "number"
-                },
-                {
-                  "name": "pinned",
-                  "type": "boolean"
-                },
-                {
-                  "name": "scope",
-                  "type": "string"
-                },
-                {
-                  "name": "lastAccessedAt",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "AgentMemoryLoadFailed",
-              "scope": "internal",
-              "description": "Fired when AgentMemory fails to load",
-              "payload": [
-                {
-                  "name": "message",
-                  "type": "string"
-                }
-              ]
-            }
-          ]
+          "scope": "collection"
         },
         {
           "name": "AgentMemoryCreate",
-          "linkedEntity": "AgentMemory",
           "category": "interaction",
+          "linkedEntity": "AgentMemory",
           "emits": [
             {
               "event": "SAVE",
@@ -408,8 +513,8 @@
             },
             {
               "event": "AgentMemoryLoaded",
-              "scope": "internal",
               "description": "Fired when AgentMemory finishes loading",
+              "scope": "internal",
               "payload": [
                 {
                   "name": "id",
@@ -459,8 +564,8 @@
             },
             {
               "event": "AgentMemoryLoadFailed",
-              "scope": "internal",
               "description": "Fired when AgentMemory fails to load",
+              "scope": "internal",
               "payload": [
                 {
                   "name": "message",
@@ -486,7 +591,7 @@
               },
               {
                 "key": "MEMORIZE",
-                "name": "Open"
+                "name": "Memorize"
               },
               {
                 "key": "CLOSE",
@@ -502,6 +607,10 @@
                     "required": true
                   }
                 ]
+              },
+              {
+                "key": "MEMORIZED",
+                "name": "Memorized"
               },
               {
                 "key": "AgentMemoryLoaded",
@@ -545,35 +654,35 @@
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "plus-circle",
+                              "type": "icon",
                               "size": "md"
                             },
                             {
+                              "variant": "h3",
                               "type": "typography",
-                              "content": "Memorize",
-                              "variant": "h3"
+                              "content": "Memorize"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "entity": "AgentMemory",
                           "mode": "create",
-                          "submitEvent": "SAVE",
                           "cancelEvent": "CLOSE",
                           "fields": [
                             "content",
                             "category",
                             "scope"
-                          ]
+                          ],
+                          "entity": "AgentMemory",
+                          "type": "form-section",
+                          "submitEvent": "SAVE"
                         }
                       ]
                     }
@@ -609,13 +718,16 @@
                     "@payload.data"
                   ],
                   [
+                    "emit",
+                    "MEMORIZED",
+                    {
+                      "id": "@payload.data.id"
+                    }
+                  ],
+                  [
                     "render-ui",
                     "modal",
                     null
-                  ],
-                  [
-                    "emit",
-                    "MEMORIZED"
                   ]
                 ]
               }
@@ -625,8 +737,8 @@
         },
         {
           "name": "AgentMemoryAgent",
-          "linkedEntity": "AgentMemory",
           "category": "interaction",
+          "linkedEntity": "AgentMemory",
           "emits": [
             {
               "event": "FORGOT",
@@ -667,6 +779,68 @@
                   "type": "string"
                 }
               ]
+            },
+            {
+              "event": "AgentMemoryLoaded",
+              "description": "Fired when AgentMemory finishes loading",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "description",
+                  "type": "string"
+                },
+                {
+                  "name": "status",
+                  "type": "string"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "type": "string"
+                },
+                {
+                  "name": "category",
+                  "type": "string"
+                },
+                {
+                  "name": "strength",
+                  "type": "number"
+                },
+                {
+                  "name": "pinned",
+                  "type": "boolean"
+                },
+                {
+                  "name": "scope",
+                  "type": "string"
+                },
+                {
+                  "name": "lastAccessedAt",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "AgentMemoryLoadFailed",
+              "description": "Fired when AgentMemory fails to load",
+              "scope": "internal",
+              "payload": [
+                {
+                  "name": "message",
+                  "type": "string"
+                }
+              ]
             }
           ],
           "stateMachine": {
@@ -687,6 +861,21 @@
               {
                 "key": "DO_MEMORIZE",
                 "name": "Do Memorize",
+                "payload": [
+                  {
+                    "name": "data",
+                    "type": "object",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "DECAY",
+                "name": "Decay"
+              },
+              {
+                "key": "MEMORIZED",
+                "name": "Memorized",
                 "payload": [
                   {
                     "name": "data",
@@ -740,19 +929,28 @@
                 ]
               },
               {
-                "key": "DECAY",
-                "name": "Decay"
+                "key": "FORGOT",
+                "name": "Forgot"
               },
               {
-                "key": "MEMORIZED",
-                "name": "Memorized",
-                "payload": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
+                "key": "REINFORCED",
+                "name": "Reinforced"
+              },
+              {
+                "key": "DECAYED",
+                "name": "Decayed"
+              },
+              {
+                "key": "PINNED",
+                "name": "Pinned"
+              },
+              {
+                "key": "AgentMemoryLoaded",
+                "name": "AgentMemory loaded"
+              },
+              {
+                "key": "AgentMemoryLoadFailed",
+                "name": "AgentMemory load failed"
               }
             ],
             "transitions": [
@@ -763,16 +961,22 @@
                 "effects": [
                   [
                     "fetch",
-                    "AgentMemory"
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "failure": "AgentMemoryLoadFailed",
+                        "success": "AgentMemoryLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "empty-state",
-                      "icon": "brain",
                       "title": "Memory",
-                      "description": "Memory is ready"
+                      "description": "Memory is ready",
+                      "type": "empty-state",
+                      "icon": "brain"
                     }
                   ]
                 ]
@@ -792,6 +996,47 @@
                     "create",
                     "AgentMemory",
                     "@payload.data"
+                  ],
+                  [
+                    "emit",
+                    "MEMORIZED",
+                    {
+                      "id": "@payload.data.id"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "DECAY",
+                "effects": [
+                  [
+                    "agent/decay"
+                  ],
+                  [
+                    "emit",
+                    "DECAYED",
+                    {
+                      "id": ""
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "active",
+                "event": "MEMORIZED",
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentMemory",
+                    {
+                      "emit": {
+                        "success": "AgentMemoryLoaded",
+                        "failure": "AgentMemoryLoadFailed"
+                      }
+                    }
                   ]
                 ]
               },
@@ -829,7 +1074,10 @@
                   ],
                   [
                     "emit",
-                    "PINNED"
+                    "PINNED",
+                    {
+                      "id": "@payload.id"
+                    }
                   ]
                 ]
               },
@@ -844,7 +1092,10 @@
                   ],
                   [
                     "emit",
-                    "FORGOT"
+                    "FORGOT",
+                    {
+                      "id": "@payload.id"
+                    }
                   ]
                 ]
               },
@@ -859,21 +1110,10 @@
                   ],
                   [
                     "emit",
-                    "REINFORCED"
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "DECAY",
-                "effects": [
-                  [
-                    "agent/decay"
-                  ],
-                  [
-                    "emit",
-                    "DECAYED"
+                    "REINFORCED",
+                    {
+                      "id": "@payload.id"
+                    }
                   ]
                 ]
               },
@@ -887,18 +1127,10 @@
                   ],
                   [
                     "emit",
-                    "DECAYED"
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "active",
-                "event": "MEMORIZED",
-                "effects": [
-                  [
-                    "fetch",
-                    "AgentMemory"
+                    "DECAYED",
+                    {
+                      "id": ""
+                    }
                   ]
                 ]
               }

@@ -387,16 +387,28 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
     module: 'core',
     category: 'effect',
     minArity: 2,
-    maxArity: 3,
-    description: 'Create, update, delete, clear, or batch entity records',
+    maxArity: 4,
+    description: 'Create, update, delete, clear, or batch entity records. Optional trailing { emit: { success, failure } } options object attaches closed-circuit emit routing.',
     hasSideEffects: true,
     returnType: 'void',
     params: [
       { name: 'action', type: PERSIST_ACTION, description: 'Persist action' },
       { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
       { name: 'data', type: ENTITY_REF, description: 'Payload (create/update) or entity id (delete)', optional: true },
+      {
+        name: 'options',
+        type: {
+          kind: 'object',
+          fields: {
+            emit: { kind: 'object', fields: {}, open: true },
+          },
+          open: true,
+        },
+        description: 'Optional trailing options object carrying { emit: { success, failure } } closed-circuit routing',
+        optional: true,
+      },
     ],
-    example: '["persist", "create", "Task", { "title": "@payload.title" }]',
+    example: '["persist", "create", "Task", { "title": "@payload.title" }, { "emit": { "success": "TASK_CREATED" } }]',
     effect: {
       kind: 'persist',
       // Action-discriminated union. The compiler narrows at the call site

@@ -1,7 +1,7 @@
 {
   "name": "std-filtered-list",
   "version": "1.0.0",
-  "description": "Filtered list molecule composing Search + Filter + Browse + Pagination via @trait.X in a vstack. Showcases intra-frame composition.",
+  "description": "std-filtered-list as a Function",
   "orbitals": [
     {
       "name": "FilteredListItemOrbital",
@@ -61,12 +61,28 @@
         {
           "ref": "Browse.traits.BrowseItemBrowse",
           "name": "FilteredItemBrowse",
-          "linkedEntity": "FilteredListItem"
+          "linkedEntity": "FilteredListItem",
+          "listens": [
+            {
+              "event": "*.SearchResultLoaded",
+              "triggers": "INIT"
+            },
+            {
+              "event": "*.FilterTargetLoaded",
+              "triggers": "INIT"
+            }
+          ]
         },
         {
           "ref": "Pagination.traits.PagedItemPagination",
           "name": "FilteredItemPagination",
-          "linkedEntity": "FilteredListItem"
+          "linkedEntity": "FilteredListItem",
+          "listens": [
+            {
+              "event": "*.BrowseItemLoaded",
+              "triggers": "INIT"
+            }
+          ]
         },
         {
           "name": "FilteredListLayout",
@@ -81,7 +97,8 @@
             ],
             "events": [
               {
-                "key": "INIT"
+                "key": "INIT",
+                "name": "Initialize"
               }
             ],
             "transitions": [
@@ -91,26 +108,30 @@
                 "event": "INIT",
                 "effects": [
                   [
+                    "fetch",
+                    "FilteredListItem"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "gap": "md",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
                           "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
                           "children": [
                             "@trait.FilteredItemSearch",
                             "@trait.FilteredItemFilter"
-                          ]
+                          ],
+                          "type": "stack"
                         },
                         "@trait.FilteredItemBrowse",
                         "@trait.FilteredItemPagination"
-                      ],
-                      "className": "max-w-5xl mx-auto w-full",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

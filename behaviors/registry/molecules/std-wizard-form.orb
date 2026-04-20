@@ -1,7 +1,7 @@
 {
   "name": "std-wizard-form",
   "version": "1.0.0",
-  "description": "Wizard-driven form: Wizard + Input + ValidateOnSave composed via @trait.X (two-hop).",
+  "description": "std-wizard-form as a Function",
   "orbitals": [
     {
       "name": "WizardFormOrbital",
@@ -45,19 +45,70 @@
       },
       "traits": [
         {
-          "ref": "Wizard.traits.WizardEntryWizard",
-          "name": "WizardFormWizard",
-          "linkedEntity": "WizardFormEntry"
-        },
-        {
           "ref": "Input.traits.TextInputInput",
           "name": "WizardFormInput",
           "linkedEntity": "WizardFormEntry"
         },
         {
+          "ref": "Wizard.traits.WizardEntryWizard",
+          "name": "WizardFormWizard",
+          "linkedEntity": "WizardFormEntry",
+          "effects": {
+            "RENDER_STEP": [
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "stack",
+                  "className": "max-w-xl mx-auto w-full",
+                  "children": [
+                    {
+                      "variant": "h2",
+                      "content": "@entity.step",
+                      "type": "typography"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    "@trait.WizardFormInput",
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "justify": "end",
+                      "children": [
+                        {
+                          "event": "PREV",
+                          "variant": "ghost",
+                          "label": "Back",
+                          "type": "button"
+                        },
+                        {
+                          "type": "button",
+                          "variant": "primary",
+                          "event": "NEXT",
+                          "label": "Next"
+                        }
+                      ]
+                    }
+                  ],
+                  "direction": "vertical",
+                  "gap": "md"
+                }
+              ]
+            ]
+          }
+        },
+        {
           "ref": "Validate.traits.OrbFileWatcher",
           "name": "WizardFormValidate",
-          "linkedEntity": "WizardFormEntry"
+          "linkedEntity": "WizardFormEntry",
+          "listens": [
+            {
+              "event": "WizardFormWizard.STEP_COMPLETED",
+              "triggers": "VALIDATE"
+            }
+          ]
         },
         {
           "name": "WizardFormLayout",
@@ -72,7 +123,8 @@
             ],
             "events": [
               {
-                "key": "INIT"
+                "key": "INIT",
+                "name": "Initialize"
               }
             ],
             "transitions": [

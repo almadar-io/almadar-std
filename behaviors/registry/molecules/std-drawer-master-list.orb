@@ -1,7 +1,7 @@
 {
   "name": "std-drawer-master-list",
   "version": "1.0.0",
-  "description": "Master-drawer: Browse left + Drawer right, composed via @trait.X.",
+  "description": "std-drawer-master-list as a Function",
   "orbitals": [
     {
       "name": "DrawerMasterOrbital",
@@ -48,7 +48,16 @@
         {
           "ref": "Drawer.traits.DrawerContentDrawer",
           "name": "DrawerMasterDrawer",
-          "linkedEntity": "DrawerMasterItem"
+          "linkedEntity": "DrawerMasterItem",
+          "listens": [
+            {
+              "event": "DrawerMasterBrowse.SELECT",
+              "triggers": "OPEN",
+              "payloadMapping": {
+                "id": "@payload.id"
+              }
+            }
+          ]
         },
         {
           "name": "DrawerMasterLayout",
@@ -63,7 +72,8 @@
             ],
             "events": [
               {
-                "key": "INIT"
+                "key": "INIT",
+                "name": "Initialize"
               }
             ],
             "transitions": [
@@ -77,28 +87,28 @@
                     "main",
                     {
                       "gap": "md",
+                      "type": "stack",
                       "direction": "horizontal",
                       "children": [
                         {
+                          "children": [
+                            "@trait.DrawerMasterBrowse"
+                          ],
                           "type": "box",
                           "style": {
                             "flex": "3"
-                          },
-                          "children": [
-                            "@trait.DrawerMasterBrowse"
-                          ]
+                          }
                         },
                         {
                           "children": [
                             "@trait.DrawerMasterDrawer"
                           ],
-                          "type": "box",
                           "style": {
                             "flex": "2"
-                          }
+                          },
+                          "type": "box"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
