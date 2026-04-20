@@ -24,9 +24,9 @@ orbital EmployeeOrbital {
       ONBOARD external { id: string }
     }
     listens {
-      * EMPLOYEE_CREATED -> INIT
-      * EMPLOYEE_UPDATED -> INIT
-      * EMPLOYEE_DELETED -> INIT
+      EmployeeCreate EMPLOYEE_CREATED -> INIT
+      EmployeeEdit EMPLOYEE_UPDATED -> INIT
+      EmployeeDelete EMPLOYEE_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -55,7 +55,6 @@ orbital EmployeeOrbital {
         (emit EMPLOYEE_CREATED)
     }
     emits {
-      SAVE
       EMPLOYEE_CREATED external { id: string }
     }
     listens {
@@ -85,7 +84,6 @@ orbital EmployeeOrbital {
         (emit EMPLOYEE_UPDATED)
     }
     emits {
-      SAVE
       EMPLOYEE_UPDATED external { id: string }
     }
     listens {
@@ -112,9 +110,6 @@ orbital EmployeeOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -150,7 +145,6 @@ orbital EmployeeOrbital {
         (ref Employee)
     }
     emits {
-      CONFIRM_DELETE
       EMPLOYEE_DELETED external { id: string }
     }
     listens {
@@ -248,9 +242,9 @@ orbital TimeOffOrbital {
       APPROVE_LEAVE external { id: string }
     }
     listens {
-      * TIME_OFF_CREATED -> INIT
-      * TIME_OFF_UPDATED -> INIT
-      * TIME_OFF_DELETED -> INIT
+      TimeOffCreate TIME_OFF_CREATED -> INIT
+      TimeOffEdit TIME_OFF_UPDATED -> INIT
+      TimeOffDelete TIME_OFF_DELETED -> INIT
           TimeOffLoadFailed { message : string }
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]
@@ -276,7 +270,6 @@ orbital TimeOffOrbital {
         (emit TIME_OFF_CREATED)
     }
     emits {
-      SAVE
       TIME_OFF_CREATED
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]
@@ -306,7 +299,6 @@ orbital TimeOffOrbital {
         (emit TIME_OFF_UPDATED)
     }
     emits {
-      SAVE
       TIME_OFF_UPDATED
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]
@@ -333,9 +325,6 @@ orbital TimeOffOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]
     listens {
@@ -370,7 +359,6 @@ orbital TimeOffOrbital {
         (ref TimeOff)
     }
     emits {
-      CONFIRM_DELETE
       TIME_OFF_DELETED
     }
     emits: [TimeOffLoaded, TimeOffLoadFailed]

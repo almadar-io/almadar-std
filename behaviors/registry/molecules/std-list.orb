@@ -68,114 +68,114 @@
                 "main",
                 {
                   "gap": "lg",
-                  "type": "stack",
-                  "direction": "vertical",
-                  "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
-                      "justify": "space-between",
-                      "type": "stack",
                       "direction": "horizontal",
                       "align": "center",
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "list",
+                              "size": "lg",
                               "type": "icon",
-                              "size": "lg"
+                              "name": "list"
                             },
                             {
-                              "variant": "h2",
                               "type": "typography",
+                              "variant": "h2",
                               "content": "ListItems"
                             }
                           ],
+                          "gap": "sm",
                           "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
-                          "children": [
-                            {
-                              "type": "button",
-                              "label": "Create ListItem",
-                              "variant": "primary",
-                              "icon": "plus",
-                              "event": "CREATE"
-                            }
-                          ],
                           "type": "stack",
                           "gap": "sm",
+                          "children": [
+                            {
+                              "variant": "primary",
+                              "event": "CREATE",
+                              "icon": "plus",
+                              "type": "button",
+                              "label": "Create ListItem"
+                            }
+                          ],
                           "direction": "horizontal"
                         }
                       ],
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack",
+                      "justify": "space-between"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "columns": [
-                        {
-                          "icon": "list",
-                          "variant": "h4",
-                          "label": "Name",
-                          "name": "name"
-                        },
-                        {
-                          "variant": "badge",
-                          "colorMap": {
-                            "disabled": "neutral",
-                            "completed": "success",
-                            "inactive": "neutral",
-                            "scheduled": "warning",
-                            "draft": "warning",
-                            "pending": "warning",
-                            "cancelled": "destructive",
-                            "failed": "destructive",
-                            "active": "success",
-                            "archived": "neutral",
-                            "error": "destructive",
-                            "done": "success"
-                          },
-                          "label": "Description",
-                          "name": "description"
-                        },
-                        {
-                          "variant": "caption",
-                          "name": "status",
-                          "label": "Status"
-                        }
-                      ],
-                      "type": "data-grid",
+                      "entity": "ListItem",
+                      "emptyDescription": "Create your first listitem to get started.",
                       "emptyIcon": "inbox",
                       "itemActions": [
                         {
                           "label": "View",
-                          "event": "VIEW",
                           "size": "sm",
-                          "variant": "ghost"
-                        },
-                        {
                           "variant": "ghost",
-                          "event": "EDIT",
-                          "size": "sm",
-                          "label": "Edit"
+                          "event": "VIEW"
                         },
                         {
-                          "event": "DELETE",
+                          "label": "Edit",
+                          "size": "sm",
+                          "variant": "ghost",
+                          "event": "EDIT"
+                        },
+                        {
                           "variant": "danger",
                           "size": "sm",
+                          "event": "DELETE",
                           "label": "Delete"
                         }
                       ],
-                      "entity": "ListItem",
+                      "type": "data-grid",
                       "emptyTitle": "No listitems yet",
-                      "emptyDescription": "Create your first listitem to get started."
+                      "columns": [
+                        {
+                          "name": "name",
+                          "variant": "h4",
+                          "label": "Name",
+                          "icon": "list"
+                        },
+                        {
+                          "colorMap": {
+                            "done": "success",
+                            "active": "success",
+                            "scheduled": "warning",
+                            "disabled": "neutral",
+                            "error": "destructive",
+                            "draft": "warning",
+                            "completed": "success",
+                            "pending": "warning",
+                            "inactive": "neutral",
+                            "archived": "neutral",
+                            "cancelled": "destructive",
+                            "failed": "destructive"
+                          },
+                          "variant": "badge",
+                          "name": "description",
+                          "label": "Description"
+                        },
+                        {
+                          "variant": "caption",
+                          "label": "Status",
+                          "name": "status"
+                        }
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "direction": "vertical",
+                  "className": "max-w-5xl mx-auto w-full"
                 }
               ]
             ]
@@ -189,6 +189,55 @@
             "OPEN": "CREATE"
           },
           "effects": {
+            "CREATE": [
+              [
+                "fetch",
+                "ListItem"
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "gap": "md",
+                  "direction": "vertical",
+                  "children": [
+                    {
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "name": "plus-circle",
+                          "type": "icon",
+                          "size": "md"
+                        },
+                        {
+                          "variant": "h3",
+                          "content": "Create ListItem",
+                          "type": "typography"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "fields": [
+                        "name",
+                        "description",
+                        "status"
+                      ],
+                      "cancelEvent": "CLOSE",
+                      "entity": "ListItem",
+                      "type": "form-section",
+                      "mode": "create",
+                      "submitEvent": "SAVE"
+                    }
+                  ]
+                }
+              ]
+            ],
             "SAVE": [
               [
                 "persist",
@@ -228,55 +277,6 @@
                 "info"
               ]
             ],
-            "CREATE": [
-              [
-                "fetch",
-                "ListItem"
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "gap": "md",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "size": "md",
-                          "name": "plus-circle",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "h3",
-                          "type": "typography",
-                          "content": "Create ListItem"
-                        }
-                      ],
-                      "gap": "sm"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "mode": "create",
-                      "submitEvent": "SAVE",
-                      "type": "form-section",
-                      "entity": "ListItem",
-                      "cancelEvent": "CLOSE",
-                      "fields": [
-                        "name",
-                        "description",
-                        "status"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            ],
             "INIT": [
               [
                 "ref",
@@ -293,6 +293,25 @@
             "OPEN": "EDIT"
           },
           "effects": {
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ]
+            ],
             "SAVE": [
               [
                 "persist",
@@ -325,64 +344,45 @@
                 "render-ui",
                 "modal",
                 {
-                  "direction": "vertical",
+                  "type": "stack",
                   "children": [
                     {
-                      "gap": "sm",
+                      "direction": "horizontal",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "edit",
+                          "type": "icon",
                           "size": "md"
                         },
                         {
-                          "variant": "h3",
                           "type": "typography",
-                          "content": "Edit ListItem"
+                          "content": "Edit ListItem",
+                          "variant": "h3"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "horizontal"
+                      "gap": "sm",
+                      "type": "stack"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "entityId": "@entity.id",
+                      "mode": "edit",
+                      "entity": "ListItem",
                       "type": "form-section",
                       "submitEvent": "SAVE",
+                      "cancelEvent": "CLOSE",
                       "fields": [
                         "name",
                         "description",
                         "status"
-                      ],
-                      "cancelEvent": "CLOSE",
-                      "entityId": "@entity.id",
-                      "entity": "ListItem",
-                      "mode": "edit"
+                      ]
                     }
                   ],
-                  "type": "stack",
-                  "gap": "md"
+                  "gap": "md",
+                  "direction": "vertical"
                 }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
               ]
             ],
             "INIT": [
@@ -405,6 +405,139 @@
               [
                 "ref",
                 "ListItem"
+              ]
+            ],
+            "VIEW": [
+              [
+                "fetch",
+                "ListItem",
+                {
+                  "id": "@payload.id"
+                }
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "gap": "md",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "eye",
+                          "size": "md"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "h3",
+                          "content": "@entity.name"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "gap": "md",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Name",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "@entity.name",
+                          "type": "typography",
+                          "variant": "body"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Description"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.description",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "md"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Status",
+                          "variant": "caption"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.status"
+                        }
+                      ],
+                      "gap": "md",
+                      "type": "stack"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "content": "Created At",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.createdAt",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "md"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "justify": "end",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "label": "Edit",
+                          "type": "button",
+                          "variant": "primary",
+                          "icon": "edit",
+                          "event": "EDIT"
+                        },
+                        {
+                          "event": "CLOSE",
+                          "type": "button",
+                          "label": "Close",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "type": "stack"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "vertical"
+                }
               ]
             ],
             "SAVE": [
@@ -439,139 +572,6 @@
                 "Cancelled",
                 "info"
               ]
-            ],
-            "VIEW": [
-              [
-                "fetch",
-                "ListItem",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "gap": "md",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "size": "md",
-                          "name": "eye",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "@entity.name",
-                          "type": "typography",
-                          "variant": "h3"
-                        }
-                      ],
-                      "align": "center",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "content": "Name",
-                          "variant": "caption",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.name"
-                        }
-                      ],
-                      "type": "stack"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Description"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.description",
-                          "type": "typography"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Status"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.status"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "md"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Created At"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.createdAt"
-                        }
-                      ],
-                      "type": "stack",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "type": "button",
-                          "variant": "primary",
-                          "event": "EDIT",
-                          "label": "Edit",
-                          "icon": "edit"
-                        },
-                        {
-                          "label": "Close",
-                          "type": "button",
-                          "event": "CLOSE",
-                          "variant": "ghost"
-                        }
-                      ],
-                      "justify": "end"
-                    }
-                  ]
-                }
-              ]
             ]
           }
         },
@@ -580,8 +580,8 @@
           "name": "ListItemDelete",
           "linkedEntity": "ListItem",
           "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
+            "REQUEST": "DELETE",
+            "CONFIRM": "CONFIRM_DELETE"
           },
           "effects": {
             "INIT": [
@@ -590,7 +590,7 @@
                 "ListItem"
               ]
             ],
-            "CANCEL": [
+            "CLOSE": [
               [
                 "render-ui",
                 "modal",
@@ -650,61 +650,61 @@
                 "modal",
                 {
                   "direction": "vertical",
-                  "gap": "md",
-                  "type": "stack",
                   "children": [
                     {
-                      "type": "stack",
                       "align": "center",
-                      "gap": "sm",
                       "children": [
                         {
-                          "size": "md",
+                          "name": "alert-triangle",
                           "type": "icon",
-                          "name": "alert-triangle"
+                          "size": "md"
                         },
                         {
+                          "content": "Delete ListItem",
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Delete ListItem"
+                          "type": "typography"
                         }
                       ],
-                      "direction": "horizontal"
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "alert",
+                      "variant": "danger",
                       "message": "This action cannot be undone.",
-                      "variant": "danger"
+                      "type": "alert"
                     },
                     {
-                      "type": "stack",
                       "children": [
                         {
+                          "label": "Cancel",
                           "event": "CANCEL",
                           "type": "button",
-                          "label": "Cancel",
                           "variant": "ghost"
                         },
                         {
-                          "event": "CONFIRM_DELETE",
+                          "label": "Delete",
+                          "icon": "check",
                           "type": "button",
                           "variant": "danger",
-                          "icon": "check",
-                          "label": "Delete"
+                          "event": "CONFIRM_DELETE"
                         }
                       ],
-                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack",
                       "justify": "end",
-                      "direction": "horizontal"
+                      "gap": "sm"
                     }
-                  ]
+                  ],
+                  "type": "stack",
+                  "gap": "md"
                 }
               ]
             ],
-            "CLOSE": [
+            "CANCEL": [
               [
                 "render-ui",
                 "modal",

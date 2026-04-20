@@ -72,91 +72,54 @@
                 "render-ui",
                 "main",
                 {
-                  "direction": "vertical",
-                  "gap": "lg",
-                  "type": "stack",
-                  "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
-                      "justify": "space-between",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
                       "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between",
+                      "align": "center",
                       "children": [
                         {
-                          "gap": "sm",
                           "type": "stack",
+                          "gap": "sm",
+                          "align": "center",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "package",
                               "size": "lg",
+                              "name": "package",
                               "type": "icon"
                             },
                             {
-                              "content": "InventoryItems Inventory",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "InventoryItems Inventory"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
                               "label": "Add InventoryItem",
-                              "type": "button",
                               "variant": "primary",
                               "icon": "plus",
+                              "type": "button",
                               "event": "ADD_ITEM"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "columns": [
-                        {
-                          "label": "Name",
-                          "icon": "package",
-                          "variant": "h4",
-                          "name": "name"
-                        },
-                        {
-                          "name": "description",
-                          "variant": "badge",
-                          "colorMap": {
-                            "archived": "neutral",
-                            "failed": "destructive",
-                            "pending": "warning",
-                            "scheduled": "warning",
-                            "draft": "warning",
-                            "active": "success",
-                            "completed": "success",
-                            "inactive": "neutral",
-                            "disabled": "neutral",
-                            "cancelled": "destructive",
-                            "error": "destructive",
-                            "done": "success"
-                          },
-                          "label": "Description"
-                        },
-                        {
-                          "label": "Status",
-                          "name": "status",
-                          "variant": "caption"
-                        }
-                      ],
-                      "entity": "InventoryItem",
+                      "emptyIcon": "inbox",
                       "emptyTitle": "No items yet",
-                      "emptyDescription": "Add your first item to get started.",
                       "itemActions": [
                         {
                           "variant": "ghost",
@@ -166,15 +129,52 @@
                         },
                         {
                           "event": "DROP",
+                          "size": "sm",
                           "label": "Drop",
-                          "variant": "danger",
-                          "size": "sm"
+                          "variant": "danger"
                         }
                       ],
-                      "emptyIcon": "inbox",
+                      "columns": [
+                        {
+                          "variant": "h4",
+                          "icon": "package",
+                          "name": "name",
+                          "label": "Name"
+                        },
+                        {
+                          "colorMap": {
+                            "done": "success",
+                            "draft": "warning",
+                            "archived": "neutral",
+                            "error": "destructive",
+                            "failed": "destructive",
+                            "scheduled": "warning",
+                            "cancelled": "destructive",
+                            "inactive": "neutral",
+                            "disabled": "neutral",
+                            "active": "success",
+                            "completed": "success",
+                            "pending": "warning"
+                          },
+                          "label": "Description",
+                          "variant": "badge",
+                          "name": "description"
+                        },
+                        {
+                          "name": "status",
+                          "label": "Status",
+                          "variant": "caption"
+                        }
+                      ],
+                      "emptyDescription": "Add your first item to get started.",
+                      "entity": "InventoryItem",
                       "type": "data-grid"
                     }
-                  ]
+                  ],
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack",
+                  "className": "max-w-5xl mx-auto w-full"
                 }
               ]
             ]
@@ -188,31 +188,6 @@
             "OPEN": "ADD_ITEM"
           },
           "effects": {
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ]
-            ],
-            "INIT": [
-              [
-                "ref",
-                "InventoryItem"
-              ]
-            ],
             "SAVE": [
               [
                 "persist",
@@ -233,6 +208,25 @@
                 }
               ]
             ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ]
+            ],
             "ADD_ITEM": [
               [
                 "fetch",
@@ -242,13 +236,13 @@
                 "render-ui",
                 "modal",
                 {
+                  "type": "stack",
                   "children": [
                     {
-                      "direction": "horizontal",
                       "children": [
                         {
-                          "type": "icon",
                           "size": "md",
+                          "type": "icon",
                           "name": "plus-circle"
                         },
                         {
@@ -257,6 +251,7 @@
                           "variant": "h3"
                         }
                       ],
+                      "direction": "horizontal",
                       "gap": "sm",
                       "type": "stack"
                     },
@@ -264,22 +259,27 @@
                       "type": "divider"
                     },
                     {
+                      "type": "form-section",
+                      "mode": "create",
+                      "entity": "InventoryItem",
+                      "cancelEvent": "CLOSE",
+                      "submitEvent": "SAVE",
                       "fields": [
                         "name",
                         "description",
                         "status"
-                      ],
-                      "type": "form-section",
-                      "entity": "InventoryItem",
-                      "submitEvent": "SAVE",
-                      "mode": "create",
-                      "cancelEvent": "CLOSE"
+                      ]
                     }
                   ],
                   "gap": "md",
-                  "type": "stack",
                   "direction": "vertical"
                 }
+              ]
+            ],
+            "INIT": [
+              [
+                "ref",
+                "InventoryItem"
               ]
             ]
           }
@@ -292,6 +292,12 @@
             "OPEN": "USE_ITEM"
           },
           "effects": {
+            "INIT": [
+              [
+                "ref",
+                "InventoryItem"
+              ]
+            ],
             "USE_ITEM": [
               [
                 "fetch",
@@ -304,19 +310,16 @@
                 "render-ui",
                 "modal",
                 {
+                  "type": "stack",
+                  "direction": "vertical",
                   "align": "center",
                   "gap": "md",
-                  "direction": "vertical",
                   "children": [
                     {
-                      "align": "center",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm",
                       "children": [
                         {
-                          "name": "zap",
                           "size": "md",
+                          "name": "zap",
                           "type": "icon"
                         },
                         {
@@ -324,39 +327,42 @@
                           "content": "Use InventoryItem",
                           "variant": "h3"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "typography",
                       "variant": "body",
+                      "type": "typography",
                       "content": "@entity.name"
                     },
                     {
-                      "type": "stack",
                       "justify": "center",
-                      "direction": "horizontal",
-                      "gap": "sm",
                       "children": [
                         {
-                          "label": "Cancel",
                           "variant": "ghost",
                           "type": "button",
+                          "label": "Cancel",
                           "event": "CLOSE"
                         },
                         {
+                          "type": "button",
+                          "label": "Confirm Use",
                           "event": "SAVE",
                           "variant": "primary",
-                          "label": "Confirm Use",
-                          "icon": "check",
-                          "type": "button"
+                          "icon": "check"
                         }
-                      ]
+                      ],
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal"
                     }
-                  ],
-                  "type": "stack"
+                  ]
                 }
               ]
             ],
@@ -377,12 +383,6 @@
                 "notify",
                 "Cancelled",
                 "info"
-              ]
-            ],
-            "INIT": [
-              [
-                "ref",
-                "InventoryItem"
               ]
             ],
             "SAVE": [
@@ -440,12 +440,6 @@
                 "InventoryItem"
               ]
             ],
-            "INIT": [
-              [
-                "ref",
-                "InventoryItem"
-              ]
-            ],
             "CANCEL": [
               [
                 "render-ui",
@@ -459,6 +453,30 @@
                   "type": "box"
                 }
               ],
+              [
+                "ref",
+                "InventoryItem"
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ],
+              [
+                "ref",
+                "InventoryItem"
+              ]
+            ],
+            "INIT": [
               [
                 "ref",
                 "InventoryItem"
@@ -482,76 +500,58 @@
                 "modal",
                 {
                   "gap": "md",
-                  "type": "stack",
                   "children": [
                     {
                       "align": "center",
                       "children": [
                         {
-                          "name": "alert-triangle",
+                          "type": "icon",
                           "size": "md",
-                          "type": "icon"
+                          "name": "alert-triangle"
                         },
                         {
+                          "type": "typography",
                           "variant": "h3",
-                          "content": "Drop InventoryItem",
-                          "type": "typography"
+                          "content": "Drop InventoryItem"
                         }
                       ],
-                      "direction": "horizontal",
+                      "gap": "sm",
                       "type": "stack",
-                      "gap": "sm"
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "message": "Are you sure you want to drop this inventoryitem?",
                       "type": "alert",
+                      "message": "Are you sure you want to drop this inventoryitem?",
                       "variant": "danger"
                     },
                     {
-                      "direction": "horizontal",
-                      "gap": "sm",
+                      "type": "stack",
                       "justify": "end",
                       "children": [
                         {
-                          "label": "Cancel",
-                          "event": "CANCEL",
+                          "type": "button",
                           "variant": "ghost",
-                          "type": "button"
+                          "label": "Cancel",
+                          "event": "CANCEL"
                         },
                         {
                           "event": "CONFIRM_DROP",
-                          "type": "button",
-                          "label": "Drop",
+                          "icon": "check",
                           "variant": "danger",
-                          "icon": "check"
+                          "label": "Drop",
+                          "type": "button"
                         }
                       ],
-                      "type": "stack"
+                      "direction": "horizontal",
+                      "gap": "sm"
                     }
                   ],
-                  "direction": "vertical"
+                  "direction": "vertical",
+                  "type": "stack"
                 }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "ref",
-                "InventoryItem"
               ]
             ]
           }

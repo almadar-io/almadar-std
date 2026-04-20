@@ -173,12 +173,20 @@
           ],
           "listens": [
             {
-              "event": "*.FIX_SUCCEEDED",
-              "triggers": "INIT"
+              "event": "FIX_SUCCEEDED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentFixLoopCycle"
+              }
             },
             {
-              "event": "*.FIX_FAILED",
-              "triggers": "INIT"
+              "event": "FIX_FAILED",
+              "triggers": "INIT",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentFixLoopCycle"
+              }
             }
           ],
           "stateMachine": {
@@ -292,12 +300,14 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "gap": "sm",
                           "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
                           "children": [
                             {
                               "size": "lg",
@@ -305,45 +315,43 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Validation-Fix Loop",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Enter the target to validate and auto-fix",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "form-section",
                                   "fields": [
                                     "target"
                                   ],
+                                  "type": "form-section",
+                                  "mode": "edit",
                                   "entity": "AgentFixLoop",
-                                  "submitEvent": "FIX",
-                                  "mode": "edit"
+                                  "submitEvent": "FIX"
                                 }
                               ],
-                              "direction": "vertical",
                               "gap": "md",
+                              "direction": "vertical",
                               "type": "stack"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
-                      ],
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -384,29 +392,29 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "icon",
+                          "name": "shield-check",
                           "size": "lg",
-                          "name": "shield-check"
+                          "type": "icon"
                         },
                         {
                           "variant": "h3",
-                          "content": "Validating...",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Validating..."
                         },
                         {
                           "type": "spinner",
                           "size": "lg"
                         },
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "@entity.target",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "@entity.target"
                             },
                             {
                               "label": [
@@ -426,11 +434,11 @@
                             }
                           ],
                           "type": "stack",
-                          "justify": "center"
+                          "gap": "md",
+                          "justify": "center",
+                          "direction": "horizontal"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center"
                     }
                   ]
@@ -455,20 +463,14 @@
                     "main",
                     {
                       "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "align": "center",
                           "justify": "space-between",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "horizontal",
                               "gap": "sm",
-                              "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
                                   "size": "lg",
@@ -476,20 +478,25 @@
                                   "name": "check-circle"
                                 },
                                 {
-                                  "content": "Validation Passed",
                                   "type": "typography",
+                                  "content": "Validation Passed",
                                   "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "align": "center",
+                              "direction": "horizontal"
                             },
                             {
-                              "event": "RESET",
-                              "label": "New Target",
+                              "type": "button",
                               "variant": "ghost",
-                              "icon": "rotate-ccw",
-                              "type": "button"
+                              "label": "New Target",
+                              "event": "RESET",
+                              "icon": "rotate-ccw"
                             }
-                          ]
+                          ],
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -499,22 +506,25 @@
                           "type": "simple-grid",
                           "children": [
                             {
-                              "value": "@entity.fixAttempts",
                               "label": "Fix Attempts",
-                              "type": "stat-display",
-                              "icon": "wrench"
+                              "icon": "wrench",
+                              "value": "@entity.fixAttempts",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Status",
                               "value": "Passed",
-                              "icon": "check",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Status",
+                              "icon": "check"
                             }
                           ]
                         },
                         {
                           "children": [
                             {
+                              "gap": "sm",
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "content": "Target",
@@ -522,20 +532,18 @@
                                   "type": "typography"
                                 },
                                 {
-                                  "content": "@entity.target",
                                   "variant": "body",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "@entity.target"
                                 }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm"
+                              ]
                             }
                           ],
                           "type": "card"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -584,29 +592,31 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "stack",
                           "justify": "space-between",
+                          "align": "center",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
                               "align": "center",
-                              "direction": "horizontal",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "icon",
                                   "size": "lg",
+                                  "type": "icon",
                                   "name": "cpu"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "Generating fix...",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "Generating fix..."
                                 }
                               ],
-                              "gap": "sm"
+                              "direction": "horizontal",
+                              "type": "stack"
                             },
                             {
                               "label": [
@@ -620,42 +630,40 @@
                               "type": "badge"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "gap": "sm",
+                              "direction": "vertical",
                               "children": [
                                 {
-                                  "content": "Validation Errors",
+                                  "type": "typography",
                                   "variant": "caption",
-                                  "type": "typography"
+                                  "content": "Validation Errors"
                                 },
                                 {
+                                  "variant": "error",
                                   "message": "@entity.validationErrors",
-                                  "type": "alert",
-                                  "variant": "error"
+                                  "type": "alert"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "vertical"
+                              "gap": "sm",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         },
                         {
-                          "type": "spinner",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "spinner"
                         }
                       ],
-                      "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -683,7 +691,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
@@ -692,29 +699,29 @@
                           "name": "x-circle"
                         },
                         {
+                          "content": "Fix Loop Failed",
                           "variant": "h2",
-                          "type": "typography",
-                          "content": "Fix Loop Failed"
+                          "type": "typography"
                         },
                         {
-                          "message": "@entity.error",
                           "type": "alert",
-                          "variant": "error"
+                          "variant": "error",
+                          "message": "@entity.error"
                         },
                         {
                           "cols": 2.0,
                           "children": [
                             {
-                              "icon": "wrench",
                               "type": "stat-display",
                               "label": "Attempts Used",
-                              "value": "@entity.fixAttempts"
+                              "value": "@entity.fixAttempts",
+                              "icon": "wrench"
                             },
                             {
                               "type": "stat-display",
-                              "value": "@entity.errorCount",
                               "icon": "alert-triangle",
-                              "label": "Remaining Errors"
+                              "label": "Remaining Errors",
+                              "value": "@entity.errorCount"
                             }
                           ],
                           "type": "simple-grid"
@@ -723,34 +730,35 @@
                           "type": "card",
                           "children": [
                             {
-                              "gap": "sm",
                               "type": "stack",
-                              "direction": "vertical",
+                              "gap": "sm",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "caption",
+                                  "type": "typography",
                                   "content": "Last Validation Errors"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "@entity.validationErrors",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "content": "@entity.validationErrors"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
                           ]
                         },
                         {
+                          "type": "button",
                           "variant": "primary",
                           "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "type": "button",
-                          "event": "RESET"
+                          "event": "RESET",
+                          "label": "Retry"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -783,17 +791,16 @@
                     "main",
                     {
                       "type": "stack",
-                      "align": "center",
                       "children": [
                         {
                           "size": "lg",
-                          "name": "tool",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "tool"
                         },
                         {
-                          "type": "typography",
+                          "variant": "h3",
                           "content": "Applying fix...",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "type": "spinner",
@@ -803,8 +810,9 @@
                           "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
+                              "gap": "sm",
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "caption",
@@ -812,18 +820,18 @@
                                   "content": "Proposed Fix"
                                 },
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "@entity.currentFix"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ]
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "lg",
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -851,14 +859,12 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
+                          "size": "lg",
                           "name": "x-circle",
-                          "size": "lg"
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -871,53 +877,55 @@
                           "variant": "error"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 2.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "wrench",
+                              "type": "stat-display",
                               "label": "Attempts Used",
                               "value": "@entity.fixAttempts"
                             },
                             {
                               "icon": "alert-triangle",
-                              "label": "Remaining Errors",
+                              "value": "@entity.errorCount",
                               "type": "stat-display",
-                              "value": "@entity.errorCount"
+                              "label": "Remaining Errors"
                             }
-                          ]
+                          ],
+                          "type": "simple-grid",
+                          "cols": 2.0
                         },
                         {
                           "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "caption",
+                                  "content": "Last Validation Errors",
                                   "type": "typography",
-                                  "content": "Last Validation Errors"
+                                  "variant": "caption"
                                 },
                                 {
-                                  "variant": "body",
                                   "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.validationErrors"
                                 }
                               ],
+                              "direction": "vertical",
                               "type": "stack",
                               "gap": "sm"
                             }
                           ]
                         },
                         {
+                          "variant": "primary",
+                          "type": "button",
                           "label": "Retry",
                           "event": "RESET",
-                          "type": "button",
-                          "variant": "primary",
                           "icon": "rotate-ccw"
                         }
                       ],
+                      "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -945,14 +953,13 @@
                     "main",
                     {
                       "gap": "lg",
-                      "type": "stack",
                       "align": "center",
                       "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "shield-check",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
@@ -964,16 +971,16 @@
                           "type": "spinner"
                         },
                         {
+                          "direction": "horizontal",
                           "justify": "center",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "badge",
-                              "label": "@entity.target"
+                              "label": "@entity.target",
+                              "type": "badge"
                             },
                             {
-                              "type": "badge",
                               "label": [
                                 "str/concat",
                                 "Attempt ",
@@ -986,12 +993,13 @@
                                   "str/concat",
                                   "@entity.maxAttempts"
                                 ]
-                              ]
+                              ],
+                              "type": "badge"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         }
-                      ]
+                      ],
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1019,74 +1027,74 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "name": "x-circle",
-                          "type": "icon",
-                          "size": "lg"
-                        },
-                        {
-                          "variant": "h2",
-                          "type": "typography",
-                          "content": "Fix Loop Failed"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "error",
-                          "message": "@entity.error"
-                        },
-                        {
-                          "cols": 2.0,
-                          "children": [
-                            {
-                              "icon": "wrench",
-                              "type": "stat-display",
-                              "label": "Attempts Used",
-                              "value": "@entity.fixAttempts"
-                            },
-                            {
-                              "label": "Remaining Errors",
-                              "value": "@entity.errorCount",
-                              "icon": "alert-triangle",
-                              "type": "stat-display"
-                            }
-                          ],
-                          "type": "simple-grid"
-                        },
-                        {
-                          "type": "card",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "Last Validation Errors"
-                                },
-                                {
-                                  "variant": "body",
-                                  "content": "@entity.validationErrors",
-                                  "type": "typography"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "gap": "sm"
-                            }
-                          ]
-                        },
-                        {
-                          "variant": "primary",
-                          "event": "RESET",
-                          "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "type": "button"
-                        }
-                      ],
+                      "direction": "vertical",
                       "align": "center",
                       "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical"
+                      "children": [
+                        {
+                          "type": "icon",
+                          "size": "lg",
+                          "name": "x-circle"
+                        },
+                        {
+                          "content": "Fix Loop Failed",
+                          "variant": "h2",
+                          "type": "typography"
+                        },
+                        {
+                          "message": "@entity.error",
+                          "type": "alert",
+                          "variant": "error"
+                        },
+                        {
+                          "type": "simple-grid",
+                          "children": [
+                            {
+                              "icon": "wrench",
+                              "value": "@entity.fixAttempts",
+                              "type": "stat-display",
+                              "label": "Attempts Used"
+                            },
+                            {
+                              "value": "@entity.errorCount",
+                              "icon": "alert-triangle",
+                              "type": "stat-display",
+                              "label": "Remaining Errors"
+                            }
+                          ],
+                          "cols": 2.0
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "variant": "caption",
+                                  "content": "Last Validation Errors",
+                                  "type": "typography"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.validationErrors"
+                                }
+                              ],
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "label": "Retry",
+                          "event": "RESET",
+                          "variant": "primary",
+                          "type": "button",
+                          "icon": "rotate-ccw"
+                        }
+                      ]
                     }
                   ]
                 ]
@@ -1135,24 +1143,27 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "wrench",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "wrench"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "Validation-Fix Loop",
-                              "variant": "h2"
+                              "type": "typography"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
@@ -1161,32 +1172,29 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "content": "Enter the target to validate and auto-fix",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "Enter the target to validate and auto-fix"
                                 },
                                 {
                                   "mode": "edit",
+                                  "entity": "AgentFixLoop",
+                                  "submitEvent": "FIX",
                                   "type": "form-section",
                                   "fields": [
                                     "target"
-                                  ],
-                                  "entity": "AgentFixLoop",
-                                  "submitEvent": "FIX"
+                                  ]
                                 }
-                              ]
+                              ],
+                              "gap": "md",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1235,27 +1243,27 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
+                              "size": "lg",
                               "name": "wrench"
                             },
                             {
                               "variant": "h2",
-                              "content": "Validation-Fix Loop",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Validation-Fix Loop"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
@@ -1264,25 +1272,25 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "variant": "body",
+                                  "type": "typography",
                                   "content": "Enter the target to validate and auto-fix"
                                 },
                                 {
-                                  "submitEvent": "FIX",
-                                  "entity": "AgentFixLoop",
+                                  "type": "form-section",
                                   "fields": [
                                     "target"
                                   ],
+                                  "submitEvent": "FIX",
                                   "mode": "edit",
-                                  "type": "form-section"
+                                  "entity": "AgentFixLoop"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "md",
+                              "direction": "vertical"
                             }
                           ]
                         }
@@ -1301,49 +1309,58 @@
           "linkedEntity": "AgentFixLoop",
           "emitsScope": "internal",
           "effects": {
-            "INIT": [
+            "START": [
               [
-                "fetch",
-                "AgentFixLoop"
+                "set",
+                "@entity.status",
+                "in_progress"
+              ],
+              [
+                "set",
+                "@entity.currentStep",
+                0.0
               ],
               [
                 "render-ui",
                 "main",
                 {
-                  "direction": "vertical",
                   "type": "stack",
+                  "direction": "vertical",
+                  "gap": "lg",
                   "children": [
                     {
-                      "gap": "sm",
-                      "direction": "horizontal",
                       "children": [
                         {
+                          "name": "loader",
                           "size": "lg",
-                          "name": "list-ordered",
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
+                          "content": "AgentFixLoop",
                           "variant": "h2",
-                          "content": "AgentFixLoop"
+                          "type": "typography"
                         },
                         {
                           "type": "badge",
-                          "label": "Idle",
-                          "variant": "default"
+                          "variant": "warning",
+                          "label": "In Progress"
                         }
                       ],
                       "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
                       "align": "center"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "type": "wizard-progress",
+                      "currentStep": "@entity.currentStep",
                       "steps": [
                         {
-                          "title": "Validate",
-                          "id": "0"
+                          "id": "0",
+                          "title": "Validate"
                         },
                         {
                           "title": "Analyze",
@@ -1354,22 +1371,51 @@
                           "id": "2"
                         },
                         {
-                          "title": "Re-validate",
-                          "id": "3"
+                          "id": "3",
+                          "title": "Re-validate"
                         }
-                      ],
-                      "currentStep": "@entity.currentStep",
-                      "type": "wizard-progress"
+                      ]
                     },
                     {
-                      "type": "button",
-                      "label": "Start",
-                      "icon": "play",
-                      "event": "START",
-                      "variant": "primary"
+                      "children": [
+                        {
+                          "value": "@entity.currentStep",
+                          "type": "stat-display",
+                          "label": "Current Step"
+                        },
+                        {
+                          "type": "stat-display",
+                          "label": "Total Steps",
+                          "value": "@entity.totalSteps"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center",
+                      "gap": "sm"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "button",
+                          "label": "Advance",
+                          "event": "ADVANCE",
+                          "icon": "chevron-right",
+                          "variant": "primary"
+                        },
+                        {
+                          "type": "button",
+                          "label": "Reset",
+                          "icon": "rotate-ccw",
+                          "event": "RESET",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "type": "stack",
+                      "gap": "sm"
                     }
-                  ],
-                  "gap": "lg"
+                  ]
                 }
               ]
             ],
@@ -1389,34 +1435,34 @@
                 {
                   "children": [
                     {
-                      "direction": "horizontal",
                       "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm",
                       "align": "center",
                       "children": [
                         {
                           "name": "loader",
-                          "size": "lg",
-                          "type": "icon"
+                          "type": "icon",
+                          "size": "lg"
                         },
                         {
-                          "content": "AgentFixLoop",
                           "variant": "h2",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "AgentFixLoop"
                         },
                         {
                           "label": "In Progress",
                           "type": "badge",
                           "variant": "warning"
                         }
-                      ],
-                      "gap": "sm"
+                      ]
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "currentStep": "@entity.currentStep",
                       "type": "wizard-progress",
+                      "currentStep": "@entity.currentStep",
                       "steps": [
                         {
                           "id": "0",
@@ -1427,53 +1473,53 @@
                           "title": "Analyze"
                         },
                         {
-                          "title": "Fix",
-                          "id": "2"
+                          "id": "2",
+                          "title": "Fix"
                         },
                         {
-                          "title": "Re-validate",
-                          "id": "3"
+                          "id": "3",
+                          "title": "Re-validate"
                         }
                       ]
                     },
                     {
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "sm",
                       "children": [
                         {
-                          "type": "stat-display",
                           "value": "@entity.currentStep",
+                          "type": "stat-display",
                           "label": "Current Step"
                         },
                         {
-                          "value": "@entity.totalSteps",
+                          "label": "Total Steps",
                           "type": "stat-display",
-                          "label": "Total Steps"
+                          "value": "@entity.totalSteps"
                         }
                       ],
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "align": "center"
+                      "direction": "horizontal"
                     },
                     {
+                      "direction": "horizontal",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "button",
                           "event": "ADVANCE",
+                          "type": "button",
+                          "variant": "primary",
                           "icon": "chevron-right",
-                          "label": "Advance",
-                          "variant": "primary"
+                          "label": "Advance"
                         },
                         {
-                          "icon": "rotate-ccw",
                           "event": "RESET",
+                          "label": "Reset",
                           "type": "button",
-                          "variant": "ghost",
-                          "label": "Reset"
+                          "icon": "rotate-ccw",
+                          "variant": "ghost"
                         }
                       ],
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "type": "stack"
+                      "gap": "sm"
                     }
                   ],
                   "direction": "vertical",
@@ -1492,30 +1538,125 @@
                 "render-ui",
                 "main",
                 {
-                  "gap": "lg",
+                  "type": "stack",
                   "direction": "vertical",
+                  "children": [
+                    {
+                      "align": "center",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "size": "lg",
+                          "type": "icon",
+                          "name": "x-circle"
+                        },
+                        {
+                          "variant": "h2",
+                          "type": "typography",
+                          "content": "AgentFixLoop"
+                        },
+                        {
+                          "variant": "destructive",
+                          "label": "Failed",
+                          "type": "badge"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "currentStep": "@entity.currentStep",
+                      "steps": [
+                        {
+                          "title": "Validate",
+                          "id": "0"
+                        },
+                        {
+                          "id": "1",
+                          "title": "Analyze"
+                        },
+                        {
+                          "id": "2",
+                          "title": "Fix"
+                        },
+                        {
+                          "id": "3",
+                          "title": "Re-validate"
+                        }
+                      ],
+                      "type": "wizard-progress"
+                    },
+                    {
+                      "variant": "error",
+                      "message": "Pipeline failed at the current step.",
+                      "type": "alert"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "value": "@entity.currentStep",
+                          "label": "Failed At Step",
+                          "type": "stat-display"
+                        }
+                      ]
+                    },
+                    {
+                      "icon": "rotate-ccw",
+                      "label": "Reset",
+                      "event": "RESET",
+                      "variant": "ghost",
+                      "type": "button"
+                    }
+                  ],
+                  "gap": "lg"
+                }
+              ]
+            ],
+            "RESET": [
+              [
+                "set",
+                "@entity.status",
+                "idle"
+              ],
+              [
+                "set",
+                "@entity.currentStep",
+                0.0
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "direction": "vertical",
+                  "gap": "lg",
                   "type": "stack",
                   "children": [
                     {
                       "gap": "sm",
-                      "align": "center",
-                      "direction": "horizontal",
                       "type": "stack",
+                      "direction": "horizontal",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "name": "x-circle",
-                          "size": "lg"
+                          "size": "lg",
+                          "name": "list-ordered",
+                          "type": "icon"
                         },
                         {
                           "type": "typography",
-                          "content": "AgentFixLoop",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "content": "AgentFixLoop"
                         },
                         {
-                          "variant": "destructive",
-                          "type": "badge",
-                          "label": "Failed"
+                          "variant": "default",
+                          "label": "Idle",
+                          "type": "badge"
                         }
                       ]
                     },
@@ -1525,48 +1666,31 @@
                     {
                       "steps": [
                         {
-                          "title": "Validate",
-                          "id": "0"
+                          "id": "0",
+                          "title": "Validate"
                         },
                         {
                           "title": "Analyze",
                           "id": "1"
                         },
                         {
-                          "title": "Fix",
-                          "id": "2"
+                          "id": "2",
+                          "title": "Fix"
                         },
                         {
-                          "id": "3",
-                          "title": "Re-validate"
+                          "title": "Re-validate",
+                          "id": "3"
                         }
                       ],
-                      "type": "wizard-progress",
-                      "currentStep": "@entity.currentStep"
+                      "currentStep": "@entity.currentStep",
+                      "type": "wizard-progress"
                     },
                     {
-                      "type": "alert",
-                      "message": "Pipeline failed at the current step.",
-                      "variant": "error"
-                    },
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "label": "Failed At Step",
-                          "value": "@entity.currentStep",
-                          "type": "stat-display"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    },
-                    {
-                      "label": "Reset",
+                      "label": "Start",
+                      "event": "START",
                       "type": "button",
-                      "variant": "ghost",
-                      "icon": "rotate-ccw",
-                      "event": "RESET"
+                      "variant": "primary",
+                      "icon": "play"
                     }
                   ]
                 }
@@ -1587,30 +1711,31 @@
                 "render-ui",
                 "main",
                 {
+                  "direction": "vertical",
                   "gap": "lg",
                   "type": "stack",
                   "children": [
                     {
+                      "type": "stack",
                       "direction": "horizontal",
+                      "gap": "sm",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "check-circle",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
                           "content": "AgentFixLoop",
-                          "type": "typography",
-                          "variant": "h2"
+                          "variant": "h2",
+                          "type": "typography"
                         },
                         {
-                          "type": "badge",
                           "variant": "success",
+                          "type": "badge",
                           "label": "Completed"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "sm",
                       "align": "center"
                     },
                     {
@@ -1624,8 +1749,8 @@
                           "title": "Validate"
                         },
                         {
-                          "title": "Analyze",
-                          "id": "1"
+                          "id": "1",
+                          "title": "Analyze"
                         },
                         {
                           "id": "2",
@@ -1639,164 +1764,44 @@
                       "currentStep": "@entity.totalSteps"
                     },
                     {
-                      "type": "alert",
                       "variant": "success",
+                      "type": "alert",
                       "message": "All steps completed successfully."
                     },
                     {
-                      "variant": "ghost",
                       "type": "button",
                       "label": "Reset",
                       "icon": "rotate-ccw",
+                      "variant": "ghost",
                       "event": "RESET"
-                    }
-                  ],
-                  "direction": "vertical"
-                }
-              ]
-            ],
-            "START": [
-              [
-                "set",
-                "@entity.status",
-                "in_progress"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                0.0
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "stack",
-                  "gap": "lg",
-                  "direction": "vertical",
-                  "children": [
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "size": "lg",
-                          "name": "loader"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h2",
-                          "content": "AgentFixLoop"
-                        },
-                        {
-                          "type": "badge",
-                          "label": "In Progress",
-                          "variant": "warning"
-                        }
-                      ],
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "type": "stack"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "wizard-progress",
-                      "currentStep": "@entity.currentStep",
-                      "steps": [
-                        {
-                          "id": "0",
-                          "title": "Validate"
-                        },
-                        {
-                          "id": "1",
-                          "title": "Analyze"
-                        },
-                        {
-                          "title": "Fix",
-                          "id": "2"
-                        },
-                        {
-                          "title": "Re-validate",
-                          "id": "3"
-                        }
-                      ]
-                    },
-                    {
-                      "children": [
-                        {
-                          "type": "stat-display",
-                          "value": "@entity.currentStep",
-                          "label": "Current Step"
-                        },
-                        {
-                          "label": "Total Steps",
-                          "value": "@entity.totalSteps",
-                          "type": "stat-display"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "sm"
-                    },
-                    {
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "variant": "primary",
-                          "type": "button",
-                          "event": "ADVANCE",
-                          "icon": "chevron-right",
-                          "label": "Advance"
-                        },
-                        {
-                          "icon": "rotate-ccw",
-                          "label": "Reset",
-                          "type": "button",
-                          "variant": "ghost",
-                          "event": "RESET"
-                        }
-                      ],
-                      "type": "stack"
                     }
                   ]
                 }
               ]
             ],
-            "RESET": [
+            "INIT": [
               [
-                "set",
-                "@entity.status",
-                "idle"
-              ],
-              [
-                "set",
-                "@entity.currentStep",
-                0.0
+                "fetch",
+                "AgentFixLoop"
               ],
               [
                 "render-ui",
                 "main",
                 {
-                  "direction": "vertical",
                   "type": "stack",
                   "children": [
                     {
                       "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm",
                       "children": [
                         {
+                          "name": "list-ordered",
                           "type": "icon",
-                          "size": "lg",
-                          "name": "list-ordered"
+                          "size": "lg"
                         },
                         {
-                          "variant": "h2",
+                          "content": "AgentFixLoop",
                           "type": "typography",
-                          "content": "AgentFixLoop"
+                          "variant": "h2"
                         },
                         {
                           "type": "badge",
@@ -1804,6 +1809,8 @@
                           "variant": "default"
                         }
                       ],
+                      "direction": "horizontal",
+                      "gap": "sm",
                       "align": "center"
                     },
                     {
@@ -1826,19 +1833,20 @@
                           "id": "2"
                         },
                         {
-                          "id": "3",
-                          "title": "Re-validate"
+                          "title": "Re-validate",
+                          "id": "3"
                         }
                       ]
                     },
                     {
-                      "label": "Start",
-                      "variant": "primary",
-                      "event": "START",
                       "type": "button",
-                      "icon": "play"
+                      "event": "START",
+                      "variant": "primary",
+                      "icon": "play",
+                      "label": "Start"
                     }
                   ],
+                  "direction": "vertical",
                   "gap": "lg"
                 }
               ]
@@ -1859,14 +1867,9 @@
                 "render-ui",
                 "main",
                 {
-                  "className": "max-w-5xl mx-auto w-full",
                   "gap": "lg",
                   "children": [
                     {
-                      "direction": "horizontal",
-                      "align": "center",
-                      "justify": "space-between",
-                      "type": "stack",
                       "children": [
                         {
                           "children": [
@@ -1881,74 +1884,79 @@
                               "type": "typography"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack",
+                          "align": "center"
                         }
                       ],
-                      "gap": "md"
+                      "align": "center",
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "md",
+                      "justify": "space-between"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "emptyDescription": "All validations passed.",
                       "columns": [
                         {
                           "variant": "h4",
+                          "label": "Target",
                           "icon": "alert-triangle",
-                          "name": "target",
-                          "label": "Target"
+                          "name": "target"
                         },
                         {
                           "variant": "badge",
-                          "name": "errorCount",
                           "label": "Error Count",
                           "colorMap": {
-                            "completed": "success",
-                            "draft": "warning",
-                            "scheduled": "warning",
-                            "failed": "destructive",
-                            "cancelled": "destructive",
-                            "pending": "warning",
-                            "archived": "neutral",
-                            "error": "destructive",
                             "active": "success",
+                            "error": "destructive",
+                            "failed": "destructive",
+                            "completed": "success",
+                            "disabled": "neutral",
+                            "scheduled": "warning",
+                            "pending": "warning",
                             "done": "success",
-                            "inactive": "neutral",
-                            "disabled": "neutral"
-                          }
+                            "archived": "neutral",
+                            "cancelled": "destructive",
+                            "draft": "warning",
+                            "inactive": "neutral"
+                          },
+                          "name": "errorCount"
                         },
                         {
-                          "variant": "caption",
                           "label": "Status",
+                          "variant": "caption",
                           "name": "status"
                         }
                       ],
+                      "type": "data-grid",
                       "emptyIcon": "inbox",
-                      "entity": "AgentFixLoop",
                       "emptyTitle": "No errors",
+                      "entity": "AgentFixLoop",
                       "itemActions": [
                         {
                           "label": "View",
                           "size": "sm",
-                          "event": "VIEW",
-                          "variant": "ghost"
+                          "variant": "ghost",
+                          "event": "VIEW"
                         }
                       ],
-                      "type": "data-grid"
+                      "emptyDescription": "All validations passed."
                     },
                     {
-                      "event": "INIT",
                       "icon": "plus",
-                      "type": "floating-action-button",
+                      "event": "INIT",
                       "label": "Create",
+                      "type": "floating-action-button",
                       "tooltip": "Create"
                     }
                   ],
-                  "direction": "vertical",
-                  "type": "stack"
+                  "type": "stack",
+                  "className": "max-w-5xl mx-auto w-full",
+                  "direction": "vertical"
                 }
               ]
             ]
@@ -1960,47 +1968,115 @@
           "linkedEntity": "AgentFixLoop",
           "emitsScope": "internal",
           "effects": {
-            "INVOKE": [
+            "CLOSE": [
               [
                 "render-ui",
                 "modal",
+                null
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ],
+              [
+                "ref",
+                "AgentFixLoop"
+              ],
+              [
+                "render-ui",
+                "main",
                 {
+                  "type": "stack",
                   "children": [
                     {
-                      "type": "stack",
+                      "justify": "space-between",
+                      "direction": "horizontal",
                       "children": [
                         {
-                          "size": "md",
-                          "type": "icon",
-                          "name": "wrench"
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "wrench",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Invoke Tool",
+                              "variant": "h2"
+                            }
+                          ]
                         },
                         {
-                          "variant": "h3",
-                          "type": "typography",
-                          "content": "Invoke Tool"
+                          "variant": "primary",
+                          "type": "button",
+                          "label": "Open",
+                          "icon": "wrench",
+                          "event": "INVOKE"
                         }
                       ],
-                      "direction": "horizontal",
-                      "gap": "sm"
+                      "type": "stack",
+                      "gap": "md"
                     },
                     {
                       "type": "divider"
                     },
                     {
+                      "type": "empty-state",
+                      "description": "Click Open to view details in a modal overlay.",
+                      "icon": "wrench",
+                      "title": "Nothing open"
+                    }
+                  ],
+                  "gap": "lg",
+                  "direction": "vertical"
+                }
+              ]
+            ],
+            "INVOKE": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "direction": "vertical",
+                  "type": "stack",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "wrench",
+                          "size": "md"
+                        },
+                        {
+                          "content": "Invoke Tool",
+                          "variant": "h3",
+                          "type": "typography"
+                        }
+                      ],
+                      "gap": "sm",
+                      "type": "stack",
+                      "direction": "horizontal"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "form-section",
+                      "entity": "AgentFixLoop",
                       "submitEvent": "SAVE",
-                      "cancelEvent": "CLOSE",
                       "fields": [
                         "toolName",
                         "args"
                       ],
-                      "type": "form-section",
-                      "mode": "create",
-                      "entity": "AgentFixLoop"
+                      "cancelEvent": "CLOSE",
+                      "mode": "create"
                     }
-                  ],
-                  "type": "stack",
-                  "gap": "md",
-                  "direction": "vertical"
+                  ]
                 }
               ]
             ],
@@ -2028,52 +2104,52 @@
                 "render-ui",
                 "main",
                 {
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack",
                   "children": [
                     {
-                      "type": "stack",
                       "direction": "horizontal",
-                      "gap": "md",
-                      "justify": "space-between",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "type": "icon",
                               "size": "lg",
-                              "name": "wrench",
-                              "type": "icon"
+                              "name": "wrench"
                             },
                             {
-                              "type": "typography",
                               "content": "Invoke Tool",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
-                          "icon": "wrench",
-                          "event": "INVOKE",
-                          "label": "Open",
+                          "type": "button",
                           "variant": "primary",
-                          "type": "button"
+                          "icon": "wrench",
+                          "label": "Open",
+                          "event": "INVOKE"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "justify": "space-between"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "description": "Click Open to view details in a modal overlay.",
-                      "type": "empty-state",
+                      "title": "Nothing open",
                       "icon": "wrench",
-                      "title": "Nothing open"
+                      "type": "empty-state",
+                      "description": "Click Open to view details in a modal overlay."
                     }
-                  ],
-                  "gap": "lg",
-                  "type": "stack",
-                  "direction": "vertical"
+                  ]
                 }
               ]
             ],
@@ -2086,15 +2162,19 @@
                 "render-ui",
                 "main",
                 {
+                  "type": "stack",
                   "gap": "lg",
                   "direction": "vertical",
                   "children": [
                     {
+                      "direction": "horizontal",
                       "type": "stack",
                       "justify": "space-between",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "size": "lg",
@@ -2102,93 +2182,21 @@
                               "name": "wrench"
                             },
                             {
-                              "content": "Invoke Tool",
                               "variant": "h2",
+                              "content": "Invoke Tool",
                               "type": "typography"
                             }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "button",
-                          "label": "Open",
-                          "event": "INVOKE",
                           "variant": "primary",
-                          "icon": "wrench"
+                          "label": "Open",
+                          "icon": "wrench",
+                          "event": "INVOKE"
                         }
                       ],
-                      "direction": "horizontal",
                       "gap": "md"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "description": "Click Open to view details in a modal overlay.",
-                      "icon": "wrench",
-                      "title": "Nothing open",
-                      "type": "empty-state"
-                    }
-                  ],
-                  "type": "stack"
-                }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ],
-              [
-                "ref",
-                "AgentFixLoop"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "gap": "lg",
-                  "direction": "vertical",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "md",
-                      "justify": "space-between",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "wrench"
-                            },
-                            {
-                              "content": "Invoke Tool",
-                              "type": "typography",
-                              "variant": "h2"
-                            }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "button",
-                          "label": "Open",
-                          "event": "INVOKE",
-                          "variant": "primary",
-                          "icon": "wrench"
-                        }
-                      ]
                     },
                     {
                       "type": "divider"
@@ -2211,17 +2219,7 @@
           "linkedEntity": "AgentFixLoop",
           "emitsScope": "internal",
           "effects": {
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ],
+            "INIT": [
               [
                 "ref",
                 "AgentFixLoop"
@@ -2230,41 +2228,38 @@
                 "render-ui",
                 "main",
                 {
-                  "gap": "lg",
-                  "type": "stack",
-                  "direction": "vertical",
                   "children": [
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "justify": "space-between",
-                      "direction": "horizontal",
                       "children": [
                         {
                           "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
-                              "name": "wrench"
+                              "name": "wrench",
+                              "size": "lg"
                             },
                             {
+                              "variant": "h2",
                               "content": "Invoke Tool",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
-                          "type": "button",
                           "event": "INVOKE",
-                          "label": "Open",
+                          "type": "button",
                           "variant": "primary",
-                          "icon": "wrench"
+                          "icon": "wrench",
+                          "label": "Open"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
@@ -2272,10 +2267,13 @@
                     {
                       "type": "empty-state",
                       "title": "Nothing open",
-                      "description": "Click Open to view details in a modal overlay.",
-                      "icon": "wrench"
+                      "icon": "wrench",
+                      "description": "Click Open to view details in a modal overlay."
                     }
-                  ]
+                  ],
+                  "gap": "lg",
+                  "type": "stack",
+                  "direction": "vertical"
                 }
               ]
             ],
@@ -2305,218 +2303,50 @@
                 {
                   "direction": "vertical",
                   "type": "stack",
-                  "gap": "lg",
                   "children": [
                     {
-                      "gap": "md",
-                      "justify": "space-between",
+                      "type": "stack",
+                      "direction": "horizontal",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
+                              "type": "icon",
                               "name": "wrench",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
-                              "type": "typography",
                               "content": "Invoke Tool",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         {
+                          "icon": "wrench",
+                          "event": "INVOKE",
                           "type": "button",
                           "label": "Open",
-                          "event": "INVOKE",
-                          "variant": "primary",
-                          "icon": "wrench"
+                          "variant": "primary"
                         }
                       ],
-                      "direction": "horizontal",
-                      "type": "stack"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "description": "Click Open to view details in a modal overlay.",
-                      "type": "empty-state",
-                      "title": "Nothing open",
-                      "icon": "wrench"
-                    }
-                  ]
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "ref",
-                "AgentFixLoop"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "gap": "lg",
-                  "direction": "vertical",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "direction": "horizontal",
                       "justify": "space-between",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "wrench",
-                              "size": "lg"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Invoke Tool"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "button",
-                          "event": "INVOKE",
-                          "label": "Open",
-                          "variant": "primary",
-                          "icon": "wrench"
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
+                      "gap": "md"
                     },
                     {
                       "type": "divider"
                     },
                     {
                       "type": "empty-state",
-                      "description": "Click Open to view details in a modal overlay.",
                       "icon": "wrench",
-                      "title": "Nothing open"
-                    }
-                  ]
-                }
-              ]
-            ],
-            "INVOKE": [
-              [
-                "render-ui",
-                "modal",
-                {
-                  "children": [
-                    {
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "name": "wrench",
-                          "size": "md",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "Invoke Tool",
-                          "variant": "h3",
-                          "type": "typography"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "mode": "create",
-                      "fields": [
-                        "toolName",
-                        "args"
-                      ],
-                      "type": "form-section",
-                      "submitEvent": "SAVE",
-                      "entity": "AgentFixLoop",
-                      "cancelEvent": "CLOSE"
-                    }
-                  ],
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "md"
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "ref": "AgentCompletion.traits.AgentCompletionModal",
-          "name": "FixLoopCompletionFlow",
-          "linkedEntity": "AgentFixLoop",
-          "emitsScope": "internal",
-          "effects": {
-            "INIT": [
-              [
-                "ref",
-                "AgentFixLoop"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "justify": "space-between",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "name": "sparkles",
-                              "type": "icon",
-                              "size": "lg"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "AgentFixLoop"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        },
-                        {
-                          "variant": "primary",
-                          "label": "Open",
-                          "event": "GENERATE",
-                          "type": "button",
-                          "icon": "sparkles"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "icon": "sparkles",
-                      "type": "empty-state",
                       "description": "Click Open to view details in a modal overlay.",
                       "title": "Nothing open"
                     }
                   ],
-                  "direction": "vertical",
-                  "gap": "lg",
-                  "type": "stack"
+                  "gap": "lg"
                 }
               ]
             ],
@@ -2539,38 +2369,146 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
-                  "direction": "vertical",
                   "children": [
                     {
-                      "direction": "horizontal",
-                      "justify": "space-between",
                       "type": "stack",
+                      "justify": "space-between",
+                      "children": [
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "wrench",
+                              "type": "icon",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "Invoke Tool",
+                              "variant": "h2"
+                            }
+                          ],
+                          "direction": "horizontal"
+                        },
+                        {
+                          "type": "button",
+                          "icon": "wrench",
+                          "label": "Open",
+                          "variant": "primary",
+                          "event": "INVOKE"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "title": "Nothing open",
+                      "type": "empty-state",
+                      "description": "Click Open to view details in a modal overlay.",
+                      "icon": "wrench"
+                    }
+                  ],
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack"
+                }
+              ]
+            ],
+            "INVOKE": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "direction": "vertical",
+                  "gap": "md",
+                  "type": "stack",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "name": "wrench",
+                          "size": "md",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "Invoke Tool"
+                        }
+                      ],
+                      "gap": "sm"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "entity": "AgentFixLoop",
+                      "cancelEvent": "CLOSE",
+                      "mode": "create",
+                      "submitEvent": "SAVE",
+                      "fields": [
+                        "toolName",
+                        "args"
+                      ],
+                      "type": "form-section"
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "ref": "AgentCompletion.traits.AgentCompletionModal",
+          "name": "FixLoopCompletionFlow",
+          "linkedEntity": "AgentFixLoop",
+          "emitsScope": "internal",
+          "effects": {
+            "INIT": [
+              [
+                "ref",
+                "AgentFixLoop"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "children": [
+                    {
+                      "justify": "space-between",
                       "gap": "md",
+                      "direction": "horizontal",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
-                              "size": "lg",
-                              "name": "sparkles"
+                              "name": "sparkles",
+                              "size": "lg"
                             },
                             {
-                              "variant": "h2",
                               "content": "AgentFixLoop",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md"
                         },
                         {
-                          "icon": "sparkles",
-                          "type": "button",
                           "variant": "primary",
-                          "label": "Open",
-                          "event": "GENERATE"
+                          "icon": "sparkles",
+                          "event": "GENERATE",
+                          "type": "button",
+                          "label": "Open"
                         }
                       ]
                     },
@@ -2578,12 +2516,140 @@
                       "type": "divider"
                     },
                     {
-                      "type": "empty-state",
-                      "title": "Nothing open",
                       "description": "Click Open to view details in a modal overlay.",
-                      "icon": "sparkles"
+                      "title": "Nothing open",
+                      "icon": "sparkles",
+                      "type": "empty-state"
                     }
                   ],
+                  "type": "stack",
+                  "gap": "lg",
+                  "direction": "vertical"
+                }
+              ]
+            ],
+            "GENERATE": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "gap": "sm",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "name": "sparkles",
+                          "size": "md"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "AgentFixLoop",
+                          "variant": "h3"
+                        }
+                      ],
+                      "direction": "horizontal"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "children": [
+                        {
+                          "type": "badge",
+                          "label": "@entity.provider"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.model"
+                        }
+                      ],
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "sm"
+                    },
+                    {
+                      "mode": "create",
+                      "entity": "AgentFixLoop",
+                      "fields": [
+                        "prompt"
+                      ],
+                      "cancelEvent": "CLOSE",
+                      "submitEvent": "SAVE",
+                      "type": "form-section"
+                    }
+                  ],
+                  "direction": "vertical",
+                  "gap": "md"
+                }
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ],
+              [
+                "ref",
+                "AgentFixLoop"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "children": [
+                    {
+                      "gap": "md",
+                      "direction": "horizontal",
+                      "justify": "space-between",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "size": "lg",
+                              "type": "icon",
+                              "name": "sparkles"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentFixLoop",
+                              "variant": "h2"
+                            }
+                          ],
+                          "type": "stack",
+                          "gap": "md"
+                        },
+                        {
+                          "type": "button",
+                          "event": "GENERATE",
+                          "icon": "sparkles",
+                          "label": "Open",
+                          "variant": "primary"
+                        }
+                      ],
+                      "type": "stack"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "icon": "sparkles",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay.",
+                      "type": "empty-state"
+                    }
+                  ],
+                  "type": "stack",
+                  "direction": "vertical",
                   "gap": "lg"
                 }
               ]
@@ -2612,110 +2678,52 @@
                 "render-ui",
                 "main",
                 {
-                  "direction": "vertical",
-                  "gap": "lg",
                   "type": "stack",
+                  "direction": "vertical",
                   "children": [
                     {
+                      "justify": "space-between",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
                           "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "sparkles",
                               "type": "icon",
+                              "name": "sparkles",
                               "size": "lg"
                             },
                             {
-                              "variant": "h2",
+                              "type": "typography",
                               "content": "AgentFixLoop",
-                              "type": "typography"
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "gap": "md"
                         },
                         {
-                          "event": "GENERATE",
                           "variant": "primary",
-                          "type": "button",
                           "icon": "sparkles",
-                          "label": "Open"
-                        }
-                      ],
-                      "justify": "space-between",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "empty-state",
-                      "icon": "sparkles",
-                      "title": "Nothing open",
-                      "description": "Click Open to view details in a modal overlay."
-                    }
-                  ]
-                }
-              ]
-            ],
-            "GENERATE": [
-              [
-                "render-ui",
-                "modal",
-                {
-                  "type": "stack",
-                  "gap": "md",
-                  "direction": "vertical",
-                  "children": [
-                    {
-                      "children": [
-                        {
-                          "name": "sparkles",
-                          "size": "md",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "AgentFixLoop",
-                          "variant": "h3"
+                          "type": "button",
+                          "label": "Open",
+                          "event": "GENERATE"
                         }
                       ],
                       "direction": "horizontal",
-                      "gap": "sm",
+                      "gap": "md",
                       "type": "stack"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "label": "@entity.provider",
-                          "type": "badge"
-                        },
-                        {
-                          "type": "badge",
-                          "label": "@entity.model"
-                        }
-                      ]
-                    },
-                    {
-                      "cancelEvent": "CLOSE",
-                      "type": "form-section",
-                      "mode": "create",
-                      "entity": "AgentFixLoop",
-                      "submitEvent": "SAVE",
-                      "fields": [
-                        "prompt"
-                      ]
+                      "type": "empty-state",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay.",
+                      "icon": "sparkles"
                     }
-                  ]
+                  ],
+                  "gap": "lg"
                 }
               ]
             ]

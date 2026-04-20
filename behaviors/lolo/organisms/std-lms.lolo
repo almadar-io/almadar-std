@@ -24,9 +24,9 @@ orbital CourseOrbital {
       ENROLL external { id: string }
     }
     listens {
-      * COURSE_CREATED -> INIT
-      * COURSE_UPDATED -> INIT
-      * COURSE_DELETED -> INIT
+      CourseCreate COURSE_CREATED -> INIT
+      CourseEdit COURSE_UPDATED -> INIT
+      CourseDelete COURSE_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -55,7 +55,6 @@ orbital CourseOrbital {
         (emit COURSE_CREATED)
     }
     emits {
-      SAVE
       COURSE_CREATED external { id: string }
     }
     listens {
@@ -85,7 +84,6 @@ orbital CourseOrbital {
         (emit COURSE_UPDATED)
     }
     emits {
-      SAVE
       COURSE_UPDATED external { id: string }
     }
     listens {
@@ -112,9 +110,6 @@ orbital CourseOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -150,7 +145,6 @@ orbital CourseOrbital {
         (ref Course)
     }
     emits {
-      CONFIRM_DELETE
       COURSE_DELETED external { id: string }
     }
     listens {

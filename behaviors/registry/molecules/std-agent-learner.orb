@@ -204,30 +204,16 @@
                   "type": "string"
                 }
               ]
-            },
-            {
-              "event": "TASK_FAILED",
-              "scope": "external",
-              "payload": [
-                {
-                  "name": "outcome",
-                  "type": "string"
-                },
-                {
-                  "name": "category",
-                  "type": "string"
-                }
-              ]
             }
           ],
           "listens": [
             {
-              "event": "*.TASK_SUCCEEDED",
-              "triggers": "TASK_SUCCEEDED"
-            },
-            {
-              "event": "*.TASK_FAILED",
-              "triggers": "TASK_FAILED"
+              "event": "TASK_SUCCEEDED",
+              "triggers": "TASK_SUCCEEDED",
+              "source": {
+                "kind": "trait",
+                "trait": "AgentLearnerLearner"
+              }
             }
           ],
           "stateMachine": {
@@ -331,23 +317,24 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "sm",
                           "align": "center",
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "name": "graduation-cap",
+                              "size": "lg",
                               "type": "icon",
-                              "size": "lg"
+                              "name": "graduation-cap"
                             },
                             {
+                              "type": "typography",
                               "variant": "h2",
-                              "content": "Outcome Learner",
-                              "type": "typography"
+                              "content": "Outcome Learner"
                             }
                           ]
                         },
@@ -355,65 +342,64 @@
                           "type": "divider"
                         },
                         {
+                          "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
+                              "type": "stat-display",
+                              "value": "@entity.totalSuccesses",
                               "label": "Successes",
-                              "icon": "check-circle",
-                              "type": "stat-display",
-                              "value": "@entity.totalSuccesses"
+                              "icon": "check-circle"
                             },
                             {
-                              "type": "stat-display",
                               "label": "Failures",
+                              "value": "@entity.totalFailures",
                               "icon": "x-circle",
-                              "value": "@entity.totalFailures"
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Current Provider",
-                              "type": "stat-display",
                               "icon": "cpu",
-                              "value": "@entity.provider"
+                              "label": "Current Provider",
+                              "value": "@entity.provider",
+                              "type": "stat-display"
                             }
-                          ],
-                          "type": "simple-grid",
-                          "cols": 3.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
+                                  "content": "Listening for task outcomes...",
                                   "variant": "body",
-                                  "type": "typography",
-                                  "content": "Listening for task outcomes..."
+                                  "type": "typography"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "type": "typography",
                                   "variant": "caption"
                                 }
                               ],
+                              "type": "stack",
                               "direction": "vertical",
                               "gap": "md"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
                           "type": "card",
                           "children": [
                             {
                               "gap": "sm",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "content": "Last Outcome",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
                                   "type": "typography",
@@ -421,22 +407,22 @@
                                   "content": "@entity.outcome"
                                 },
                                 {
+                                  "content": "Impact Analysis",
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Impact Analysis"
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
+                                  "content": "@entity.impact",
                                   "variant": "body",
-                                  "content": "@entity.impact"
+                                  "type": "typography"
                                 }
                               ],
+                              "direction": "vertical",
                               "type": "stack"
                             }
                           ]
                         }
                       ],
-                      "direction": "vertical",
                       "type": "stack"
                     }
                   ]
@@ -495,14 +481,14 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "align": "center",
+                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
-                          "name": "save",
                           "size": "lg",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "save"
                         },
                         {
                           "variant": "h3",
@@ -578,17 +564,15 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "icon",
+                          "name": "save",
                           "size": "lg",
-                          "name": "save"
+                          "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "Recording outcome...",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
@@ -596,12 +580,14 @@
                           "type": "spinner"
                         },
                         {
-                          "label": "@entity.outcome",
-                          "type": "badge"
+                          "type": "badge",
+                          "label": "@entity.outcome"
                         }
                       ],
+                      "direction": "vertical",
+                      "type": "stack",
                       "gap": "lg",
-                      "type": "stack"
+                      "align": "center"
                     }
                   ]
                 ]
@@ -622,26 +608,26 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
                           "align": "center",
-                          "children": [
-                            {
-                              "size": "lg",
-                              "name": "graduation-cap",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h2",
-                              "type": "typography",
-                              "content": "Outcome Learner"
-                            }
-                          ],
                           "gap": "sm",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "graduation-cap",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Outcome Learner"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
@@ -651,22 +637,22 @@
                           "type": "simple-grid",
                           "children": [
                             {
+                              "icon": "check-circle",
                               "label": "Successes",
-                              "value": "@entity.totalSuccesses",
                               "type": "stat-display",
-                              "icon": "check-circle"
+                              "value": "@entity.totalSuccesses"
                             },
                             {
+                              "type": "stat-display",
                               "label": "Failures",
-                              "type": "stat-display",
-                              "icon": "x-circle",
-                              "value": "@entity.totalFailures"
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle"
                             },
                             {
-                              "label": "Current Provider",
                               "value": "@entity.provider",
                               "icon": "cpu",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Current Provider"
                             }
                           ]
                         },
@@ -674,13 +660,13 @@
                           "type": "divider"
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "gap": "md",
                               "children": [
                                 {
-                                  "variant": "body",
                                   "content": "Listening for task outcomes...",
+                                  "variant": "body",
                                   "type": "typography"
                                 },
                                 {
@@ -689,16 +675,17 @@
                                   "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically."
                                 }
                               ],
+                              "gap": "md",
                               "type": "stack",
                               "direction": "vertical"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
                                   "variant": "caption",
@@ -706,29 +693,28 @@
                                   "content": "Last Outcome"
                                 },
                                 {
-                                  "content": "@entity.outcome",
                                   "variant": "body",
+                                  "content": "@entity.outcome",
                                   "type": "typography"
                                 },
                                 {
+                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "Impact Analysis",
-                                  "variant": "caption"
+                                  "content": "Impact Analysis"
                                 },
                                 {
                                   "content": "@entity.impact",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "vertical"
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "type": "card"
                         }
                       ],
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -806,29 +792,27 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
                           "name": "cpu",
-                          "size": "lg",
-                          "type": "icon"
+                          "type": "icon",
+                          "size": "lg"
                         },
                         {
-                          "type": "typography",
                           "content": "Analyzing impact...",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
-                          "size": "lg",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "lg"
                         },
                         {
                           "justify": "center",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
                               "type": "badge",
@@ -850,7 +834,9 @@
                           ],
                           "direction": "horizontal"
                         }
-                      ]
+                      ],
+                      "align": "center",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -874,94 +860,93 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "size": "lg",
+                              "type": "icon",
                               "name": "graduation-cap",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
                               "content": "Outcome Learner",
                               "variant": "h2",
                               "type": "typography"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "cols": 3.0,
+                          "type": "simple-grid",
                           "children": [
                             {
+                              "label": "Successes",
                               "value": "@entity.totalSuccesses",
                               "icon": "check-circle",
-                              "label": "Successes",
                               "type": "stat-display"
                             },
                             {
-                              "value": "@entity.totalFailures",
+                              "icon": "x-circle",
                               "type": "stat-display",
                               "label": "Failures",
-                              "icon": "x-circle"
+                              "value": "@entity.totalFailures"
                             },
                             {
                               "value": "@entity.provider",
-                              "type": "stat-display",
                               "label": "Current Provider",
+                              "type": "stat-display",
                               "icon": "cpu"
                             }
                           ],
-                          "type": "simple-grid"
+                          "cols": 3.0
                         },
                         {
                           "type": "divider"
+                        },
+                        {
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "type": "stack",
+                              "gap": "md",
+                              "children": [
+                                {
+                                  "content": "Listening for task outcomes...",
+                                  "variant": "body",
+                                  "type": "typography"
+                                },
+                                {
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ]
+                            }
+                          ],
+                          "type": "card"
                         },
                         {
                           "type": "card",
                           "children": [
                             {
-                              "direction": "vertical",
-                              "gap": "md",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "Listening for task outcomes..."
-                                },
-                                {
-                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
                                   "variant": "caption",
-                                  "type": "typography"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "gap": "sm",
-                              "children": [
-                                {
                                   "type": "typography",
-                                  "variant": "caption",
                                   "content": "Last Outcome"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "body",
                                   "content": "@entity.outcome",
-                                  "variant": "body"
+                                  "type": "typography"
                                 },
                                 {
                                   "type": "typography",
@@ -969,18 +954,19 @@
                                   "variant": "caption"
                                 },
                                 {
-                                  "content": "@entity.impact",
+                                  "variant": "body",
                                   "type": "typography",
-                                  "variant": "body"
+                                  "content": "@entity.impact"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical",
+                              "gap": "sm"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1012,51 +998,52 @@
                     "main",
                     {
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "name": "graduation-cap",
                               "size": "lg",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "graduation-cap"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "Outcome Learner",
-                              "variant": "h2"
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "type": "stat-display",
                               "icon": "check-circle",
+                              "type": "stat-display",
                               "label": "Successes",
                               "value": "@entity.totalSuccesses"
                             },
                             {
-                              "icon": "x-circle",
                               "label": "Failures",
-                              "type": "stat-display",
-                              "value": "@entity.totalFailures"
+                              "value": "@entity.totalFailures",
+                              "icon": "x-circle",
+                              "type": "stat-display"
                             },
                             {
-                              "label": "Current Provider",
                               "value": "@entity.provider",
-                              "icon": "cpu",
-                              "type": "stat-display"
+                              "type": "stat-display",
+                              "label": "Current Provider",
+                              "icon": "cpu"
                             }
                           ],
-                          "cols": 3.0
+                          "type": "simple-grid"
                         },
                         {
                           "type": "divider"
@@ -1065,9 +1052,8 @@
                           "type": "card",
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "md",
+                              "type": "stack",
                               "children": [
                                 {
                                   "variant": "body",
@@ -1075,24 +1061,24 @@
                                   "content": "Listening for task outcomes..."
                                 },
                                 {
-                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
                                   "type": "typography",
+                                  "content": "This module records TASK_SUCCEEDED and TASK_FAILED events automatically.",
                                   "variant": "caption"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical"
                             }
                           ]
                         },
                         {
+                          "type": "card",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "children": [
                                 {
+                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "Last Outcome",
-                                  "variant": "caption"
+                                  "content": "Last Outcome"
                                 },
                                 {
                                   "type": "typography",
@@ -1100,23 +1086,23 @@
                                   "variant": "body"
                                 },
                                 {
-                                  "variant": "caption",
                                   "type": "typography",
-                                  "content": "Impact Analysis"
+                                  "content": "Impact Analysis",
+                                  "variant": "caption"
                                 },
                                 {
                                   "content": "@entity.impact",
-                                  "type": "typography",
-                                  "variant": "body"
+                                  "variant": "body",
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "vertical"
+                              "gap": "sm",
+                              "direction": "vertical",
+                              "type": "stack"
                             }
-                          ],
-                          "type": "card"
+                          ]
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical"
                     }
                   ]
@@ -1142,16 +1128,13 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
+                              "size": "lg",
                               "name": "graduation-cap"
                             },
                             {
@@ -1160,6 +1143,9 @@
                               "variant": "h2"
                             }
                           ],
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "align": "center"
                         },
                         {
@@ -1167,41 +1153,41 @@
                         },
                         {
                           "type": "simple-grid",
+                          "cols": 3.0,
                           "children": [
                             {
-                              "label": "Successes",
                               "type": "stat-display",
                               "icon": "check-circle",
-                              "value": "@entity.totalSuccesses"
+                              "value": "@entity.totalSuccesses",
+                              "label": "Successes"
                             },
                             {
-                              "type": "stat-display",
-                              "value": "@entity.totalFailures",
                               "label": "Failures",
+                              "value": "@entity.totalFailures",
+                              "type": "stat-display",
                               "icon": "x-circle"
                             },
                             {
-                              "icon": "cpu",
-                              "value": "@entity.provider",
                               "type": "stat-display",
-                              "label": "Current Provider"
+                              "value": "@entity.provider",
+                              "label": "Current Provider",
+                              "icon": "cpu"
                             }
-                          ],
-                          "cols": 3.0
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "type": "stack",
+                              "gap": "md",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "Listening for task outcomes...",
+                                  "type": "typography",
                                   "variant": "body"
                                 },
                                 {
@@ -1209,45 +1195,45 @@
                                   "variant": "caption",
                                   "type": "typography"
                                 }
-                              ],
-                              "gap": "md"
-                            }
-                          ]
-                        },
-                        {
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "content": "Last Outcome",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "@entity.outcome",
-                                  "variant": "body"
-                                },
-                                {
-                                  "type": "typography",
-                                  "content": "Impact Analysis",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.impact"
-                                }
                               ]
                             }
                           ],
                           "type": "card"
+                        },
+                        {
+                          "type": "card",
+                          "children": [
+                            {
+                              "direction": "vertical",
+                              "children": [
+                                {
+                                  "type": "typography",
+                                  "content": "Last Outcome",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "variant": "body",
+                                  "type": "typography",
+                                  "content": "@entity.outcome"
+                                },
+                                {
+                                  "variant": "caption",
+                                  "type": "typography",
+                                  "content": "Impact Analysis"
+                                },
+                                {
+                                  "variant": "body",
+                                  "content": "@entity.impact",
+                                  "type": "typography"
+                                }
+                              ],
+                              "type": "stack",
+                              "gap": "sm"
+                            }
+                          ]
                         }
                       ],
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -1272,94 +1258,94 @@
                 {
                   "children": [
                     {
-                      "gap": "md",
-                      "justify": "space-between",
                       "direction": "horizontal",
                       "type": "stack",
+                      "justify": "space-between",
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "align": "center",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
+                              "type": "icon",
                               "name": "graduation-cap",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Learning Records"
+                              "content": "Learning Records",
+                              "type": "typography"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "gap": "sm"
                         }
-                      ],
-                      "align": "center"
+                      ]
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "emptyDescription": "Task outcomes will appear here as they are recorded.",
+                      "type": "data-grid",
+                      "entity": "AgentLearner",
                       "emptyTitle": "No records yet",
+                      "emptyDescription": "Task outcomes will appear here as they are recorded.",
+                      "emptyIcon": "inbox",
                       "columns": [
                         {
-                          "name": "outcome",
                           "variant": "h4",
+                          "label": "Outcome",
                           "icon": "graduation-cap",
-                          "label": "Outcome"
+                          "name": "outcome"
                         },
                         {
+                          "label": "Category",
+                          "name": "category",
+                          "variant": "badge",
                           "colorMap": {
-                            "archived": "neutral",
+                            "done": "success",
+                            "active": "success",
+                            "failed": "destructive",
+                            "completed": "success",
+                            "pending": "warning",
                             "disabled": "neutral",
                             "error": "destructive",
                             "cancelled": "destructive",
-                            "failed": "destructive",
                             "draft": "warning",
+                            "archived": "neutral",
                             "scheduled": "warning",
-                            "inactive": "neutral",
-                            "active": "success",
-                            "completed": "success",
-                            "done": "success",
-                            "pending": "warning"
-                          },
-                          "label": "Category",
-                          "variant": "badge",
-                          "name": "category"
+                            "inactive": "neutral"
+                          }
                         },
                         {
                           "variant": "caption",
-                          "label": "Status",
-                          "name": "status"
+                          "name": "status",
+                          "label": "Status"
                         }
                       ],
-                      "emptyIcon": "inbox",
-                      "type": "data-grid",
-                      "entity": "AgentLearner",
                       "itemActions": [
                         {
-                          "event": "VIEW",
-                          "size": "sm",
                           "label": "View",
-                          "variant": "ghost"
+                          "size": "sm",
+                          "variant": "ghost",
+                          "event": "VIEW"
                         }
                       ]
                     },
                     {
+                      "icon": "plus",
                       "event": "INIT",
                       "label": "Create",
-                      "tooltip": "Create",
-                      "icon": "plus",
-                      "type": "floating-action-button"
+                      "type": "floating-action-button",
+                      "tooltip": "Create"
                     }
                   ],
-                  "type": "stack",
-                  "className": "max-w-5xl mx-auto w-full",
                   "gap": "lg",
-                  "direction": "vertical"
+                  "type": "stack",
+                  "direction": "vertical",
+                  "className": "max-w-5xl mx-auto w-full"
                 }
               ]
             ]
@@ -1381,128 +1367,128 @@
                 "main",
                 {
                   "direction": "vertical",
-                  "className": "max-w-5xl mx-auto w-full",
+                  "gap": "lg",
                   "type": "stack",
+                  "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
+                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
                               "type": "icon",
+                              "size": "lg",
                               "name": "brain"
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "AgentLearner Manager"
+                              "content": "AgentLearner Manager",
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "align": "center"
                         },
                         {
-                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "event": "MEMORIZE",
-                              "type": "button",
                               "label": "Memorize",
                               "icon": "plus",
+                              "event": "MEMORIZE",
+                              "type": "button",
                               "variant": "primary"
                             },
                             {
-                              "label": "Recall",
                               "variant": "secondary",
-                              "event": "RECALL",
                               "icon": "search",
-                              "type": "button"
+                              "type": "button",
+                              "event": "RECALL",
+                              "label": "Recall"
                             },
                             {
-                              "icon": "clock",
-                              "type": "button",
-                              "label": "Decay All",
                               "event": "DECAY",
-                              "variant": "ghost"
+                              "icon": "clock",
+                              "variant": "ghost",
+                              "label": "Decay All",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "type": "stack"
                         }
                       ],
-                      "direction": "horizontal",
-                      "type": "stack",
                       "justify": "space-between",
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack",
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
                       "type": "data-grid",
-                      "columns": [
-                        {
-                          "variant": "h4",
-                          "label": "Content",
-                          "name": "content",
-                          "icon": "brain"
-                        },
-                        {
-                          "name": "category",
-                          "label": "Category",
-                          "variant": "badge",
-                          "colorMap": {
-                            "completed": "success",
-                            "disabled": "neutral",
-                            "error": "destructive",
-                            "cancelled": "destructive",
-                            "failed": "destructive",
-                            "done": "success",
-                            "archived": "neutral",
-                            "draft": "warning",
-                            "scheduled": "warning",
-                            "inactive": "neutral",
-                            "active": "success",
-                            "pending": "warning"
-                          }
-                        },
-                        {
-                          "name": "strength",
-                          "label": "Strength",
-                          "variant": "caption"
-                        }
-                      ],
+                      "emptyTitle": "No memories yet",
                       "entity": "AgentLearner",
+                      "emptyIcon": "inbox",
+                      "emptyDescription": "Create your first memory to get started.",
                       "itemActions": [
                         {
                           "label": "Pin",
-                          "event": "PIN",
+                          "size": "sm",
                           "variant": "ghost",
-                          "size": "sm"
+                          "event": "PIN"
                         },
                         {
+                          "variant": "ghost",
                           "label": "Reinforce",
                           "event": "REINFORCE",
-                          "variant": "ghost",
                           "size": "sm"
                         },
                         {
+                          "size": "sm",
                           "event": "FORGET",
-                          "label": "Forget",
                           "variant": "danger",
-                          "size": "sm"
+                          "label": "Forget"
                         }
                       ],
-                      "emptyTitle": "No memories yet",
-                      "emptyIcon": "inbox",
-                      "emptyDescription": "Create your first memory to get started."
+                      "columns": [
+                        {
+                          "name": "content",
+                          "icon": "brain",
+                          "variant": "h4",
+                          "label": "Content"
+                        },
+                        {
+                          "label": "Category",
+                          "variant": "badge",
+                          "name": "category",
+                          "colorMap": {
+                            "inactive": "neutral",
+                            "completed": "success",
+                            "draft": "warning",
+                            "archived": "neutral",
+                            "error": "destructive",
+                            "pending": "warning",
+                            "failed": "destructive",
+                            "disabled": "neutral",
+                            "active": "success",
+                            "cancelled": "destructive",
+                            "done": "success",
+                            "scheduled": "warning"
+                          }
+                        },
+                        {
+                          "variant": "caption",
+                          "label": "Strength",
+                          "name": "strength"
+                        }
+                      ]
                     }
-                  ],
-                  "gap": "lg"
+                  ]
                 }
               ]
             ]
@@ -1523,52 +1509,52 @@
                 "render-ui",
                 "main",
                 {
+                  "gap": "lg",
                   "children": [
                     {
+                      "type": "stack",
+                      "gap": "md",
+                      "direction": "horizontal",
+                      "justify": "space-between",
                       "children": [
                         {
+                          "type": "stack",
+                          "gap": "md",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "icon",
+                              "size": "lg",
                               "name": "sparkles",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
-                              "content": "AgentLearner",
                               "type": "typography",
+                              "content": "AgentLearner",
                               "variant": "h2"
                             }
-                          ],
-                          "type": "stack",
-                          "gap": "md"
+                          ]
                         },
                         {
+                          "icon": "sparkles",
                           "variant": "primary",
-                          "type": "button",
                           "event": "GENERATE",
-                          "label": "Open",
-                          "icon": "sparkles"
+                          "type": "button",
+                          "label": "Open"
                         }
-                      ],
-                      "direction": "horizontal",
-                      "justify": "space-between",
-                      "gap": "md",
-                      "type": "stack"
+                      ]
                     },
                     {
                       "type": "divider"
                     },
                     {
                       "type": "empty-state",
-                      "description": "Click Open to view details in a modal overlay.",
+                      "title": "Nothing open",
                       "icon": "sparkles",
-                      "title": "Nothing open"
+                      "description": "Click Open to view details in a modal overlay."
                     }
                   ],
-                  "direction": "vertical",
                   "type": "stack",
-                  "gap": "lg"
+                  "direction": "vertical"
                 }
               ]
             ],
@@ -1577,26 +1563,23 @@
                 "render-ui",
                 "modal",
                 {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "md",
                   "children": [
                     {
-                      "gap": "sm",
+                      "type": "stack",
                       "direction": "horizontal",
+                      "gap": "sm",
                       "children": [
                         {
+                          "type": "icon",
                           "name": "sparkles",
-                          "size": "md",
-                          "type": "icon"
+                          "size": "md"
                         },
                         {
                           "type": "typography",
                           "variant": "h3",
                           "content": "AgentLearner"
                         }
-                      ],
-                      "type": "stack"
+                      ]
                     },
                     {
                       "type": "divider"
@@ -1609,22 +1592,93 @@
                           "label": "@entity.provider"
                         },
                         {
-                          "type": "badge",
-                          "label": "@entity.model"
+                          "label": "@entity.model",
+                          "type": "badge"
                         }
                       ],
-                      "gap": "sm",
-                      "direction": "horizontal"
+                      "direction": "horizontal",
+                      "gap": "sm"
                     },
                     {
+                      "mode": "create",
+                      "type": "form-section",
+                      "submitEvent": "SAVE",
+                      "entity": "AgentLearner",
                       "cancelEvent": "CLOSE",
                       "fields": [
                         "prompt"
+                      ]
+                    }
+                  ],
+                  "gap": "md",
+                  "type": "stack",
+                  "direction": "vertical"
+                }
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ],
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "gap": "lg",
+                  "direction": "vertical",
+                  "type": "stack",
+                  "children": [
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
+                          "children": [
+                            {
+                              "name": "sparkles",
+                              "size": "lg",
+                              "type": "icon"
+                            },
+                            {
+                              "type": "typography",
+                              "content": "AgentLearner",
+                              "variant": "h2"
+                            }
+                          ]
+                        },
+                        {
+                          "variant": "primary",
+                          "type": "button",
+                          "label": "Open",
+                          "icon": "sparkles",
+                          "event": "GENERATE"
+                        }
                       ],
-                      "type": "form-section",
-                      "entity": "AgentLearner",
-                      "mode": "create",
-                      "submitEvent": "SAVE"
+                      "justify": "space-between",
+                      "gap": "md"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "title": "Nothing open",
+                      "icon": "sparkles",
+                      "description": "Click Open to view details in a modal overlay."
                     }
                   ]
                 }
@@ -1655,82 +1709,16 @@
                 "main",
                 {
                   "direction": "vertical",
-                  "type": "stack",
                   "gap": "lg",
                   "children": [
                     {
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "icon",
-                              "name": "sparkles",
-                              "size": "lg"
-                            },
-                            {
-                              "type": "typography",
-                              "variant": "h2",
-                              "content": "AgentLearner"
-                            }
-                          ],
-                          "gap": "md"
-                        },
-                        {
-                          "icon": "sparkles",
-                          "type": "button",
-                          "label": "Open",
-                          "event": "GENERATE",
-                          "variant": "primary"
-                        }
-                      ],
-                      "type": "stack",
-                      "justify": "space-between",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "icon": "sparkles",
-                      "title": "Nothing open",
-                      "description": "Click Open to view details in a modal overlay.",
-                      "type": "empty-state"
-                    }
-                  ]
-                }
-              ]
-            ],
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ],
-              [
-                "ref",
-                "AgentLearner"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "gap": "lg",
-                  "children": [
-                    {
-                      "direction": "horizontal",
                       "gap": "md",
+                      "justify": "space-between",
+                      "type": "stack",
+                      "direction": "horizontal",
                       "children": [
                         {
+                          "direction": "horizontal",
                           "children": [
                             {
                               "size": "lg",
@@ -1738,25 +1726,22 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "AgentLearner",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
                           "gap": "md",
-                          "direction": "horizontal",
                           "type": "stack"
                         },
                         {
-                          "label": "Open",
-                          "event": "GENERATE",
-                          "type": "button",
                           "variant": "primary",
-                          "icon": "sparkles"
+                          "type": "button",
+                          "event": "GENERATE",
+                          "icon": "sparkles",
+                          "label": "Open"
                         }
-                      ],
-                      "justify": "space-between",
-                      "type": "stack"
+                      ]
                     },
                     {
                       "type": "divider"
@@ -1764,10 +1749,11 @@
                     {
                       "icon": "sparkles",
                       "description": "Click Open to view details in a modal overlay.",
-                      "type": "empty-state",
-                      "title": "Nothing open"
+                      "title": "Nothing open",
+                      "type": "empty-state"
                     }
-                  ]
+                  ],
+                  "type": "stack"
                 }
               ]
             ]
@@ -1779,64 +1765,6 @@
           "linkedEntity": "AgentLearner",
           "emitsScope": "internal",
           "effects": {
-            "INIT": [
-              [
-                "ref",
-                "AgentLearner"
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "gap": "lg",
-                  "direction": "vertical",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "children": [
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "repeat"
-                            },
-                            {
-                              "variant": "h2",
-                              "content": "Switch Provider",
-                              "type": "typography"
-                            }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "variant": "primary",
-                          "icon": "repeat",
-                          "event": "SWITCH",
-                          "type": "button",
-                          "label": "Open"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "justify": "space-between",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "icon": "repeat",
-                      "title": "Nothing open",
-                      "description": "Click Open to view details in a modal overlay.",
-                      "type": "empty-state"
-                    }
-                  ]
-                }
-              ]
-            ],
             "CLOSE": [
               [
                 "render-ui",
@@ -1856,118 +1784,50 @@
                 "render-ui",
                 "main",
                 {
+                  "direction": "vertical",
+                  "type": "stack",
                   "gap": "lg",
                   "children": [
                     {
-                      "justify": "space-between",
                       "children": [
                         {
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
+                              "name": "repeat",
                               "type": "icon",
-                              "name": "repeat"
+                              "size": "lg"
                             },
                             {
+                              "type": "typography",
                               "content": "Switch Provider",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md"
                         },
                         {
-                          "event": "SWITCH",
-                          "icon": "repeat",
+                          "variant": "primary",
                           "type": "button",
-                          "label": "Open",
-                          "variant": "primary"
+                          "icon": "repeat",
+                          "event": "SWITCH",
+                          "label": "Open"
                         }
                       ],
-                      "direction": "horizontal",
                       "type": "stack",
-                      "gap": "md"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "space-between"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "type": "empty-state",
                       "description": "Click Open to view details in a modal overlay.",
                       "icon": "repeat",
+                      "type": "empty-state",
                       "title": "Nothing open"
-                    }
-                  ],
-                  "type": "stack",
-                  "direction": "vertical"
-                }
-              ]
-            ],
-            "SWITCH": [
-              [
-                "fetch",
-                "AgentLearner"
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "gap": "md",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "size": "md",
-                          "type": "icon",
-                          "name": "repeat"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "Switch Provider"
-                        }
-                      ],
-                      "gap": "sm",
-                      "type": "stack"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Current:",
-                          "variant": "caption"
-                        },
-                        {
-                          "type": "badge",
-                          "label": "@entity.currentProvider"
-                        },
-                        {
-                          "type": "badge",
-                          "label": "@entity.currentModel"
-                        }
-                      ],
-                      "gap": "md"
-                    },
-                    {
-                      "submitEvent": "SAVE",
-                      "entity": "AgentLearner",
-                      "mode": "edit",
-                      "cancelEvent": "CLOSE",
-                      "fields": [
-                        "currentProvider",
-                        "currentModel"
-                      ],
-                      "type": "form-section"
                     }
                   ]
                 }
@@ -1997,13 +1857,16 @@
                 "render-ui",
                 "main",
                 {
-                  "type": "stack",
                   "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack",
                   "children": [
                     {
+                      "justify": "space-between",
+                      "direction": "horizontal",
+                      "gap": "md",
                       "children": [
                         {
-                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
@@ -2017,20 +1880,18 @@
                               "content": "Switch Provider"
                             }
                           ],
+                          "type": "stack",
                           "direction": "horizontal"
                         },
                         {
-                          "type": "button",
-                          "event": "SWITCH",
-                          "variant": "primary",
                           "icon": "repeat",
-                          "label": "Open"
+                          "type": "button",
+                          "label": "Open",
+                          "event": "SWITCH",
+                          "variant": "primary"
                         }
                       ],
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "md",
-                      "justify": "space-between"
+                      "type": "stack"
                     },
                     {
                       "type": "divider"
@@ -2038,11 +1899,136 @@
                     {
                       "icon": "repeat",
                       "title": "Nothing open",
-                      "type": "empty-state",
-                      "description": "Click Open to view details in a modal overlay."
+                      "description": "Click Open to view details in a modal overlay.",
+                      "type": "empty-state"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "SWITCH": [
+              [
+                "fetch",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "children": [
+                    {
+                      "type": "stack",
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "size": "md",
+                          "name": "repeat"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "Switch Provider",
+                          "variant": "h3"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "gap": "md",
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Current:"
+                        },
+                        {
+                          "label": "@entity.currentProvider",
+                          "type": "badge"
+                        },
+                        {
+                          "type": "badge",
+                          "label": "@entity.currentModel"
+                        }
+                      ]
+                    },
+                    {
+                      "fields": [
+                        "currentProvider",
+                        "currentModel"
+                      ],
+                      "type": "form-section",
+                      "mode": "edit",
+                      "cancelEvent": "CLOSE",
+                      "entity": "AgentLearner",
+                      "submitEvent": "SAVE"
                     }
                   ],
-                  "gap": "lg"
+                  "type": "stack",
+                  "gap": "md",
+                  "direction": "vertical"
+                }
+              ]
+            ],
+            "INIT": [
+              [
+                "ref",
+                "AgentLearner"
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "name": "repeat",
+                              "size": "lg"
+                            },
+                            {
+                              "type": "typography",
+                              "variant": "h2",
+                              "content": "Switch Provider"
+                            }
+                          ]
+                        },
+                        {
+                          "variant": "primary",
+                          "event": "SWITCH",
+                          "label": "Open",
+                          "icon": "repeat",
+                          "type": "button"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "justify": "space-between",
+                      "gap": "md"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "empty-state",
+                      "title": "Nothing open",
+                      "description": "Click Open to view details in a modal overlay.",
+                      "icon": "repeat"
+                    }
+                  ]
                 }
               ]
             ]

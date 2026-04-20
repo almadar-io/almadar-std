@@ -54,8 +54,7 @@ orbital ReviewOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-search", size: "lg" }, { type: "typography", content: "Code Review", variant: "h2" }] }, { type: "divider" }, { type: "card", children: [{ type: "stack", direction: "vertical", gap: "md", children: [{ type: "typography", content: "Paste schema or code to review. The agent will classify, search for patterns, and generate a structured review.", variant: "body" }, { type: "form-section", entity: "Review", mode: "edit", submitEvent: "SUBMIT_REVIEW", fields: ["target"] }] }] }] }] })
     }
     emits {
-      REVIEW_COMPLETE internal { score: number }
-      REVIEW_COMPLETE external { score: number }
+      REVIEW_COMPLETE external { id : string }
     }
     listens {
       * CLASSIFIED -> SUBMIT_REVIEW
@@ -308,7 +307,7 @@ orbital AnalysisOrbital {
       SHOW internal { category: string, confidence: number }
     }
     listens {
-      * CLASSIFIED -> CLASSIFIED
+      InputClassifier CLASSIFIED -> CLASSIFIED
           AnalysisLoadFailed { message : string }
           DO_CLASSIFY { data : string }
     }
@@ -354,7 +353,6 @@ orbital ReviewCompletionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Code Reviewer", navItems: [{ label: "Review", href: "/review", icon: "file-search" }, { label: "Analysis", href: "/analysis", icon: "tag" }, { label: "Issues", href: "/issues", icon: "alert-triangle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "ReviewCompletion", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE
       GENERATED
     }
     emits: [ReviewCompletionLoaded, ReviewCompletionLoadFailed]
@@ -428,7 +426,7 @@ orbital ReviewCompletionOrbital {
       SHOW internal { response: string }
     }
     listens {
-      * GENERATED -> GENERATED
+      ReviewCompletionFlow GENERATED -> GENERATED
           ReviewCompletionLoadFailed { message : string }
           DO_GENERATE { data : string }
     }

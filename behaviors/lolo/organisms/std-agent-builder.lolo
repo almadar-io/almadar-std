@@ -104,7 +104,7 @@ orbital BuildPlanOrbital {
       PLAN_READY external { plan: string }
     }
     listens {
-      * PLAN_READY -> INIT
+      BuildPlanner PLAN_READY -> INIT
       CLASSIFIED { category : string! }
       MEMORIES_LOADED { memories : string!, count : number! }
       PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
@@ -128,9 +128,6 @@ orbital BuildPlanOrbital {
       PLAN -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      PLAN
     }
     listens {
       PLAN { data : object! }
@@ -383,11 +380,6 @@ orbital BuildLoopOrbital {
         (set @entity.currentStep 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "BuildLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
     }
-    emits {
-      ADVANCE internal { step: number }
-      COMPLETE internal { totalSteps: number }
-      FAIL internal { step: number }
-    }
     emits: [BuildLoopLoaded, BuildLoopLoadFailed]
     listens {
       BuildLoopLoadFailed { message : string }
@@ -633,8 +625,8 @@ orbital BuildFixOrbital {
       FIX_FAILED external { target: string, error: string }
     }
     listens {
-      * FIX_SUCCEEDED -> INIT
-      * FIX_FAILED -> INIT
+      FixLoop FIX_SUCCEEDED -> INIT
+      FixLoop FIX_FAILED -> INIT
       * TOOL_LOOP_DONE -> FIX
           VALIDATION_ERRORS { errors : string, count : string }
           EXCEEDED_ATTEMPTS { error : string }
@@ -684,11 +676,6 @@ orbital BuildFixOrbital {
         (set @entity.status idle)
         (set @entity.currentStep 0)
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "BuildFix", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
-    }
-    emits {
-      ADVANCE internal { step: number }
-      COMPLETE internal { totalSteps: number }
-      FAIL internal { step: number }
     }
     emits: [BuildFixLoaded, BuildFixLoadFailed]
     listens {
@@ -823,9 +810,9 @@ orbital BuildSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Schema Builder", navItems: [{ label: "Plan", href: "/plan", icon: "clipboard-list" }, { label: "Build", href: "/build", icon: "hammer" }, { label: "Fix", href: "/fix", icon: "wrench" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal", size: "lg" }, { type: "typography", content: "BuildSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", event: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", event: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", event: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "BuildSession", emptyIcon: "inbox", emptyTitle: "No sessions yet", emptyDescription: "Start a new session to begin.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
     }
     listens {
-      * FORKED -> INIT
-      * LABELED -> INIT
-      * ENDED -> INIT
+      BuildSessionAgent FORKED -> INIT
+      BuildSessionLabel LABELED -> INIT
+      BuildSessionAgent ENDED -> INIT
           BuildSessionLoadFailed { message : string }
     }
     emits: [BuildSessionLoaded, BuildSessionLoadFailed]
@@ -851,7 +838,6 @@ orbital BuildSessionOrbital {
         (emit LABELED)
     }
     emits {
-      SAVE
       LABELED
     }
     emits: [BuildSessionLoaded, BuildSessionLoadFailed]
@@ -914,8 +900,8 @@ orbital BuildSessionOrbital {
       FORKED external { sessionId: string }
     }
     listens {
-      * ENDED -> INIT
-      * FORKED -> INIT
+      BuildSessionAgent ENDED -> INIT
+      BuildSessionAgent FORKED -> INIT
           BuildSessionLoadFailed { message : string }
           DO_LABEL { data : string }
     }

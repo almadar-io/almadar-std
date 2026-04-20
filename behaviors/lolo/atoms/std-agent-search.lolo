@@ -23,7 +23,7 @@ orbital AgentSearchOrbital {
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "search", size: "lg" }, { type: "typography", content: "AgentSearch", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Search", event: "SEARCH", variant: "primary", icon: "search" }, { type: "button", label: "Clear", event: "CLEAR", variant: "ghost", icon: "x" }] }] }, { type: "divider" }, { type: "data-grid", entity: "AgentSearch", emptyIcon: "inbox", emptyTitle: "No search results", emptyDescription: "Enter a query to search the codebase.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "query", label: "Query", variant: "h4", icon: "search" }, { name: "language", label: "Language", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "resultCount", label: "Result Count", variant: "caption" }] }] })
     }
     listens {
-      * SEARCHED -> INIT
+      AgentSearchAgent SEARCHED -> INIT
       VIEW { id : string!, row : object }
           AgentSearchLoadFailed { message : string }
     }
@@ -60,7 +60,7 @@ orbital AgentSearchOrbital {
       SEARCHED external { query: string, resultCount: number }
     }
     listens {
-      * SEARCHED -> INIT
+      AgentSearchAgent SEARCHED -> INIT
       SEARCH { query : string!, language : string }
           AgentSearchLoadFailed { message : string }
     }

@@ -53,84 +53,72 @@
           "ref": "Browse.traits.BrowseItemBrowse",
           "name": "DetailRecordBrowse",
           "linkedEntity": "DetailRecord",
-          "listens": [
-            {
-              "event": "*.SAVE",
-              "triggers": "INIT"
-            }
-          ],
           "effects": {
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
-            ],
             "BrowseItemLoaded": [
               [
                 "render-ui",
                 "main",
                 {
-                  "gap": "lg",
                   "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack",
                   "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
+                      "align": "center",
+                      "type": "stack",
                       "justify": "space-between",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "align": "center",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "file-text",
+                              "type": "icon",
                               "size": "lg",
-                              "type": "icon"
+                              "name": "file-text"
                             },
                             {
-                              "variant": "h2",
                               "content": "DetailRecords",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ]
                         },
                         {
                           "event": "CREATE",
-                          "type": "button",
                           "label": "Create DetailRecord",
-                          "variant": "primary",
-                          "icon": "plus"
+                          "type": "button",
+                          "icon": "plus",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "entity": "DetailRecord",
                       "emptyTitle": "No detailrecords yet",
                       "emptyDescription": "Create your first detailrecord to get started.",
                       "itemActions": [
                         {
+                          "event": "VIEW",
                           "label": "View",
                           "variant": "ghost",
-                          "size": "sm",
-                          "event": "VIEW"
+                          "size": "sm"
                         }
                       ],
                       "type": "data-grid",
                       "columns": [
                         {
-                          "name": "name",
-                          "variant": "h4",
                           "icon": "file-text",
-                          "label": "Name"
+                          "label": "Name",
+                          "variant": "h4",
+                          "name": "name"
                         },
                         {
                           "variant": "badge",
@@ -138,16 +126,22 @@
                           "label": "Description"
                         },
                         {
-                          "name": "status",
                           "label": "Status",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "name": "status"
                         }
                       ],
-                      "emptyIcon": "inbox"
+                      "emptyIcon": "inbox",
+                      "entity": "DetailRecord"
                     }
-                  ],
-                  "type": "stack"
+                  ]
                 }
+              ]
+            ],
+            "INIT": [
+              [
+                "fetch",
+                "DetailRecord"
               ]
             ]
           }
@@ -180,6 +174,57 @@
                 }
               ]
             ],
+            "CREATE": [
+              [
+                "render-ui",
+                "modal",
+                {
+                  "direction": "vertical",
+                  "type": "stack",
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "name": "plus-circle",
+                          "size": "md",
+                          "type": "icon"
+                        },
+                        {
+                          "variant": "h3",
+                          "type": "typography",
+                          "content": "New DetailRecord"
+                        }
+                      ],
+                      "gap": "sm",
+                      "direction": "horizontal",
+                      "type": "stack"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "mode": "create",
+                      "cancelEvent": "CLOSE",
+                      "submitEvent": "SAVE",
+                      "entity": "DetailRecord",
+                      "fields": [
+                        "name",
+                        "description",
+                        "status"
+                      ],
+                      "type": "form-section"
+                    }
+                  ],
+                  "gap": "md"
+                }
+              ]
+            ],
+            "INIT": [
+              [
+                "fetch",
+                "DetailRecord"
+              ]
+            ],
             "CLOSE": [
               [
                 "render-ui",
@@ -198,57 +243,6 @@
                 "Cancelled",
                 "info"
               ]
-            ],
-            "CREATE": [
-              [
-                "render-ui",
-                "modal",
-                {
-                  "type": "stack",
-                  "direction": "vertical",
-                  "children": [
-                    {
-                      "children": [
-                        {
-                          "name": "plus-circle",
-                          "type": "icon",
-                          "size": "md"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "New DetailRecord",
-                          "type": "typography"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "sm"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "fields": [
-                        "name",
-                        "description",
-                        "status"
-                      ],
-                      "cancelEvent": "CLOSE",
-                      "entity": "DetailRecord",
-                      "type": "form-section",
-                      "mode": "create",
-                      "submitEvent": "SAVE"
-                    }
-                  ],
-                  "gap": "md"
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
             ]
           }
         },
@@ -260,121 +254,6 @@
             "OPEN": "VIEW"
           },
           "effects": {
-            "VIEW": [
-              [
-                "fetch",
-                "DetailRecord",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "direction": "vertical",
-                  "children": [
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "icon",
-                          "name": "eye",
-                          "size": "md"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "@entity.name",
-                          "variant": "h3"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Name"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.name",
-                          "type": "typography"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "gap": "md"
-                    },
-                    {
-                      "children": [
-                        {
-                          "content": "Description",
-                          "variant": "caption",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.description",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "content": "Status",
-                          "variant": "caption",
-                          "type": "typography"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.status"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "children": [
-                        {
-                          "event": "CLOSE",
-                          "variant": "ghost",
-                          "label": "Close",
-                          "type": "button"
-                        }
-                      ],
-                      "gap": "sm",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "justify": "end"
-                    }
-                  ],
-                  "type": "stack",
-                  "gap": "md"
-                }
-              ]
-            ],
-            "INIT": [
-              [
-                "fetch",
-                "DetailRecord"
-              ]
-            ],
             "CLOSE": [
               [
                 "render-ui",
@@ -387,6 +266,121 @@
                 {
                   "type": "box"
                 }
+              ]
+            ],
+            "VIEW": [
+              [
+                "fetch",
+                "DetailRecord",
+                {
+                  "id": "@payload.id"
+                }
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "type": "stack",
+                  "direction": "vertical",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "name": "eye",
+                          "type": "icon",
+                          "size": "md"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@entity.name",
+                          "variant": "h3"
+                        }
+                      ],
+                      "gap": "sm",
+                      "type": "stack",
+                      "align": "center"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Name"
+                        },
+                        {
+                          "type": "typography",
+                          "variant": "body",
+                          "content": "@entity.name"
+                        }
+                      ]
+                    },
+                    {
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "content": "Description",
+                          "type": "typography"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@entity.description"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Status"
+                        },
+                        {
+                          "variant": "body",
+                          "content": "@entity.status",
+                          "type": "typography"
+                        }
+                      ],
+                      "direction": "horizontal"
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "stack",
+                      "children": [
+                        {
+                          "label": "Close",
+                          "type": "button",
+                          "event": "CLOSE",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "justify": "end",
+                      "gap": "sm"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "INIT": [
+              [
+                "fetch",
+                "DetailRecord"
               ]
             ],
             "SAVE": [

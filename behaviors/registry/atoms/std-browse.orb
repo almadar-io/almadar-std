@@ -126,8 +126,8 @@
                     "BrowseItem",
                     {
                       "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
+                        "success": "BrowseItemLoaded",
+                        "failure": "BrowseItemLoadFailed"
                       }
                     }
                   ],
@@ -135,23 +135,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "align": "center",
-                      "className": "max-w-5xl mx-auto w-full py-12",
                       "children": [
                         {
                           "type": "spinner",
                           "size": "lg"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "caption",
+                          "color": "muted",
                           "content": "Loading BrowseItems…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
+                      "className": "max-w-5xl mx-auto w-full py-12"
                     }
                   ]
                 ]
@@ -166,87 +166,87 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
+                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "justify": "space-between",
                           "align": "center",
-                          "type": "stack",
                           "gap": "md",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "size": "lg",
+                                  "name": "list",
                                   "type": "icon",
-                                  "name": "list"
+                                  "size": "lg"
                                 },
                                 {
                                   "type": "typography",
-                                  "content": "BrowseItems",
-                                  "variant": "h2"
+                                  "variant": "h2",
+                                  "content": "BrowseItems"
                                 }
-                              ],
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center"
+                              ]
                             }
-                          ]
+                          ],
+                          "justify": "space-between",
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "BrowseItem",
+                          "emptyIcon": "inbox",
+                          "emptyDescription": "Create your first browseitem to get started.",
+                          "type": "data-grid",
+                          "emptyTitle": "No browseitems yet",
                           "columns": [
                             {
+                              "icon": "list",
                               "label": "Name",
                               "name": "name",
-                              "variant": "h4",
-                              "icon": "list"
+                              "variant": "h4"
                             },
                             {
                               "colorMap": {
-                                "archived": "neutral",
-                                "completed": "success",
-                                "scheduled": "warning",
-                                "disabled": "neutral",
-                                "error": "destructive",
                                 "cancelled": "destructive",
-                                "inactive": "neutral",
-                                "pending": "warning",
-                                "active": "success",
                                 "failed": "destructive",
+                                "scheduled": "warning",
+                                "inactive": "neutral",
+                                "archived": "neutral",
+                                "active": "success",
+                                "pending": "warning",
+                                "disabled": "neutral",
                                 "draft": "warning",
+                                "error": "destructive",
+                                "completed": "success",
                                 "done": "success"
                               },
+                              "name": "description",
                               "variant": "badge",
-                              "label": "Description",
-                              "name": "description"
+                              "label": "Description"
                             },
                             {
-                              "variant": "caption",
                               "name": "status",
+                              "variant": "caption",
                               "label": "Status"
                             }
-                          ],
-                          "type": "data-grid",
-                          "entity": "BrowseItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No browseitems yet",
-                          "emptyDescription": "Create your first browseitem to get started."
+                          ]
                         },
                         {
                           "type": "floating-action-button",
-                          "event": "INIT",
+                          "icon": "plus",
                           "label": "Create",
                           "tooltip": "Create",
-                          "icon": "plus"
+                          "event": "INIT"
                         }
                       ],
-                      "type": "stack",
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -260,20 +260,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
                       "className": "max-w-5xl mx-auto w-full py-12",
                       "children": [
                         {
+                          "size": "xl",
                           "type": "icon",
                           "name": "alert-triangle",
-                          "color": "destructive",
-                          "size": "xl"
+                          "color": "destructive"
                         },
                         {
+                          "type": "typography",
                           "content": "Failed to load BrowseItems",
-                          "variant": "h3",
-                          "type": "typography"
+                          "variant": "h3"
                         },
                         {
                           "type": "typography",
@@ -282,21 +280,63 @@
                           "color": "muted"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "variant": "primary",
                           "type": "button",
+                          "variant": "primary",
                           "label": "Retry",
+                          "icon": "rotate-ccw",
                           "event": "INIT"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack",
+                      "align": "center"
                     }
                   ]
                 ]
               },
               {
                 "from": "browsing",
+                "to": "loading",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "BrowseItem",
+                    {
+                      "emit": {
+                        "failure": "BrowseItemLoadFailed",
+                        "success": "BrowseItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "size": "lg",
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "type": "typography",
+                          "content": "Refreshing…",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full py-12",
+                      "type": "stack",
+                      "gap": "lg",
+                      "align": "center"
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "error",
                 "to": "loading",
                 "event": "INIT",
                 "effects": [
@@ -314,8 +354,10 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
+                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
+                      "className": "max-w-5xl mx-auto w-full py-12",
                       "children": [
                         {
                           "size": "lg",
@@ -324,53 +366,11 @@
                         {
                           "color": "muted",
                           "variant": "caption",
-                          "content": "Refreshing…",
-                          "type": "typography"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "gap": "lg"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BrowseItem",
-                    {
-                      "emit": {
-                        "failure": "BrowseItemLoadFailed",
-                        "success": "BrowseItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "className": "max-w-5xl mx-auto w-full py-12",
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "size": "lg",
-                          "type": "spinner"
-                        },
-                        {
                           "type": "typography",
-                          "content": "Retrying…",
-                          "color": "muted",
-                          "variant": "caption"
+                          "content": "Retrying…"
                         }
                       ],
-                      "direction": "vertical"
+                      "align": "center"
                     }
                   ]
                 ]

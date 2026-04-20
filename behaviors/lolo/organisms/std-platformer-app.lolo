@@ -137,9 +137,9 @@ orbital CollectibleOrbital {
         (render-ui main { type: "game-shell", appName: "Platformer App", showTopBar: true, children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package", size: "lg" }, { type: "typography", content: "Collectibles", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Add Collectible", event: "ADD_ITEM", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Collectible", emptyIcon: "inbox", emptyTitle: "No items yet", emptyDescription: "Add your first item to get started.", itemActions: [{ label: "Use", event: "USE_ITEM", variant: "ghost", size: "sm" }, { label: "Drop", event: "DROP", variant: "danger", size: "sm" }], columns: [{ name: "name", label: "Name", variant: "h4", icon: "package" }, { name: "type", label: "Type", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "quantity", label: "Quantity", variant: "caption" }] }] }] })
     }
     listens {
-      * ITEM_ADDED -> INIT
-      * ITEM_USED -> INIT
-      * CONFIRM_DROP -> INIT
+      CollectibleAdd ITEM_ADDED -> INIT
+      CollectibleUse ITEM_USED -> INIT
+      CollectibleDrop CONFIRM_DROP -> INIT
           CollectibleLoadFailed { message : string }
     }
     emits: [CollectibleLoaded, CollectibleLoadFailed]
@@ -165,7 +165,6 @@ orbital CollectibleOrbital {
         (emit ITEM_ADDED)
     }
     emits {
-      SAVE
       ITEM_ADDED
     }
     emits: [CollectibleLoaded, CollectibleLoadFailed]
@@ -195,7 +194,6 @@ orbital CollectibleOrbital {
         (emit ITEM_USED)
     }
     emits {
-      SAVE
       ITEM_USED
     }
     emits: [CollectibleLoaded, CollectibleLoadFailed]

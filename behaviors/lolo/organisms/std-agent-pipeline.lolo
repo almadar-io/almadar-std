@@ -105,7 +105,7 @@ orbital PipelinePlanOrbital {
       PIPELINE_PLANNED external { steps: string }
     }
     listens {
-      * PLAN_READY -> INIT
+      PipelinePlanner PLAN_READY -> INIT
       CLASSIFIED { category : string! }
       MEMORIES_LOADED { memories : string!, count : number! }
       PLAN_GENERATED { steps : string!, confidence : number!, plan : string, toolName : string, toolArgs : string }
@@ -129,9 +129,6 @@ orbital PipelinePlanOrbital {
       PLAN -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      PLAN
     }
     listens {
       PLAN { data : object! }
@@ -387,11 +384,6 @@ orbital PipelineExecOrbital {
         (set @entity.currentStep 0)
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "PipelineExec", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Plan" }, { id: "1", title: "Execute" }, { id: "2", title: "Check" }, { id: "3", title: "Complete" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] }] })
     }
-    emits {
-      ADVANCE internal { step: number }
-      COMPLETE internal { totalSteps: number }
-      FAIL internal { step: number }
-    }
     emits: [PipelineExecLoaded, PipelineExecLoadFailed]
     listens {
       PipelineExecLoadFailed { message : string }
@@ -550,9 +542,9 @@ orbital PipelineSessionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "terminal", size: "lg" }, { type: "typography", content: "PipelineSession Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Fork", event: "FORK", variant: "secondary", icon: "git-branch" }, { type: "button", label: "Label", event: "LABEL", variant: "secondary", icon: "tag" }, { type: "button", label: "End", event: "END", variant: "ghost", icon: "square" }] }] }, { type: "divider" }, { type: "data-grid", entity: "PipelineSession", emptyIcon: "inbox", emptyTitle: "No sessions yet", emptyDescription: "Start a new session to begin.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "sessionId", label: "Session ID", variant: "h4", icon: "terminal" }, { name: "status", label: "Status", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "label", label: "Label", variant: "caption" }] }] }] })
     }
     listens {
-      * FORKED -> INIT
-      * LABELED -> INIT
-      * ENDED -> INIT
+      PipelineSessionAgent FORKED -> INIT
+      PipelineSessionLabel LABELED -> INIT
+      PipelineSessionAgent ENDED -> INIT
       * STEP_COMPLETE -> INIT
           PipelineSessionLoadFailed { message : string }
     }
@@ -579,7 +571,6 @@ orbital PipelineSessionOrbital {
         (emit LABELED)
     }
     emits {
-      SAVE
       LABELED
     }
     emits: [PipelineSessionLoaded, PipelineSessionLoadFailed]
@@ -642,8 +633,8 @@ orbital PipelineSessionOrbital {
       FORKED external { sessionId: string }
     }
     listens {
-      * ENDED -> INIT
-      * FORKED -> INIT
+      PipelineSessionAgent ENDED -> INIT
+      PipelineSessionAgent FORKED -> INIT
           PipelineSessionLoadFailed { message : string }
           DO_LABEL { data : string }
     }
@@ -672,11 +663,11 @@ orbital ExecutionLogOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Pipeline", navItems: [{ label: "Pipeline", href: "/pipeline", icon: "git-branch" }, { label: "Execution", href: "/execution", icon: "play" }, { label: "Logs", href: "/logs", icon: "terminal" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "ExecutionLog Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "ExecutionLog", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
     listens {
-      * MEMORIZED -> INIT
-      * PINNED -> INIT
-      * FORGOT -> INIT
-      * REINFORCED -> INIT
-      * DECAYED -> INIT
+      ExecutionLogCreate MEMORIZED -> INIT
+      ExecutionLogAgent PINNED -> INIT
+      ExecutionLogAgent FORGOT -> INIT
+      ExecutionLogAgent REINFORCED -> INIT
+      ExecutionLogAgent DECAYED -> INIT
           ExecutionLogLoadFailed { message : string }
     }
     emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]
@@ -701,7 +692,6 @@ orbital ExecutionLogOrbital {
         (emit MEMORIZED)
     }
     emits {
-      SAVE
       MEMORIZED
     }
     emits: [ExecutionLogLoaded, ExecutionLogLoadFailed]

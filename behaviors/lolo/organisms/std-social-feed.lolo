@@ -23,7 +23,6 @@ orbital PostOrbital {
       COMMENT external { id: string }
     }
     listens {
-      * SAVE -> INIT
       VIEW { id : string!, row : object }
           PostLoadFailed { message : string }
     }
@@ -48,9 +47,6 @@ orbital PostOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
     listens {
       SAVE { data : object! }
           PostLoadFailed { message : string }
@@ -74,9 +70,6 @@ orbital PostOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -105,7 +98,7 @@ orbital CommentOrbital {
         (render-ui main { type: "dashboard-layout", appName: "SocialFeed", navItems: [{ label: "Feed", href: "/feed", icon: "layout-list" }, { label: "Messages", href: "/messages", icon: "message-circle" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Messages", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "Comment", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "author", variant: "h4", icon: "message-circle" }, { name: "body", variant: "body" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * SEND -> INIT
+      CommentCompose SEND -> INIT
       * COMMENT -> INIT
           CommentLoadFailed { message : string }
     }
@@ -155,9 +148,6 @@ orbital CommentOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [CommentLoaded, CommentLoadFailed]
     listens {

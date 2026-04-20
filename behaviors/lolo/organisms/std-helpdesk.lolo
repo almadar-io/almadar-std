@@ -24,9 +24,9 @@ orbital TicketOrbital {
       ASSIGN external { id: string }
     }
     listens {
-      * TICKET_CREATED -> INIT
-      * TICKET_UPDATED -> INIT
-      * TICKET_DELETED -> INIT
+      TicketCreate TICKET_CREATED -> INIT
+      TicketEdit TICKET_UPDATED -> INIT
+      TicketDelete TICKET_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -55,7 +55,6 @@ orbital TicketOrbital {
         (emit TICKET_CREATED)
     }
     emits {
-      SAVE
       TICKET_CREATED external { id: string }
     }
     listens {
@@ -85,7 +84,6 @@ orbital TicketOrbital {
         (emit TICKET_UPDATED)
     }
     emits {
-      SAVE
       TICKET_UPDATED external { id: string }
     }
     listens {
@@ -112,9 +110,6 @@ orbital TicketOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -150,7 +145,6 @@ orbital TicketOrbital {
         (ref Ticket)
     }
     emits {
-      CONFIRM_DELETE
       TICKET_DELETED external { id: string }
     }
     listens {
@@ -182,7 +176,7 @@ orbital ResponseOrbital {
       RESOLVE external { id: string }
     }
     listens {
-      * SEND -> INIT
+      ResponseCompose SEND -> INIT
       * ASSIGN -> INIT
           ResponseLoadFailed { message : string }
     }
@@ -232,9 +226,6 @@ orbital ResponseOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [ResponseLoaded, ResponseLoadFailed]
     listens {

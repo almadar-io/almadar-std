@@ -129,11 +129,11 @@ orbital MemoryOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "brain", size: "lg" }, { type: "typography", content: "Memory Manager", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Memorize", event: "MEMORIZE", variant: "primary", icon: "plus" }, { type: "button", label: "Recall", event: "RECALL", variant: "secondary", icon: "search" }, { type: "button", label: "Decay All", event: "DECAY", variant: "ghost", icon: "clock" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Memory", emptyIcon: "inbox", emptyTitle: "No memories yet", emptyDescription: "Create your first memory to get started.", itemActions: [{ label: "Pin", event: "PIN", variant: "ghost", size: "sm" }, { label: "Reinforce", event: "REINFORCE", variant: "ghost", size: "sm" }, { label: "Forget", event: "FORGET", variant: "danger", size: "sm" }], columns: [{ name: "content", label: "Content", variant: "h4", icon: "brain" }, { name: "category", label: "Category", variant: "badge", colorMap: { active: "success", completed: "success", done: "success", pending: "warning", draft: "warning", scheduled: "warning", inactive: "neutral", archived: "neutral", disabled: "neutral", error: "destructive", cancelled: "destructive", failed: "destructive" } }, { name: "strength", label: "Strength", variant: "caption" }] }] }] })
     }
     listens {
-      * MEMORIZED -> INIT
-      * PINNED -> INIT
-      * FORGOT -> INIT
-      * REINFORCED -> INIT
-      * DECAYED -> INIT
+      MemoryCreate MEMORIZED -> INIT
+      MemoryAgent PINNED -> INIT
+      MemoryAgent FORGOT -> INIT
+      MemoryAgent REINFORCED -> INIT
+      MemoryAgent DECAYED -> INIT
           MemoryLoadFailed { message : string }
     }
     emits: [MemoryLoaded, MemoryLoadFailed]
@@ -158,7 +158,6 @@ orbital MemoryOrbital {
         (emit MEMORIZED)
     }
     emits {
-      SAVE
       MEMORIZED
     }
     emits: [MemoryLoaded, MemoryLoadFailed]
@@ -429,7 +428,6 @@ orbital ProviderConfigOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Agent Assistant", navItems: [{ label: "Chat", href: "/chat", icon: "message-circle" }, { label: "Memory", href: "/memory", icon: "brain" }, { label: "Settings", href: "/settings", icon: "settings" }], children: [{ type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "repeat", size: "lg" }, { type: "typography", content: "Switch Provider", variant: "h2" }] }, { type: "button", label: "Open", event: "SWITCH", variant: "primary", icon: "repeat" }] }, { type: "divider" }, { type: "empty-state", icon: "repeat", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] }] })
     }
     emits {
-      SAVE
       SWITCHED
       PROVIDER_CHANGED internal { provider: string }
       PROVIDER_CHANGED external { provider: string }
@@ -499,7 +497,7 @@ orbital ProviderConfigOrbital {
       SHOW internal { provider: string, model: string }
     }
     listens {
-      * SWITCHED -> SWITCHED
+      ProviderManager SWITCHED -> SWITCHED
           ProviderConfigLoadFailed { message : string }
           DO_SWITCH { data : string }
     }

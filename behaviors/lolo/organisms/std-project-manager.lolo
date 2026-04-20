@@ -23,9 +23,9 @@ orbital TaskOrbital {
         (render-ui main { type: "dashboard-layout", appName: "ProjectManagerApp", navItems: [{ label: "Tasks", href: "/tasks", icon: "check-square" }, { label: "Sprints", href: "/sprints", icon: "zap" }, { label: "Burndown", href: "/burndown", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "check-square", size: "lg" }, { type: "typography", content: "Tasks", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Task", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "simple-grid", columns: 1, children: [{ type: "stat-display", label: "Total Tasks", value: ["array/len", "@entity"], icon: "check-square" }] }, { type: "divider" }, { type: "data-grid", entity: "Task", emptyIcon: "inbox", emptyTitle: "No tasks yet", emptyDescription: "Create tasks to plan your sprint.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "check-square" }, { name: "priority", variant: "badge" }, { name: "status", variant: "badge" }, { name: "assignee", variant: "body" }, { name: "storyPoints", label: "Points", variant: "body", format: "number" }, { name: "dueDate", label: "Due", variant: "caption", format: "date" }], cols: 2, gap: "md" }] }] })
     }
     listens {
-      * TASK_CREATED -> INIT
-      * TASK_UPDATED -> INIT
-      * TASK_DELETED -> INIT
+      TaskCreate TASK_CREATED -> INIT
+      TaskEdit TASK_UPDATED -> INIT
+      TaskDelete TASK_DELETED -> INIT
       * ASSIGN_TASK -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
@@ -55,7 +55,6 @@ orbital TaskOrbital {
         (emit TASK_CREATED)
     }
     emits {
-      SAVE
       TASK_CREATED external { id: string }
     }
     listens {
@@ -85,7 +84,6 @@ orbital TaskOrbital {
         (emit TASK_UPDATED)
     }
     emits {
-      SAVE
       TASK_UPDATED external { id: string }
     }
     listens {
@@ -112,9 +110,6 @@ orbital TaskOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -150,7 +145,6 @@ orbital TaskOrbital {
         (ref Task)
     }
     emits {
-      CONFIRM_DELETE
       TASK_DELETED external { id: string }
     }
     listens {
@@ -186,9 +180,9 @@ orbital SprintOrbital {
       COMPLETE_SPRINT external { id: string }
     }
     listens {
-      * SPRINT_CREATED -> INIT
-      * SPRINT_UPDATED -> INIT
-      * SPRINT_DELETED -> INIT
+      SprintCreate SPRINT_CREATED -> INIT
+      SprintEdit SPRINT_UPDATED -> INIT
+      SprintDelete SPRINT_DELETED -> INIT
           SprintLoadFailed { message : string }
     }
     emits: [SprintLoaded, SprintLoadFailed]
@@ -214,7 +208,6 @@ orbital SprintOrbital {
         (emit SPRINT_CREATED)
     }
     emits {
-      SAVE
       SPRINT_CREATED
     }
     emits: [SprintLoaded, SprintLoadFailed]
@@ -244,7 +237,6 @@ orbital SprintOrbital {
         (emit SPRINT_UPDATED)
     }
     emits {
-      SAVE
       SPRINT_UPDATED
     }
     emits: [SprintLoaded, SprintLoadFailed]
@@ -271,9 +263,6 @@ orbital SprintOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [SprintLoaded, SprintLoadFailed]
     listens {
@@ -308,7 +297,6 @@ orbital SprintOrbital {
         (ref Sprint)
     }
     emits {
-      CONFIRM_DELETE
       SPRINT_DELETED
     }
     emits: [SprintLoaded, SprintLoadFailed]

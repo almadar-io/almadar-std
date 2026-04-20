@@ -19,7 +19,7 @@ orbital ChatMessageOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "message-circle", size: "lg" }, { type: "typography", content: "Chat", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "ChatMessage", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "sender", variant: "h4" }, { name: "content", variant: "body" }, { name: "timestamp", variant: "caption", format: "date" }], variant: "message", senderField: "sender", gap: "sm" }] }] })
     }
     listens {
-      * SEND -> INIT
+      ChatMessageCompose SEND -> INIT
       VIEW { id : string!, row : object }
           ChatMessageLoadFailed { message : string }
     }
@@ -70,9 +70,7 @@ orbital ChatMessageOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
@@ -101,9 +99,9 @@ orbital ChannelOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Realtime Chat", navItems: [{ label: "Chat", href: "/chat", icon: "layout-list" }, { label: "Channels", href: "/channels", icon: "hash" }, { label: "Online", href: "/online", icon: "layout-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "hash", size: "lg" }, { type: "typography", content: "Channels", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Channel", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Channel", emptyIcon: "inbox", emptyTitle: "No channels yet", emptyDescription: "Create a channel to start conversations.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "hash" }, { name: "memberCount", label: "Members", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "isPrivate", label: "Private", variant: "body", format: "boolean" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * CHANNEL_CREATED -> INIT
-      * CHANNEL_UPDATED -> INIT
-      * CHANNEL_DELETED -> INIT
+      ChannelCreate CHANNEL_CREATED -> INIT
+      ChannelEdit CHANNEL_UPDATED -> INIT
+      ChannelDelete CHANNEL_DELETED -> INIT
           ChannelLoadFailed { message : string }
     }
     emits: [ChannelLoaded, ChannelLoadFailed]
@@ -129,7 +127,6 @@ orbital ChannelOrbital {
         (emit CHANNEL_CREATED)
     }
     emits {
-      SAVE
       CHANNEL_CREATED
     }
     emits: [ChannelLoaded, ChannelLoadFailed]
@@ -159,7 +156,6 @@ orbital ChannelOrbital {
         (emit CHANNEL_UPDATED)
     }
     emits {
-      SAVE
       CHANNEL_UPDATED
     }
     emits: [ChannelLoaded, ChannelLoadFailed]
@@ -187,9 +183,7 @@ orbital ChannelOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     emits: [ChannelLoaded, ChannelLoadFailed]
     listens {
       ChannelLoadFailed { message : string }
@@ -223,7 +217,6 @@ orbital ChannelOrbital {
         (ref Channel)
     }
     emits {
-      CONFIRM_DELETE
       CHANNEL_DELETED
     }
     emits: [ChannelLoaded, ChannelLoadFailed]

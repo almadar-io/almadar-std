@@ -47,10 +47,10 @@ orbital AgentMemoryOrbital {
     }
     listens {
       * MEMORIZED -> INIT
-      * PINNED -> INIT
-      * FORGOT -> INIT
-      * REINFORCED -> INIT
-      * DECAYED -> INIT
+      AgentMemoryAgent PINNED -> INIT
+      AgentMemoryAgent FORGOT -> INIT
+      AgentMemoryAgent REINFORCED -> INIT
+      AgentMemoryAgent DECAYED -> INIT
       PIN { id : string!, row : object }
       REINFORCE { id : string!, row : object }
       FORGET { id : string!, row : object }
@@ -79,7 +79,6 @@ orbital AgentMemoryOrbital {
     }
     ;; consumers: AgentMemoryBrowse.listens * MEMORIZED -> INIT triggers refresh; downstream agents may listen
     emits {
-      SAVE external { data: string }
       MEMORIZED external { id: string }
     }
     emits: [AgentMemoryLoaded, AgentMemoryLoadFailed]

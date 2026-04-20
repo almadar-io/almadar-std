@@ -25,9 +25,9 @@ orbital ProductOrbital {
       ADD_TO_CART external { id: string }
     }
     listens {
-      * PRODUCT_CREATED -> INIT
-      * PRODUCT_UPDATED -> INIT
-      * PRODUCT_DELETED -> INIT
+      ProductCreate PRODUCT_CREATED -> INIT
+      ProductEdit PRODUCT_UPDATED -> INIT
+      ProductDelete PRODUCT_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -56,7 +56,6 @@ orbital ProductOrbital {
         (emit PRODUCT_CREATED)
     }
     emits {
-      SAVE
       PRODUCT_CREATED external { id: string }
     }
     listens {
@@ -86,7 +85,6 @@ orbital ProductOrbital {
         (emit PRODUCT_UPDATED)
     }
     emits {
-      SAVE
       PRODUCT_UPDATED external { id: string }
     }
     listens {
@@ -113,9 +111,6 @@ orbital ProductOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -151,7 +146,6 @@ orbital ProductOrbital {
         (ref Product)
     }
     emits {
-      CONFIRM_DELETE
       PRODUCT_DELETED external { id: string }
     }
     listens {
@@ -219,9 +213,6 @@ orbital CartItemOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
     emits: [CartItemLoaded, CartItemLoadFailed]
     listens {
       CartItemLoadFailed { message : string }
@@ -252,9 +243,6 @@ orbital CartItemOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
         (ref CartItem)
-    }
-    emits {
-      CONFIRM_REMOVE
     }
     emits: [CartItemLoaded, CartItemLoadFailed]
     listens {
@@ -353,9 +341,9 @@ orbital OrderRecordOrbital {
         (render-ui main { type: "dashboard-layout", appName: "EcommerceApp", navItems: [{ label: "Products", href: "/products", icon: "package" }, { label: "Cart", href: "/cart", icon: "shopping-cart" }, { label: "Checkout", href: "/checkout", icon: "credit-card" }, { label: "Orders", href: "/orders", icon: "clipboard-list" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "clipboard-list", size: "lg" }, { type: "typography", content: "Order History", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create OrderRecord", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "OrderRecord", emptyIcon: "inbox", emptyTitle: "No orders yet", emptyDescription: "Orders will appear here as customers complete checkout.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "customerName", label: "Customer", variant: "h3", icon: "clipboard-list" }, { name: "status", variant: "badge" }, { name: "orderTotal", label: "Total", variant: "h4", format: "currency" }, { name: "email", variant: "caption" }, { name: "shippingAddress", label: "Address", variant: "caption" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * ORDER_RECORD_CREATED -> INIT
-      * ORDER_RECORD_UPDATED -> INIT
-      * ORDER_RECORD_DELETED -> INIT
+      OrderRecordCreate ORDER_RECORD_CREATED -> INIT
+      OrderRecordEdit ORDER_RECORD_UPDATED -> INIT
+      OrderRecordDelete ORDER_RECORD_DELETED -> INIT
       * ORDER_PLACED -> INIT
           OrderRecordLoadFailed { message : string }
     }
@@ -382,7 +370,6 @@ orbital OrderRecordOrbital {
         (emit ORDER_RECORD_CREATED)
     }
     emits {
-      SAVE
       ORDER_RECORD_CREATED
     }
     emits: [OrderRecordLoaded, OrderRecordLoadFailed]
@@ -412,7 +399,6 @@ orbital OrderRecordOrbital {
         (emit ORDER_RECORD_UPDATED)
     }
     emits {
-      SAVE
       ORDER_RECORD_UPDATED
     }
     emits: [OrderRecordLoaded, OrderRecordLoadFailed]
@@ -439,9 +425,6 @@ orbital OrderRecordOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [OrderRecordLoaded, OrderRecordLoadFailed]
     listens {
@@ -476,7 +459,6 @@ orbital OrderRecordOrbital {
         (ref OrderRecord)
     }
     emits {
-      CONFIRM_DELETE
       ORDER_RECORD_DELETED
     }
     emits: [OrderRecordLoaded, OrderRecordLoadFailed]

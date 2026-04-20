@@ -24,9 +24,9 @@ orbital ContactOrbital {
       CONVERT_LEAD external { id: string }
     }
     listens {
-      * CONTACT_CREATED -> INIT
-      * CONTACT_UPDATED -> INIT
-      * CONTACT_DELETED -> INIT
+      ContactCreate CONTACT_CREATED -> INIT
+      ContactEdit CONTACT_UPDATED -> INIT
+      ContactDelete CONTACT_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -55,7 +55,6 @@ orbital ContactOrbital {
         (emit CONTACT_CREATED)
     }
     emits {
-      SAVE
       CONTACT_CREATED external { id: string }
     }
     listens {
@@ -85,7 +84,6 @@ orbital ContactOrbital {
         (emit CONTACT_UPDATED)
     }
     emits {
-      SAVE
       CONTACT_UPDATED external { id: string }
     }
     listens {
@@ -112,9 +110,6 @@ orbital ContactOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -150,7 +145,6 @@ orbital ContactOrbital {
         (ref Contact)
     }
     emits {
-      CONFIRM_DELETE
       CONTACT_DELETED external { id: string }
     }
     listens {
@@ -184,9 +178,9 @@ orbital DealOrbital {
       CLOSE_DEAL external { id: string }
     }
     listens {
-      * DEAL_CREATED -> INIT
-      * DEAL_UPDATED -> INIT
-      * DEAL_DELETED -> INIT
+      DealCreate DEAL_CREATED -> INIT
+      DealEdit DEAL_UPDATED -> INIT
+      DealDelete DEAL_DELETED -> INIT
       * CONVERT_LEAD -> INIT
           DealLoadFailed { message : string }
     }
@@ -213,7 +207,6 @@ orbital DealOrbital {
         (emit DEAL_CREATED)
     }
     emits {
-      SAVE
       DEAL_CREATED
     }
     emits: [DealLoaded, DealLoadFailed]
@@ -243,7 +236,6 @@ orbital DealOrbital {
         (emit DEAL_UPDATED)
     }
     emits {
-      SAVE
       DEAL_UPDATED
     }
     emits: [DealLoaded, DealLoadFailed]
@@ -270,9 +262,6 @@ orbital DealOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [DealLoaded, DealLoadFailed]
     listens {
@@ -307,7 +296,6 @@ orbital DealOrbital {
         (ref Deal)
     }
     emits {
-      CONFIRM_DELETE
       DEAL_DELETED
     }
     emits: [DealLoaded, DealLoadFailed]
@@ -379,7 +367,7 @@ orbital NoteOrbital {
         (render-ui main { type: "dashboard-layout", appName: "CRM", navItems: [{ label: "Contacts", href: "/contacts", icon: "users" }, { label: "Deals", href: "/deals", icon: "briefcase" }, { label: "Pipeline", href: "/pipeline", icon: "bar-chart-2" }, { label: "Notes", href: "/notes", icon: "file-text" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "Notes", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Compose", event: "COMPOSE", variant: "primary", icon: "edit" }] }] }, { type: "divider" }, { type: "data-list", entity: "Note", emptyIcon: "inbox", emptyTitle: "No messages yet", emptyDescription: "Start a new conversation.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "subject", variant: "h4", icon: "file-text" }, { name: "author", variant: "caption" }, { name: "createdAt", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * SEND -> INIT
+      NoteCompose SEND -> INIT
           NoteLoadFailed { message : string }
     }
     emits: [NoteLoaded, NoteLoadFailed]
@@ -428,9 +416,6 @@ orbital NoteOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [NoteLoaded, NoteLoadFailed]
     listens {

@@ -115,8 +115,8 @@ orbital AgentFixLoopOrbital {
       FIX_FAILED external { target: string, error: string }
     }
     listens {
-      * FIX_SUCCEEDED -> INIT
-      * FIX_FAILED -> INIT
+      AgentFixLoopCycle FIX_SUCCEEDED -> INIT
+      AgentFixLoopCycle FIX_FAILED -> INIT
       VALIDATION_ERRORS { errors : string!, count : number! }
       FIX_GENERATED { fix : string! }
       EXCEEDED_ATTEMPTS { error : string! }
@@ -151,7 +151,6 @@ orbital AgentFixLoopOrbital {
         (set @entity.currentStep 0)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "list-ordered", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }, { type: "badge", label: "Idle", variant: "default" }] }, { type: "divider" }, { type: "wizard-progress", currentStep: "@entity.currentStep", steps: [{ id: "0", title: "Validate" }, { id: "1", title: "Analyze" }, { id: "2", title: "Fix" }, { id: "3", title: "Re-validate" }] }, { type: "button", label: "Start", event: "START", variant: "primary", icon: "play" }] })
     }
-    listens {}
     emitsScope internal
   }
   trait FixLoopErrorsBrowse = Browse.traits.BrowseItemBrowse -> AgentFixLoop {
@@ -181,7 +180,6 @@ orbital AgentFixLoopOrbital {
         (ref AgentFixLoop)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
-    listens {}
     emitsScope internal
   }
   trait FixLoopFixCall = AgentToolCall.traits.AgentToolCallModal -> AgentFixLoop {
@@ -205,7 +203,6 @@ orbital AgentFixLoopOrbital {
         (ref AgentFixLoop)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "wrench", size: "lg" }, { type: "typography", content: "Invoke Tool", variant: "h2" }] }, { type: "button", label: "Open", event: "INVOKE", variant: "primary", icon: "wrench" }] }, { type: "divider" }, { type: "empty-state", icon: "wrench", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
-    listens {}
     emitsScope internal
   }
   trait FixLoopCompletionFlow = AgentCompletion.traits.AgentCompletionModal -> AgentFixLoop {
@@ -229,7 +226,6 @@ orbital AgentFixLoopOrbital {
         (ref AgentFixLoop)
         (render-ui main { type: "stack", direction: "vertical", gap: "lg", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", children: [{ type: "stack", direction: "horizontal", gap: "md", children: [{ type: "icon", name: "sparkles", size: "lg" }, { type: "typography", content: "AgentFixLoop", variant: "h2" }] }, { type: "button", label: "Open", event: "GENERATE", variant: "primary", icon: "sparkles" }] }, { type: "divider" }, { type: "empty-state", icon: "sparkles", title: "Nothing open", description: "Click Open to view details in a modal overlay." }] })
     }
-    listens {}
     emitsScope internal
   }
   page "/agentfixloops" as AgentFixLoopPage -> AgentFixLoopCycle, FixLoopStepProgress, FixLoopErrorsBrowse, FixLoopValidateCall, FixLoopFixCall, FixLoopCompletionFlow

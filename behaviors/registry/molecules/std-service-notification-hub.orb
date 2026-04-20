@@ -223,11 +223,11 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "stretch",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "size": "lg",
@@ -235,24 +235,22 @@
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "ServiceNotificationHub Notification Hub",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "md",
                           "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "label": "Recipient",
-                          "type": "input",
                           "placeholder": "Email or phone number",
-                          "bind": "@entity.recipient"
+                          "label": "Recipient",
+                          "bind": "@entity.recipient",
+                          "type": "input"
                         },
                         {
                           "label": "Subject",
@@ -261,42 +259,44 @@
                           "placeholder": "Notification subject"
                         },
                         {
-                          "type": "textarea",
-                          "label": "Message",
                           "bind": "@entity.messageBody",
-                          "placeholder": "Write your message..."
+                          "placeholder": "Write your message...",
+                          "type": "textarea",
+                          "label": "Message"
                         },
                         {
+                          "justify": "center",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "button",
-                              "icon": "mail",
-                              "event": "SEND_EMAIL",
                               "label": "Email",
-                              "variant": "primary"
+                              "event": "SEND_EMAIL",
+                              "variant": "primary",
+                              "icon": "mail"
                             },
                             {
+                              "variant": "secondary",
                               "label": "SMS",
-                              "type": "button",
-                              "variant": "secondary",
+                              "event": "SEND_SMS",
                               "icon": "message-circle",
-                              "event": "SEND_SMS"
+                              "type": "button"
                             },
                             {
-                              "label": "WhatsApp",
                               "variant": "secondary",
                               "type": "button",
+                              "label": "WhatsApp",
                               "event": "SEND_WHATSAPP",
                               "icon": "phone"
                             }
                           ],
-                          "justify": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "lg",
+                      "type": "stack",
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -315,9 +315,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "message": "Delivering servicenotificationhub notification...",
-                      "title": "Sending notification..."
+                      "title": "Sending notification...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -325,8 +325,8 @@
                     "email",
                     "send",
                     {
-                      "subject": "@entity.subject",
                       "to": "@entity.recipient",
+                      "subject": "@entity.subject",
                       "body": "@entity.messageBody"
                     }
                   ]
@@ -346,9 +346,9 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "loading-state",
                       "title": "Sending notification...",
-                      "message": "Delivering servicenotificationhub notification...",
-                      "type": "loading-state"
+                      "message": "Delivering servicenotificationhub notification..."
                     }
                   ],
                   [
@@ -356,8 +356,8 @@
                     "twilio",
                     "sendSMS",
                     {
-                      "body": "@entity.messageBody",
-                      "to": "@entity.recipient"
+                      "to": "@entity.recipient",
+                      "body": "@entity.messageBody"
                     }
                   ]
                 ]
@@ -376,9 +376,9 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
                       "message": "Delivering servicenotificationhub notification...",
-                      "title": "Sending notification..."
+                      "title": "Sending notification...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -386,8 +386,8 @@
                     "twilio",
                     "sendWhatsApp",
                     {
-                      "body": "@entity.messageBody",
-                      "to": "@entity.recipient"
+                      "to": "@entity.recipient",
+                      "body": "@entity.messageBody"
                     }
                   ]
                 ]
@@ -406,29 +406,29 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "gap": "lg",
+                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
                           "name": "check-circle",
-                          "size": "lg",
-                          "type": "icon"
+                          "type": "icon",
+                          "size": "lg"
                         },
                         {
+                          "type": "alert",
                           "variant": "success",
-                          "message": "Notification sent successfully",
-                          "type": "alert"
+                          "message": "Notification sent successfully"
                         },
                         {
                           "event": "RESET",
-                          "label": "Send Another",
                           "type": "button",
                           "variant": "ghost",
+                          "label": "Send Another",
                           "icon": "rotate-ccw"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -452,40 +452,40 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
-                          "message": "Could not deliver the notification.",
                           "title": "Send Failed",
+                          "type": "error-state",
                           "onRetry": "RETRY",
-                          "type": "error-state"
+                          "message": "Could not deliver the notification."
                         },
                         {
+                          "direction": "horizontal",
+                          "type": "stack",
+                          "gap": "sm",
                           "children": [
                             {
-                              "icon": "refresh-cw",
-                              "label": "Retry",
-                              "type": "button",
+                              "event": "RETRY",
                               "variant": "primary",
-                              "event": "RETRY"
+                              "label": "Retry",
+                              "icon": "refresh-cw",
+                              "type": "button"
                             },
                             {
                               "type": "button",
-                              "variant": "ghost",
-                              "icon": "rotate-ccw",
                               "event": "RESET",
-                              "label": "Reset"
+                              "icon": "rotate-ccw",
+                              "label": "Reset",
+                              "variant": "ghost"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center",
-                          "type": "stack"
+                          "justify": "center"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -504,50 +504,55 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "stretch",
                       "type": "stack",
                       "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "md",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
+                              "name": "bell",
                               "type": "icon",
-                              "name": "bell"
+                              "size": "lg"
                             },
                             {
+                              "variant": "h2",
                               "type": "typography",
-                              "content": "ServiceNotificationHub Notification Hub",
-                              "variant": "h2"
+                              "content": "ServiceNotificationHub Notification Hub"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "bind": "@entity.recipient",
-                          "label": "Recipient",
                           "type": "input",
-                          "placeholder": "Email or phone number"
+                          "placeholder": "Email or phone number",
+                          "label": "Recipient",
+                          "bind": "@entity.recipient"
                         },
                         {
                           "type": "input",
                           "label": "Subject",
-                          "placeholder": "Notification subject",
-                          "bind": "@entity.subject"
+                          "bind": "@entity.subject",
+                          "placeholder": "Notification subject"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "label": "Message",
+                          "type": "textarea",
                           "bind": "@entity.messageBody",
-                          "type": "textarea"
+                          "placeholder": "Write your message...",
+                          "label": "Message"
                         },
                         {
+                          "gap": "sm",
+                          "justify": "center",
                           "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "label": "Email",
@@ -557,27 +562,22 @@
                               "event": "SEND_EMAIL"
                             },
                             {
-                              "type": "button",
-                              "label": "SMS",
                               "variant": "secondary",
-                              "event": "SEND_SMS",
-                              "icon": "message-circle"
+                              "icon": "message-circle",
+                              "label": "SMS",
+                              "type": "button",
+                              "event": "SEND_SMS"
                             },
                             {
                               "type": "button",
-                              "icon": "phone",
                               "label": "WhatsApp",
+                              "event": "SEND_WHATSAPP",
                               "variant": "secondary",
-                              "event": "SEND_WHATSAPP"
+                              "icon": "phone"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "justify": "center"
+                          ]
                         }
-                      ],
-                      "align": "stretch",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -591,80 +591,80 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "stretch",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "align": "center",
                           "children": [
                             {
-                              "name": "bell",
+                              "type": "icon",
                               "size": "lg",
-                              "type": "icon"
+                              "name": "bell"
                             },
                             {
                               "type": "typography",
-                              "content": "ServiceNotificationHub Notification Hub",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "content": "ServiceNotificationHub Notification Hub"
                             }
                           ],
-                          "type": "stack"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Email or phone number",
                           "label": "Recipient",
-                          "type": "input",
-                          "bind": "@entity.recipient"
+                          "bind": "@entity.recipient",
+                          "placeholder": "Email or phone number",
+                          "type": "input"
                         },
                         {
-                          "type": "input",
-                          "placeholder": "Notification subject",
                           "label": "Subject",
-                          "bind": "@entity.subject"
+                          "bind": "@entity.subject",
+                          "type": "input",
+                          "placeholder": "Notification subject"
                         },
                         {
-                          "type": "textarea",
                           "label": "Message",
-                          "bind": "@entity.messageBody",
-                          "placeholder": "Write your message..."
+                          "type": "textarea",
+                          "placeholder": "Write your message...",
+                          "bind": "@entity.messageBody"
                         },
                         {
-                          "justify": "center",
                           "type": "stack",
                           "direction": "horizontal",
                           "gap": "sm",
                           "children": [
                             {
-                              "variant": "primary",
+                              "icon": "mail",
                               "event": "SEND_EMAIL",
-                              "label": "Email",
                               "type": "button",
-                              "icon": "mail"
+                              "variant": "primary",
+                              "label": "Email"
                             },
                             {
-                              "icon": "message-circle",
-                              "event": "SEND_SMS",
                               "variant": "secondary",
-                              "label": "SMS",
-                              "type": "button"
+                              "event": "SEND_SMS",
+                              "icon": "message-circle",
+                              "type": "button",
+                              "label": "SMS"
                             },
                             {
-                              "icon": "phone",
-                              "label": "WhatsApp",
                               "event": "SEND_WHATSAPP",
+                              "variant": "secondary",
+                              "icon": "phone",
                               "type": "button",
-                              "variant": "secondary"
+                              "label": "WhatsApp"
                             }
-                          ]
+                          ],
+                          "justify": "center"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
-                      "align": "stretch"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -683,35 +683,36 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "align": "stretch",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
+                          "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
                               "size": "lg",
-                              "type": "icon",
-                              "name": "bell"
+                              "name": "bell",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "content": "ServiceNotificationHub Notification Hub",
+                              "variant": "h2",
                               "type": "typography"
                             }
-                          ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center",
-                          "gap": "md"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
                           "placeholder": "Email or phone number",
-                          "label": "Recipient",
-                          "bind": "@entity.recipient"
+                          "type": "input",
+                          "bind": "@entity.recipient",
+                          "label": "Recipient"
                         },
                         {
                           "placeholder": "Notification subject",
@@ -720,43 +721,42 @@
                           "type": "input"
                         },
                         {
-                          "label": "Message",
                           "type": "textarea",
+                          "label": "Message",
                           "placeholder": "Write your message...",
                           "bind": "@entity.messageBody"
                         },
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
-                              "label": "Email",
-                              "event": "SEND_EMAIL",
+                              "icon": "mail",
                               "type": "button",
                               "variant": "primary",
-                              "icon": "mail"
+                              "label": "Email",
+                              "event": "SEND_EMAIL"
                             },
                             {
-                              "type": "button",
-                              "variant": "secondary",
+                              "event": "SEND_SMS",
                               "label": "SMS",
+                              "variant": "secondary",
                               "icon": "message-circle",
-                              "event": "SEND_SMS"
+                              "type": "button"
                             },
                             {
-                              "icon": "phone",
-                              "event": "SEND_WHATSAPP",
-                              "label": "WhatsApp",
                               "variant": "secondary",
+                              "icon": "phone",
+                              "label": "WhatsApp",
+                              "event": "SEND_WHATSAPP",
                               "type": "button"
                             }
-                          ],
-                          "justify": "center"
+                          ]
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]

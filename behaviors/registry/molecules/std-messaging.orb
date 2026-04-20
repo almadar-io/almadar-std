@@ -63,91 +63,91 @@
                 "render-ui",
                 "main",
                 {
-                  "gap": "lg",
-                  "direction": "vertical",
-                  "type": "stack",
-                  "className": "max-w-5xl mx-auto w-full",
                   "children": [
                     {
+                      "type": "stack",
+                      "justify": "space-between",
+                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
-                          "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "name": "message-circle",
                               "size": "lg",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "message-circle"
                             },
                             {
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "ChatMessages"
-                            }
-                          ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "label": "Compose",
-                              "type": "button",
-                              "variant": "primary",
-                              "event": "COMPOSE",
-                              "icon": "edit"
+                              "content": "ChatMessages",
+                              "variant": "h2"
                             }
                           ],
                           "gap": "sm",
-                          "type": "stack"
+                          "align": "center",
+                          "direction": "horizontal"
+                        },
+                        {
+                          "gap": "sm",
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "children": [
+                            {
+                              "type": "button",
+                              "event": "COMPOSE",
+                              "variant": "primary",
+                              "label": "Compose",
+                              "icon": "edit"
+                            }
+                          ]
                         }
                       ],
-                      "gap": "md",
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "justify": "space-between"
+                      "direction": "horizontal"
                     },
                     {
                       "type": "divider"
                     },
                     {
-                      "entity": "ChatMessage",
-                      "emptyTitle": "No messages yet",
-                      "itemActions": [
-                        {
-                          "event": "VIEW",
-                          "variant": "ghost",
-                          "label": "View",
-                          "size": "sm"
-                        }
-                      ],
                       "columns": [
                         {
                           "name": "name",
-                          "label": "Name",
                           "icon": "message-circle",
+                          "label": "Name",
                           "variant": "h4"
                         },
                         {
+                          "label": "Description",
                           "name": "description",
-                          "variant": "caption",
-                          "label": "Description"
+                          "variant": "caption"
                         },
                         {
                           "name": "status",
                           "variant": "caption",
-                          "label": "Status",
-                          "format": "date"
+                          "format": "date",
+                          "label": "Status"
                         }
                       ],
                       "variant": "compact",
+                      "itemActions": [
+                        {
+                          "event": "VIEW",
+                          "size": "sm",
+                          "variant": "ghost",
+                          "label": "View"
+                        }
+                      ],
                       "type": "data-grid",
+                      "entity": "ChatMessage",
                       "emptyDescription": "Start a new conversation.",
+                      "emptyTitle": "No messages yet",
                       "emptyIcon": "inbox"
                     }
-                  ]
+                  ],
+                  "className": "max-w-5xl mx-auto w-full",
+                  "gap": "lg",
+                  "type": "stack",
+                  "direction": "vertical"
                 }
               ]
             ]
@@ -162,25 +162,6 @@
             "SAVE": "SEND"
           },
           "effects": {
-            "CLOSE": [
-              [
-                "render-ui",
-                "modal",
-                null
-              ],
-              [
-                "render-ui",
-                "main",
-                {
-                  "type": "box"
-                }
-              ],
-              [
-                "notify",
-                "Cancelled",
-                "info"
-              ]
-            ],
             "SEND": [
               [
                 "persist",
@@ -212,6 +193,7 @@
                 "render-ui",
                 "modal",
                 {
+                  "type": "stack",
                   "direction": "vertical",
                   "gap": "md",
                   "children": [
@@ -221,14 +203,14 @@
                       "type": "stack",
                       "children": [
                         {
-                          "size": "md",
                           "name": "edit",
+                          "size": "md",
                           "type": "icon"
                         },
                         {
                           "content": "New ChatMessage",
-                          "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         }
                       ]
                     },
@@ -241,154 +223,11 @@
                         "description",
                         "status"
                       ],
-                      "cancelEvent": "CLOSE",
-                      "mode": "create",
                       "submitEvent": "SEND",
+                      "mode": "create",
+                      "cancelEvent": "CLOSE",
                       "type": "form-section",
                       "entity": "ChatMessage"
-                    }
-                  ],
-                  "type": "stack"
-                }
-              ]
-            ]
-          }
-        },
-        {
-          "ref": "Modal.traits.ModalRecordModal",
-          "name": "ChatMessageView",
-          "linkedEntity": "ChatMessage",
-          "events": {
-            "OPEN": "VIEW"
-          },
-          "effects": {
-            "INIT": [
-              [
-                "ref",
-                "ChatMessage"
-              ]
-            ],
-            "VIEW": [
-              [
-                "fetch",
-                "ChatMessage",
-                {
-                  "id": "@payload.id"
-                }
-              ],
-              [
-                "render-ui",
-                "modal",
-                {
-                  "gap": "md",
-                  "direction": "vertical",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "direction": "horizontal",
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "name": "eye",
-                          "size": "md",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "@entity.name",
-                          "type": "typography"
-                        }
-                      ],
-                      "gap": "sm"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Name"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "body",
-                          "content": "@entity.name"
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack"
-                    },
-                    {
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "content": "Description",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.description",
-                          "type": "typography"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "type": "stack"
-                    },
-                    {
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "content": "Status",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
-                          "content": "@entity.status",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "variant": "caption",
-                          "type": "typography",
-                          "content": "Created At"
-                        },
-                        {
-                          "content": "@entity.createdAt",
-                          "type": "typography",
-                          "variant": "body"
-                        }
-                      ],
-                      "gap": "md",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "type": "divider"
-                    },
-                    {
-                      "justify": "end",
-                      "children": [
-                        {
-                          "type": "button",
-                          "variant": "ghost",
-                          "label": "Close",
-                          "event": "CLOSE"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "type": "stack"
                     }
                   ]
                 }
@@ -412,7 +251,17 @@
                 "Cancelled",
                 "info"
               ]
-            ],
+            ]
+          }
+        },
+        {
+          "ref": "Modal.traits.ModalRecordModal",
+          "name": "ChatMessageView",
+          "linkedEntity": "ChatMessage",
+          "events": {
+            "OPEN": "VIEW"
+          },
+          "effects": {
             "SAVE": [
               [
                 "render-ui",
@@ -425,6 +274,157 @@
                 {
                   "type": "box"
                 }
+              ]
+            ],
+            "CLOSE": [
+              [
+                "render-ui",
+                "modal",
+                null
+              ],
+              [
+                "render-ui",
+                "main",
+                {
+                  "type": "box"
+                }
+              ],
+              [
+                "notify",
+                "Cancelled",
+                "info"
+              ]
+            ],
+            "VIEW": [
+              [
+                "fetch",
+                "ChatMessage",
+                {
+                  "id": "@payload.id"
+                }
+              ],
+              [
+                "render-ui",
+                "modal",
+                {
+                  "direction": "vertical",
+                  "type": "stack",
+                  "gap": "md",
+                  "children": [
+                    {
+                      "direction": "horizontal",
+                      "type": "stack",
+                      "gap": "sm",
+                      "align": "center",
+                      "children": [
+                        {
+                          "size": "md",
+                          "name": "eye",
+                          "type": "icon"
+                        },
+                        {
+                          "type": "typography",
+                          "content": "@entity.name",
+                          "variant": "h3"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Name"
+                        },
+                        {
+                          "content": "@entity.name",
+                          "type": "typography",
+                          "variant": "body"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "stack",
+                      "gap": "md",
+                      "children": [
+                        {
+                          "variant": "caption",
+                          "type": "typography",
+                          "content": "Description"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@entity.description"
+                        }
+                      ],
+                      "direction": "horizontal"
+                    },
+                    {
+                      "type": "stack",
+                      "direction": "horizontal",
+                      "children": [
+                        {
+                          "content": "Status",
+                          "type": "typography",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@entity.status"
+                        }
+                      ],
+                      "gap": "md"
+                    },
+                    {
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "type": "stack",
+                      "children": [
+                        {
+                          "type": "typography",
+                          "content": "Created At",
+                          "variant": "caption"
+                        },
+                        {
+                          "variant": "body",
+                          "type": "typography",
+                          "content": "@entity.createdAt"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "gap": "sm",
+                      "justify": "end",
+                      "children": [
+                        {
+                          "variant": "ghost",
+                          "label": "Close",
+                          "event": "CLOSE",
+                          "type": "button"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "type": "stack"
+                    }
+                  ]
+                }
+              ]
+            ],
+            "INIT": [
+              [
+                "ref",
+                "ChatMessage"
               ]
             ]
           }

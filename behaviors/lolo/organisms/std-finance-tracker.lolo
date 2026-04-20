@@ -20,9 +20,9 @@ orbital TransactionOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "credit-card", size: "lg" }, { type: "typography", content: "Transactions", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Transaction", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Transaction", emptyIcon: "inbox", emptyTitle: "No transactions yet", emptyDescription: "Record your first transaction.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "description", variant: "h3", icon: "credit-card" }, { name: "category", variant: "badge" }, { name: "amount", variant: "h4", format: "currency" }, { name: "date", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * TRANSACTION_CREATED -> INIT
-      * TRANSACTION_UPDATED -> INIT
-      * TRANSACTION_DELETED -> INIT
+      TransactionCreate TRANSACTION_CREATED -> INIT
+      TransactionEdit TRANSACTION_UPDATED -> INIT
+      TransactionDelete TRANSACTION_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -51,7 +51,6 @@ orbital TransactionOrbital {
         (emit TRANSACTION_CREATED)
     }
     emits {
-      SAVE
       TRANSACTION_CREATED external { id: string }
     }
     listens {
@@ -81,7 +80,6 @@ orbital TransactionOrbital {
         (emit TRANSACTION_UPDATED)
     }
     emits {
-      SAVE
       TRANSACTION_UPDATED external { id: string }
     }
     listens {
@@ -109,9 +107,7 @@ orbital TransactionOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
@@ -146,7 +142,6 @@ orbital TransactionOrbital {
         (ref Transaction)
     }
     emits {
-      CONFIRM_DELETE
       TRANSACTION_DELETED external { id: string }
     }
     listens {
@@ -216,7 +211,6 @@ orbital FinanceReportOrbital {
         (render-ui main { type: "dashboard-layout", appName: "Finance Tracker", navItems: [{ label: "Transactions", href: "/transactions", icon: "dollar-sign" }, { label: "Summary", href: "/summary", icon: "layout-list" }, { label: "Reports", href: "/reports", icon: "bar-chart" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "file-text", size: "lg" }, { type: "typography", content: "Reports", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create FinanceReport", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "FinanceReport", emptyIcon: "inbox", emptyTitle: "No reports yet", emptyDescription: "Generate a report to analyze your finances.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "title", variant: "h3", icon: "file-text" }, { name: "period", variant: "badge" }, { name: "total", variant: "h4", format: "currency" }, { name: "generatedAt", label: "Generated", variant: "caption", format: "date" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * SAVE -> INIT
           FinanceReportLoadFailed { message : string }
     }
     emits: [FinanceReportLoaded, FinanceReportLoadFailed]
@@ -240,9 +234,7 @@ orbital FinanceReportOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     emits: [FinanceReportLoaded, FinanceReportLoadFailed]
     listens {
       FinanceReportLoadFailed { message : string }
@@ -267,9 +259,7 @@ orbital FinanceReportOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     emits: [FinanceReportLoaded, FinanceReportLoadFailed]
     listens {
       FinanceReportLoadFailed { message : string }

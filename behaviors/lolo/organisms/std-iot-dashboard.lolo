@@ -61,9 +61,9 @@ orbital DeviceOrbital {
         (render-ui main { type: "dashboard-layout", appName: "IoT Dashboard", navItems: [{ label: "Sensors", href: "/sensors", icon: "layout-list" }, { label: "Devices", href: "/devices", icon: "cpu" }, { label: "Alerts", href: "/alerts", icon: "bell" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "cpu", size: "lg" }, { type: "typography", content: "Devices", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Device", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "Device", emptyIcon: "inbox", emptyTitle: "No devices registered", emptyDescription: "Connect a device to start monitoring.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "cpu" }, { name: "status", variant: "badge" }, { name: "type", variant: "body" }, { name: "lastSeen", label: "Last Seen", variant: "caption", format: "date" }], cols: 3, gap: "md" }] }] })
     }
     listens {
-      * DEVICE_CREATED -> INIT
-      * DEVICE_UPDATED -> INIT
-      * DEVICE_DELETED -> INIT
+      DeviceCreate DEVICE_CREATED -> INIT
+      DeviceEdit DEVICE_UPDATED -> INIT
+      DeviceDelete DEVICE_DELETED -> INIT
           DeviceLoadFailed { message : string }
     }
     emits: [DeviceLoaded, DeviceLoadFailed]
@@ -89,7 +89,6 @@ orbital DeviceOrbital {
         (emit DEVICE_CREATED)
     }
     emits {
-      SAVE
       DEVICE_CREATED
     }
     emits: [DeviceLoaded, DeviceLoadFailed]
@@ -119,7 +118,6 @@ orbital DeviceOrbital {
         (emit DEVICE_UPDATED)
     }
     emits {
-      SAVE
       DEVICE_UPDATED
     }
     emits: [DeviceLoaded, DeviceLoadFailed]
@@ -147,9 +145,7 @@ orbital DeviceOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     emits: [DeviceLoaded, DeviceLoadFailed]
     listens {
       DeviceLoadFailed { message : string }
@@ -183,7 +179,6 @@ orbital DeviceOrbital {
         (ref Device)
     }
     emits {
-      CONFIRM_DELETE
       DEVICE_DELETED
     }
     emits: [DeviceLoaded, DeviceLoadFailed]

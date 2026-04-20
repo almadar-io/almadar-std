@@ -20,9 +20,9 @@ orbital BuildOrbital {
         (render-ui main { type: "dashboard-layout", appName: "CI/CD Pipeline", navItems: [{ label: "Builds", href: "/builds", icon: "hammer" }, { label: "Stages", href: "/stages", icon: "layers" }, { label: "Deploy", href: "/deploy", icon: "rocket" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "package", size: "lg" }, { type: "typography", content: "Builds", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Build", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Build", emptyIcon: "inbox", emptyTitle: "No builds yet", emptyDescription: "Trigger a build to get started.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "branch", variant: "h3", icon: "git-branch" }, { name: "status", variant: "badge" }, { name: "commit", variant: "body" }, { name: "triggeredBy", label: "Triggered By", variant: "caption" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * BUILD_CREATED -> INIT
-      * BUILD_UPDATED -> INIT
-      * BUILD_DELETED -> INIT
+      BuildCreate BUILD_CREATED -> INIT
+      BuildEdit BUILD_UPDATED -> INIT
+      BuildDelete BUILD_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -51,7 +51,6 @@ orbital BuildOrbital {
         (emit BUILD_CREATED)
     }
     emits {
-      SAVE
       BUILD_CREATED external { id: string }
     }
     listens {
@@ -81,7 +80,6 @@ orbital BuildOrbital {
         (emit BUILD_UPDATED)
     }
     emits {
-      SAVE
       BUILD_UPDATED external { id: string }
     }
     listens {
@@ -109,9 +107,7 @@ orbital BuildOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
+
     listens {
       VIEW { id : string! }
       SAVE { data : object! }
@@ -146,7 +142,6 @@ orbital BuildOrbital {
         (ref Build)
     }
     emits {
-      CONFIRM_DELETE
       BUILD_DELETED external { id: string }
     }
     listens {

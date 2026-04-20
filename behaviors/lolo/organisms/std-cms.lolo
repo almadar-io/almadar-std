@@ -26,9 +26,9 @@ orbital ArticleOrbital {
       CATEGORIZE external { id: string }
     }
     listens {
-      * ARTICLE_CREATED -> INIT
-      * ARTICLE_UPDATED -> INIT
-      * ARTICLE_DELETED -> INIT
+      ArticleCreate ARTICLE_CREATED -> INIT
+      ArticleEdit ARTICLE_UPDATED -> INIT
+      ArticleDelete ARTICLE_DELETED -> INIT
       VIEW { id : string!, row : object }
       EDIT { id : string!, row : object }
       DELETE { id : string!, row : object }
@@ -57,7 +57,6 @@ orbital ArticleOrbital {
         (emit ARTICLE_CREATED)
     }
     emits {
-      SAVE
       ARTICLE_CREATED external { id: string }
     }
     listens {
@@ -87,7 +86,6 @@ orbital ArticleOrbital {
         (emit ARTICLE_UPDATED)
     }
     emits {
-      SAVE
       ARTICLE_UPDATED external { id: string }
     }
     listens {
@@ -114,9 +112,6 @@ orbital ArticleOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     listens {
       VIEW { id : string! }
@@ -152,7 +147,6 @@ orbital ArticleOrbital {
         (ref Article)
     }
     emits {
-      CONFIRM_DELETE
       ARTICLE_DELETED external { id: string }
     }
     listens {
@@ -183,7 +177,6 @@ orbital MediaAssetOrbital {
         (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "image", size: "lg" }, { type: "typography", content: "Media Library", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create MediaAsset", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-grid", entity: "MediaAsset", emptyIcon: "inbox", emptyTitle: "No media assets", emptyDescription: "Upload media to build your library.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }], columns: [{ name: "fileName", label: "File", variant: "h3", icon: "image" }, { name: "fileType", label: "Type", variant: "badge" }, { name: "fileSize", label: "Size", variant: "body", format: "number" }, { name: "altText", label: "Alt Text", variant: "caption" }], cols: 3, gap: "md" }] }] })
     }
     listens {
-      * SAVE -> INIT
       * PUBLISH -> INIT
           MediaAssetLoadFailed { message : string }
     }
@@ -208,9 +201,6 @@ orbital MediaAssetOrbital {
         (render-ui modal null)
         (render-ui main { type: "box" })
     }
-    emits {
-      SAVE
-    }
     emits: [MediaAssetLoaded, MediaAssetLoadFailed]
     listens {
       MediaAssetLoadFailed { message : string }
@@ -234,9 +224,6 @@ orbital MediaAssetOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [MediaAssetLoaded, MediaAssetLoadFailed]
     listens {
@@ -266,9 +253,9 @@ orbital CategoryOrbital {
         (render-ui main { type: "dashboard-layout", appName: "CmsApp", navItems: [{ label: "Articles", href: "/articles", icon: "file-text" }, { label: "Media", href: "/media", icon: "image" }, { label: "Categories", href: "/categories", icon: "folder" }], children: [{ type: "stack", direction: "vertical", gap: "lg", className: "max-w-5xl mx-auto w-full", children: [{ type: "stack", direction: "horizontal", gap: "md", justify: "space-between", align: "center", children: [{ type: "stack", direction: "horizontal", gap: "sm", align: "center", children: [{ type: "icon", name: "folder", size: "lg" }, { type: "typography", content: "Categories", variant: "h2" }] }, { type: "stack", direction: "horizontal", gap: "sm", children: [{ type: "button", label: "Create Category", event: "CREATE", variant: "primary", icon: "plus" }] }] }, { type: "divider" }, { type: "data-list", entity: "Category", emptyIcon: "inbox", emptyTitle: "No categories yet", emptyDescription: "Create categories to organize your content.", itemActions: [{ label: "View", event: "VIEW", variant: "ghost", size: "sm" }, { label: "Edit", event: "EDIT", variant: "ghost", size: "sm" }, { label: "Delete", event: "DELETE", variant: "danger", size: "sm" }], columns: [{ name: "name", variant: "h3", icon: "folder" }, { name: "articleCount", label: "Articles", variant: "badge", format: "number" }, { name: "description", variant: "body" }, { name: "slug", variant: "caption" }], variant: "card", gap: "sm" }] }] })
     }
     listens {
-      * CATEGORY_CREATED -> INIT
-      * CATEGORY_UPDATED -> INIT
-      * CATEGORY_DELETED -> INIT
+      CategoryCreate CATEGORY_CREATED -> INIT
+      CategoryEdit CATEGORY_UPDATED -> INIT
+      CategoryDelete CATEGORY_DELETED -> INIT
       * CATEGORIZE -> INIT
           CategoryLoadFailed { message : string }
     }
@@ -295,7 +282,6 @@ orbital CategoryOrbital {
         (emit CATEGORY_CREATED)
     }
     emits {
-      SAVE
       CATEGORY_CREATED
     }
     emits: [CategoryLoaded, CategoryLoadFailed]
@@ -325,7 +311,6 @@ orbital CategoryOrbital {
         (emit CATEGORY_UPDATED)
     }
     emits {
-      SAVE
       CATEGORY_UPDATED
     }
     emits: [CategoryLoaded, CategoryLoadFailed]
@@ -352,9 +337,6 @@ orbital CategoryOrbital {
       SAVE -> closed
         (render-ui modal null)
         (render-ui main { type: "box" })
-    }
-    emits {
-      SAVE
     }
     emits: [CategoryLoaded, CategoryLoadFailed]
     listens {
@@ -389,7 +371,6 @@ orbital CategoryOrbital {
         (ref Category)
     }
     emits {
-      CONFIRM_DELETE
       CATEGORY_DELETED
     }
     emits: [CategoryLoaded, CategoryLoadFailed]
