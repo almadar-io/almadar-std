@@ -159,22 +159,22 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "children": [
                         {
-                          "type": "spinner",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "spinner"
                         },
                         {
-                          "content": "Loading cart…",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "color": "muted",
+                          "content": "Loading cart…",
+                          "variant": "caption"
                         }
                       ],
                       "align": "center",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
+                      "className": "py-12",
                       "type": "stack"
                     }
                   ]
@@ -189,63 +189,60 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "space-between",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
+                          "justify": "between",
                           "children": [
                             {
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "shopping-cart",
-                                  "size": "lg"
+                                  "name": "shopping-cart"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "Shopping Cart",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
-                              "direction": "horizontal",
                               "type": "stack",
+                              "direction": "horizontal",
                               "gap": "md"
                             },
                             {
-                              "label": "Add Item",
-                              "icon": "plus",
-                              "event": "ADD_ITEM",
                               "variant": "primary",
-                              "type": "button"
+                              "action": "ADD_ITEM",
+                              "type": "button",
+                              "icon": "plus",
+                              "label": "Add Item"
                             }
-                          ],
-                          "direction": "horizontal",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "emptyDescription": "Add items to get started.",
                           "itemActions": [
                             {
-                              "event": "REQUEST_REMOVE",
+                              "label": "Remove",
                               "variant": "danger",
-                              "size": "sm",
-                              "label": "Remove"
+                              "event": "REQUEST_REMOVE"
                             }
                           ],
                           "type": "data-grid",
-                          "emptyIcon": "inbox",
-                          "entity": "@payload.data",
-                          "emptyTitle": "Your cart is empty",
-                          "columns": [
+                          "fields": [
                             {
                               "name": "name",
                               "variant": "h4",
-                              "icon": "shopping-cart",
-                              "label": "Name"
+                              "label": "Name",
+                              "icon": "shopping-cart"
                             },
                             {
                               "name": "description",
@@ -253,15 +250,14 @@
                               "label": "Description"
                             },
                             {
+                              "label": "Status",
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "name": "status"
                             }
-                          ]
+                          ],
+                          "entity": "@payload.data"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -275,37 +271,37 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "md",
                       "className": "py-12",
+                      "direction": "vertical",
+                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "color": "destructive",
+                          "size": "xl",
                           "type": "icon",
                           "name": "alert-triangle",
-                          "size": "xl"
+                          "color": "destructive"
                         },
                         {
+                          "variant": "h3",
                           "content": "Failed to load cart",
-                          "type": "typography",
-                          "variant": "h3"
+                          "type": "typography"
                         },
                         {
                           "variant": "body",
                           "color": "muted",
-                          "content": "@payload.message",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "@payload.message"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "label": "Retry",
-                          "event": "INIT",
                           "variant": "primary",
+                          "action": "INIT",
+                          "label": "Retry",
+                          "icon": "rotate-ccw",
                           "type": "button"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "md"
                     }
                   ]
                 ]
@@ -345,8 +341,8 @@
                     "CartItem",
                     {
                       "emit": {
-                        "failure": "CartItemLoadFailed",
-                        "success": "CartItemLoaded"
+                        "success": "CartItemLoaded",
+                        "failure": "CartItemLoadFailed"
                       }
                     }
                   ],
@@ -354,8 +350,8 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "lg"
+                      "size": "lg",
+                      "type": "spinner"
                     }
                   ]
                 ]
@@ -369,15 +365,15 @@
           "name": "CartItemAddItem",
           "linkedEntity": "CartItem",
           "config": {
-            "openButtonLabel": "Add Item",
-            "icon": "plus-circle",
+            "title": "Add Item",
             "fields": [
               "name",
               "description",
               "status"
             ],
+            "openButtonLabel": "Add Item",
             "mode": "create",
-            "title": "Add Item"
+            "icon": "plus-circle"
           },
           "events": {
             "OPEN": "ADD_ITEM"
@@ -388,14 +384,14 @@
           "name": "CartItemRemoveConfirm",
           "linkedEntity": "CartItem",
           "config": {
-            "confirmLabel": "Remove",
-            "icon": "alert-triangle",
             "alertMessage": "Are you sure you want to remove this item from your cart?",
-            "title": "Remove Item"
+            "icon": "alert-triangle",
+            "title": "Remove Item",
+            "confirmLabel": "Remove"
           },
           "events": {
-            "REQUEST": "REQUEST_REMOVE",
-            "CONFIRM": "CONFIRM_REMOVE"
+            "CONFIRM": "CONFIRM_REMOVE",
+            "REQUEST": "REQUEST_REMOVE"
           }
         },
         {
