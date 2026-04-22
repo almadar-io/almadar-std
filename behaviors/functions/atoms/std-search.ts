@@ -16,7 +16,7 @@
  * @packageDocumentation
  */
 
-import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence } from '@almadar/core/types';
+import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig } from '@almadar/core/types';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-search';
@@ -47,7 +47,7 @@ export interface StdSearchParams {
   /** Set every emit's scope. */
   emitsScope?: 'internal' | 'external';
   /** Nested config override (outer key = config field name). */
-  config?: Record<string, Record<string, unknown>>;
+  config?: TraitConfig;
   /** URL path override for the (first) page. */
   pagePath?: string;
 }
