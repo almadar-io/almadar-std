@@ -136,7 +136,37 @@
               },
               {
                 "key": "NotificationLoaded",
-                "name": "Notification loaded"
+                "name": "Notification loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "message",
+                    "type": "string"
+                  },
+                  {
+                    "name": "notificationType",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "NotificationLoadFailed",
@@ -169,49 +199,49 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "md",
                           "type": "stack",
-                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "bell",
+                              "type": "icon",
                               "size": "lg"
                             },
                             {
-                              "content": "Notifications",
+                              "variant": "h2",
                               "type": "typography",
-                              "variant": "h2"
+                              "content": "Notifications"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "title": "No notifications",
+                          "description": "New notifications will appear here.",
                           "type": "empty-state",
                           "icon": "bell-off",
-                          "description": "New notifications will appear here."
+                          "title": "No notifications"
                         },
                         {
+                          "actionPayload": {
+                            "message": "This is a test notification",
+                            "notificationType": "info"
+                          },
+                          "type": "button",
+                          "event": "SHOW",
                           "label": "Test Notification",
                           "variant": "secondary",
-                          "type": "button",
-                          "icon": "bell",
-                          "actionPayload": {
-                            "notificationType": "info",
-                            "message": "This is a test notification"
-                          },
-                          "event": "SHOW"
+                          "icon": "bell"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -235,55 +265,47 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "justify": "space-between",
                           "align": "center",
+                          "justify": "space-between",
+                          "type": "stack",
                           "children": [
                             {
                               "direction": "horizontal",
-                              "type": "stack",
                               "align": "center",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "name": "bell",
                                   "type": "icon",
-                                  "size": "lg",
-                                  "name": "bell"
+                                  "size": "lg"
                                 },
                                 {
+                                  "content": "Notifications",
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "Notifications"
+                                  "type": "typography"
                                 }
                               ],
                               "gap": "md"
                             },
                             {
+                              "icon": "x",
                               "event": "HIDE",
                               "label": "Dismiss",
                               "variant": "ghost",
-                              "icon": "x",
                               "type": "button"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "alert",
-                          "message": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "message"
-                          ],
                           "variant": [
                             "object/get",
                             [
@@ -291,13 +313,7 @@
                               "@entity"
                             ],
                             "notificationType"
-                          ]
-                        },
-                        {
-                          "type": "toast-slot",
-                          "position": "top-right"
-                        },
-                        {
+                          ],
                           "message": [
                             "object/get",
                             [
@@ -305,14 +321,28 @@
                               "@entity"
                             ],
                             "message"
-                          ],
+                          ]
+                        },
+                        {
+                          "position": "top-right",
+                          "type": "toast-slot"
+                        },
+                        {
+                          "severity": "warning",
                           "category": "compliance",
                           "type": "violation-alert",
-                          "severity": "warning"
+                          "message": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "message"
+                          ]
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -336,17 +366,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
-                          "justify": "space-between",
-                          "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stack",
+                              "gap": "md",
+                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
@@ -355,37 +384,29 @@
                                   "size": "lg"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "Notifications"
+                                  "content": "Notifications",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "md",
-                              "align": "center"
+                              "type": "stack"
                             },
                             {
-                              "label": "Dismiss",
-                              "variant": "ghost",
-                              "event": "HIDE",
                               "type": "button",
-                              "icon": "x"
+                              "event": "HIDE",
+                              "icon": "x",
+                              "variant": "ghost",
+                              "label": "Dismiss"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": [
-                            "object/get",
-                            [
-                              "array/first",
-                              "@entity"
-                            ],
-                            "notificationType"
-                          ],
                           "message": [
                             "object/get",
                             [
@@ -394,14 +415,21 @@
                             ],
                             "message"
                           ],
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": [
+                            "object/get",
+                            [
+                              "array/first",
+                              "@entity"
+                            ],
+                            "notificationType"
+                          ]
                         },
                         {
-                          "type": "toast-slot",
-                          "position": "top-right"
+                          "position": "top-right",
+                          "type": "toast-slot"
                         },
                         {
-                          "type": "violation-alert",
                           "message": [
                             "object/get",
                             [
@@ -411,9 +439,11 @@
                             "message"
                           ],
                           "severity": "warning",
+                          "type": "violation-alert",
                           "category": "compliance"
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -433,9 +463,12 @@
                     "main",
                     {
                       "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "children": [
                         {
                           "direction": "horizontal",
+                          "type": "stack",
                           "gap": "md",
                           "children": [
                             {
@@ -444,37 +477,34 @@
                               "size": "lg"
                             },
                             {
+                              "content": "Notifications",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "Notifications"
+                              "type": "typography"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "empty-state",
-                          "icon": "bell-off",
                           "title": "No notifications",
-                          "description": "New notifications will appear here."
+                          "description": "New notifications will appear here.",
+                          "icon": "bell-off"
                         },
                         {
-                          "label": "Test Notification",
-                          "event": "SHOW",
-                          "variant": "secondary",
                           "type": "button",
                           "icon": "bell",
+                          "variant": "secondary",
                           "actionPayload": {
-                            "notificationType": "info",
-                            "message": "This is a test notification"
-                          }
+                            "message": "This is a test notification",
+                            "notificationType": "info"
+                          },
+                          "event": "SHOW",
+                          "label": "Test Notification"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]

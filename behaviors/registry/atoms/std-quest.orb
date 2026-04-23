@@ -154,7 +154,29 @@
               },
               {
                 "key": "QuestLogLoaded",
-                "name": "QuestLog loaded"
+                "name": "QuestLog loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "QuestLogLoadFailed",
@@ -178,8 +200,8 @@
                     "QuestLog",
                     {
                       "emit": {
-                        "failure": "QuestLogLoadFailed",
-                        "success": "QuestLogLoaded"
+                        "success": "QuestLogLoaded",
+                        "failure": "QuestLogLoadFailed"
                       }
                     }
                   ],
@@ -187,54 +209,53 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
                           "type": "stack",
+                          "direction": "horizontal",
                           "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
+                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "flag",
-                                  "size": "lg"
+                                  "name": "flag"
                                 },
                                 {
+                                  "variant": "h2",
                                   "content": "QuestLogs Board",
-                                  "type": "typography",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ],
+                              "gap": "md",
+                              "direction": "horizontal",
                               "type": "stack"
                             }
                           ],
-                          "justify": "space-between",
-                          "direction": "horizontal"
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "QuestLog",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "direction": "vertical",
-                              "gap": "sm",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "stack",
-                                  "direction": "horizontal",
                                   "align": "center",
                                   "children": [
                                     {
-                                      "gap": "sm",
                                       "align": "center",
+                                      "gap": "sm",
+                                      "direction": "horizontal",
+                                      "type": "stack",
                                       "children": [
                                         {
                                           "type": "icon",
@@ -242,44 +263,45 @@
                                           "size": "sm"
                                         },
                                         {
-                                          "type": "typography",
+                                          "content": "@item.name",
                                           "variant": "h4",
-                                          "content": "@item.name"
+                                          "type": "typography"
                                         }
-                                      ],
-                                      "type": "stack",
-                                      "direction": "horizontal"
+                                      ]
                                     },
                                     {
                                       "type": "badge",
                                       "label": "@item.description"
                                     }
                                   ],
+                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "justify": "space-between"
                                 },
                                 {
-                                  "content": "@item.status",
                                   "type": "typography",
+                                  "content": "@item.status",
                                   "variant": "caption"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "vertical",
+                              "gap": "sm"
+                            }
+                          ],
+                          "entity": "QuestLog",
+                          "groupBy": "status",
+                          "itemActions": [
+                            {
+                              "label": "Accept",
+                              "event": "ACCEPT"
                             }
                           ],
                           "type": "data-list",
                           "emptyTitle": "No questlogs available",
-                          "groupBy": "status",
-                          "emptyDescription": "Check back later for new questlogs.",
-                          "itemActions": [
-                            {
-                              "event": "ACCEPT",
-                              "label": "Accept"
-                            }
-                          ],
-                          "emptyIcon": "inbox"
+                          "emptyIcon": "inbox",
+                          "emptyDescription": "Check back later for new questlogs."
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -304,52 +326,54 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "flag",
+                                  "size": "lg",
                                   "type": "icon",
-                                  "size": "lg"
+                                  "name": "flag"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "QuestLogs Board"
+                                  "content": "QuestLogs Board",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "gap": "md"
                             },
                             {
-                              "label": "Active",
-                              "type": "badge"
+                              "type": "badge",
+                              "label": "Active"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "justify": "space-between",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "showPercentage": true,
+                          "type": "progress-bar",
                           "value": 50.0,
-                          "type": "progress-bar"
+                          "showPercentage": true
                         },
                         {
+                          "type": "data-grid",
+                          "entity": "QuestLog",
                           "emptyIcon": "inbox",
+                          "emptyTitle": "No active quests",
                           "emptyDescription": "Accept a quest to begin.",
                           "itemActions": [
                             {
-                              "label": "Progress",
-                              "event": "PROGRESS"
+                              "event": "PROGRESS",
+                              "label": "Progress"
                             },
                             {
                               "label": "Complete",
@@ -365,53 +389,51 @@
                             "fn",
                             "item",
                             {
-                              "type": "stack",
                               "gap": "sm",
+                              "type": "stack",
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "stack",
                                   "align": "center",
+                                  "type": "stack",
+                                  "direction": "horizontal",
+                                  "justify": "space-between",
                                   "children": [
                                     {
-                                      "gap": "sm",
-                                      "type": "stack",
                                       "align": "center",
+                                      "direction": "horizontal",
+                                      "type": "stack",
                                       "children": [
                                         {
+                                          "name": "flag",
                                           "type": "icon",
-                                          "size": "sm",
-                                          "name": "flag"
+                                          "size": "sm"
                                         },
                                         {
-                                          "type": "typography",
+                                          "variant": "h4",
                                           "content": "@item.name",
-                                          "variant": "h4"
+                                          "type": "typography"
                                         }
                                       ],
-                                      "direction": "horizontal"
+                                      "gap": "sm"
                                     },
                                     {
-                                      "label": "@item.description",
-                                      "type": "badge"
+                                      "type": "badge",
+                                      "label": "@item.description"
                                     }
-                                  ],
-                                  "justify": "space-between",
-                                  "direction": "horizontal"
+                                  ]
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@item.status"
+                                  "content": "@item.status",
+                                  "variant": "caption"
                                 }
                               ]
                             }
-                          ],
-                          "type": "data-grid",
-                          "entity": "QuestLog",
-                          "emptyTitle": "No active quests"
+                          ]
                         }
                       ],
+                      "type": "stack",
                       "gap": "lg"
                     }
                   ]
@@ -436,59 +458,57 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "space-between",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
                               "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
-                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "flag"
+                                  "name": "flag",
+                                  "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "QuestLogs Board",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
-                              "type": "stack"
+                              "gap": "md"
                             },
                             {
                               "type": "badge",
                               "label": "Active"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "justify": "space-between"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "value": 50.0,
                           "showPercentage": true,
-                          "type": "progress-bar"
+                          "type": "progress-bar",
+                          "value": 50.0
                         },
                         {
-                          "emptyTitle": "No active quests",
+                          "emptyDescription": "Accept a quest to begin.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "gap": "sm",
                               "children": [
                                 {
+                                  "type": "stack",
                                   "justify": "space-between",
                                   "direction": "horizontal",
-                                  "type": "stack",
                                   "align": "center",
                                   "children": [
                                     {
@@ -499,52 +519,54 @@
                                           "size": "sm"
                                         },
                                         {
-                                          "type": "typography",
+                                          "variant": "h4",
                                           "content": "@item.name",
-                                          "variant": "h4"
+                                          "type": "typography"
                                         }
                                       ],
-                                      "gap": "sm",
                                       "direction": "horizontal",
+                                      "gap": "sm",
                                       "align": "center",
                                       "type": "stack"
                                     },
                                     {
-                                      "label": "@item.description",
-                                      "type": "badge"
+                                      "type": "badge",
+                                      "label": "@item.description"
                                     }
                                   ]
                                 },
                                 {
+                                  "type": "typography",
                                   "variant": "caption",
-                                  "content": "@item.status",
-                                  "type": "typography"
+                                  "content": "@item.status"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "direction": "vertical"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "label": "Progress",
+                              "event": "PROGRESS"
+                            },
+                            {
+                              "event": "COMPLETE",
+                              "label": "Complete"
+                            },
+                            {
+                              "label": "Fail",
+                              "event": "FAIL",
+                              "variant": "danger"
                             }
                           ],
                           "type": "data-grid",
                           "entity": "QuestLog",
-                          "emptyDescription": "Accept a quest to begin.",
-                          "itemActions": [
-                            {
-                              "event": "PROGRESS",
-                              "label": "Progress"
-                            },
-                            {
-                              "label": "Complete",
-                              "event": "COMPLETE"
-                            },
-                            {
-                              "variant": "danger",
-                              "label": "Fail",
-                              "event": "FAIL"
-                            }
-                          ],
-                          "emptyIcon": "inbox"
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No active quests"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg"
                     }
                   ]
@@ -559,33 +581,33 @@
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "type": "stack",
+                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
+                              "size": "md",
                               "type": "icon",
-                              "name": "trending-up",
-                              "size": "md"
+                              "name": "trending-up"
                             },
                             {
+                              "type": "typography",
                               "content": "Update Progress",
-                              "variant": "h3",
-                              "type": "typography"
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack"
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "QuestLog",
                           "cancelEvent": "CANCEL",
+                          "entity": "QuestLog",
+                          "mode": "edit",
                           "submitEvent": "SAVE",
                           "type": "form-section",
                           "fields": [
@@ -593,10 +615,10 @@
                             "description",
                             "status",
                             "createdAt"
-                          ],
-                          "mode": "edit"
+                          ]
                         }
-                      ]
+                      ],
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -610,13 +632,14 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
+                          "name": "check-circle",
                           "size": "lg",
-                          "type": "icon",
-                          "name": "check-circle"
+                          "type": "icon"
                         },
                         {
                           "variant": "h2",
@@ -625,19 +648,18 @@
                         },
                         {
                           "variant": "success",
-                          "message": "Congratulations! The quest has been completed.",
-                          "type": "alert"
+                          "type": "alert",
+                          "message": "Congratulations! The quest has been completed."
                         },
                         {
-                          "variant": "primary",
-                          "icon": "arrow-left",
+                          "event": "RESET",
                           "type": "button",
                           "label": "View Quests",
-                          "event": "RESET"
+                          "variant": "primary",
+                          "icon": "arrow-left"
                         }
                       ],
-                      "direction": "vertical",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -652,33 +674,33 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "x-circle",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
-                          "variant": "h2",
                           "type": "typography",
-                          "content": "Quest Failed"
+                          "content": "Quest Failed",
+                          "variant": "h2"
                         },
                         {
-                          "variant": "danger",
                           "type": "alert",
+                          "variant": "danger",
                           "message": "The quest was not completed. You can try again."
                         },
                         {
                           "event": "RESET",
+                          "icon": "arrow-left",
                           "type": "button",
                           "label": "View Quests",
-                          "variant": "primary",
-                          "icon": "arrow-left"
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -714,102 +736,57 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack",
                       "children": [
                         {
                           "type": "stack",
+                          "direction": "horizontal",
                           "justify": "space-between",
+                          "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "type": "stack",
                               "gap": "md",
                               "children": [
                                 {
-                                  "name": "flag",
                                   "type": "icon",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "flag"
                                 },
                                 {
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "QuestLogs Board"
+                                  "content": "QuestLogs Board",
+                                  "variant": "h2"
                                 }
                               ],
-                              "type": "stack"
+                              "direction": "horizontal"
                             },
                             {
                               "label": "Active",
                               "type": "badge"
                             }
-                          ],
-                          "gap": "md",
-                          "direction": "horizontal"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "progress-bar",
                           "value": 50.0,
-                          "showPercentage": true
+                          "showPercentage": true,
+                          "type": "progress-bar"
                         },
                         {
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "flag",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "variant": "h4",
-                                          "content": "@item.name",
-                                          "type": "typography"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "label": "@item.description",
-                                      "type": "badge"
-                                    }
-                                  ],
-                                  "justify": "space-between"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "@item.status"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "type": "stack",
-                              "gap": "sm"
-                            }
-                          ],
+                          "emptyTitle": "No active quests",
                           "emptyDescription": "Accept a quest to begin.",
-                          "type": "data-grid",
                           "itemActions": [
                             {
                               "label": "Progress",
                               "event": "PROGRESS"
                             },
                             {
-                              "event": "COMPLETE",
-                              "label": "Complete"
+                              "label": "Complete",
+                              "event": "COMPLETE"
                             },
                             {
                               "event": "FAIL",
@@ -817,12 +794,57 @@
                               "label": "Fail"
                             }
                           ],
-                          "entity": "QuestLog",
-                          "emptyTitle": "No active quests",
-                          "emptyIcon": "inbox"
+                          "emptyIcon": "inbox",
+                          "type": "data-grid",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "size": "sm",
+                                          "name": "flag"
+                                        },
+                                        {
+                                          "content": "@item.name",
+                                          "type": "typography",
+                                          "variant": "h4"
+                                        }
+                                      ],
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.description"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "justify": "space-between"
+                                },
+                                {
+                                  "content": "@item.status",
+                                  "variant": "caption",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "type": "stack"
+                            }
+                          ],
+                          "entity": "QuestLog"
                         }
-                      ],
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -842,8 +864,8 @@
                     "QuestLog",
                     {
                       "emit": {
-                        "success": "QuestLogLoaded",
-                        "failure": "QuestLogLoadFailed"
+                        "failure": "QuestLogLoadFailed",
+                        "success": "QuestLogLoaded"
                       }
                     }
                   ],
@@ -853,50 +875,98 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
+                          "justify": "space-between",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "size": "lg",
-                                  "name": "flag"
+                                  "name": "flag",
+                                  "size": "lg"
                                 },
                                 {
                                   "content": "QuestLogs Board",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
                               "gap": "md",
-                              "type": "stack"
+                              "type": "stack",
+                              "direction": "horizontal"
                             },
                             {
-                              "type": "badge",
-                              "label": "Active"
+                              "label": "Active",
+                              "type": "badge"
                             }
                           ],
-                          "justify": "space-between",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "value": 50.0,
-                          "showPercentage": true,
-                          "type": "progress-bar"
+                          "type": "progress-bar",
+                          "showPercentage": true
                         },
                         {
+                          "emptyTitle": "No active quests",
+                          "emptyIcon": "inbox",
                           "emptyDescription": "Accept a quest to begin.",
-                          "type": "data-grid",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "gap": "sm",
+                              "type": "stack",
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "justify": "space-between",
+                                  "direction": "horizontal",
+                                  "type": "stack",
+                                  "children": [
+                                    {
+                                      "direction": "horizontal",
+                                      "children": [
+                                        {
+                                          "name": "flag",
+                                          "size": "sm",
+                                          "type": "icon"
+                                        },
+                                        {
+                                          "variant": "h4",
+                                          "content": "@item.name",
+                                          "type": "typography"
+                                        }
+                                      ],
+                                      "align": "center",
+                                      "type": "stack",
+                                      "gap": "sm"
+                                    },
+                                    {
+                                      "type": "badge",
+                                      "label": "@item.description"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "variant": "caption",
+                                  "content": "@item.status",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "vertical"
+                            }
+                          ],
                           "entity": "QuestLog",
+                          "type": "data-grid",
                           "itemActions": [
                             {
-                              "label": "Progress",
-                              "event": "PROGRESS"
+                              "event": "PROGRESS",
+                              "label": "Progress"
                             },
                             {
                               "label": "Complete",
@@ -904,58 +974,10 @@
                             },
                             {
                               "variant": "danger",
-                              "label": "Fail",
-                              "event": "FAIL"
+                              "event": "FAIL",
+                              "label": "Fail"
                             }
-                          ],
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "type": "stack",
-                              "direction": "vertical",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "justify": "space-between",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "name": "flag",
-                                          "size": "sm"
-                                        },
-                                        {
-                                          "type": "typography",
-                                          "variant": "h4",
-                                          "content": "@item.name"
-                                        }
-                                      ],
-                                      "direction": "horizontal",
-                                      "align": "center",
-                                      "gap": "sm",
-                                      "type": "stack"
-                                    },
-                                    {
-                                      "label": "@item.description",
-                                      "type": "badge"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "variant": "caption",
-                                  "type": "typography",
-                                  "content": "@item.status"
-                                }
-                              ],
-                              "gap": "sm"
-                            }
-                          ],
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No active quests"
+                          ]
                         }
                       ],
                       "direction": "vertical",
@@ -994,33 +1016,33 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "justify": "space-between",
                           "gap": "md",
                           "children": [
                             {
-                              "direction": "horizontal",
+                              "type": "stack",
                               "children": [
                                 {
-                                  "name": "flag",
                                   "size": "lg",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "name": "flag"
                                 },
                                 {
-                                  "variant": "h2",
                                   "type": "typography",
-                                  "content": "QuestLogs Board"
+                                  "content": "QuestLogs Board",
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "md",
-                              "type": "stack"
+                              "direction": "horizontal",
+                              "gap": "md"
                             },
                             {
                               "label": "Active",
                               "type": "badge"
                             }
                           ],
-                          "justify": "space-between"
+                          "type": "stack",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -1031,10 +1053,6 @@
                           "showPercentage": true
                         },
                         {
-                          "emptyDescription": "Accept a quest to begin.",
-                          "emptyIcon": "inbox",
-                          "entity": "QuestLog",
-                          "type": "data-grid",
                           "itemActions": [
                             {
                               "event": "PROGRESS",
@@ -1046,57 +1064,61 @@
                             },
                             {
                               "label": "Fail",
-                              "event": "FAIL",
-                              "variant": "danger"
+                              "variant": "danger",
+                              "event": "FAIL"
                             }
                           ],
-                          "emptyTitle": "No active quests",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "gap": "sm",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
                                   "type": "stack",
-                                  "direction": "horizontal",
+                                  "justify": "space-between",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "gap": "sm",
-                                      "type": "stack",
-                                      "direction": "horizontal",
                                       "children": [
                                         {
-                                          "size": "sm",
+                                          "type": "icon",
                                           "name": "flag",
-                                          "type": "icon"
+                                          "size": "sm"
                                         },
                                         {
                                           "type": "typography",
-                                          "content": "@item.name",
-                                          "variant": "h4"
+                                          "variant": "h4",
+                                          "content": "@item.name"
                                         }
                                       ],
+                                      "type": "stack",
+                                      "direction": "horizontal",
+                                      "gap": "sm",
                                       "align": "center"
                                     },
                                     {
-                                      "type": "badge",
-                                      "label": "@item.description"
+                                      "label": "@item.description",
+                                      "type": "badge"
                                     }
                                   ],
-                                  "align": "center",
-                                  "justify": "space-between"
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "content": "@item.status",
                                   "type": "typography",
-                                  "variant": "caption"
+                                  "variant": "caption",
+                                  "content": "@item.status"
                                 }
-                              ]
+                              ],
+                              "gap": "sm"
                             }
-                          ]
+                          ],
+                          "emptyTitle": "No active quests",
+                          "entity": "QuestLog",
+                          "emptyIcon": "inbox",
+                          "emptyDescription": "Accept a quest to begin.",
+                          "type": "data-grid"
                         }
                       ]
                     }
@@ -1113,8 +1135,8 @@
                     "QuestLog",
                     {
                       "emit": {
-                        "failure": "QuestLogLoadFailed",
-                        "success": "QuestLogLoaded"
+                        "success": "QuestLogLoaded",
+                        "failure": "QuestLogLoadFailed"
                       }
                     }
                   ],
@@ -1123,75 +1145,85 @@
                     "main",
                     {
                       "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "space-between",
+                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "direction": "horizontal",
                               "type": "stack",
+                              "gap": "md",
                               "children": [
                                 {
-                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "flag"
+                                  "name": "flag",
+                                  "size": "lg"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "QuestLogs Board",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
                               ]
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md"
+                          "justify": "space-between",
+                          "gap": "md",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "QuestLog",
-                          "emptyIcon": "inbox",
+                          "type": "data-list",
                           "emptyTitle": "No questlogs available",
-                          "groupBy": "status",
+                          "emptyIcon": "inbox",
+                          "entity": "QuestLog",
+                          "itemActions": [
+                            {
+                              "event": "ACCEPT",
+                              "label": "Accept"
+                            }
+                          ],
+                          "emptyDescription": "Check back later for new questlogs.",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "type": "stack",
+                              "direction": "vertical",
                               "children": [
                                 {
+                                  "direction": "horizontal",
                                   "justify": "space-between",
+                                  "align": "center",
                                   "children": [
                                     {
                                       "gap": "sm",
-                                      "direction": "horizontal",
-                                      "type": "stack",
+                                      "align": "center",
                                       "children": [
                                         {
                                           "name": "flag",
-                                          "size": "sm",
-                                          "type": "icon"
+                                          "type": "icon",
+                                          "size": "sm"
                                         },
                                         {
-                                          "type": "typography",
                                           "variant": "h4",
-                                          "content": "@item.name"
+                                          "content": "@item.name",
+                                          "type": "typography"
                                         }
                                       ],
-                                      "align": "center"
+                                      "direction": "horizontal",
+                                      "type": "stack"
                                     },
                                     {
-                                      "type": "badge",
-                                      "label": "@item.description"
+                                      "label": "@item.description",
+                                      "type": "badge"
                                     }
                                   ],
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "align": "center"
+                                  "type": "stack"
                                 },
                                 {
                                   "type": "typography",
@@ -1199,22 +1231,12 @@
                                   "variant": "caption"
                                 }
                               ],
-                              "direction": "vertical",
                               "gap": "sm"
                             }
                           ],
-                          "emptyDescription": "Check back later for new questlogs.",
-                          "itemActions": [
-                            {
-                              "event": "ACCEPT",
-                              "label": "Accept"
-                            }
-                          ],
-                          "type": "data-list"
+                          "groupBy": "status"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -1239,47 +1261,60 @@
                     "main",
                     {
                       "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "md",
                           "type": "stack",
-                          "justify": "space-between",
-                          "direction": "horizontal",
                           "children": [
                             {
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack",
                               "children": [
                                 {
-                                  "size": "lg",
                                   "type": "icon",
-                                  "name": "flag"
+                                  "name": "flag",
+                                  "size": "lg"
                                 },
                                 {
                                   "content": "QuestLogs Board",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
+                              ]
                             }
-                          ]
+                          ],
+                          "justify": "space-between",
+                          "direction": "horizontal",
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "data-list",
+                          "itemActions": [
+                            {
+                              "event": "ACCEPT",
+                              "label": "Accept"
+                            }
+                          ],
+                          "emptyDescription": "Check back later for new questlogs.",
+                          "emptyTitle": "No questlogs available",
+                          "emptyIcon": "inbox",
+                          "entity": "QuestLog",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
+                              "gap": "sm",
                               "direction": "vertical",
+                              "type": "stack",
                               "children": [
                                 {
+                                  "align": "center",
                                   "children": [
                                     {
+                                      "direction": "horizontal",
                                       "children": [
                                         {
                                           "name": "flag",
@@ -1287,15 +1322,14 @@
                                           "type": "icon"
                                         },
                                         {
-                                          "variant": "h4",
                                           "type": "typography",
-                                          "content": "@item.name"
+                                          "content": "@item.name",
+                                          "variant": "h4"
                                         }
                                       ],
                                       "type": "stack",
                                       "align": "center",
-                                      "gap": "sm",
-                                      "direction": "horizontal"
+                                      "gap": "sm"
                                     },
                                     {
                                       "label": "@item.description",
@@ -1303,33 +1337,21 @@
                                     }
                                   ],
                                   "type": "stack",
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "justify": "space-between"
+                                  "justify": "space-between",
+                                  "direction": "horizontal"
                                 },
                                 {
-                                  "variant": "caption",
+                                  "content": "@item.status",
                                   "type": "typography",
-                                  "content": "@item.status"
+                                  "variant": "caption"
                                 }
-                              ],
-                              "gap": "sm"
+                              ]
                             }
                           ],
-                          "emptyIcon": "inbox",
-                          "entity": "QuestLog",
-                          "itemActions": [
-                            {
-                              "event": "ACCEPT",
-                              "label": "Accept"
-                            }
-                          ],
-                          "type": "data-list",
-                          "emptyDescription": "Check back later for new questlogs.",
-                          "groupBy": "status",
-                          "emptyTitle": "No questlogs available"
+                          "groupBy": "status"
                         }
                       ],
+                      "type": "stack",
                       "gap": "lg"
                     }
                   ]

@@ -218,7 +218,62 @@
               },
               {
                 "key": "ServiceGithubLoaded",
-                "name": "ServiceGithub loaded"
+                "name": "ServiceGithub loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "body",
+                    "type": "string"
+                  },
+                  {
+                    "name": "head",
+                    "type": "string"
+                  },
+                  {
+                    "name": "base",
+                    "type": "string"
+                  },
+                  {
+                    "name": "prUrl",
+                    "type": "string"
+                  },
+                  {
+                    "name": "prNumber",
+                    "type": "number"
+                  },
+                  {
+                    "name": "ghStatus",
+                    "type": "string"
+                  },
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "ServiceGithubLoadFailed",
@@ -242,8 +297,8 @@
                     "ServiceGithub",
                     {
                       "emit": {
-                        "success": "ServiceGithubLoaded",
-                        "failure": "ServiceGithubLoadFailed"
+                        "failure": "ServiceGithubLoadFailed",
+                        "success": "ServiceGithubLoaded"
                       }
                     }
                   ],
@@ -251,41 +306,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
+                              "name": "git-pull-request",
                               "size": "lg",
-                              "name": "git-pull-request"
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
+                              "variant": "h2",
                               "content": "Create Pull Request",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "gap": "md",
                           "type": "stack",
                           "children": [
                             {
-                              "placeholder": "PR title",
-                              "field": "title",
                               "type": "input",
-                              "label": "Title"
+                              "label": "Title",
+                              "field": "title",
+                              "placeholder": "PR title"
                             },
                             {
                               "label": "Body",
@@ -294,28 +344,33 @@
                               "type": "textarea"
                             },
                             {
-                              "field": "head",
-                              "placeholder": "feature-branch",
+                              "type": "input",
                               "label": "Head Branch",
-                              "type": "input"
+                              "placeholder": "feature-branch",
+                              "field": "head"
                             },
                             {
-                              "placeholder": "main",
-                              "field": "base",
+                              "label": "Base Branch",
                               "type": "input",
-                              "label": "Base Branch"
+                              "field": "base",
+                              "placeholder": "main"
                             }
-                          ]
+                          ],
+                          "gap": "md",
+                          "direction": "vertical"
                         },
                         {
+                          "icon": "git-pull-request",
                           "event": "CREATE_PR",
-                          "type": "button",
-                          "label": "Create PR",
                           "variant": "primary",
-                          "icon": "git-pull-request"
+                          "label": "Create PR",
+                          "type": "button"
                         }
                       ],
-                      "gap": "lg"
+                      "align": "center",
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -339,10 +394,10 @@
                     "github",
                     "createPR",
                     {
-                      "body": "@entity.body",
                       "head": "@entity.head",
+                      "title": "@entity.title",
                       "base": "@entity.base",
-                      "title": "@entity.title"
+                      "body": "@entity.body"
                     }
                   ]
                 ]
@@ -371,35 +426,35 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
-                      "gap": "lg",
                       "type": "stack",
                       "direction": "vertical",
                       "children": [
                         {
-                          "size": "lg",
+                          "name": "check-circle",
                           "type": "icon",
-                          "name": "check-circle"
+                          "size": "lg"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
-                          "message": "Pull request created!"
+                          "message": "Pull request created!",
+                          "type": "alert"
                         },
                         {
-                          "variant": "body",
-                          "color": "muted",
+                          "content": "@entity.prUrl",
                           "type": "typography",
-                          "content": "@entity.prUrl"
+                          "variant": "body",
+                          "color": "muted"
                         },
                         {
                           "event": "RESET",
-                          "label": "Create Another",
                           "variant": "ghost",
+                          "icon": "rotate-ccw",
                           "type": "button",
-                          "icon": "rotate-ccw"
+                          "label": "Create Another"
                         }
-                      ]
+                      ],
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -418,10 +473,10 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "PR Creation Failed",
-                      "onRetry": "RETRY",
                       "type": "error-state",
-                      "message": "@entity.error"
+                      "message": "@entity.error",
+                      "onRetry": "RETRY",
+                      "title": "PR Creation Failed"
                     }
                   ]
                 ]
@@ -435,17 +490,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
+                          "gap": "md",
                           "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "size": "lg",
-                              "type": "icon",
-                              "name": "git-pull-request"
+                              "name": "git-pull-request",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
@@ -453,41 +507,39 @@
                               "content": "Create Pull Request"
                             }
                           ],
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "stack",
                           "direction": "vertical",
                           "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "placeholder": "PR title",
+                              "label": "Title",
                               "field": "title",
                               "type": "input",
-                              "label": "Title"
+                              "placeholder": "PR title"
                             },
                             {
                               "placeholder": "Describe your changes...",
-                              "type": "textarea",
                               "label": "Body",
-                              "field": "body"
+                              "field": "body",
+                              "type": "textarea"
                             },
                             {
+                              "label": "Head Branch",
                               "field": "head",
-                              "placeholder": "feature-branch",
                               "type": "input",
-                              "label": "Head Branch"
+                              "placeholder": "feature-branch"
                             },
                             {
-                              "field": "base",
                               "type": "input",
-                              "placeholder": "main",
-                              "label": "Base Branch"
+                              "field": "base",
+                              "label": "Base Branch",
+                              "placeholder": "main"
                             }
                           ]
                         },
@@ -499,7 +551,10 @@
                           "icon": "git-pull-request"
                         }
                       ],
-                      "gap": "lg"
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -513,30 +568,35 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
+                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
                               "name": "git-pull-request",
+                              "size": "lg",
                               "type": "icon"
                             },
                             {
+                              "variant": "h2",
                               "content": "Create Pull Request",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center",
                           "type": "stack",
-                          "gap": "md"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "direction": "vertical",
+                          "type": "stack",
+                          "gap": "md",
                           "children": [
                             {
                               "field": "title",
@@ -545,39 +605,34 @@
                               "placeholder": "PR title"
                             },
                             {
-                              "label": "Body",
                               "placeholder": "Describe your changes...",
+                              "label": "Body",
                               "field": "body",
                               "type": "textarea"
                             },
                             {
-                              "placeholder": "feature-branch",
-                              "label": "Head Branch",
                               "type": "input",
-                              "field": "head"
+                              "label": "Head Branch",
+                              "field": "head",
+                              "placeholder": "feature-branch"
                             },
                             {
-                              "label": "Base Branch",
+                              "type": "input",
                               "field": "base",
-                              "placeholder": "main",
-                              "type": "input"
+                              "label": "Base Branch",
+                              "placeholder": "main"
                             }
-                          ],
-                          "gap": "md",
-                          "type": "stack"
+                          ]
                         },
                         {
-                          "label": "Create PR",
+                          "icon": "git-pull-request",
                           "type": "button",
-                          "variant": "primary",
                           "event": "CREATE_PR",
-                          "icon": "git-pull-request"
+                          "label": "Create PR",
+                          "variant": "primary"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "align": "center",
-                      "gap": "lg"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -591,71 +646,71 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "center",
                       "type": "stack",
+                      "gap": "lg",
                       "children": [
                         {
-                          "align": "center",
+                          "gap": "md",
                           "children": [
                             {
-                              "name": "git-pull-request",
                               "size": "lg",
+                              "name": "git-pull-request",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
+                              "type": "typography",
                               "content": "Create Pull Request"
                             }
                           ],
                           "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack"
+                          "type": "stack",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "vertical",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "input",
-                              "placeholder": "PR title",
                               "field": "title",
-                              "label": "Title"
+                              "label": "Title",
+                              "placeholder": "PR title"
                             },
                             {
-                              "label": "Body",
-                              "placeholder": "Describe your changes...",
                               "field": "body",
+                              "placeholder": "Describe your changes...",
+                              "label": "Body",
                               "type": "textarea"
                             },
                             {
-                              "type": "input",
                               "placeholder": "feature-branch",
+                              "type": "input",
                               "label": "Head Branch",
                               "field": "head"
                             },
                             {
-                              "field": "base",
+                              "placeholder": "main",
                               "label": "Base Branch",
                               "type": "input",
-                              "placeholder": "main"
+                              "field": "base"
                             }
                           ],
-                          "gap": "md"
+                          "type": "stack",
+                          "direction": "vertical"
                         },
                         {
-                          "type": "button",
-                          "icon": "git-pull-request",
-                          "event": "CREATE_PR",
                           "variant": "primary",
-                          "label": "Create PR"
+                          "label": "Create PR",
+                          "event": "CREATE_PR",
+                          "icon": "git-pull-request",
+                          "type": "button"
                         }
                       ],
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "align": "center"
                     }
                   ]
                 ]

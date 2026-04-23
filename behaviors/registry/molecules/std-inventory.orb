@@ -177,23 +177,23 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "className": "py-12",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
-                          "size": "lg",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "lg"
                         },
                         {
-                          "variant": "caption",
                           "type": "typography",
+                          "variant": "caption",
                           "color": "muted",
                           "content": "Loading inventory…"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "align": "center",
+                      "gap": "md",
+                      "className": "py-12",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -207,39 +207,38 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-5xl mx-auto w-full",
                       "children": [
                         {
-                          "children": [
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "package",
-                                  "size": "lg"
-                                },
-                                {
-                                  "content": "Inventory",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "type": "stack",
-                              "gap": "md"
-                            },
-                            {
-                              "label": "Add Item",
-                              "variant": "primary",
-                              "type": "button",
-                              "action": "ADD_ITEM",
-                              "icon": "plus"
-                            }
-                          ],
+                          "direction": "horizontal",
                           "justify": "between",
                           "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "size": "lg",
+                                  "name": "package"
+                                },
+                                {
+                                  "content": "Inventory",
+                                  "variant": "h2",
+                                  "type": "typography"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "ADD_ITEM",
+                              "variant": "primary",
+                              "type": "button",
+                              "icon": "plus",
+                              "label": "Add Item"
+                            }
+                          ]
                         },
                         {
                           "type": "divider"
@@ -252,36 +251,37 @@
                               "event": "USE_ITEM"
                             },
                             {
+                              "event": "DROP",
                               "variant": "danger",
-                              "label": "Drop",
-                              "event": "DROP"
+                              "label": "Drop"
                             }
                           ],
+                          "type": "data-grid",
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "name",
                               "variant": "h4",
+                              "label": "Name",
                               "icon": "package",
-                              "label": "Name"
+                              "name": "name"
                             },
                             {
-                              "name": "description",
                               "variant": "caption",
+                              "name": "description",
                               "label": "Description"
                             },
                             {
-                              "label": "Status",
                               "variant": "badge",
-                              "name": "status"
+                              "name": "status",
+                              "label": "Status"
                             }
-                          ],
-                          "entity": "@payload.data",
-                          "type": "data-grid"
+                          ]
                         }
                       ],
+                      "className": "max-w-5xl mx-auto w-full",
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -295,36 +295,36 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "gap": "md",
                       "className": "py-12",
                       "children": [
                         {
                           "size": "xl",
-                          "name": "alert-triangle",
                           "type": "icon",
+                          "name": "alert-triangle",
                           "color": "destructive"
                         },
                         {
                           "type": "typography",
-                          "content": "Failed to load inventory",
-                          "variant": "h3"
+                          "variant": "h3",
+                          "content": "Failed to load inventory"
                         },
                         {
-                          "color": "muted",
                           "type": "typography",
                           "variant": "body",
-                          "content": "@payload.error"
+                          "content": "@payload.error",
+                          "color": "muted"
                         },
                         {
                           "variant": "primary",
-                          "label": "Retry",
                           "action": "INIT",
+                          "icon": "rotate-ccw",
                           "type": "button",
-                          "icon": "rotate-ccw"
+                          "label": "Retry"
                         }
                       ],
-                      "gap": "md",
+                      "direction": "vertical",
+                      "type": "stack",
                       "align": "center"
                     }
                   ]
@@ -349,8 +349,8 @@
                     "render-ui",
                     "main",
                     {
-                      "size": "lg",
-                      "type": "spinner"
+                      "type": "spinner",
+                      "size": "lg"
                     }
                   ]
                 ]
@@ -365,8 +365,8 @@
                     "InventoryItem",
                     {
                       "emit": {
-                        "success": "InventoryItemLoaded",
-                        "failure": "InventoryItemLoadFailed"
+                        "failure": "InventoryItemLoadFailed",
+                        "success": "InventoryItemLoaded"
                       }
                     }
                   ],
@@ -389,14 +389,14 @@
           "name": "InventoryItemAdd",
           "linkedEntity": "InventoryItem",
           "config": {
-            "mode": "create",
-            "title": "Add Item",
-            "icon": "plus-circle",
             "fields": [
               "name",
               "description",
               "status"
-            ]
+            ],
+            "mode": "create",
+            "icon": "plus-circle",
+            "title": "Add Item"
           },
           "events": {
             "OPEN": "ADD_ITEM",
@@ -408,10 +408,10 @@
           "name": "InventoryItemUse",
           "linkedEntity": "InventoryItem",
           "config": {
-            "alertMessage": "Consume this item?",
-            "icon": "zap",
             "title": "Use Item",
-            "confirmLabel": "Confirm Use"
+            "alertMessage": "Consume this item?",
+            "confirmLabel": "Confirm Use",
+            "icon": "zap"
           },
           "events": {
             "CONFIRM": "ITEM_USED",
@@ -424,13 +424,13 @@
           "linkedEntity": "InventoryItem",
           "config": {
             "alertMessage": "Are you sure you want to drop this item? This action cannot be undone.",
+            "confirmLabel": "Drop",
             "icon": "alert-triangle",
-            "title": "Drop Item",
-            "confirmLabel": "Drop"
+            "title": "Drop Item"
           },
           "events": {
-            "REQUEST": "DROP",
-            "CONFIRM": "ITEM_DROPPED"
+            "CONFIRM": "ITEM_DROPPED",
+            "REQUEST": "DROP"
           }
         },
         {

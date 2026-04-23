@@ -100,7 +100,29 @@
               },
               {
                 "key": "AudioTrackLoaded",
-                "name": "AudioTrack loaded"
+                "name": "AudioTrack loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "AudioTrackLoadFailed",
@@ -124,8 +146,8 @@
                     "AudioTrack",
                     {
                       "emit": {
-                        "success": "AudioTrackLoaded",
-                        "failure": "AudioTrackLoadFailed"
+                        "failure": "AudioTrackLoadFailed",
+                        "success": "AudioTrackLoaded"
                       }
                     }
                   ],
@@ -133,37 +155,28 @@
                     "render-ui",
                     "main",
                     {
-                      "baseUrl": "https://almadar-kflow-assets.web.app/shared/audio",
-                      "manifest": {
-                        "drop": "https://almadar-kflow-assets.web.app/shared/audio/sfx/drop_001.ogg",
-                        "click": "https://almadar-kflow-assets.web.app/shared/audio/sfx/close_001.ogg",
-                        "confirm": "https://almadar-kflow-assets.web.app/shared/audio/sfx/confirmation_001.ogg"
-                      },
-                      "type": "game-audio-provider",
                       "initialMuted": false,
                       "children": [
                         {
-                          "direction": "vertical",
-                          "className": "max-w-md mx-auto",
-                          "gap": "lg",
+                          "type": "stack",
                           "children": [
                             {
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
                               "children": [
                                 {
                                   "type": "icon",
-                                  "size": "lg",
-                                  "name": "volume-2"
+                                  "name": "volume-2",
+                                  "size": "lg"
                                 },
                                 {
                                   "variant": "h2",
-                                  "content": "Audio Controls",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "content": "Audio Controls"
                                 }
                               ],
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack"
+                              "direction": "horizontal"
                             },
                             {
                               "type": "divider"
@@ -171,33 +184,164 @@
                             {
                               "children": [
                                 {
-                                  "direction": "vertical",
                                   "type": "stack",
-                                  "gap": "md",
                                   "children": [
                                     {
                                       "variant": "h4",
-                                      "type": "typography",
-                                      "content": "Audio Active"
-                                    },
-                                    {
-                                      "content": "Toggle mute to control game audio playback.",
-                                      "variant": "body",
-                                      "color": "muted",
+                                      "content": "Audio Active",
                                       "type": "typography"
                                     },
                                     {
-                                      "type": "stack",
+                                      "color": "muted",
+                                      "type": "typography",
+                                      "content": "Toggle mute to control game audio playback.",
+                                      "variant": "body"
+                                    },
+                                    {
                                       "children": [
                                         {
                                           "event": "TOGGLE_MUTE",
-                                          "variant": "primary",
                                           "label": "Toggle Mute",
+                                          "type": "button",
                                           "icon": "volume-2",
-                                          "type": "button"
+                                          "variant": "primary"
                                         }
                                       ],
+                                      "gap": "sm",
+                                      "type": "stack",
+                                      "direction": "horizontal"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "md"
+                                }
+                              ],
+                              "type": "card"
+                            },
+                            {
+                              "type": "card",
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "content": "Sound Effects"
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "label": "Play Click",
+                                          "variant": "outline",
+                                          "icon": "play",
+                                          "type": "button"
+                                        },
+                                        {
+                                          "label": "Play Confirm",
+                                          "icon": "play",
+                                          "type": "button",
+                                          "variant": "outline"
+                                        },
+                                        {
+                                          "type": "button",
+                                          "icon": "play",
+                                          "label": "Play Drop",
+                                          "variant": "outline"
+                                        }
+                                      ],
+                                      "type": "stack",
                                       "direction": "horizontal",
+                                      "gap": "sm"
+                                    }
+                                  ],
+                                  "gap": "sm",
+                                  "type": "stack",
+                                  "direction": "vertical"
+                                }
+                              ]
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "lg",
+                          "className": "max-w-md mx-auto"
+                        }
+                      ],
+                      "baseUrl": "https://almadar-kflow-assets.web.app/shared/audio",
+                      "type": "game-audio-provider",
+                      "manifest": {
+                        "click": "https://almadar-kflow-assets.web.app/shared/audio/sfx/close_001.ogg",
+                        "drop": "https://almadar-kflow-assets.web.app/shared/audio/sfx/drop_001.ogg",
+                        "confirm": "https://almadar-kflow-assets.web.app/shared/audio/sfx/confirmation_001.ogg"
+                      }
+                    }
+                  ]
+                ]
+              },
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "TOGGLE_MUTE",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "gap": "lg",
+                          "direction": "vertical",
+                          "children": [
+                            {
+                              "direction": "horizontal",
+                              "type": "stack",
+                              "gap": "sm",
+                              "children": [
+                                {
+                                  "size": "lg",
+                                  "name": "volume-2",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "Audio Controls",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "align": "center"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "type": "stack",
+                                  "gap": "md",
+                                  "direction": "vertical",
+                                  "children": [
+                                    {
+                                      "content": "Audio Active",
+                                      "type": "typography",
+                                      "variant": "h4"
+                                    },
+                                    {
+                                      "content": "Toggle mute to control game audio playback.",
+                                      "type": "typography",
+                                      "color": "muted",
+                                      "variant": "body"
+                                    },
+                                    {
+                                      "direction": "horizontal",
+                                      "type": "stack",
+                                      "children": [
+                                        {
+                                          "type": "button",
+                                          "icon": "volume-2",
+                                          "label": "Toggle Mute",
+                                          "variant": "primary",
+                                          "event": "TOGGLE_MUTE"
+                                        }
+                                      ],
                                       "gap": "sm"
                                     }
                                   ]
@@ -213,34 +357,34 @@
                                   "direction": "vertical",
                                   "children": [
                                     {
-                                      "type": "typography",
                                       "variant": "h4",
+                                      "type": "typography",
                                       "content": "Sound Effects"
                                     },
                                     {
-                                      "gap": "sm",
-                                      "type": "stack",
                                       "direction": "horizontal",
                                       "children": [
                                         {
+                                          "variant": "outline",
+                                          "icon": "play",
+                                          "type": "button",
+                                          "label": "Play Click"
+                                        },
+                                        {
                                           "type": "button",
                                           "variant": "outline",
-                                          "label": "Play Click",
-                                          "icon": "play"
-                                        },
-                                        {
-                                          "type": "button",
-                                          "label": "Play Confirm",
                                           "icon": "play",
-                                          "variant": "outline"
+                                          "label": "Play Confirm"
                                         },
                                         {
+                                          "variant": "outline",
                                           "type": "button",
                                           "label": "Play Drop",
-                                          "icon": "play",
-                                          "variant": "outline"
+                                          "icon": "play"
                                         }
-                                      ]
+                                      ],
+                                      "gap": "sm",
+                                      "type": "stack"
                                     }
                                   ]
                                 }
@@ -248,140 +392,18 @@
                               "type": "card"
                             }
                           ],
+                          "className": "max-w-md mx-auto",
                           "type": "stack"
                         }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "TOGGLE_MUTE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "game-audio-provider",
-                      "baseUrl": "https://almadar-kflow-assets.web.app/shared/audio",
-                      "initialMuted": false,
-                      "children": [
-                        {
-                          "className": "max-w-md mx-auto",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "volume-2",
-                                  "size": "lg"
-                                },
-                                {
-                                  "content": "Audio Controls",
-                                  "variant": "h2",
-                                  "type": "typography"
-                                }
-                              ],
-                              "align": "center"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "variant": "h4",
-                                      "type": "typography",
-                                      "content": "Audio Active"
-                                    },
-                                    {
-                                      "content": "Toggle mute to control game audio playback.",
-                                      "type": "typography",
-                                      "color": "muted",
-                                      "variant": "body"
-                                    },
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "gap": "sm",
-                                      "children": [
-                                        {
-                                          "type": "button",
-                                          "event": "TOGGLE_MUTE",
-                                          "label": "Toggle Mute",
-                                          "icon": "volume-2",
-                                          "variant": "primary"
-                                        }
-                                      ]
-                                    }
-                                  ],
-                                  "direction": "vertical",
-                                  "gap": "md"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "type": "stack",
-                                  "gap": "sm",
-                                  "direction": "vertical",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "content": "Sound Effects",
-                                      "variant": "h4"
-                                    },
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "button",
-                                          "label": "Play Click",
-                                          "icon": "play",
-                                          "variant": "outline"
-                                        },
-                                        {
-                                          "type": "button",
-                                          "label": "Play Confirm",
-                                          "icon": "play",
-                                          "variant": "outline"
-                                        },
-                                        {
-                                          "type": "button",
-                                          "icon": "play",
-                                          "label": "Play Drop",
-                                          "variant": "outline"
-                                        }
-                                      ],
-                                      "type": "stack",
-                                      "gap": "sm",
-                                      "direction": "horizontal"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ],
-                          "gap": "lg",
-                          "type": "stack",
-                          "direction": "vertical"
-                        }
                       ],
+                      "initialMuted": false,
+                      "type": "game-audio-provider",
                       "manifest": {
                         "confirm": "https://almadar-kflow-assets.web.app/shared/audio/sfx/confirmation_001.ogg",
                         "drop": "https://almadar-kflow-assets.web.app/shared/audio/sfx/drop_001.ogg",
                         "click": "https://almadar-kflow-assets.web.app/shared/audio/sfx/close_001.ogg"
-                      }
+                      },
+                      "baseUrl": "https://almadar-kflow-assets.web.app/shared/audio"
                     }
                   ]
                 ]

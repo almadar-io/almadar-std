@@ -190,7 +190,53 @@
               },
               {
                 "key": "ServiceNotificationHubLoaded",
-                "name": "ServiceNotificationHub loaded"
+                "name": "ServiceNotificationHub loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "recipient",
+                    "type": "string"
+                  },
+                  {
+                    "name": "subject",
+                    "type": "string"
+                  },
+                  {
+                    "name": "messageBody",
+                    "type": "string"
+                  },
+                  {
+                    "name": "channel",
+                    "type": "string"
+                  },
+                  {
+                    "name": "sendStatus",
+                    "type": "string"
+                  },
+                  {
+                    "name": "error",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "ServiceNotificationHubLoadFailed",
@@ -214,8 +260,8 @@
                     "ServiceNotificationHub",
                     {
                       "emit": {
-                        "success": "ServiceNotificationHubLoaded",
-                        "failure": "ServiceNotificationHubLoadFailed"
+                        "failure": "ServiceNotificationHubLoadFailed",
+                        "success": "ServiceNotificationHubLoaded"
                       }
                     }
                   ],
@@ -223,25 +269,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "gap": "lg",
                       "direction": "vertical",
-                      "align": "stretch",
                       "children": [
                         {
                           "type": "stack",
+                          "gap": "md",
                           "direction": "horizontal",
                           "align": "center",
-                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
                               "size": "lg",
+                              "type": "icon",
                               "name": "bell"
                             },
                             {
-                              "content": "ServiceNotificationHub Notification Hub",
                               "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "ServiceNotificationHub Notification Hub"
                             }
                           ]
                         },
@@ -249,54 +294,55 @@
                           "type": "divider"
                         },
                         {
-                          "placeholder": "Email or phone number",
+                          "bind": "@entity.recipient",
                           "type": "input",
                           "label": "Recipient",
-                          "bind": "@entity.recipient"
+                          "placeholder": "Email or phone number"
                         },
                         {
-                          "bind": "@entity.subject",
                           "placeholder": "Notification subject",
                           "label": "Subject",
-                          "type": "input"
+                          "type": "input",
+                          "bind": "@entity.subject"
                         },
                         {
                           "bind": "@entity.messageBody",
                           "placeholder": "Write your message...",
-                          "label": "Message",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "label": "Message"
                         },
                         {
-                          "justify": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "label": "Email",
                               "variant": "primary",
+                              "type": "button",
                               "icon": "mail",
-                              "type": "button",
-                              "event": "SEND_EMAIL"
+                              "event": "SEND_EMAIL",
+                              "label": "Email"
                             },
                             {
-                              "label": "SMS",
+                              "type": "button",
                               "variant": "secondary",
-                              "icon": "message-circle",
                               "event": "SEND_SMS",
-                              "type": "button"
+                              "icon": "message-circle",
+                              "label": "SMS"
                             },
                             {
-                              "icon": "phone",
-                              "event": "SEND_WHATSAPP",
                               "type": "button",
+                              "event": "SEND_WHATSAPP",
+                              "variant": "secondary",
                               "label": "WhatsApp",
-                              "variant": "secondary"
+                              "icon": "phone"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack",
+                          "justify": "center"
                         }
                       ],
-                      "gap": "lg"
+                      "align": "stretch",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -316,8 +362,8 @@
                     "main",
                     {
                       "type": "loading-state",
-                      "message": "Delivering servicenotificationhub notification...",
-                      "title": "Sending notification..."
+                      "title": "Sending notification...",
+                      "message": "Delivering servicenotificationhub notification..."
                     }
                   ],
                   [
@@ -325,9 +371,9 @@
                     "email",
                     "send",
                     {
-                      "subject": "@entity.subject",
                       "body": "@entity.messageBody",
-                      "to": "@entity.recipient"
+                      "to": "@entity.recipient",
+                      "subject": "@entity.subject"
                     }
                   ]
                 ]
@@ -377,8 +423,8 @@
                     "main",
                     {
                       "message": "Delivering servicenotificationhub notification...",
-                      "type": "loading-state",
-                      "title": "Sending notification..."
+                      "title": "Sending notification...",
+                      "type": "loading-state"
                     }
                   ],
                   [
@@ -386,8 +432,8 @@
                     "twilio",
                     "sendWhatsApp",
                     {
-                      "body": "@entity.messageBody",
-                      "to": "@entity.recipient"
+                      "to": "@entity.recipient",
+                      "body": "@entity.messageBody"
                     }
                   ]
                 ]
@@ -406,29 +452,29 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "gap": "lg",
                       "align": "center",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "name": "check-circle",
                           "size": "lg",
-                          "type": "icon"
+                          "type": "icon",
+                          "name": "check-circle"
                         },
                         {
-                          "variant": "success",
                           "type": "alert",
+                          "variant": "success",
                           "message": "Notification sent successfully"
                         },
                         {
                           "type": "button",
+                          "event": "RESET",
                           "label": "Send Another",
                           "variant": "ghost",
-                          "event": "RESET",
                           "icon": "rotate-ccw"
                         }
-                      ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -452,40 +498,40 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
-                          "type": "error-state",
-                          "title": "Send Failed",
+                          "onRetry": "RETRY",
                           "message": "Could not deliver the notification.",
-                          "onRetry": "RETRY"
+                          "type": "error-state",
+                          "title": "Send Failed"
                         },
                         {
-                          "type": "stack",
-                          "justify": "center",
-                          "direction": "horizontal",
                           "gap": "sm",
+                          "justify": "center",
+                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "variant": "primary",
                               "type": "button",
-                              "label": "Retry",
                               "event": "RETRY",
                               "icon": "refresh-cw",
-                              "variant": "primary"
+                              "label": "Retry"
                             },
                             {
                               "type": "button",
-                              "variant": "ghost",
+                              "icon": "rotate-ccw",
                               "label": "Reset",
                               "event": "RESET",
-                              "icon": "rotate-ccw"
+                              "variant": "ghost"
                             }
                           ]
                         }
                       ],
+                      "align": "center",
+                      "gap": "lg",
                       "type": "stack",
-                      "gap": "lg"
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -504,80 +550,80 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
+                      "align": "stretch",
                       "children": [
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
                               "type": "icon",
-                              "name": "bell",
-                              "size": "lg"
+                              "size": "lg",
+                              "name": "bell"
                             },
                             {
+                              "variant": "h2",
                               "content": "ServiceNotificationHub Notification Hub",
-                              "type": "typography",
-                              "variant": "h2"
+                              "type": "typography"
                             }
                           ],
-                          "gap": "md",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "label": "Recipient",
                           "placeholder": "Email or phone number",
                           "bind": "@entity.recipient",
+                          "label": "Recipient",
                           "type": "input"
                         },
                         {
                           "type": "input",
-                          "label": "Subject",
+                          "placeholder": "Notification subject",
                           "bind": "@entity.subject",
-                          "placeholder": "Notification subject"
+                          "label": "Subject"
                         },
                         {
-                          "bind": "@entity.messageBody",
-                          "label": "Message",
                           "placeholder": "Write your message...",
-                          "type": "textarea"
+                          "type": "textarea",
+                          "bind": "@entity.messageBody",
+                          "label": "Message"
                         },
                         {
-                          "justify": "center",
                           "gap": "sm",
                           "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Email",
-                              "event": "SEND_EMAIL",
                               "variant": "primary",
-                              "icon": "mail"
+                              "event": "SEND_EMAIL",
+                              "icon": "mail",
+                              "label": "Email"
                             },
                             {
+                              "label": "SMS",
+                              "variant": "secondary",
                               "icon": "message-circle",
-                              "variant": "secondary",
-                              "type": "button",
                               "event": "SEND_SMS",
-                              "label": "SMS"
+                              "type": "button"
                             },
                             {
-                              "label": "WhatsApp",
                               "variant": "secondary",
+                              "icon": "phone",
+                              "label": "WhatsApp",
                               "event": "SEND_WHATSAPP",
-                              "type": "button",
-                              "icon": "phone"
+                              "type": "button"
                             }
-                          ],
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
-                      "align": "stretch",
-                      "type": "stack"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]
@@ -591,13 +637,11 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "stretch",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "type": "stack",
-                          "align": "center",
                           "gap": "md",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "type": "icon",
@@ -605,66 +649,68 @@
                               "name": "bell"
                             },
                             {
+                              "type": "typography",
                               "content": "ServiceNotificationHub Notification Hub",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             }
-                          ]
+                          ],
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "bind": "@entity.recipient",
+                          "type": "input",
                           "label": "Recipient",
                           "placeholder": "Email or phone number",
-                          "type": "input"
+                          "bind": "@entity.recipient"
                         },
                         {
+                          "label": "Subject",
                           "type": "input",
                           "placeholder": "Notification subject",
-                          "label": "Subject",
                           "bind": "@entity.subject"
                         },
                         {
-                          "placeholder": "Write your message...",
+                          "label": "Message",
                           "bind": "@entity.messageBody",
-                          "type": "textarea",
-                          "label": "Message"
+                          "placeholder": "Write your message...",
+                          "type": "textarea"
                         },
                         {
-                          "type": "stack",
+                          "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
-                              "label": "Email",
+                              "event": "SEND_EMAIL",
                               "variant": "primary",
-                              "type": "button",
+                              "label": "Email",
                               "icon": "mail",
-                              "event": "SEND_EMAIL"
+                              "type": "button"
                             },
                             {
                               "label": "SMS",
-                              "icon": "message-circle",
                               "variant": "secondary",
+                              "event": "SEND_SMS",
                               "type": "button",
-                              "event": "SEND_SMS"
+                              "icon": "message-circle"
                             },
                             {
-                              "label": "WhatsApp",
-                              "icon": "phone",
-                              "variant": "secondary",
                               "event": "SEND_WHATSAPP",
-                              "type": "button"
+                              "variant": "secondary",
+                              "type": "button",
+                              "icon": "phone",
+                              "label": "WhatsApp"
                             }
                           ],
-                          "justify": "center",
-                          "direction": "horizontal",
-                          "gap": "sm"
+                          "type": "stack",
+                          "direction": "horizontal"
                         }
                       ],
+                      "direction": "vertical",
+                      "align": "stretch",
                       "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -683,18 +729,17 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "children": [
                         {
-                          "gap": "md",
+                          "direction": "horizontal",
                           "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
+                          "gap": "md",
                           "children": [
                             {
-                              "type": "icon",
                               "size": "lg",
-                              "name": "bell"
+                              "name": "bell",
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -707,56 +752,57 @@
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "bind": "@entity.recipient",
                           "label": "Recipient",
-                          "placeholder": "Email or phone number"
-                        },
-                        {
-                          "placeholder": "Notification subject",
-                          "label": "Subject",
-                          "bind": "@entity.subject",
+                          "bind": "@entity.recipient",
+                          "placeholder": "Email or phone number",
                           "type": "input"
                         },
                         {
-                          "label": "Message",
-                          "placeholder": "Write your message...",
-                          "bind": "@entity.messageBody",
-                          "type": "textarea"
+                          "label": "Subject",
+                          "bind": "@entity.subject",
+                          "type": "input",
+                          "placeholder": "Notification subject"
                         },
                         {
+                          "type": "textarea",
+                          "bind": "@entity.messageBody",
+                          "placeholder": "Write your message...",
+                          "label": "Message"
+                        },
+                        {
+                          "direction": "horizontal",
+                          "justify": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "icon": "mail",
-                              "label": "Email",
                               "event": "SEND_EMAIL",
-                              "variant": "primary"
+                              "label": "Email",
+                              "variant": "primary",
+                              "type": "button",
+                              "icon": "mail"
                             },
                             {
+                              "variant": "secondary",
                               "event": "SEND_SMS",
                               "label": "SMS",
                               "icon": "message-circle",
-                              "type": "button",
-                              "variant": "secondary"
+                              "type": "button"
                             },
                             {
+                              "type": "button",
                               "label": "WhatsApp",
-                              "variant": "secondary",
-                              "event": "SEND_WHATSAPP",
                               "icon": "phone",
-                              "type": "button"
+                              "event": "SEND_WHATSAPP",
+                              "variant": "secondary"
                             }
                           ],
-                          "justify": "center",
                           "gap": "sm",
-                          "direction": "horizontal",
                           "type": "stack"
                         }
                       ],
                       "align": "stretch",
                       "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg"
                     }
                   ]
                 ]

@@ -112,7 +112,29 @@
               },
               {
                 "key": "PagedItemLoaded",
-                "name": "PagedItem loaded"
+                "name": "PagedItem loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "PagedItemLoadFailed",
@@ -136,8 +158,8 @@
                     "PagedItem",
                     {
                       "emit": {
-                        "failure": "PagedItemLoadFailed",
-                        "success": "PagedItemLoaded"
+                        "success": "PagedItemLoaded",
+                        "failure": "PagedItemLoadFailed"
                       }
                     }
                   ],
@@ -145,33 +167,33 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center",
                               "direction": "horizontal",
                               "children": [
                                 {
-                                  "name": "list",
                                   "type": "icon",
+                                  "name": "list",
                                   "size": "lg"
                                 },
                                 {
-                                  "variant": "h2",
+                                  "type": "typography",
                                   "content": "PagedItems",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "gap": "sm",
+                              "align": "center"
                             }
                           ],
+                          "type": "stack",
+                          "gap": "sm",
+                          "direction": "horizontal",
                           "justify": "space-between",
                           "align": "center"
                         },
@@ -179,20 +201,15 @@
                           "type": "divider"
                         },
                         {
-                          "type": "data-grid",
-                          "entity": "PagedItem",
-                          "emptyIcon": "inbox",
-                          "emptyTitle": "No pageditems yet",
-                          "emptyDescription": "Add pageditems to see them here.",
                           "columns": [
                             {
+                              "name": "name",
                               "label": "Name",
-                              "variant": "h4",
-                              "name": "name"
+                              "variant": "h4"
                             },
                             {
-                              "name": "description",
                               "variant": "caption",
+                              "name": "description",
                               "label": "Description"
                             },
                             {
@@ -200,18 +217,23 @@
                               "label": "Status",
                               "name": "status"
                             }
-                          ]
+                          ],
+                          "type": "data-grid",
+                          "entity": "PagedItem",
+                          "emptyIcon": "inbox",
+                          "emptyTitle": "No pageditems yet",
+                          "emptyDescription": "Add pageditems to see them here."
                         },
                         {
-                          "onPageChange": "PAGE",
-                          "totalPages": 10.0,
                           "showPageSize": false,
                           "type": "pagination",
-                          "currentPage": 1.0
+                          "currentPage": 1.0,
+                          "onPageChange": "PAGE",
+                          "totalPages": 10.0
                         },
                         {
-                          "type": "infinite-scroll-sentinel",
-                          "loadMoreEvent": "PAGE"
+                          "loadMoreEvent": "PAGE",
+                          "type": "infinite-scroll-sentinel"
                         }
                       ],
                       "direction": "vertical"
@@ -229,8 +251,8 @@
                     "PagedItem",
                     {
                       "emit": {
-                        "failure": "PagedItemLoadFailed",
-                        "success": "PagedItemLoaded"
+                        "success": "PagedItemLoaded",
+                        "failure": "PagedItemLoadFailed"
                       }
                     }
                   ],
@@ -242,45 +264,45 @@
                       "children": [
                         {
                           "justify": "space-between",
+                          "align": "center",
                           "children": [
                             {
-                              "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "sm",
                               "children": [
                                 {
-                                  "name": "list",
                                   "type": "icon",
-                                  "size": "lg"
+                                  "size": "lg",
+                                  "name": "list"
                                 },
                                 {
+                                  "content": "PagedItems",
                                   "variant": "h2",
-                                  "type": "typography",
-                                  "content": "PagedItems"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "type": "stack",
+                              "align": "center",
+                              "gap": "sm",
+                              "direction": "horizontal"
                             }
                           ],
                           "type": "stack",
-                          "direction": "horizontal",
                           "gap": "sm",
-                          "align": "center"
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "PagedItem",
                           "type": "data-grid",
                           "emptyIcon": "inbox",
-                          "emptyDescription": "Add pageditems to see them here.",
                           "emptyTitle": "No pageditems yet",
+                          "emptyDescription": "Add pageditems to see them here.",
+                          "entity": "PagedItem",
                           "columns": [
                             {
-                              "variant": "h4",
                               "name": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "variant": "h4"
                             },
                             {
                               "name": "description",
@@ -288,22 +310,22 @@
                               "label": "Description"
                             },
                             {
+                              "label": "Status",
                               "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
+                              "name": "status"
                             }
                           ]
                         },
                         {
                           "showPageSize": false,
-                          "totalPages": 10.0,
                           "currentPage": "@payload.page",
-                          "type": "pagination",
-                          "onPageChange": "PAGE"
+                          "onPageChange": "PAGE",
+                          "totalPages": 10.0,
+                          "type": "pagination"
                         }
                       ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "direction": "vertical"
                     }
                   ]
                 ]

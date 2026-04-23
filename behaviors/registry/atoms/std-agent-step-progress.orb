@@ -143,7 +143,37 @@
               },
               {
                 "key": "AgentStepProgressLoaded",
-                "name": "AgentStepProgress loaded"
+                "name": "AgentStepProgress loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "currentStep",
+                    "type": "number"
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number"
+                  }
+                ]
               },
               {
                 "key": "AgentStepProgressLoadFailed",
@@ -167,8 +197,8 @@
                     "AgentStepProgress",
                     {
                       "emit": {
-                        "failure": "AgentStepProgressLoadFailed",
-                        "success": "AgentStepProgressLoaded"
+                        "success": "AgentStepProgressLoaded",
+                        "failure": "AgentStepProgressLoadFailed"
                       }
                     }
                   ],
@@ -176,35 +206,36 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "list-ordered"
+                              "name": "list-ordered",
+                              "type": "icon"
                             },
                             {
+                              "content": "AgentStepProgress",
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "AgentStepProgress"
+                              "type": "typography"
                             },
                             {
                               "variant": "default",
-                              "type": "badge",
-                              "label": "Idle"
+                              "label": "Idle",
+                              "type": "badge"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "currentStep": "@entity.currentStep",
                           "type": "wizard-progress",
                           "steps": [
                             {
@@ -216,26 +247,24 @@
                               "title": "Process"
                             },
                             {
-                              "id": "2",
-                              "title": "Validate"
+                              "title": "Validate",
+                              "id": "2"
                             },
                             {
-                              "title": "Complete",
-                              "id": "3"
+                              "id": "3",
+                              "title": "Complete"
                             }
-                          ]
+                          ],
+                          "currentStep": "@entity.currentStep"
                         },
                         {
-                          "type": "button",
-                          "variant": "primary",
-                          "event": "START",
                           "icon": "play",
+                          "variant": "primary",
+                          "action": "START",
+                          "type": "button",
                           "label": "Start"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -259,38 +288,36 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
-                          "type": "stack",
+                          "align": "center",
                           "direction": "horizontal",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
                               "name": "loader",
-                              "size": "lg",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
+                              "type": "typography",
                               "content": "AgentStepProgress"
                             },
                             {
-                              "label": "In Progress",
                               "type": "badge",
+                              "label": "In Progress",
                               "variant": "warning"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep",
                           "steps": [
                             {
                               "id": "0",
@@ -301,24 +328,24 @@
                               "id": "1"
                             },
                             {
-                              "id": "2",
-                              "title": "Validate"
+                              "title": "Validate",
+                              "id": "2"
                             },
                             {
                               "id": "3",
                               "title": "Complete"
                             }
-                          ]
+                          ],
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep"
                         },
                         {
                           "type": "stack",
-                          "align": "center",
-                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "type": "stat-display",
                               "value": "@entity.currentStep",
+                              "type": "stat-display",
                               "label": "Current Step"
                             },
                             {
@@ -326,31 +353,32 @@
                               "label": "Total Steps",
                               "value": "@entity.totalSteps"
                             }
-                          ]
+                          ],
+                          "align": "center",
+                          "gap": "sm"
                         },
                         {
+                          "gap": "sm",
                           "children": [
                             {
-                              "icon": "chevron-right",
-                              "type": "button",
-                              "event": "ADVANCE",
                               "label": "Advance",
-                              "variant": "primary"
+                              "type": "button",
+                              "action": "ADVANCE",
+                              "variant": "primary",
+                              "icon": "chevron-right"
                             },
                             {
                               "label": "Reset",
-                              "event": "RESET",
+                              "action": "RESET",
                               "icon": "rotate-ccw",
-                              "type": "button",
-                              "variant": "ghost"
+                              "variant": "ghost",
+                              "type": "button"
                             }
                           ],
-                          "direction": "horizontal",
                           "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal"
                         }
-                      ],
-                      "direction": "vertical"
+                      ]
                     }
                   ]
                 ]
@@ -374,66 +402,65 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
                           "gap": "sm",
-                          "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "name": "list-ordered",
                               "type": "icon",
-                              "size": "lg"
+                              "name": "list-ordered"
                             },
                             {
+                              "type": "typography",
                               "content": "AgentStepProgress",
-                              "variant": "h2",
-                              "type": "typography"
+                              "variant": "h2"
                             },
                             {
+                              "variant": "default",
                               "type": "badge",
-                              "label": "Idle",
-                              "variant": "default"
+                              "label": "Idle"
                             }
-                          ]
+                          ],
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "currentStep": "@entity.currentStep",
+                          "type": "wizard-progress",
                           "steps": [
                             {
                               "title": "Initialize",
                               "id": "0"
                             },
                             {
-                              "title": "Process",
-                              "id": "1"
+                              "id": "1",
+                              "title": "Process"
                             },
                             {
                               "title": "Validate",
                               "id": "2"
                             },
                             {
-                              "title": "Complete",
-                              "id": "3"
+                              "id": "3",
+                              "title": "Complete"
                             }
-                          ],
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep"
+                          ]
                         },
                         {
                           "type": "button",
-                          "event": "START",
-                          "label": "Start",
                           "icon": "play",
-                          "variant": "primary"
+                          "variant": "primary",
+                          "action": "START",
+                          "label": "Start"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -461,18 +488,14 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "name": "loader",
-                              "size": "lg",
-                              "type": "icon"
+                              "type": "icon",
+                              "name": "loader"
                             },
                             {
                               "content": "AgentStepProgress",
@@ -480,27 +503,28 @@
                               "type": "typography"
                             },
                             {
+                              "variant": "warning",
                               "type": "badge",
-                              "label": "In Progress",
-                              "variant": "warning"
+                              "label": "In Progress"
                             }
                           ],
-                          "direction": "horizontal"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "wizard-progress",
                           "currentStep": "@entity.currentStep",
+                          "type": "wizard-progress",
                           "steps": [
                             {
-                              "id": "0",
-                              "title": "Initialize"
+                              "title": "Initialize",
+                              "id": "0"
                             },
                             {
-                              "title": "Process",
-                              "id": "1"
+                              "id": "1",
+                              "title": "Process"
                             },
                             {
                               "id": "2",
@@ -513,46 +537,48 @@
                           ]
                         },
                         {
+                          "align": "center",
                           "gap": "sm",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "stat-display",
+                              "label": "Current Step",
                               "value": "@entity.currentStep",
-                              "label": "Current Step"
+                              "type": "stat-display"
                             },
                             {
                               "type": "stat-display",
-                              "label": "Total Steps",
-                              "value": "@entity.totalSteps"
+                              "value": "@entity.totalSteps",
+                              "label": "Total Steps"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal"
                         },
                         {
                           "gap": "sm",
-                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
-                              "icon": "chevron-right",
                               "label": "Advance",
-                              "variant": "primary",
-                              "event": "ADVANCE"
+                              "action": "ADVANCE",
+                              "icon": "chevron-right",
+                              "variant": "primary"
                             },
                             {
-                              "type": "button",
-                              "label": "Reset",
+                              "action": "RESET",
                               "variant": "ghost",
                               "icon": "rotate-ccw",
-                              "event": "RESET"
+                              "label": "Reset",
+                              "type": "button"
                             }
-                          ]
+                          ],
+                          "type": "stack"
                         }
                       ],
-                      "direction": "vertical"
+                      "gap": "lg",
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -580,11 +606,12 @@
                       "children": [
                         {
                           "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
-                              "type": "icon",
-                              "name": "check-circle"
+                              "name": "check-circle",
+                              "type": "icon"
                             },
                             {
                               "variant": "h2",
@@ -593,24 +620,21 @@
                             },
                             {
                               "label": "Completed",
-                              "variant": "success",
-                              "type": "badge"
+                              "type": "badge",
+                              "variant": "success"
                             }
                           ],
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "type": "wizard-progress",
-                          "currentStep": "@entity.totalSteps",
                           "steps": [
                             {
-                              "id": "0",
-                              "title": "Initialize"
+                              "title": "Initialize",
+                              "id": "0"
                             },
                             {
                               "id": "1",
@@ -624,23 +648,24 @@
                               "id": "3",
                               "title": "Complete"
                             }
-                          ]
+                          ],
+                          "currentStep": "@entity.totalSteps"
                         },
                         {
-                          "type": "alert",
                           "variant": "success",
+                          "type": "alert",
                           "message": "All steps completed successfully."
                         },
                         {
-                          "label": "Reset",
-                          "icon": "rotate-ccw",
-                          "variant": "ghost",
+                          "action": "RESET",
                           "type": "button",
-                          "event": "RESET"
+                          "variant": "ghost",
+                          "label": "Reset",
+                          "icon": "rotate-ccw"
                         }
                       ],
-                      "gap": "lg",
-                      "type": "stack"
+                      "type": "stack",
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -659,83 +684,82 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "type": "stack",
-                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
+                          "type": "stack",
                           "direction": "horizontal",
-                          "align": "center",
                           "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
-                              "size": "lg",
                               "name": "x-circle"
                             },
                             {
-                              "type": "typography",
                               "variant": "h2",
-                              "content": "AgentStepProgress"
+                              "content": "AgentStepProgress",
+                              "type": "typography"
                             },
                             {
+                              "variant": "danger",
                               "type": "badge",
-                              "label": "Failed",
-                              "variant": "destructive"
+                              "label": "Failed"
                             }
                           ],
-                          "type": "stack"
+                          "align": "center"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "currentStep": "@entity.currentStep",
                           "steps": [
                             {
-                              "id": "0",
-                              "title": "Initialize"
+                              "title": "Initialize",
+                              "id": "0"
                             },
                             {
-                              "id": "1",
-                              "title": "Process"
+                              "title": "Process",
+                              "id": "1"
                             },
                             {
                               "id": "2",
                               "title": "Validate"
                             },
                             {
-                              "title": "Complete",
-                              "id": "3"
+                              "id": "3",
+                              "title": "Complete"
                             }
                           ],
-                          "type": "wizard-progress"
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep"
                         },
                         {
-                          "type": "alert",
                           "message": "Pipeline failed at the current step.",
+                          "type": "alert",
                           "variant": "error"
                         },
                         {
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
-                              "type": "stat-display",
+                              "label": "Failed At Step",
                               "value": "@entity.currentStep",
-                              "label": "Failed At Step"
+                              "type": "stat-display"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal"
                         },
                         {
+                          "action": "RESET",
                           "icon": "rotate-ccw",
-                          "variant": "ghost",
-                          "label": "Reset",
                           "type": "button",
-                          "event": "RESET"
+                          "label": "Reset",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -759,13 +783,13 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
                       "type": "stack",
                       "children": [
                         {
-                          "align": "center",
                           "children": [
                             {
-                              "size": "lg",
                               "name": "list-ordered",
                               "type": "icon"
                             },
@@ -775,19 +799,22 @@
                               "variant": "h2"
                             },
                             {
-                              "label": "Idle",
                               "variant": "default",
+                              "label": "Idle",
                               "type": "badge"
                             }
                           ],
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep",
                           "steps": [
                             {
                               "title": "Initialize",
@@ -798,27 +825,23 @@
                               "title": "Process"
                             },
                             {
-                              "title": "Validate",
-                              "id": "2"
+                              "id": "2",
+                              "title": "Validate"
                             },
                             {
                               "id": "3",
                               "title": "Complete"
                             }
-                          ],
-                          "type": "wizard-progress",
-                          "currentStep": "@entity.currentStep"
+                          ]
                         },
                         {
-                          "label": "Start",
-                          "icon": "play",
-                          "type": "button",
                           "variant": "primary",
-                          "event": "START"
+                          "icon": "play",
+                          "label": "Start",
+                          "action": "START",
+                          "type": "button"
                         }
-                      ],
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -842,41 +865,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "lg",
                       "children": [
                         {
-                          "gap": "sm",
+                          "align": "center",
                           "type": "stack",
+                          "gap": "sm",
                           "direction": "horizontal",
                           "children": [
                             {
-                              "size": "lg",
                               "name": "list-ordered",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "content": "AgentStepProgress",
+                              "variant": "h2",
                               "type": "typography"
                             },
                             {
-                              "type": "badge",
                               "variant": "default",
+                              "type": "badge",
                               "label": "Idle"
                             }
-                          ],
-                          "align": "center"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "currentStep": "@entity.currentStep",
                           "steps": [
                             {
-                              "title": "Initialize",
-                              "id": "0"
+                              "id": "0",
+                              "title": "Initialize"
                             },
                             {
                               "title": "Process",
@@ -887,21 +908,22 @@
                               "id": "2"
                             },
                             {
-                              "id": "3",
-                              "title": "Complete"
+                              "title": "Complete",
+                              "id": "3"
                             }
                           ],
-                          "type": "wizard-progress"
+                          "type": "wizard-progress",
+                          "currentStep": "@entity.currentStep"
                         },
                         {
-                          "label": "Start",
                           "icon": "play",
+                          "type": "button",
                           "variant": "primary",
-                          "event": "START",
-                          "type": "button"
+                          "label": "Start",
+                          "action": "START"
                         }
                       ],
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -929,59 +951,58 @@
                       "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
                               "type": "icon",
-                              "size": "lg",
                               "name": "list-ordered"
                             },
                             {
                               "content": "AgentStepProgress",
-                              "type": "typography",
-                              "variant": "h2"
+                              "variant": "h2",
+                              "type": "typography"
                             },
                             {
-                              "variant": "default",
                               "type": "badge",
+                              "variant": "default",
                               "label": "Idle"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "currentStep": "@entity.currentStep",
+                          "type": "wizard-progress",
                           "steps": [
                             {
                               "id": "0",
                               "title": "Initialize"
                             },
                             {
-                              "id": "1",
-                              "title": "Process"
+                              "title": "Process",
+                              "id": "1"
                             },
                             {
-                              "id": "2",
-                              "title": "Validate"
+                              "title": "Validate",
+                              "id": "2"
                             },
                             {
-                              "id": "3",
-                              "title": "Complete"
+                              "title": "Complete",
+                              "id": "3"
                             }
-                          ],
-                          "currentStep": "@entity.currentStep",
-                          "type": "wizard-progress"
+                          ]
                         },
                         {
-                          "event": "START",
-                          "type": "button",
-                          "icon": "play",
                           "label": "Start",
-                          "variant": "primary"
+                          "type": "button",
+                          "action": "START",
+                          "variant": "primary",
+                          "icon": "play"
                         }
                       ],
                       "direction": "vertical"

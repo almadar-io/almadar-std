@@ -192,7 +192,53 @@
               },
               {
                 "key": "ServiceTwilioLoaded",
-                "name": "ServiceTwilio loaded"
+                "name": "ServiceTwilio loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "to",
+                    "type": "string"
+                  },
+                  {
+                    "name": "messageBody",
+                    "type": "string"
+                  },
+                  {
+                    "name": "channel",
+                    "type": "string"
+                  },
+                  {
+                    "name": "messageSid",
+                    "type": "string"
+                  },
+                  {
+                    "name": "sendStatus",
+                    "type": "string"
+                  },
+                  {
+                    "name": "error",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "ServiceTwilioLoadFailed",
@@ -225,67 +271,67 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "type": "stack",
+                      "direction": "vertical",
                       "align": "stretch",
                       "children": [
                         {
-                          "direction": "horizontal",
+                          "align": "center",
                           "gap": "md",
+                          "direction": "horizontal",
+                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "message-circle",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
                               "content": "ServiceTwilio Messaging",
                               "variant": "h2",
                               "type": "typography"
                             }
-                          ],
-                          "align": "center",
-                          "type": "stack"
+                          ]
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "+1234567890",
+                          "type": "input",
                           "bind": "@entity.to",
                           "label": "To",
-                          "type": "input"
+                          "placeholder": "+1234567890"
                         },
                         {
+                          "type": "textarea",
                           "label": "Message",
-                          "placeholder": "Write your message...",
                           "bind": "@entity.messageBody",
-                          "type": "textarea"
+                          "placeholder": "Write your message..."
                         },
                         {
                           "type": "stack",
-                          "gap": "sm",
-                          "direction": "horizontal",
                           "justify": "center",
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "children": [
                             {
-                              "icon": "message-circle",
+                              "event": "SEND_SMS",
                               "variant": "primary",
                               "type": "button",
                               "label": "Send SMS",
-                              "event": "SEND_SMS"
+                              "icon": "message-circle"
                             },
                             {
+                              "icon": "phone",
+                              "type": "button",
                               "label": "Send WhatsApp",
                               "variant": "secondary",
-                              "icon": "phone",
-                              "event": "SEND_WHATSAPP",
-                              "type": "button"
+                              "event": "SEND_WHATSAPP"
                             }
                           ]
                         }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
@@ -299,9 +345,9 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "Sending message...",
+                      "message": "Delivering servicetwilio message...",
                       "type": "loading-state",
-                      "message": "Delivering servicetwilio message..."
+                      "title": "Sending message..."
                     }
                   ],
                   [
@@ -334,8 +380,8 @@
                     "twilio",
                     "sendWhatsApp",
                     {
-                      "to": "@entity.to",
-                      "body": "@entity.messageBody"
+                      "body": "@entity.messageBody",
+                      "to": "@entity.to"
                     }
                   ]
                 ]
@@ -359,29 +405,29 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "direction": "vertical",
                       "gap": "lg",
+                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "check-circle",
+                          "type": "icon",
                           "size": "lg"
                         },
                         {
+                          "type": "alert",
                           "variant": "success",
-                          "message": "Message sent successfully",
-                          "type": "alert"
+                          "message": "Message sent successfully"
                         },
                         {
-                          "variant": "ghost",
                           "label": "Send Another",
                           "event": "RESET",
                           "type": "button",
+                          "variant": "ghost",
                           "icon": "rotate-ccw"
                         }
-                      ],
-                      "align": "center",
-                      "type": "stack"
+                      ]
                     }
                   ]
                 ]
@@ -405,39 +451,39 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
+                      "direction": "vertical",
                       "children": [
                         {
-                          "message": "Could not deliver the message.",
-                          "onRetry": "RETRY",
                           "type": "error-state",
-                          "title": "Send Failed"
+                          "message": "Could not deliver the message.",
+                          "title": "Send Failed",
+                          "onRetry": "RETRY"
                         },
                         {
                           "gap": "sm",
+                          "justify": "center",
+                          "type": "stack",
                           "direction": "horizontal",
                           "children": [
                             {
                               "type": "button",
+                              "event": "RETRY",
                               "variant": "primary",
                               "icon": "refresh-cw",
-                              "label": "Retry",
-                              "event": "RETRY"
+                              "label": "Retry"
                             },
                             {
                               "event": "RESET",
-                              "variant": "ghost",
                               "label": "Reset",
+                              "variant": "ghost",
                               "icon": "rotate-ccw",
                               "type": "button"
                             }
-                          ],
-                          "justify": "center",
-                          "type": "stack"
+                          ]
                         }
                       ],
                       "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "align": "center"
                     }
                   ]
@@ -466,58 +512,58 @@
                               "size": "lg"
                             },
                             {
-                              "variant": "h2",
+                              "content": "ServiceTwilio Messaging",
                               "type": "typography",
-                              "content": "ServiceTwilio Messaging"
+                              "variant": "h2"
                             }
                           ],
-                          "gap": "md",
                           "align": "center",
+                          "direction": "horizontal",
                           "type": "stack",
-                          "direction": "horizontal"
+                          "gap": "md"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "bind": "@entity.to",
                           "label": "To",
+                          "bind": "@entity.to",
+                          "type": "input",
                           "placeholder": "+1234567890"
                         },
                         {
-                          "bind": "@entity.messageBody",
-                          "type": "textarea",
                           "placeholder": "Write your message...",
-                          "label": "Message"
+                          "type": "textarea",
+                          "label": "Message",
+                          "bind": "@entity.messageBody"
                         },
                         {
+                          "type": "stack",
+                          "direction": "horizontal",
+                          "justify": "center",
                           "gap": "sm",
                           "children": [
                             {
                               "label": "Send SMS",
+                              "event": "SEND_SMS",
                               "variant": "primary",
                               "icon": "message-circle",
-                              "type": "button",
-                              "event": "SEND_SMS"
+                              "type": "button"
                             },
                             {
-                              "label": "Send WhatsApp",
                               "type": "button",
-                              "variant": "secondary",
                               "icon": "phone",
-                              "event": "SEND_WHATSAPP"
+                              "event": "SEND_WHATSAPP",
+                              "label": "Send WhatsApp",
+                              "variant": "secondary"
                             }
-                          ],
-                          "justify": "center",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          ]
                         }
                       ],
                       "direction": "vertical",
-                      "align": "stretch",
                       "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "align": "stretch"
                     }
                   ]
                 ]
@@ -531,67 +577,67 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
+                      "type": "stack",
                       "direction": "vertical",
+                      "align": "stretch",
                       "children": [
                         {
                           "gap": "md",
-                          "type": "stack",
+                          "direction": "horizontal",
                           "children": [
                             {
-                              "name": "message-circle",
                               "size": "lg",
+                              "name": "message-circle",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
+                              "type": "typography",
                               "content": "ServiceTwilio Messaging",
-                              "type": "typography"
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "align": "center"
+                          "align": "center",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "placeholder": "+1234567890",
                           "label": "To",
+                          "type": "input",
                           "bind": "@entity.to",
-                          "type": "input"
+                          "placeholder": "+1234567890"
                         },
                         {
                           "label": "Message",
-                          "type": "textarea",
                           "bind": "@entity.messageBody",
+                          "type": "textarea",
                           "placeholder": "Write your message..."
                         },
                         {
+                          "type": "stack",
                           "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
                               "type": "button",
-                              "label": "Send SMS",
-                              "event": "SEND_SMS",
+                              "variant": "primary",
                               "icon": "message-circle",
-                              "variant": "primary"
+                              "label": "Send SMS",
+                              "event": "SEND_SMS"
                             },
                             {
-                              "label": "Send WhatsApp",
-                              "type": "button",
-                              "event": "SEND_WHATSAPP",
+                              "variant": "secondary",
                               "icon": "phone",
-                              "variant": "secondary"
+                              "label": "Send WhatsApp",
+                              "event": "SEND_WHATSAPP",
+                              "type": "button"
                             }
                           ],
-                          "justify": "center",
-                          "type": "stack",
                           "direction": "horizontal"
                         }
                       ],
-                      "align": "stretch",
-                      "type": "stack"
+                      "gap": "lg"
                     }
                   ]
                 ]
@@ -610,19 +656,18 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "stretch",
                       "children": [
                         {
                           "type": "stack",
+                          "align": "center",
                           "gap": "md",
                           "direction": "horizontal",
-                          "align": "center",
                           "children": [
                             {
+                              "type": "icon",
                               "name": "message-circle",
-                              "size": "lg",
-                              "type": "icon"
+                              "size": "lg"
                             },
                             {
                               "type": "typography",
@@ -635,42 +680,43 @@
                           "type": "divider"
                         },
                         {
-                          "type": "input",
-                          "bind": "@entity.to",
                           "label": "To",
-                          "placeholder": "+1234567890"
+                          "placeholder": "+1234567890",
+                          "type": "input",
+                          "bind": "@entity.to"
                         },
                         {
-                          "placeholder": "Write your message...",
-                          "label": "Message",
+                          "type": "textarea",
                           "bind": "@entity.messageBody",
-                          "type": "textarea"
+                          "label": "Message",
+                          "placeholder": "Write your message..."
                         },
                         {
                           "type": "stack",
-                          "gap": "sm",
+                          "justify": "center",
                           "children": [
                             {
                               "label": "Send SMS",
-                              "icon": "message-circle",
+                              "variant": "primary",
                               "event": "SEND_SMS",
                               "type": "button",
-                              "variant": "primary"
+                              "icon": "message-circle"
                             },
                             {
-                              "variant": "secondary",
-                              "icon": "phone",
                               "label": "Send WhatsApp",
                               "event": "SEND_WHATSAPP",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "secondary",
+                              "icon": "phone"
                             }
                           ],
                           "direction": "horizontal",
-                          "justify": "center"
+                          "gap": "sm"
                         }
                       ],
                       "gap": "lg",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]

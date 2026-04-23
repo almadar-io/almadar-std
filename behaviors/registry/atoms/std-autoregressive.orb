@@ -105,28 +105,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "align": "center",
                       "children": [
                         {
+                          "type": "stack",
                           "gap": "sm",
                           "children": [
                             {
                               "size": "lg",
-                              "type": "icon",
-                              "name": "message-square"
+                              "name": "message-square",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h2",
                               "content": "Autoregressive Generator",
+                              "variant": "h2",
                               "type": "typography"
                             }
                           ],
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
+                          "align": "center",
+                          "direction": "horizontal"
                         },
                         {
                           "type": "divider"
@@ -137,23 +133,27 @@
                         },
                         {
                           "content": "Vocab: undefined | Max length: undefined",
-                          "color": "muted",
+                          "variant": "body",
                           "type": "typography",
-                          "variant": "body"
+                          "color": "muted"
                         },
                         {
-                          "content": "@entity.generatedTokens",
+                          "variant": "body",
                           "type": "typography",
-                          "variant": "body"
+                          "content": "@entity.generatedTokens"
                         },
                         {
                           "icon": "play",
+                          "event": "GENERATE",
                           "type": "button",
                           "label": "Generate",
-                          "event": "GENERATE",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -182,37 +182,36 @@
                     "forward",
                     "primary",
                     {
-                      "input": "@entity.generatedTokens",
                       "output-contract": {
-                        "dtype": "float32",
-                        "type": "tensor",
                         "shape": [
                           null
                         ],
-                        "activation": "softmax"
+                        "type": "tensor",
+                        "activation": "softmax",
+                        "dtype": "float32"
                       },
-                      "on-complete": "TOKEN_READY"
+                      "on-complete": "TOKEN_READY",
+                      "input": "@entity.generatedTokens"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
+                          "content": "Generating",
                           "variant": "h3",
-                          "type": "typography",
-                          "content": "Generating"
+                          "type": "typography"
                         },
                         {
-                          "type": "progress-bar",
-                          "value": "@entity.tokenCount"
+                          "value": "@entity.tokenCount",
+                          "type": "progress-bar"
                         },
                         {
-                          "type": "typography",
                           "variant": "body",
-                          "content": "@entity.generatedTokens"
+                          "content": "@entity.generatedTokens",
+                          "type": "typography"
                         },
                         {
                           "variant": "caption",
@@ -220,13 +219,14 @@
                           "type": "typography"
                         },
                         {
-                          "type": "spinner",
-                          "size": "sm"
+                          "size": "sm",
+                          "type": "spinner"
                         }
                       ],
+                      "type": "stack",
                       "direction": "vertical",
-                      "align": "center",
-                      "gap": "md"
+                      "gap": "md",
+                      "align": "center"
                     }
                   ]
                 ]
@@ -279,27 +279,30 @@
                     "forward",
                     "primary",
                     {
-                      "on-complete": "TOKEN_READY",
+                      "input": "@entity.generatedTokens",
                       "output-contract": {
                         "shape": [
                           null
                         ],
+                        "activation": "softmax",
                         "type": "tensor",
-                        "dtype": "float32",
-                        "activation": "softmax"
+                        "dtype": "float32"
                       },
-                      "input": "@entity.generatedTokens"
+                      "on-complete": "TOKEN_READY"
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "gap": "md",
+                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
-                          "content": "Generating",
+                          "type": "typography",
                           "variant": "h3",
-                          "type": "typography"
+                          "content": "Generating"
                         },
                         {
                           "value": "@entity.tokenCount",
@@ -307,23 +310,20 @@
                         },
                         {
                           "variant": "body",
-                          "type": "typography",
-                          "content": "@entity.generatedTokens"
+                          "content": "@entity.generatedTokens",
+                          "type": "typography"
                         },
                         {
+                          "content": "Tokens: @entity.tokenCount",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Tokens: @entity.tokenCount"
+                          "variant": "caption"
                         },
                         {
-                          "size": "sm",
-                          "type": "spinner"
+                          "type": "spinner",
+                          "size": "sm"
                         }
                       ],
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md",
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -364,39 +364,39 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
+                          "size": "lg",
                           "type": "icon",
-                          "name": "check-circle",
-                          "size": "lg"
+                          "name": "check-circle"
                         },
                         {
                           "variant": "h3",
-                          "content": "Generation Complete",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "@entity.generatedTokens",
                           "type": "typography",
-                          "variant": "body"
+                          "content": "Generation Complete"
                         },
                         {
                           "type": "typography",
-                          "content": "Total tokens: @entity.tokenCount",
-                          "variant": "caption"
+                          "variant": "body",
+                          "content": "@entity.generatedTokens"
                         },
                         {
-                          "type": "button",
+                          "type": "typography",
+                          "variant": "caption",
+                          "content": "Total tokens: @entity.tokenCount"
+                        },
+                        {
                           "variant": "outline",
-                          "icon": "refresh-cw",
+                          "type": "button",
                           "event": "GENERATE",
+                          "icon": "refresh-cw",
                           "label": "Generate Again"
                         }
-                      ]
+                      ],
+                      "gap": "md"
                     }
                   ]
                 ]

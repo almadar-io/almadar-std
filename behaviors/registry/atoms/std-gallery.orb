@@ -123,7 +123,33 @@
               },
               {
                 "key": "GalleryItemLoaded",
-                "name": "GalleryItem loaded"
+                "name": "GalleryItem loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  },
+                  {
+                    "name": "imageUrl",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "GalleryItemLoadFailed",
@@ -147,8 +173,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "success": "GalleryItemLoaded",
-                        "failure": "GalleryItemLoadFailed"
+                        "failure": "GalleryItemLoadFailed",
+                        "success": "GalleryItemLoaded"
                       }
                     }
                   ],
@@ -156,36 +182,37 @@
                     "render-ui",
                     "main",
                     {
+                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "space-between",
                           "gap": "md",
                           "type": "stack",
-                          "direction": "horizontal",
                           "align": "center",
+                          "justify": "space-between",
+                          "direction": "horizontal",
                           "children": [
                             {
                               "align": "center",
-                              "gap": "sm",
                               "direction": "horizontal",
                               "children": [
                                 {
                                   "name": "image",
-                                  "size": "lg",
-                                  "type": "icon"
+                                  "type": "icon",
+                                  "size": "lg"
                                 },
                                 {
+                                  "type": "typography",
                                   "content": "GalleryItems Gallery",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "variant": "h2"
                                 }
                               ],
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "type": "typography",
-                              "variant": "caption",
                               "color": "muted",
+                              "variant": "caption",
+                              "type": "typography",
                               "content": "Click any image to view full size"
                             }
                           ]
@@ -194,38 +221,37 @@
                           "type": "divider"
                         },
                         {
+                          "type": "data-grid",
                           "cols": 3.0,
+                          "entity": "GalleryItem",
+                          "emptyIcon": "image",
+                          "gap": "md",
+                          "emptyDescription": "Add images to your gallery.",
+                          "emptyTitle": "No images yet",
+                          "columns": [
+                            {
+                              "variant": "h4",
+                              "label": "Title",
+                              "name": "name"
+                            },
+                            {
+                              "label": "Status",
+                              "variant": "badge",
+                              "name": "status"
+                            }
+                          ],
                           "itemActions": [
                             {
-                              "label": "View",
                               "event": "VIEW",
+                              "label": "View",
                               "icon": "maximize"
                             }
                           ],
-                          "emptyDescription": "Add images to your gallery.",
-                          "type": "data-grid",
-                          "imageField": "imageUrl",
-                          "emptyTitle": "No images yet",
-                          "entity": "GalleryItem",
-                          "emptyIcon": "image",
-                          "columns": [
-                            {
-                              "name": "name",
-                              "variant": "h4",
-                              "label": "Title"
-                            },
-                            {
-                              "variant": "badge",
-                              "name": "status",
-                              "label": "Status"
-                            }
-                          ],
-                          "gap": "md"
+                          "imageField": "imageUrl"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -240,27 +266,27 @@
                     "modal",
                     {
                       "type": "lightbox",
+                      "closeAction": "CLOSE",
+                      "isOpen": true,
+                      "currentIndex": 0.0,
+                      "showCounter": true,
                       "images": [
                         {
+                          "caption": "Mountain landscape",
                           "src": "https://picsum.photos/seed/gallery1/800/600",
-                          "alt": "Mountain landscape",
-                          "caption": "Mountain landscape"
+                          "alt": "Mountain landscape"
                         },
                         {
-                          "src": "https://picsum.photos/seed/gallery2/800/600",
                           "alt": "Ocean sunset",
-                          "caption": "Ocean sunset"
+                          "caption": "Ocean sunset",
+                          "src": "https://picsum.photos/seed/gallery2/800/600"
                         },
                         {
-                          "caption": "Forest trail",
+                          "alt": "Forest trail",
                           "src": "https://picsum.photos/seed/gallery3/800/600",
-                          "alt": "Forest trail"
+                          "caption": "Forest trail"
                         }
-                      ],
-                      "currentIndex": 0.0,
-                      "isOpen": true,
-                      "showCounter": true,
-                      "closeAction": "CLOSE"
+                      ]
                     }
                   ]
                 ]
@@ -279,11 +305,17 @@
                     "render-ui",
                     "main",
                     {
+                      "direction": "vertical",
+                      "type": "stack",
                       "children": [
                         {
-                          "justify": "space-between",
+                          "direction": "horizontal",
                           "children": [
                             {
+                              "gap": "sm",
+                              "align": "center",
+                              "type": "stack",
+                              "direction": "horizontal",
                               "children": [
                                 {
                                   "size": "lg",
@@ -291,25 +323,21 @@
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "h2",
                                   "content": "GalleryItems Gallery",
-                                  "variant": "h2"
+                                  "type": "typography"
                                 }
-                              ],
-                              "align": "center",
-                              "gap": "sm",
-                              "direction": "horizontal",
-                              "type": "stack"
+                              ]
                             },
                             {
-                              "content": "Click any image to view full size",
                               "variant": "caption",
-                              "color": "muted",
-                              "type": "typography"
+                              "type": "typography",
+                              "content": "Click any image to view full size",
+                              "color": "muted"
                             }
                           ],
+                          "justify": "space-between",
                           "align": "center",
-                          "direction": "horizontal",
                           "type": "stack",
                           "gap": "md"
                         },
@@ -317,13 +345,13 @@
                           "type": "divider"
                         },
                         {
+                          "emptyTitle": "No images yet",
+                          "entity": "GalleryItem",
+                          "emptyDescription": "Add images to your gallery.",
+                          "cols": 3.0,
+                          "imageField": "imageUrl",
                           "type": "data-grid",
                           "emptyIcon": "image",
-                          "entity": "GalleryItem",
-                          "imageField": "imageUrl",
-                          "emptyTitle": "No images yet",
-                          "cols": 3.0,
-                          "emptyDescription": "Add images to your gallery.",
                           "gap": "md",
                           "itemActions": [
                             {
@@ -334,21 +362,19 @@
                           ],
                           "columns": [
                             {
-                              "label": "Title",
+                              "name": "name",
                               "variant": "h4",
-                              "name": "name"
+                              "label": "Title"
                             },
                             {
-                              "name": "status",
+                              "label": "Status",
                               "variant": "badge",
-                              "label": "Status"
+                              "name": "status"
                             }
                           ]
                         }
                       ],
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical"
+                      "gap": "lg"
                     }
                   ]
                 ]

@@ -107,7 +107,29 @@
               },
               {
                 "key": "TabContentLoaded",
-                "name": "TabContent loaded"
+                "name": "TabContent loaded",
+                "payload": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "string"
+                  },
+                  {
+                    "name": "status",
+                    "type": "string"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "string"
+                  }
+                ]
               },
               {
                 "key": "TabContentLoadFailed",
@@ -140,15 +162,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "gap": "lg",
                       "children": [
                         {
+                          "gap": "sm",
+                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
                               "name": "layout-grid",
-                              "size": "lg"
+                              "type": "icon"
                             },
                             {
                               "type": "typography",
@@ -156,26 +179,21 @@
                               "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
-                          "align": "center"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "defaultActiveTab": "name",
-                          "onTabChange": "SELECT_TAB",
                           "type": "tabs",
                           "tabs": [
                             {
-                              "value": "name",
-                              "label": "Name"
+                              "label": "Name",
+                              "value": "name"
                             },
                             {
-                              "value": "description",
-                              "label": "Description"
+                              "label": "Description",
+                              "value": "description"
                             },
                             {
                               "value": "status",
@@ -185,15 +203,14 @@
                               "label": "CreatedAt",
                               "value": "createdAt"
                             }
-                          ]
+                          ],
+                          "defaultActiveTab": "name",
+                          "onTabChange": "SELECT_TAB"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "entity": "TabContent",
-                          "emptyDescription": "Add tabcontents to see them here.",
-                          "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
@@ -201,27 +218,28 @@
                               "direction": "vertical",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "@item.name",
-                                  "variant": "h4"
+                                  "variant": "h4",
+                                  "type": "typography"
                                 },
                                 {
-                                  "variant": "caption",
-                                  "type": "typography",
+                                  "content": "@item.name",
                                   "color": "muted",
-                                  "content": "@item.name"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack"
+                              "type": "stack",
+                              "gap": "sm"
                             }
                           ],
+                          "entity": "TabContent",
                           "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "emptyTitle": "No tabcontents yet",
-                          "emptyIcon": "inbox"
+                          "type": "data-grid"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "type": "stack"
                     }
                   ]
                 ]
@@ -245,39 +263,40 @@
                     "render-ui",
                     "main",
                     {
+                      "type": "stack",
+                      "direction": "vertical",
+                      "gap": "lg",
                       "children": [
                         {
                           "children": [
                             {
                               "type": "icon",
-                              "name": "layout-grid",
-                              "size": "lg"
+                              "name": "layout-grid"
                             },
                             {
                               "variant": "h2",
-                              "type": "typography",
-                              "content": "TabContents"
+                              "content": "TabContents",
+                              "type": "typography"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal",
-                          "type": "stack"
+                          "align": "center",
+                          "type": "stack",
+                          "gap": "sm"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "tabs",
-                          "activeTab": "@payload.tab",
+                          "onTabChange": "SELECT_TAB",
                           "tabs": [
                             {
                               "value": "name",
                               "label": "Name"
                             },
                             {
-                              "value": "description",
-                              "label": "Description"
+                              "label": "Description",
+                              "value": "description"
                             },
                             {
                               "value": "status",
@@ -288,46 +307,41 @@
                               "value": "createdAt"
                             }
                           ],
+                          "type": "tabs",
                           "defaultActiveTab": "name",
-                          "onTabChange": "SELECT_TAB"
+                          "activeTab": "@payload.tab"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "emptyTitle": "No tabcontents yet",
+                          "type": "data-grid",
                           "renderItem": [
                             "fn",
                             "item",
                             {
-                              "type": "stack",
-                              "gap": "sm",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "content": "@item.name",
+                                  "variant": "h4",
                                   "type": "typography",
-                                  "variant": "h4"
+                                  "content": "@item.name"
                                 },
                                 {
-                                  "type": "typography",
+                                  "variant": "caption",
                                   "color": "muted",
                                   "content": "@item.name",
-                                  "variant": "caption"
+                                  "type": "typography"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ],
-                          "emptyIcon": "inbox",
-                          "type": "data-grid",
                           "entity": "TabContent",
-                          "emptyDescription": "Add tabcontents to see them here."
+                          "className": "transition-shadow hover:shadow-md cursor-pointer"
                         }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg"
+                      ]
                     }
                   ]
                 ]
